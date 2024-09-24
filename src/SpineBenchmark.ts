@@ -164,32 +164,3 @@ export class SpineBenchmark {
     playNextAnimation();
   }
 }
-
-
-
-
-function setAfterElementContent(elementId: string, content: string) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    // Create a style element if it doesn't exist
-    let style = document.getElementById('dynamic-styles');
-    if (!style) {
-      style = document.createElement('style');
-      style.id = 'dynamic-styles';
-      document.head.appendChild(style);
-    }
-    
-    // Add or update the style rule
-    const styleRule = `#${elementId}::after { content: "${content}"; }`;
-    const existingRuleIndex = Array.from(style.sheet.cssRules).findIndex(rule => 
-      rule.selectorText === `#${elementId}::after`
-    );
-    
-    if (existingRuleIndex !== -1) {
-      style.sheet.deleteRule(existingRuleIndex);
-    }
-    style.sheet.insertRule(styleRule, style.sheet.cssRules.length);
-  } else {
-    console.error(`Element with id "${elementId}" not found.`);
-  }
-}

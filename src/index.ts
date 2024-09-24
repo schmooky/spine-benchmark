@@ -22,7 +22,7 @@ const app = new Application({
 });
 
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});
-app.stage.addChild(camera)
+app.stage.addChild(camera as any)
 
 
 const benchmark = new SpineBenchmark(app);
