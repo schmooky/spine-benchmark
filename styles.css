@@ -1,0 +1,144 @@
+.merged-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+}
+
+.merged-table th,
+.merged-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.merged-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.merged-table tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Styles for error rows */
+.merged-table tr.error {
+  background-color: #ffebee; /* Light red */
+}
+
+.merged-table tr.error:hover {
+  background-color: #ef9a9a; /* Darker red on hover */
+}
+
+/* Styles for warn rows */
+.merged-table tr.warn {
+  background-color: #fff3e0; /* Light orange */
+}
+
+.merged-table tr.warn:hover {
+  background-color: #ffcc80; /* Darker orange on hover */
+}
+
+h2 {
+  justify-self: center;
+  display: inline-block;
+  align-self: center;
+}
+
+.tableContainer {
+  display: flex;
+}
+
+section {
+  display: flex;
+  flex-flow: column;
+}
+
+body {
+  display: flex;
+  flex-flow: column;
+}
+
+.bone-tree {
+  align-self: center;
+}
+
+#pixiContainer {
+  align-self: center;
+}
+
+#currentAnimation{
+    align-self: center;
+    font-weight: bold;
+}
+
+#pixiContainer::after {
+  content: "";
+  position: absolute;
+  bottom: 100%; /* Position it above the canvas */
+  left: 50%;
+  transform: translateX(-50%); /* Center it horizontally */
+  white-space: nowrap; /* Prevent text wrapping */
+  /* Add any other styles you want for the text, such as: */
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-bottom: 10px; /* Add some space between the text and the canvas */
+}
+
+.bone-tree {
+  font-family: Arial, sans-serif;
+  list-style-type: none;
+  padding-left: 20px;
+}
+
+.bone-tree ul {
+  list-style-type: none;
+  padding-left: 20px;
+}
+
+.bone-tree li {
+  margin: 5px 0;
+  position: relative;
+}
+
+.bone-tree li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -15px;
+  border-left: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  width: 10px;
+  height: 15px;
+}
+
+.bone-tree li:last-child::before {
+  height: 16px;
+}
+
+.bone-tree li::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: -15px;
+  border-left: 1px solid #ccc;
+  height: calc(100% - 16px);
+}
+
+.bone-tree li:last-child::after {
+  display: none;
+}
+
+.deep-bone {
+  color: red;
+  font-weight: bold;
+}
+
+* {
+  font-family: "Fira Code", monospace;
+  font-optical-sizing: auto;
+}
