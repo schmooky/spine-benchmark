@@ -92,6 +92,7 @@ export class SpineBenchmark {
     console.log(Assets.cache);
     setTimeout(() => {
       const skeleton = new Spine(Assets.cache.get(key));
+   
       const camera = this.app.stage.children[0] as CameraContainer;
       camera.addChild(skeleton);
       camera.lookAtChild(skeleton);

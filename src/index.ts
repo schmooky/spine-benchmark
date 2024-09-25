@@ -12,8 +12,8 @@ gsap.registerPlugin(PixiPlugin);
 // give the plugin a reference to the PIXI object
 PixiPlugin.registerPIXI(PIXI);
 
-const WIDTH = 300;
-const HEIGHT = 300;
+const WIDTH = 400;
+const HEIGHT = 400;
 
 const app = new Application({
     width: WIDTH,
