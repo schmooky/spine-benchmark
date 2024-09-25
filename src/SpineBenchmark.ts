@@ -94,7 +94,9 @@ export class SpineBenchmark {
       const skeleton = new Spine(Assets.cache.get(key));
    
       const camera = this.app.stage.children[0] as CameraContainer;
+      //@ts-ignore
       camera.addChild(skeleton);
+
       camera.lookAtChild(skeleton);
       console.log(skeleton.spineData.animations.map((_) => _.name));
       // skeleton.state.setAnimation(0, "idle", true);
@@ -116,6 +118,7 @@ export class SpineBenchmark {
     console.log("updating");
     const meshInfo = this.spineAnalyzer.analyzeMeshes(this.spineInstances);
     const performanceInfo = this.performanceMonitor.getPerformanceInfo();
+    //@ts-ignore
     const drawCallInfo = this.spineAnalyzer.analyzeDrawCalls(this.app.renderer);
     
     // const resultsDiv = document.getElementById("benchmarkResults")!;

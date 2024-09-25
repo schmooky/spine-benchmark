@@ -1,7 +1,7 @@
 import { Application, Sprite } from 'pixi.js';
 import { SpineBenchmark } from './SpineBenchmark';
 import { CameraContainer } from './CameraContainer';
-import { ContextMenu } from './ContextMenu';
+
 import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";

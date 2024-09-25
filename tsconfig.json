@@ -6,7 +6,9 @@
       "strict": true,
       "esModuleInterop": true,
       "outDir": "./dist",
-      "rootDir": "./src"
+      "rootDir": "./src",
+      "skipLibCheck": true
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"]
   }
