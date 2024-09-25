@@ -4,13 +4,14 @@
     "description": "Spine Benchmark for PixiJS v7",
     "main": "dist/index.js",
     "scripts": {
-        "build": "tsc",
+        "build": "vite build",
         "start": "tsc && http-server",
         "dev": "vite --host 0.0.0.0"
     },
     "dependencies": {
         "@paralleldrive/cuid2": "^2.2.2",
         "@pixi-spine/all-4.1": "^4.0.4",
+        "@types/node": "^22.7.0",
         "gsap": "^3.12.5",
         "pixi-spine": "^4.0.3",
         "pixi.js": "^7.2.4",
