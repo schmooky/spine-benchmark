@@ -1,16 +1,17 @@
 import { AttachmentType, DeformTimeline, MeshAttachment } from "@pixi-spine/all-4.1";
 import { Spine } from "pixi-spine";
 
-function mergeMaps(map1: Map<string, any>, map2: Map<string, any>) {
+function mergeMaps(map1: Map<string, any>, map2: Map<string, any>, map3: Map<string, any>) {
     const mergedMap = new Map();
   
     // Merge keys from both maps
-    const allKeys = new Set([...map1.keys(), ...map2.keys()]);
+    const allKeys = new Set([...map1.keys(), ...map2.keys(), ...map3.keys()]);
   
     allKeys.forEach((key) => {
       mergedMap.set(key, {
         vertices: map1.get(key) ?? "",
         isChanged: map2.get(key) ?? "",
+        isBoneWeighted: map3.get(key) ?? false
       });
     });
   
@@ -40,11 +41,13 @@ function mergeMaps(map1: Map<string, any>, map2: Map<string, any>) {
       const cellKey = row.insertCell();
       const cellValue1 = row.insertCell();
       const cellValue2 = row.insertCell();
-  
+      const cellValue3 = row.insertCell();
+
       cellKey.textContent = key;
       cellValue1.textContent = value.vertices;
       cellValue2.textContent = value.isChanged;
-      if (!value.isChanged || value.vertices > 64) {
+      cellValue3.textContent = value.isBoneWeighted
+      if ((!(value.isChanged && value.isBoneWeighted)) || value.vertices > 64) {
         row.classList.add("error");
       } else if (value.vertices > 32) {
         row.classList.add("warn");
@@ -59,7 +62,7 @@ function mergeMaps(map1: Map<string, any>, map2: Map<string, any>) {
       console.error("Invalid Spine instance provided");
       return;
     }
-
+    console.group('analyzeMeshes')
     const skeleton = spineInstance.skeleton;
     const animations = spineInstance.spineData.animations;
 
@@ -67,6 +70,7 @@ function mergeMaps(map1: Map<string, any>, map2: Map<string, any>) {
     let changedMeshCount = 0;
     const meshesWithChangesInTimelines = new Map();
     const meshWorldVerticesLengths = new Map<string, number>();
+    const meshesWithBoneWeights = new Map<string,boolean>();
 
     // Count total meshes
     skeleton.slots.forEach((slot) => {
@@ -74,7 +78,12 @@ function mergeMaps(map1: Map<string, any>, map2: Map<string, any>) {
         slot.getAttachment() &&
         slot.getAttachment().type === AttachmentType.Mesh
       ) {
+        
+        const attachment = slot.getAttachment()! as MeshAttachment;
+
+        console.log(attachment.name,attachment);
         totalMeshCount++;
+        if(attachment.bones?.length) meshesWithBoneWeights.set(slot.data.name,true);
         meshWorldVerticesLengths.set(
           slot.data.name,
           (slot.getAttachment() as MeshAttachment).worldVerticesLength
@@ -104,6 +113,7 @@ function mergeMaps(map1: Map<string, any>, map2: Map<string, any>) {
             slot.getAttachment() &&
             slot.getAttachment().type === AttachmentType.Mesh
           ) {
+            
             meshesWithChangesInTimelines.set(slot.data.name, true);
           }
         }
@@ -113,25 +123,31 @@ function mergeMaps(map1: Map<string, any>, map2: Map<string, any>) {
     const allKeys = new Set([
       ...meshWorldVerticesLengths.keys(),
       ...meshesWithChangesInTimelines.keys(),
+      ...meshesWithBoneWeights.keys(),
     ]);
 
     const combinedArray = Array.from(allKeys, (key) => ({
       Key: key, 
       "Mesh Vertices": meshWorldVerticesLengths.get(key) || "",
       "Is Changed in Animation": meshesWithChangesInTimelines.get(key),
+      "Is Affected By Bones": meshesWithBoneWeights.get(key) ?? false,
     }));
 
     console.table(combinedArray);
 
     const mergedMap = mergeMaps(
       meshWorldVerticesLengths,
-      meshesWithChangesInTimelines
+      meshesWithChangesInTimelines,
+      meshesWithBoneWeights
     );
     const table = createTable(mergedMap, [
       "slot",
       "vertices",
       "changed in animation timeline",
+      "Is Affected By Bones"
     ]);
 
     document.getElementById("meshTableContainer")!.appendChild(table);
+  
+    console.groupEnd();
   }

@@ -15,8 +15,6 @@ export function attachBoneWeightsToMeshAttachments(skeleton: Spine) {
           
           // Check if the attachment is a mesh
           if (attachment instanceof MeshAttachment) {
-            let meshAttachment = attachment;
-            
             // Get the slot for this attachment
             let slot = skeleton.spineData.slots[slotIndex];
             
