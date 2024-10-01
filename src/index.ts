@@ -24,6 +24,7 @@ const app = new Application({
     width: WIDTH,
     height:HEIGHT,
     backgroundColor: 0xf0f0f0,
+    view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
 });
 
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});
@@ -31,7 +32,6 @@ app.stage.addChild(camera as any)
 
 
 const benchmark = new SpineBenchmark(app);
-document.getElementById('pixiContainer')!.appendChild(app.view as HTMLCanvasElement);
 
 const dropArea = document.getElementById('dropArea')!;
 
@@ -58,13 +58,34 @@ dropArea.addEventListener('drop', (e) => {
     e.preventDefault();
     e.stopPropagation();
     dropArea.classList.remove('highlight');
-
+    
     const files = e.dataTransfer?.files;
     if (files) {
         benchmark.loadSpineFiles(files);
     }
 });
+function bitsToSize(bits: number) {
+    const bytes = Math.ceil(bits / 8);
+    const sizes = ['Bytes', 'KB', 'MB']
+    if (bytes === 0) return 'n/a'
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    if (i === 0) return `${bytes} ${sizes[i]}`
+    return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
+}
 
+const gl = (app.renderer as PIXI.Renderer).gl;
+const ext = gl.getExtension('GMAN_webgl_memory');
 
-
+if (ext) {
+    const info = ext.getMemoryInfo();
+    setInterval(()=>{
+        const textures = ext.getResourcesInfo(WebGLTexture);
+        const textureSizes = textures.map(t => bitsToSize(t.size));
+        const buffers = ext.getResourcesInfo(WebGLBuffer);
+        const bufferSizes = buffers.map(t => bitsToSize(t.size));
+        document.getElementById("currentResources")!.innerText = JSON.stringify(info, null, "\t");
+        document.getElementById("currentTextures")!.innerText = 'Textures: ' + JSON.stringify(textureSizes, null, "\t");
+        document.getElementById("currentBuffers")!.innerText = 'Buffers: ' + JSON.stringify(bufferSizes, null, "\t");
+    },25)
+}
 // document.getElementById("meshTableContainer")!.appendChild(table);

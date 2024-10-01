@@ -7,13 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="styles.css">
-    
+    <script src="./webgl-memory.js"></script>
 </head>
 <body>
     
-    <div id="pixiContainer"></div>
+    <div id="pixiContainer"><canvas id="pixiCanvas"></canvas></div>
     <p id="currentAnimation"></p>
     <div id="dropArea">Drop Spine files here (JSON, Atlas, and Image)</div>
     <div id="benchmarkResults">
@@ -42,6 +41,12 @@
         <section id="particlesContainer">
             <h2>Частицы</h2>
             <p id="particlesContainerText"></p>
+        </section>
+        <section id="specsContainer">
+            <h2>Затраты на Анимацию</h2>
+            <p id="currentResources"></p>
+            <p id="currentTextures"></p>
+            <p id="currentBuffers"></p>
         </section>
     </div>
     <a href="https://pixijs.io/pixi-particles-editor/">Pixi Particles Editor</a>
