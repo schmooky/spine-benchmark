@@ -186,7 +186,7 @@ body {
   font-family: Arial, sans-serif;
 }
 
-.particle-info {
+.info {
     background-color: #f0f8ff;
     border: 1px solid #4682b4;
     border-radius: 5px;
@@ -196,23 +196,44 @@ body {
     transition: all 0.3s ease;
 }
 
-.particle-info:hover {
+.info:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.particle-info h3 {
+.info h3 {
     color: #4682b4;
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 1.2em;
 }
 
-.particle-info p {
+.info p {
     margin: 5px 0;
     color: #333;
 }
 
-.particle-info strong {
+.info strong {
     color: #4682b4;
+}
+
+.warning {
+  background-color: #fffbf0; /* Paler light yellow background */
+  border: 1px solid #fff3cd; /* Lighter yellow border */
+  color: #997404; /* Slightly darker text for better readability */
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* Optional: Hover effect */
+.warning:hover {
+  background-color: #fff8e6; /* Slightly darker but still pale yellow on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.warning strong {
+  color: #704d00; /* Darker color for strong text to increase contrast */
 }

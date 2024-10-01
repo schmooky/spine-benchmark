@@ -52,7 +52,7 @@ function appendParticleInfo(parentBone: string, baseName: string, children: stri
     if (!container) return;
 
     const infoBlock = document.createElement('div');
-    infoBlock.className = 'particle-info';
+    infoBlock.className = 'info';
     infoBlock.innerHTML = `
         <h3>Potential Particle Animation Detected</h3>
         <p><strong>Parent bone:</strong> ${parentBone}</p>
