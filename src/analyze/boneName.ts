@@ -8,6 +8,12 @@ document.querySelector("#namesContainerText")!.innerHTML = html; // <h1>Markdown
 function isBoneWithNumber(name: string) {
     return /.*bone\d+$/.test(name);
   }
+
+  function isSnakeCase(name: string) {
+    return /^[a-z]+(?:_[a-z]+)*(?:_[LR])?$/.test(name);
+}
+
+
   export function analyzeSpineBoneNames(spineInstance: Spine) {
     const skeleton = spineInstance.skeleton;
     const slots = skeleton.slots;
@@ -44,6 +50,12 @@ function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {
     if (isBoneWithNumber(bone.data.name)) {
         li.classList.add('default-name-bone');
     }
+
+    if (!isSnakeCase(bone.data.name)) {
+        li.classList.add('wrong-case-name-bone');
+    }
+
+    
 
     parentElement.appendChild(li);
 

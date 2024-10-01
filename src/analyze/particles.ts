@@ -40,7 +40,7 @@ export function analyzeSpineForParticles(spineInstance: Spine): void {
 
         // Check for potential particle animations
         groupedChildren.forEach((similarChildren, baseName) => {
-            if (similarChildren.length > 1) {
+            if (similarChildren.length > 2) {
                 appendParticleInfo(parentBone, baseName, similarChildren);
             }
         });

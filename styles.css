@@ -153,6 +153,11 @@ body {
 }
 
 .default-name-bone {
+  color: orange;
+  font-weight: bold;
+}
+
+.wrong-case-name-bone {
   color: red;
   font-weight: bold;
 }
