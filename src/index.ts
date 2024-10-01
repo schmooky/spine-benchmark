@@ -23,7 +23,7 @@ const HEIGHT = 400;
 const app = new Application({
     width: WIDTH,
     height:HEIGHT,
-    backgroundColor: 0xAAAAAA,
+    backgroundColor: 0xf0f0f0,
 });
 
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});

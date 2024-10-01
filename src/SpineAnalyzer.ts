@@ -6,6 +6,7 @@ import { analyzeMeshTransformations } from "./analyze/meshTransformations";
 import { analyzeSpineAttachments } from "./analyze/attachmentDistances";
 import { analyzeSpineBoneNames } from "./analyze/boneName";
 import { analyzeSpineForParticles } from "./analyze/particles";
+import { analyzeMasks } from "./analyze/clipping";
 
 export class SpineAnalyzer {
   public analyzeMeshes(spineInstances: Spine[]) {
@@ -32,6 +33,7 @@ export class SpineAnalyzer {
       analyzeSpineAttachments(spine as any);
       analyzeSpineBoneNames(spine as any);
       analyzeSpineForParticles(spine as any);
+      analyzeMasks(spine as any);
     });
 
     return { totalMeshes, totalVertices };
