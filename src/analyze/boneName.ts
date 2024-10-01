@@ -28,25 +28,15 @@ function isBoneWithNumber(name: string) {
 
     // Append the tree to the document body (or any other container)
     document.getElementById('namesContainer')!.appendChild(treeRoot);
-
-    // Log attachments that are too far from the root
-    slots.forEach(slot => {
-        const attachment = slot.attachment;
-        if (attachment) {
-            const bone = slot.bone;
-            const distanceFromRoot = getBoneDistanceFromRoot(bone, rootBone);
-
-            if (distanceFromRoot > 2) {
-                console.log(`Attachment "${attachment.name}" in slot "${slot.data.name}" is ${distanceFromRoot} bones away from root.`);
-            }
-        }
-    });
 }
 
 function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {
     const li = document.createElement('li');
     li.textContent = bone.data.name;
-    
+    console.log(bone.data.name, isBoneWithNumber(bone.data.name), isSnakeCase(bone.data.name))
+
+    li.classList.add('good-bone');
+
     if (isBoneWithNumber(bone.data.name)) {
         li.classList.add('default-name-bone');
     }
@@ -54,8 +44,6 @@ function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {
     if (!isSnakeCase(bone.data.name)) {
         li.classList.add('wrong-case-name-bone');
     }
-
-    
 
     parentElement.appendChild(li);
 
@@ -67,16 +55,4 @@ function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {
             createBoneTree(childBone, ul, depth + 1);
         });
     }
-}
-
-function getBoneDistanceFromRoot(bone:Bone, rootBone: Bone) {
-    let distance = 0;
-    let currentBone = bone;
-
-    while (currentBone && currentBone !== rootBone) {
-        distance++;
-        currentBone = currentBone.parent!;
-    }
-
-    return distance;
 }

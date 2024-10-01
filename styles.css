@@ -165,14 +165,19 @@ body {
   font-weight: bold;
 }
 
+.good-bone {
+  color: black;
+  font-weight: 400;
+}
+
 .default-name-bone {
   color: orange;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .wrong-case-name-bone {
   color: red;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 * {
@@ -276,3 +281,6 @@ p {
   margin-top: 4px;
 }
 
+summary {
+  font-weight: bold;
+}
