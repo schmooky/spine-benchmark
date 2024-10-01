@@ -205,6 +205,8 @@ canvas {
 }
 
 .info {
+  width: 100%;
+  max-width: 800px;
     background-color: #f0f8ff;
     border: 1px solid #4682b4;
     border-radius: 5px;
@@ -236,6 +238,8 @@ canvas {
 }
 
 .warning {
+  width: 100%;
+  max-width: 800px;
   background-color: #fffbf0; /* Paler light yellow background */
   border: 1px solid #fff3cd; /* Lighter yellow border */
   color: #997404; /* Slightly darker text for better readability */

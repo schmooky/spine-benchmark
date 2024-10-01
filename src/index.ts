@@ -64,8 +64,7 @@ dropArea.addEventListener('drop', (e) => {
         benchmark.loadSpineFiles(files);
     }
 });
-function bitsToSize(bits: number) {
-    const bytes = Math.ceil(bits / 8);
+function bytesToSize(bytes: number) {
     const sizes = ['Bytes', 'KB', 'MB']
     if (bytes === 0) return 'n/a'
     const i = Math.floor(Math.log(bytes) / Math.log(1024))
@@ -79,13 +78,15 @@ const ext = gl.getExtension('GMAN_webgl_memory');
 if (ext) {
     const info = ext.getMemoryInfo();
     setInterval(()=>{
-        const textures = ext.getResourcesInfo(WebGLTexture);
-        const textureSizes = textures.map(t => bitsToSize(t.size));
-        const buffers = ext.getResourcesInfo(WebGLBuffer);
-        const bufferSizes = buffers.map(t => bitsToSize(t.size));
+        const textureSizeTotalBytes = ext.getResourcesInfo(WebGLTexture).map(t => t.size).reduce((accumulator, currentValue) => {
+            return accumulator + currentValue
+          },0);
+          const bufferSizeTotalBytes = ext.getResourcesInfo(WebGLBuffer).map(t => t.size).reduce((accumulator, currentValue) => {
+            return accumulator + currentValue
+          },0);
         document.getElementById("currentResources")!.innerText = JSON.stringify(info, null, "\t");
-        document.getElementById("currentTextures")!.innerText = 'Textures: ' + JSON.stringify(textureSizes, null, "\t");
-        document.getElementById("currentBuffers")!.innerText = 'Buffers: ' + JSON.stringify(bufferSizes, null, "\t");
+        document.getElementById("totalTextures")!.innerText = 'Total Textures: ' + bytesToSize(textureSizeTotalBytes);
+        document.getElementById("totalBuffers")!.innerText = 'Total Buffers: ' + bytesToSize(bufferSizeTotalBytes);
     },25)
 }
 // document.getElementById("meshTableContainer")!.appendChild(table);

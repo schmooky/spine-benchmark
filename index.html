@@ -14,6 +14,8 @@
     
     <div id="pixiContainer"><canvas id="pixiCanvas"></canvas></div>
     <p id="currentAnimation"></p>
+    <p id="totalTextures">Total Textures: N/A</p>
+    <p id="totalBuffers">Total Buffers: N/A</p>
     <div id="dropArea">Drop Spine files here (JSON, Atlas, and Image)</div>
     <div id="benchmarkResults">
         <section id="generalRequirements">
@@ -34,6 +36,10 @@
         <section id="skeletonStructureContainer">
             <h2>Структура Скелета</h2>
         </section>
+        <section id="timelinesContainer">
+            <h2>Таймлайны</h2>
+            <p id="timelinesContainerText"></p>
+        </section>
         <section id="namesContainer">
             <h2>Названия</h2>
             <p id="namesContainerText"></p>
@@ -43,15 +49,16 @@
             <p id="particlesContainerText"></p>
         </section>
         <section id="specsContainer">
-            <h2>Затраты на Анимацию</h2>
+            <h2>Ресурсы</h2>
             <p id="currentResources"></p>
-            <p id="currentTextures"></p>
-            <p id="currentBuffers"></p>
         </section>
     </div>
     <a href="https://pixijs.io/pixi-particles-editor/">Pixi Particles Editor</a>
     <a href="https://github.com/pixijs/particle-emitter">Pixi Particles Emitter</a>
     <a href="https://github.com/pixijs/spine/blob/bda2e19cb28a0df2187451bad8ccc14f1e20da23/packages/runtime-4.1/src/core/attachments/MeshAttachment.ts#L100">MeshAttachment</a>
     <script type="module" src="src/index.ts"></script>
+    <a href="https://ru.esotericsoftware.com/spine-keys#Clean-Up">Spine - Clean Up</a>
+    <a href="https://ru.esotericsoftware.com/spine-metrics#Performance">Spine - Performance</a>
+    <a href="https://ru.esotericsoftware.com/spine-weights#Prune">Spine - Prune</a>
 </body>
 </html>
