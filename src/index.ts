@@ -6,6 +6,11 @@ import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
 
+import { attributes } from "./text/general.md";
+
+document.title = attributes.title; // Hello from front-matter
+
+document.querySelector("#generalRequirementsText")!.innerHTML = JSON.stringify(attributesw); // <h1>Markdown File</h1>
 // register the plugin
 gsap.registerPlugin(PixiPlugin);
 
@@ -59,3 +64,7 @@ dropArea.addEventListener('drop', (e) => {
         benchmark.loadSpineFiles(files);
     }
 });
+
+
+
+document.getElementById("meshTableContainer")!.appendChild(table);
