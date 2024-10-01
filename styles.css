@@ -152,6 +152,11 @@ body {
   font-weight: bold;
 }
 
+.default-name-bone {
+  color: red;
+  font-weight: bold;
+}
+
 * {
   font-family: "Fira Code", monospace;
   font-optical-sizing: auto;
@@ -176,4 +181,33 @@ body {
   font-family: Arial, sans-serif;
 }
 
+.particle-info {
+    background-color: #f0f8ff;
+    border: 1px solid #4682b4;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
 
+.particle-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.particle-info h3 {
+    color: #4682b4;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.particle-info p {
+    margin: 5px 0;
+    color: #333;
+}
+
+.particle-info strong {
+    color: #4682b4;
+}

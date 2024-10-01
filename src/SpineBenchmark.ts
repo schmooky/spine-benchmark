@@ -151,7 +151,6 @@ export class SpineBenchmark {
     function playNextAnimation() {
       if (currentIndex < animations.length) {
         const animation = animations[currentIndex];
-        console.log(`Playing animation: ${animation.name}`);
         
         // setAfterElementContent('pixiContainer',animation.name)
         document.getElementById('currentAnimation')!.innerHTML = `Animation: ${animation.name}`;

@@ -4,6 +4,8 @@ import { Renderer } from "pixi.js";
 import { analyzeMeshes } from "./analyze/mesh";
 import { analyzeMeshTransformations } from "./analyze/meshTransformations";
 import { analyzeSpineAttachments } from "./analyze/attachmentDistances";
+import { analyzeSpineBoneNames } from "./analyze/boneName";
+import { analyzeSpineForParticles } from "./analyze/particles";
 
 export class SpineAnalyzer {
   public analyzeMeshes(spineInstances: Spine[]) {
@@ -28,6 +30,8 @@ export class SpineAnalyzer {
       analyzeMeshes(spine);
       analyzeMeshTransformations(spine);
       analyzeSpineAttachments(spine as any);
+      analyzeSpineBoneNames(spine as any);
+      analyzeSpineForParticles(spine as any);
     });
 
     return { totalMeshes, totalVertices };
