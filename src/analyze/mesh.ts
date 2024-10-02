@@ -28,7 +28,7 @@ function mergeMaps(
     mergedMap.set(key, {
       vertices: map1.get(key) ?? "",
       isChanged: map2.get(key) ?? "",
-      isBoneWeighted: map3.get(key) ?? false,
+      isBoneWeighted: map3.get(key) ?? 0,
       isUsedInMeshSequence: map4.get(key) ?? false,
     });
   });
@@ -91,7 +91,7 @@ export function analyzeMeshes(spineInstance: Spine) {
   let changedMeshCount = 0;
   const meshesWithChangesInTimelines = new Map();
   const meshWorldVerticesLengths = new Map<string, number>();
-  const meshesWithBoneWeights = new Map<string, boolean>();
+  const meshesWithBoneWeights = new Map<string, number>();
   const meshesWithSequences = new Map<string, boolean>();
   // Count total meshes
   skeleton.slots.forEach((slot) => {
@@ -104,7 +104,7 @@ export function analyzeMeshes(spineInstance: Spine) {
       console.log(attachment.name, attachment);
       totalMeshCount++;
       if (attachment.bones?.length)
-        meshesWithBoneWeights.set(slot.data.name, true);
+        meshesWithBoneWeights.set(slot.data.name, attachment.bones.length);
       meshWorldVerticesLengths.set(
         slot.data.name,
         (slot.getAttachment() as MeshAttachment).worldVerticesLength
@@ -152,7 +152,7 @@ export function analyzeMeshes(spineInstance: Spine) {
     Key: key,
     "Mesh Vertices": meshWorldVerticesLengths.get(key) || "",
     "Is Changed in Animation": meshesWithChangesInTimelines.get(key),
-    "Is Affected By Bones": meshesWithBoneWeights.get(key) ?? false,
+    "Is Affected By Bones": meshesWithBoneWeights.get(key) ?? 0,
     "Is Used in Mesh Sequence": meshesWithSequences.get(key) ?? false,
   }));
   

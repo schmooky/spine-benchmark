@@ -1,0 +1,15 @@
+paylines.webp
+size:1024,128
+filter:Linear,Linear
+vfx_dott
+bounds:576,51,59,60
+offsets:13,9,81,81
+vfx_glow
+bounds:507,44,67,67
+vfx_glowCircle
+bounds:390,2,115,109
+vfx_line
+bounds:2,12,366,19
+offsets:0,0,389,19
+vfx_lineBlur
+bounds:2,33,386,78

@@ -187,7 +187,7 @@ body {
 
 canvas {
   margin-top: 32px;
-  border: 4px dashed #ccc;
+  border: 4px solid #ccc;
 }
 
 #dropArea {
@@ -200,6 +200,7 @@ canvas {
   text-align: center;
   padding: 20px;
   box-sizing: border-box;
+  font-weight: bold;
 }
 #dropArea.highlight {
   border-color: #000;

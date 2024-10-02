@@ -1,0 +1,9 @@
+FS_glow_symbol_opti.webp
+size:667,338
+filter:Linear,Linear
+glow
+bounds:340,2,334,325
+rotate:90
+ring
+bounds:2,2,334,336
+rotate:90

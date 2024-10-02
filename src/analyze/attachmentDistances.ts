@@ -1,5 +1,11 @@
 import { Bone, Spine } from "@pixi-spine/all-4.1";
 
+import { attributes, html } from "../text/bones.md";
+
+document.title = attributes.title; // Hello from front-matter
+
+document.querySelector("#bonesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
+
 export function analyzeSpineAttachments(spineInstance: Spine) {
     const skeleton = spineInstance.skeleton;
     const slots = skeleton.slots;
@@ -13,7 +19,7 @@ export function analyzeSpineAttachments(spineInstance: Spine) {
     createBoneTree(rootBone, treeRoot, 0);
 
     // Append the tree to the document body (or any other container)
-    document.getElementById('skeletonStructureContainer')!.appendChild(treeRoot);
+    document.getElementById('bonesContainer')!.appendChild(treeRoot);
 
     // Log attachments that are too far from the root
     slots.forEach(slot => {

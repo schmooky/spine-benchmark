@@ -1,5 +1,12 @@
 import { Spine } from "@pixi-spine/all-4.1";
 
+import { attributes, html } from "../text/timelines.md";
+
+document.title = attributes.title; // Hello from front-matter
+
+document.querySelector("#timelinesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
+
+
 export function analyzeSpineAnimations(spine: Spine): void {
     const container = document.getElementById('timelinesContainer');
     if (!container) return;

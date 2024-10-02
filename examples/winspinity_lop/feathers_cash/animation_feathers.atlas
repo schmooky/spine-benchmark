@@ -1,0 +1,15 @@
+animation_feathers.webp
+size:1024,512
+filter:Linear,Linear
+feather1
+bounds:291,207,240,242
+offsets:14,16,278,278
+feather2
+bounds:533,270,179,256
+offsets:19,21,212,293
+rotate:90
+feather3
+bounds:2,2,263,175
+offsets:18,12,295,214
+lig_cash
+bounds:2,179,287,270
