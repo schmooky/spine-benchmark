@@ -140,7 +140,7 @@ export function analyzeMeshes(spineInstance: Spine) {
   const meshesWithChangesInTimelines = new Map();
   const meshWorldVerticesLengths = new Map<string, number>();
   const meshesWithBoneWeights = new Map<string, number>();
-  const meshesWithSequences = new Map<string, boolean>();
+  const meshesWithParents = new Map<string, boolean>();
   // Count total meshes
   skeleton.slots.forEach((slot) => {
     if (
@@ -158,7 +158,7 @@ export function analyzeMeshes(spineInstance: Spine) {
         (slot.getAttachment() as MeshAttachment).worldVerticesLength
       );
       meshesWithChangesInTimelines.set(slot.data.name, false);
-      meshesWithSequences.set(slot.data.name, attachment.sequence != null);
+      meshesWithParents.set(slot.data.name, attachment.getParentMesh() != null);
     }
   });
   console.table(
@@ -193,7 +193,7 @@ export function analyzeMeshes(spineInstance: Spine) {
     ...meshWorldVerticesLengths.keys(),
     ...meshesWithChangesInTimelines.keys(),
     ...meshesWithBoneWeights.keys(),
-    ...meshesWithSequences.keys(),
+    ...meshesWithParents.keys(),
   ]);
 
   const combinedArray = Array.from(allKeys, (key) => ({
@@ -201,7 +201,7 @@ export function analyzeMeshes(spineInstance: Spine) {
     "Mesh Vertices": meshWorldVerticesLengths.get(key) || "",
     "Is Changed in Animation": meshesWithChangesInTimelines.get(key),
     "Is Affected By Bones": meshesWithBoneWeights.get(key) ?? 0,
-    "Is Used in Mesh Sequence": meshesWithSequences.get(key) ?? false,
+    "Is Used in Mesh Sequence": meshesWithParents.get(key) ?? false,
   }));
 
   console.table(combinedArray);
@@ -210,14 +210,14 @@ export function analyzeMeshes(spineInstance: Spine) {
     meshWorldVerticesLengths,
     meshesWithChangesInTimelines,
     meshesWithBoneWeights,
-    meshesWithSequences
+    meshesWithParents
   );
   const table = createTable(mergedMap, [
-    "slot",
-    "vertices",
-    "changed in animation timeline",
-    "Is Affected By Bones",
-    "Is Used in Mesh Sequence",
+    "Слот",
+    "Вершины",
+    "Деформируется в таймлайнах",
+    "Связан с костями",
+    "Имеет родительский меш",
   ]);
 
   console.log("MESHES", mergedMap);
