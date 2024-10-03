@@ -3,12 +3,15 @@ import { Spine } from "pixi-spine";
 import { s } from "vite/dist/node/types.d-aGj9QkWt";
 import { mergeMaps } from "../utils/mergeMaps";
 
-export function analyzeMeshTransformations(spineInstance: Spine, threshold = 0.1) {
+export function analyzeDeformations(spineInstance: Spine, threshold = 0.1) {
     const skeletonData = spineInstance.skeleton.data;
     const animations = skeletonData.animations;
     const results = {};
-    const animationMeshLoads = new Map<string,number>()
+    const animationMeshLoads = new Map<string,number>();
+    const animationDurations = new Map<string,number>()
     animations.forEach(animation => {
+      
+        animationDurations.set(animation.name,animation.duration)
         const timelines = animation.timelines;
         const meshTransformations: {
             slotIndex: number,
@@ -45,7 +48,7 @@ export function analyzeMeshTransformations(spineInstance: Spine, threshold = 0.1
                 }
             }
         });
-        const meshLoad = meshTransformations.map(a=>a.changes.reduce((partialSum, a) => partialSum + a.difference, 0)).reduce((partialSum, a) => partialSum + a, 0)
+        const meshLoad = Math.floor(meshTransformations.map(a=>a.changes.reduce((partialSum, a) => partialSum + a.difference, 0)).reduce((partialSum, a) => partialSum + a, 0))
         console.log('Mesh Load >',animation.name, meshLoad);
         animationMeshLoads.set(animation.name, meshLoad)
         // animationDeformations(animation.name)
@@ -54,14 +57,14 @@ export function analyzeMeshTransformations(spineInstance: Spine, threshold = 0.1
     
 
     const mergedMap = mergeMaps(
-      ['load1','load2'],
+      ['load1','duration'],
         animationMeshLoads,
-        animationMeshLoads
+        animationDurations
       );
       const table = createTable(mergedMap, [
-        "animation",
-        "mesh load",
-        "mesh load",
+        "Анимация",
+        "Изменения",
+        "Продолжительность",
       ]);
   
       document.getElementById("meshTransformationsTableContainer")!.appendChild(table);
@@ -106,12 +109,57 @@ function calculateDifference(timeline: DeformTimeline,prevFrame:number, currentF
   
       cellKey.textContent = key;
       cellValue1.textContent = value.load1;
-      cellValue2.textContent = value.load2;
-      if (value.load1 > 64) {
-        row.classList.add("error");
-      } else if (value.load2 > 32) {
-        row.classList.add("warn");
+      cellValue2.textContent = value.duration.toFixed(2) + 'сек';
+
+
+      function interpolateColor(color1, color2, factor) {
+        const result = color1.slice();
+        for (let i = 0; i < 3; i++) {
+          result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
+        }
+        return result;
       }
+  
+      // Function to convert RGB to hex
+      function rgbToHex(rgb) {
+        return (
+          "#" +
+          rgb
+            .map((x) => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? "0" + hex : hex;
+            })
+            .join("")
+        );
+      }
+  
+      // Set color based on vertex count
+      function setRowColor(row: HTMLTableRowElement, vertexCount: number) {
+        const minVertices = 1;
+        const maxVertices = 2000;
+        const colorStart = [255, 243, 224]; // #fff3e0
+        const colorMiddle = [255, 204, 128]; // #ffcc80
+        const colorEnd = [239, 154, 154]; // #ef9a9a
+  
+        // Calculate logarithmic factor
+        const logFactor = Math.log(vertexCount) / Math.log(maxVertices);
+  
+        let color;
+        if (logFactor <= 0.5) {
+          color = interpolateColor(colorStart, colorMiddle, logFactor * 2);
+        } else {
+          color = interpolateColor(colorMiddle, colorEnd, (logFactor - 0.5) * 2);
+        }
+  
+        // Make color darker as it approaches maxVertices
+        const darkenFactor = Math.min(logFactor * 0.08, 0.08);
+        color = color.map((c) => Math.round(c * (1 - darkenFactor)));
+  
+        row.style.backgroundColor = rgbToHex(color);
+      }
+  
+      // Apply color to the row
+      setRowColor(row, value.load1);
     });
   
     return table;
