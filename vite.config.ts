@@ -11,6 +11,10 @@ export default defineConfig(async ({ mode }) => {
 
     plugins: [mdPlugin({mode: Mode.HTML as any})],
     build: {
+      minify: false,
+      minifyIdentifiers: false,
+      minifySyntax: false,
+      minifyWhitespace: false,
       target: "esnext",
       rollupOptions: {
         input: {
