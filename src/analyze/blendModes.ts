@@ -65,10 +65,12 @@ function appendBlendModeAnimationWarning(
     <h3>Potential Blend Mode Overuse Detected</h3>
     <p><strong>Animation:</strong> ${animationName}</p>
     <p><strong>Max visible non-normal blend modes:</strong> ${maxVisibleNonNormalBlendModes}</p>
-    <p><strong>Affected slots:</strong></p>
-    <ul>
-      ${affectedSlots.map(slot => `<li>${slot}</li>`).join('')}
-    </ul>
+    <details>
+      <summary><strong>Affected slots:</strong></summary>
+        <ul>
+          ${affectedSlots.map(slot => `<li>${slot}</li>`).join('')}
+        </ul>
+    </details>
   `;
   
   container.appendChild(infoBlock);
@@ -116,11 +118,13 @@ function appendBlendModeWarning(
         <li>${BLEND_MODES[mode]}: ${count}</li>
       `).join('')}
     </ul>
-    <p><strong>Slots with non-normal blend modes:</strong></p>
-    <ul>
-      ${Array.from(blendModeMap).filter(([_, mode]) => mode !== BLEND_MODES.NORMAL)
-  .map(([slot, mode]) => `<li>${slot}: ${BLEND_MODES[mode]}</li>`).join('')}
-    </ul>
+        <details>
+    <summary><strong>Slots with non-normal blend modes:</strong></summary>
+        <ul>
+        ${Array.from(blendModeMap).filter(([_, mode]) => mode !== BLEND_MODES.NORMAL)
+          .map(([slot, mode]) => `<li>${slot}: ${BLEND_MODES[mode]}</li>`).join('')}
+        </ul>
+    </details>
   `;
   
   container.appendChild(infoBlock);
