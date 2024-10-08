@@ -14,9 +14,6 @@ export function analyzeSpineAnimations(spine: Spine): void {
     const skeletonData = spine.spineData;
     const animations = skeletonData.animations;
 
-    console.log('Spine Animations Analysis:');
-    console.log('==========================');
-
     animations.forEach(animation => {
         const name = animation.name;
         const duration = animation.duration;

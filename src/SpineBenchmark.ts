@@ -68,7 +68,6 @@ export class SpineBenchmark {
             this.createSpineAsset(json, atlasText!);
           }
         }else if (/^.+\.skel$/.test(filename)) {
-          console.log('Loading Binary Skel')
           count += 1;
           this.isBinary = true;
           json = event.target!.result;
@@ -94,11 +93,8 @@ export class SpineBenchmark {
       callback(Assets.cache.get(line));
     });
     
-    console.log(`Creating ${this.isBinary ? "Binary" : "Json"} Spine Asset`)
-    
     let skeletonData: SkeletonData;
-    if(this.isBinary) { 
-      console.log('data to parse',data)
+    if(this.isBinary) {
       const spineBinaryParser = new SkeletonBinary(
         new AtlasAttachmentLoader(spineAtlas)
       );
@@ -112,8 +108,7 @@ export class SpineBenchmark {
     
     
     Assets.cache.set(key, skeletonData);
-    console.log(`loaded`, key, Assets.cache.get(key));
-    console.log(Assets.cache);
+
     setTimeout(() => {
       const skeleton = new Spine(Assets.cache.get(key));
       
@@ -122,7 +117,6 @@ export class SpineBenchmark {
       camera.addChild(skeleton);
       
       camera.lookAtChild(skeleton);
-      console.log(skeleton.spineData.animations.map((_) => _.name));
       // skeleton.state.setAnimation(0, "idle", true);
       this.playSpineAnimationsInSequence(skeleton)
       
@@ -139,7 +133,6 @@ export class SpineBenchmark {
   }
   
   private updateBenchmarkResults() {
-    console.log("updating");
     const meshInfo = this.spineAnalyzer.analyzeMeshes(this.spineInstances);
     const performanceInfo = this.performanceMonitor.getPerformanceInfo();
     //@ts-ignore
@@ -182,7 +175,6 @@ export class SpineBenchmark {
         
         
       } else {
-        console.log("All animations have been played.");
         currentIndex = 0;
         setTimeout(playNextAnimation, 250);
       }

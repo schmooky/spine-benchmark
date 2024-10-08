@@ -116,7 +116,6 @@ function createTable(
       color = color.map((c) => Math.round(c * (1 - darkenFactor)));
 
       row.style.backgroundColor = rgbToRgba(`rgb(${color})`);
-      console.log(row,row.style.backgroundColor)
     }
 
     // Apply color to the row
@@ -149,7 +148,6 @@ export function analyzeMeshes(spineInstance: Spine) {
     ) {
       const attachment = slot.getAttachment()! as MeshAttachment;
 
-      console.log(attachment.name, attachment);
       totalMeshCount++;
       if (attachment.bones?.length)
         meshesWithBoneWeights.set(slot.data.name, attachment.bones.length);
@@ -220,11 +218,8 @@ export function analyzeMeshes(spineInstance: Spine) {
     "Имеет родительский меш",
   ]);
 
-  console.log("MESHES", mergedMap);
   (mergedMap.keys() as any as Array<string>).forEach((key) => {
-    console.log(key);
     if (!mergedMap.get(key)!.isChanged && !mergedMap.get(key)!.isBoneWeighted) {
-      console.log("*");
       appendMeshMisuseInfo(key, mergedMap.get(key)!.isUsedInMeshSequence);
     }
   });
@@ -257,7 +252,6 @@ function appendMeshMisuseInfo(
 
 
 function rgbToRgba(rgbString: string, alpha = 0.8) {
-  console.log(rgbString)
   // Regular expression to match the RGB values
   const rgbRegex = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/;
   

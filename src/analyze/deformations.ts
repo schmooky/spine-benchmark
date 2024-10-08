@@ -49,7 +49,6 @@ export function analyzeDeformations(spineInstance: Spine, threshold = 0.1) {
             }
         });
         const meshLoad = Math.floor(meshTransformations.map(a=>a.changes.reduce((partialSum, a) => partialSum + a.difference, 0)).reduce((partialSum, a) => partialSum + a, 0))
-        console.log('Mesh Load >',animation.name, meshLoad);
         animationMeshLoads.set(animation.name, meshLoad)
         // animationDeformations(animation.name)
         

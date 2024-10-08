@@ -29,7 +29,6 @@ export class SpineAnalyzer {
     });
     
     spineInstances.forEach((spine) => {
-      console.log(`Analizing Meshes`, spine);
       analyzeMeshes(spine);
       analyzeDeformations(spine);
       analyzeSpineAttachments(spine as any);
@@ -44,8 +43,6 @@ export class SpineAnalyzer {
   }
   
   public analyzeDrawCalls(renderer: Renderer) {
-    console.log(renderer.geometry, renderer);
-    console.log(renderer.batch.currentRenderer);
     // This is a simplified approximation and may not be 100% accurate
     const drawCalls = 0; //renderer.renderCounter;
     const triangles = 0; //renderer.geometry.boundCounters.points / 3;

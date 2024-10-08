@@ -20,19 +20,6 @@ export function analyzeSpineAttachments(spineInstance: Spine) {
 
     // Append the tree to the document body (or any other container)
     document.getElementById('bonesContainer')!.appendChild(treeRoot);
-
-    // Log attachments that are too far from the root
-    slots.forEach(slot => {
-        const attachment = slot.attachment;
-        if (attachment) {
-            const bone = slot.bone;
-            const distanceFromRoot = getBoneDistanceFromRoot(bone, rootBone);
-
-            if (distanceFromRoot > 2) {
-                console.log(`Attachment "${attachment.name}" in slot "${slot.data.name}" is ${distanceFromRoot} bones away from root.`);
-            }
-        }
-    });
 }
 
 function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {

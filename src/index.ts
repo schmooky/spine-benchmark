@@ -6,6 +6,7 @@ import { CameraContainer } from './CameraContainer';
 import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
+import { addStats, Stats } from 'pixi-stats';
 
 
 // import { attributes } from "./text/general.md";
@@ -29,6 +30,8 @@ const app = new Application({
     view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
 });
 
+// const stats = addStats(document,app);
+
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});
 app.stage.addChild(camera as any)
 
@@ -36,8 +39,6 @@ app.stage.addChild(camera as any)
 const benchmark = new SpineBenchmark(app);
 
 const dropArea = document.getElementById('dropArea')!;
-
-console.log(dropArea)
 
 dropArea.addEventListener('dragenter', (e) => {
     e.preventDefault();

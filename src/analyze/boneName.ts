@@ -33,7 +33,6 @@ function isBoneWithNumber(name: string) {
 function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {
     const li = document.createElement('li');
     li.textContent = bone.data.name;
-    console.log(bone.data.name, isBoneWithNumber(bone.data.name), isSnakeCase(bone.data.name))
 
     li.classList.add('good-bone');
 

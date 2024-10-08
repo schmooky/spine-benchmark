@@ -34,14 +34,9 @@ export class CameraContainer extends Container {
     let bounds: { width: number; height: number; x: number; y: number } =
       object.getBounds();
     if (bounds.width == 0 || bounds.height == 0) {
-      console.log("Invalid Bounds");
       bounds.width = object.skeleton.data.width / 2;
       bounds.height = object.skeleton.data.height / 2;
-      // bounds.x = object.skeleton.data.x;
-      // bounds.y = object.skeleton.data.y;
-      console.log(bounds);
     }
-    console.log("bounds", bounds, this.app.screen);
 
     // Calculate the scale needed to fit the object within the screen
     const scaleX = (this.app.screen.width - padding * 2) / bounds.width;
@@ -51,13 +46,11 @@ export class CameraContainer extends Container {
     const minScale = 0.2;
     const maxScale = 10;
     const scaleStep = 0.1;
-    console.log(scale);
 
     // Calculate the position to center the object
-    const x = this.app.screen.width / 2; //- (bounds.x + bounds.width / 2) * scale;
-    const y = this.app.screen.height / 2; //- (bounds.y + bounds.height / 2) * scale;
-    console.log(x, y);
-    console.log(scaleX, scaleY);
+    const x = this.app.screen.width / 2;
+    const y = this.app.screen.height / 2;
+    
     // Animate the camera to look at the object
     gsap.to(this, {
       x: x,
