@@ -135,6 +135,8 @@ export class SpineBenchmark {
     const animations = spineInstance.skeleton.data.animations;
     const container = document.getElementById('sidebarAnimations')!;
 
+    container.classList.remove('hidden');
+
     animations.forEach(animation => {
       const button = document.createElement('button');
       button.textContent = animation.name;
@@ -150,6 +152,7 @@ export class SpineBenchmark {
   private createSkinButtons(spineInstance: Spine) {
     const skins = spineInstance.skeleton.data.skins;
     const container = document.getElementById('sidebarSkins')!;
+    container.classList.remove('hidden');
 
     skins.forEach(skin => {
       const button = document.createElement('button');
