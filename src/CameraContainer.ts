@@ -50,7 +50,7 @@ export class CameraContainer extends Container {
     // Calculate the position to center the object
     const x = this.app.screen.width / 2;
     const y = this.app.screen.height / 2;
-    
+
     // Animate the camera to look at the object
     gsap.to(this, {
       x: x,
@@ -59,7 +59,7 @@ export class CameraContainer extends Container {
       ease: "power2.out",
     });
 
-    scale = +(Math.ceil(scale*20)/20).toFixed(2);
+    scale = +(Math.ceil(scale * 20) / 20).toFixed(2);
     this.scale.set(scale);
     this.setCanvasScaleDebugInfo(scale);
     document
@@ -73,7 +73,7 @@ export class CameraContainer extends Container {
         // Update scale based on scroll direction
         scale -= scrollDirection * scaleStep;
 
-        scale = +(Math.ceil(scale*20)/20).toFixed(2);
+        scale = +(Math.ceil(scale * 20) / 20).toFixed(2);
 
         // Clamp scale between minScale and maxScale
         scale = Math.max(minScale, Math.min(maxScale, scale));

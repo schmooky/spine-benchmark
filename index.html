@@ -1,81 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Spine Benchmark</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <div id="pixiContainer"><canvas id="pixiCanvas"></canvas></div>
     <div class="options">
-        <section id="sidebarSkins">
-            <h3>Skins</h3>
-        </section>
-        <section id="sidebarAnimations">
-            <h3>Animations</h3>
-        </section>
+      <h3>skins</h3>
+      <section id="optionsSkins"></section>
+      <h3>animations</h3>
+      <section id="optionsAnimations"></section>
     </div>
+    <div id="controlsContainer"></div>
     <p id="currentAnimation"></p>
     <p id="canvasScale">Scale: N/A</p>
     <p id="totalTextures">Total Textures: N/A</p>
     <p id="totalBuffers">Total Buffers: N/A</p>
     <div id="dropArea">Drop Spine files here (JSON, Atlas, and Image)</div>
     <div id="benchmarkResults">
-        <section id="generalRequirements">
-            <h2>Общие Требования</h2>
-            <p id="generalRequirementsText"></p>
-        </section>
-        <section id="meshTableContainer">
-            <h2>Анализ Мешей</h2>
-            <p id="meshTableContainerText"></p>
-        </section>
-        <section id="meshTransformationsTableContainer">
-            <h2>Mesh Transformations Analysis</h2>
-        </section>
-        <section id="clippingContainer">
-            <h2>Маски</h2>
-            <p id="clippingContainerText"></p>
-        </section>
-        <section id="blendModesContainer">
-            <h2>Режимы Наложения</h2>
-            <p id="blendModesContainerText"></p>
-        </section>
-        <section id="bonesContainer">
-            <h2>Кости</h2>
-            <p id="bonesContainerText"></p>
-        </section>
-        <section id="timelinesContainer">
-            <h2>Таймлайны</h2>
-            <p id="timelinesContainerText"></p>
-        </section>
-        <section id="namesContainer">
-            <h2>Названия</h2>
-            <p id="namesContainerText"></p>
-        </section>
-        <section id="particlesContainer">
-            <h2>Частицы</h2>
-            <p id="particlesContainerText"></p>
-        </section>
-        <section id="specsContainer">
-            <h2>Ресурсы</h2>
-            <p id="currentResources"></p>
-        </section>
-        <section id="docsContainer">
-            <h2>Полезные Ссылки</h2>
-            <a href="https://pixijs.io/pixi-particles-editor/">Pixi Particles Editor</a>
-            <a href="https://github.com/pixijs/particle-emitter">Pixi Particles Emitter</a>
-            <a href="https://github.com/pixijs/spine/blob/bda2e19cb28a0df2187451bad8ccc14f1e20da23/packages/runtime-4.1/src/core/attachments/MeshAttachment.ts#L100">MeshAttachment</a>
-            <a href="https://en.esotericsoftware.com/spine-meshes#Linked-meshes">Spine - Linked Mesh</a>
-            <a href="https://ru.esotericsoftware.com/spine-keys#Clean-Up">Spine - Clean Up</a>
-            <a href="https://ru.esotericsoftware.com/spine-metrics#Performance">Spine - Performance</a>
-            <a href="https://ru.esotericsoftware.com/spine-weights#Prune">Spine - Prune</a>
-        </section>
+      <section id="generalRequirements">
+        <h2>Общие Требования</h2>
+        <p id="generalRequirementsText"></p>
+      </section>
+      <section id="meshTableContainer">
+        <h2>Анализ Мешей</h2>
+        <p id="meshTableContainerText"></p>
+      </section>
+      <section id="meshTransformationsTableContainer">
+        <h2>Mesh Transformations Analysis</h2>
+      </section>
+      <section id="clippingContainer">
+        <h2>Маски</h2>
+        <p id="clippingContainerText"></p>
+      </section>
+      <section id="blendModesContainer">
+        <h2>Режимы Наложения</h2>
+        <p id="blendModesContainerText"></p>
+      </section>
+      <section id="bonesContainer">
+        <h2>Кости</h2>
+        <p id="bonesContainerText"></p>
+      </section>
+      <section id="timelinesContainer">
+        <h2>Таймлайны</h2>
+        <p id="timelinesContainerText"></p>
+      </section>
+      <section id="namesContainer">
+        <h2>Названия</h2>
+        <p id="namesContainerText"></p>
+      </section>
+      <section id="particlesContainer">
+        <h2>Частицы</h2>
+        <p id="particlesContainerText"></p>
+      </section>
+      <section id="specsContainer">
+        <h2>Ресурсы</h2>
+        <p id="currentResources"></p>
+      </section>
+      <section id="docsContainer">
+        <h2>Полезные Ссылки</h2>
+        <a href="https://pixijs.io/pixi-particles-editor/"
+          >Pixi Particles Editor</a
+        >
+        <a href="https://github.com/pixijs/particle-emitter"
+          >Pixi Particles Emitter</a
+        >
+        <a
+          href="https://github.com/pixijs/spine/blob/bda2e19cb28a0df2187451bad8ccc14f1e20da23/packages/runtime-4.1/src/core/attachments/MeshAttachment.ts#L100"
+          >MeshAttachment</a
+        >
+        <a href="https://en.esotericsoftware.com/spine-meshes#Linked-meshes"
+          >Spine - Linked Mesh</a
+        >
+        <a href="https://ru.esotericsoftware.com/spine-keys#Clean-Up"
+          >Spine - Clean Up</a
+        >
+        <a href="https://ru.esotericsoftware.com/spine-metrics#Performance"
+          >Spine - Performance</a
+        >
+        <a href="https://ru.esotericsoftware.com/spine-weights#Prune"
+          >Spine - Prune</a
+        >
+      </section>
     </div>
     <script type="module" src="src/index.ts"></script>
-</body>
+  </body>
 </html>

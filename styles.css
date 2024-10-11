@@ -1,11 +1,13 @@
 /* latin */
 @font-face {
-  font-family: 'Fira Code';
+  font-family: "Fira Code";
   font-style: normal;
   font-weight: 300 700;
   font-display: swap;
-  src: url('/fonts/fira.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  src: url("/fonts/fira.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 #benchmarkResults {
@@ -37,10 +39,10 @@ html {
   background-color: #f2f2f2;
   font-weight: bold;
   text-transform: uppercase;
-  
-    position: sticky;
-    top: 0; /* Don't forget this, required for the stickiness */
-    box-shadow: 0 4px 4px -1px rgba(0, 0, 0, 0.4);
+
+  position: sticky;
+  top: 0; /* Don't forget this, required for the stickiness */
+  box-shadow: 0 4px 4px -1px rgba(0, 0, 0, 0.4);
 }
 
 .merged-table tr:hover {
@@ -84,7 +86,7 @@ section {
 
 body {
   display: flex;
-  flex-flow: column;  
+  flex-flow: column;
   align-items: center;
 }
 
@@ -96,9 +98,9 @@ body {
   align-self: center;
 }
 
-#currentAnimation{
-    align-self: center;
-    font-weight: bold;
+#currentAnimation {
+  align-self: center;
+  font-weight: bold;
 }
 
 #pixiContainer::after {
@@ -213,34 +215,34 @@ canvas {
 .info {
   width: 100%;
   max-width: 800px;
-    background-color: #f0f8ff;
-    border: 1px solid #4682b4;
-    border-radius: 5px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+  background-color: #f0f8ff;
+  border: 1px solid #4682b4;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .info:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .info h3 {
-    color: #4682b4;
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.2em;
+  color: #4682b4;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
 }
 
 .info p {
-    margin: 5px 0;
-    color: #333;
+  margin: 5px 0;
+  color: #333;
 }
 
 .info strong {
-    color: #4682b4;
+  color: #4682b4;
 }
 
 .warning {
@@ -295,4 +297,32 @@ div#stats {
   height: max(100px, 6vh, 6vw);
   opacity: 0.8;
   user-select: none;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.options h3 {
+  text-align: center;
+}
+
+.options #optionsSkins {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  max-width: calc((150px * 2) + 8px);
+}
+
+.options #optionsAnimations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  max-width: calc((150px * 3) + 8px);
+}
+
+.options section button {
+  width: 150px;
+  margin: 2px;
 }

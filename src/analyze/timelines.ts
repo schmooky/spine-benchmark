@@ -6,33 +6,32 @@ document.title = attributes.title; // Hello from front-matter
 
 document.querySelector("#timelinesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
-
 export function analyzeSpineAnimations(spine: Spine): void {
-    const container = document.getElementById('timelinesContainer');
-    if (!container) return;
+  const container = document.getElementById("timelinesContainer");
+  if (!container) return;
 
-    const skeletonData = spine.spineData;
-    const animations = skeletonData.animations;
+  const skeletonData = spine.spineData;
+  const animations = skeletonData.animations;
 
-    animations.forEach(animation => {
-        const name = animation.name;
-        const duration = animation.duration;
-        const timelines = animation.timelines;
-        const timelineCount = timelines.length;
-        
-        const infoBlock = document.createElement('div');
-        infoBlock.className = 'info';
+  animations.forEach((animation) => {
+    const name = animation.name;
+    const duration = animation.duration;
+    const timelines = animation.timelines;
+    const timelineCount = timelines.length;
 
-        let timelineInfo = '';
-        let totalKeys = 0;
+    const infoBlock = document.createElement("div");
+    infoBlock.className = "info";
 
-        timelines.forEach(timeline => {
-            const frameCount = getTimelineFrameCount(timeline);
-            totalKeys += frameCount;
-            timelineInfo += `<p>${getTimelineType(timeline)}: ${frameCount} keys</p>`;
-        });
+    let timelineInfo = "";
+    let totalKeys = 0;
 
-        infoBlock.innerHTML = `
+    timelines.forEach((timeline) => {
+      const frameCount = getTimelineFrameCount(timeline);
+      totalKeys += frameCount;
+      timelineInfo += `<p>${getTimelineType(timeline)}: ${frameCount} keys</p>`;
+    });
+
+    infoBlock.innerHTML = `
             <h3>Animation: ${name}</h3>
             <p><strong>Duration:</strong> ${duration.toFixed(2)} seconds</p>
             <p><strong>Number of Timelines:</strong> ${timelineCount}</p>
@@ -43,25 +42,22 @@ export function analyzeSpineAnimations(spine: Spine): void {
             </details>
         `;
 
-        container.appendChild(infoBlock);
-
-    });
+    container.appendChild(infoBlock);
+  });
 }
 
-
-
 function getTimelineFrameCount(timeline: any): number {
-    if ('frames' in timeline) {
-        return timeline.frames.length;
-    } else if ('frameCount' in timeline) {
-        return timeline.frameCount;
-    }
-    return 0;
+  if ("frames" in timeline) {
+    return timeline.frames.length;
+  } else if ("frameCount" in timeline) {
+    return timeline.frameCount;
+  }
+  return 0;
 }
 
 function getTimelineType(timeline: any): string {
-    if ('type' in timeline) {
-        return timeline.type;
-    }
-    return timeline.constructor.name;
+  if ("type" in timeline) {
+    return timeline.type;
+  }
+  return timeline.constructor.name;
 }

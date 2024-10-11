@@ -1,13 +1,12 @@
-import * as PIXI from 'pixi.js';
+import * as PIXI from "pixi.js";
 import { attributes, html } from "../text/clipping.md";
-import { AttachmentType, ClippingAttachment, Spine } from '@pixi-spine/all-4.1';
+import { AttachmentType, ClippingAttachment, Spine } from "@pixi-spine/all-4.1";
 
 document.title = attributes.title; // Hello from front-matter
 
 document.querySelector("#clippingContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
 export function analyzeMasks(spineInstance: Spine): void {
-
   spineInstance.skeleton.slots.forEach((slot) => {
     if (slot.attachment && slot.attachment.type === AttachmentType.Clipping) {
       const clipping = slot.attachment as ClippingAttachment;
@@ -20,7 +19,7 @@ export function analyzeMasks(spineInstance: Spine): void {
 function appendMaskInfo(slotName: string, verticesCount: number): void {
   const container = document.getElementById("clippingContainer");
   if (!container) return;
-  
+
   const infoBlock = document.createElement("div");
   infoBlock.className = verticesCount > 4 ? "warning" : "info";
   infoBlock.innerHTML = `
@@ -28,6 +27,6 @@ function appendMaskInfo(slotName: string, verticesCount: number): void {
     <p><strong>Slot name:</strong> ${slotName}</p>
     <p><strong>Vertices count:</strong> ${verticesCount}</p>
   `;
-  
+
   container.appendChild(infoBlock);
 }

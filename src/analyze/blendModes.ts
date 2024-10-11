@@ -11,27 +11,31 @@ export function analyzeSpineBlendModes(spine: Spine): void {
   const skeletonData = spine.spineData;
   const animations = skeletonData.animations;
   const slots = skeletonData.slots;
-  
+
   // Helper function to check if a blend mode is non-normal
   const isNonNormalBlendMode = (blendMode: BLEND_MODES): boolean => {
     return blendMode !== BLEND_MODES.NORMAL;
   };
-  
+
   const nonNormalBlendModeSlots = checkSkeletonForNonNormalBlendModes(spine);
   appendBlendModeWarning(nonNormalBlendModeSlots);
-  
+
   // Analyze each animation
-  animations.forEach(animation => {
+  animations.forEach((animation) => {
     let maxVisibleNonNormalBlendModes = 0;
     const nonNormalBlendModeSlots: Set<string> = new Set();
-    
+
     // Check each keyframe of the animation
-    for (let time = 0; time <= animation.duration; time += 1/30) { // Assuming 30 FPS
+    for (let time = 0; time <= animation.duration; time += 1 / 30) {
+      // Assuming 30 FPS
       let visibleNonNormalBlendModes = 0;
-      
-      slots.forEach(slot => {
-        if(!slot.attachmentName) return
-        const attachment = spine.skeleton.getAttachmentByName(slot.name,slot.attachmentName);
+
+      slots.forEach((slot) => {
+        if (!slot.attachmentName) return;
+        const attachment = spine.skeleton.getAttachmentByName(
+          slot.name,
+          slot.attachmentName
+        );
         if (attachment) {
           const blendMode = slot.blendMode;
           if (isNonNormalBlendMode(blendMode)) {
@@ -40,13 +44,20 @@ export function analyzeSpineBlendModes(spine: Spine): void {
           }
         }
       });
-      
-      maxVisibleNonNormalBlendModes = Math.max(maxVisibleNonNormalBlendModes, visibleNonNormalBlendModes);
+
+      maxVisibleNonNormalBlendModes = Math.max(
+        maxVisibleNonNormalBlendModes,
+        visibleNonNormalBlendModes
+      );
     }
-    
+
     // If more than two non-normal blend modes are visible simultaneously
     if (maxVisibleNonNormalBlendModes > 2) {
-      appendBlendModeAnimationWarning(animation.name, maxVisibleNonNormalBlendModes, Array.from(nonNormalBlendModeSlots));
+      appendBlendModeAnimationWarning(
+        animation.name,
+        maxVisibleNonNormalBlendModes,
+        Array.from(nonNormalBlendModeSlots)
+      );
     }
   });
 }
@@ -58,7 +69,7 @@ function appendBlendModeAnimationWarning(
 ): void {
   const container = document.getElementById("blendModesContainer");
   if (!container) return;
-  
+
   const infoBlock = document.createElement("div");
   infoBlock.className = "warning";
   infoBlock.innerHTML = `
@@ -68,17 +79,19 @@ function appendBlendModeAnimationWarning(
     <details>
       <summary><strong>Affected slots:</strong></summary>
         <ul>
-          ${affectedSlots.map(slot => `<li>${slot}</li>`).join('')}
+          ${affectedSlots.map((slot) => `<li>${slot}</li>`).join("")}
         </ul>
     </details>
   `;
-  
+
   container.appendChild(infoBlock);
 }
-function checkSkeletonForNonNormalBlendModes(spine: Spine): Map<string,BLEND_MODES> {
-  const nonNormalBlendModeSlots = new Map<string,BLEND_MODES>();
+function checkSkeletonForNonNormalBlendModes(
+  spine: Spine
+): Map<string, BLEND_MODES> {
+  const nonNormalBlendModeSlots = new Map<string, BLEND_MODES>();
   const skeletonData = spine.skeleton.data;
-  
+
   for (let i = 0; i < skeletonData.slots.length; i++) {
     const slotData = skeletonData.slots[i];
     const blendMode = slotData.blendMode;
@@ -86,27 +99,25 @@ function checkSkeletonForNonNormalBlendModes(spine: Spine): Map<string,BLEND_MOD
       nonNormalBlendModeSlots.set(slotData.name, blendMode);
     }
   }
-  
+
   return nonNormalBlendModeSlots;
 }
 
-function appendBlendModeWarning(
-  blendModeMap: Map<string, BLEND_MODES>
-): void {
+function appendBlendModeWarning(blendModeMap: Map<string, BLEND_MODES>): void {
   const container = document.getElementById("blendModesContainer");
   if (!container) return;
-  
+
   // Count occurrences of each blend mode
   const blendModeCount = new Map<BLEND_MODES, number>();
   let nonNormalCount = 0;
-  
+
   blendModeMap.forEach((blendMode, slotName) => {
     blendModeCount.set(blendMode, (blendModeCount.get(blendMode) || 0) + 1);
     if (blendMode !== BLEND_MODES.NORMAL) {
       nonNormalCount++;
     }
   });
-  
+
   const infoBlock = document.createElement("div");
   infoBlock.className = "warning";
   infoBlock.innerHTML = `
@@ -114,18 +125,24 @@ function appendBlendModeWarning(
     <p><strong>Total non-normal blend modes:</strong> ${nonNormalCount}</p>
     <p><strong>Blend mode counts:</strong></p>
     <ul>
-      ${Array.from(blendModeCount).map(([mode, count]) => `
+      ${Array.from(blendModeCount)
+        .map(
+          ([mode, count]) => `
         <li>${BLEND_MODES[mode]}: ${count}</li>
-      `).join('')}
+      `
+        )
+        .join("")}
     </ul>
         <details>
     <summary><strong>Slots with non-normal blend modes:</strong></summary>
         <ul>
-        ${Array.from(blendModeMap).filter(([_, mode]) => mode !== BLEND_MODES.NORMAL)
-          .map(([slot, mode]) => `<li>${slot}: ${BLEND_MODES[mode]}</li>`).join('')}
+        ${Array.from(blendModeMap)
+          .filter(([_, mode]) => mode !== BLEND_MODES.NORMAL)
+          .map(([slot, mode]) => `<li>${slot}: ${BLEND_MODES[mode]}</li>`)
+          .join("")}
         </ul>
     </details>
   `;
-  
+
   container.appendChild(infoBlock);
 }
