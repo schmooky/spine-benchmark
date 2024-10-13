@@ -4,122 +4,76 @@ import {
   MeshAttachment,
 } from "@pixi-spine/all-4.1";
 import { Spine } from "pixi-spine";
+import { mergeMaps } from "../utils/mergeMaps";
 
 import { attributes, html } from "../text/mesh.md";
+
+interface Column {
+  header: string;
+  accessor: string;
+}
+
+interface StyleFunction {
+  (row: HTMLTableRowElement, accessor: string, value: any): void;
+}
 
 document.title = attributes.title; // Hello from front-matter
 
 document.querySelector("#meshTableContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
-function mergeMaps(
-  map1: Map<string, any>,
-  map2: Map<string, any>,
-  map3: Map<string, any>,
-  map4: Map<string, boolean>
-): Map<string, Record<string, any>> {
-  const mergedMap = new Map();
+// function mergeMaps(
+//   map1: Map<string, any>,
+//   map2: Map<string, any>,
+//   map3: Map<string, any>,
+//   map4: Map<string, boolean>
+// ): Map<string, Record<string, any>> {
+//   const mergedMap = new Map();
 
-  // Merge keys from both maps
-  const allKeys = new Set([...map1.keys(), ...map2.keys(), ...map3.keys()]);
+//   // Merge keys from both maps
+//   const allKeys = new Set([...map1.keys(), ...map2.keys(), ...map3.keys()]);
 
-  allKeys.forEach((key) => {
-    mergedMap.set(key, {
-      vertices: map1.get(key) ?? "",
-      isChanged: map2.get(key) ?? "",
-      isBoneWeighted: map3.get(key) ?? 0,
-      isUsedInMeshSequence: map4.get(key) ?? false,
-    });
-  });
+//   allKeys.forEach((key) => {
+//     mergedMap.set(key, {
+//       vertices: map1.get(key) ?? "",
+//       isChanged: map2.get(key) ?? "",
+//       isBoneWeighted: map3.get(key) ?? 0,
+//       isUsedInMeshSequence: map4.get(key) ?? false,
+//     });
+//   });
 
-  return mergedMap;
-}
+//   return mergedMap;
+// }
 
 function createTable(
-  mergedMap: Map<string, Record<string, any>>,
-  columns: string[]
-) {
+  data: Map<string, Record<string, any>>,
+  columns: Column[],
+  getStyle?: StyleFunction
+): HTMLTableElement {
   const table = document.createElement("table");
   table.className = "merged-table";
 
   // Create table header
   const thead = table.createTHead();
   const headerRow = thead.insertRow();
-  columns.forEach((text) => {
+  columns.forEach((column) => {
     const th = document.createElement("th");
-    th.textContent = text;
+    th.textContent = column.header;
     headerRow.appendChild(th);
   });
 
   // Create table body
   const tbody = table.createTBody();
-  mergedMap.forEach((value, key) => {
+  data.forEach((rowData, key) => {
     const row = tbody.insertRow();
-    const cellKey = row.insertCell();
-    const cellValue1 = row.insertCell();
-    const cellValue2 = row.insertCell();
-    const cellValue3 = row.insertCell();
-    const cellValue4 = row.insertCell();
+    columns.forEach((column) => {
+      const cell = row.insertCell();
+      const value = column.accessor === "key" ? key : rowData[column.accessor];
+      cell.textContent = value?.toString() || "";
 
-    cellKey.textContent = key;
-    cellValue1.textContent = value.vertices;
-    cellValue2.textContent = value.isChanged;
-    cellValue3.textContent = value.isBoneWeighted;
-    cellValue4.textContent = value.isUsedInMeshSequence;
-
-    // if ((!value.isChanged && !value.isBoneWeighted) || value.vertices > 64) {
-    //   row.classList.add("error");
-    // } else if (value.vertices > 8) {
-    //   row.classList.add("warn");
-    // }
-
-    function interpolateColor(color1, color2, factor) {
-      const result = color1.slice();
-      for (let i = 0; i < 3; i++) {
-        result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
+      if (getStyle) {
+        Object.assign(cell.style, getStyle(row, column.accessor, value));
       }
-      return result;
-    }
-
-    // Function to convert RGB to hex
-    function rgbToHex(rgb) {
-      return (
-        "#" +
-        rgb
-          .map((x) => {
-            const hex = x.toString(16);
-            return hex.length === 1 ? "0" + hex : hex;
-          })
-          .join("")
-      );
-    }
-
-    // Set color based on vertex count
-    function setRowColor(row: HTMLTableRowElement, vertexCount: number) {
-      const minVertices = 1;
-      const maxVertices = 2000;
-      const colorStart = [255, 243, 224]; // #fff3e0
-      const colorMiddle = [255, 204, 128]; // #ffcc80
-      const colorEnd = [239, 154, 154]; // #ef9a9a
-
-      // Calculate logarithmic factor
-      const logFactor = Math.log(vertexCount) / Math.log(maxVertices);
-
-      let color;
-      if (logFactor <= 0.5) {
-        color = interpolateColor(colorStart, colorMiddle, logFactor * 2);
-      } else {
-        color = interpolateColor(colorMiddle, colorEnd, (logFactor - 0.5) * 2);
-      }
-
-      // Make color darker as it approaches maxVertices
-      const darkenFactor = Math.min(logFactor * 0.08, 0.08);
-      color = color.map((c) => Math.round(c * (1 - darkenFactor)));
-
-      row.style.backgroundColor = rgbToRgba(`rgb(${color})`);
-    }
-
-    // Apply color to the row
-    setRowColor(row, value.vertices);
+    });
   });
 
   return table;
@@ -205,25 +159,68 @@ export function analyzeMeshes(spineInstance: Spine) {
   console.table(combinedArray);
 
   const mergedMap = mergeMaps(
+    ["vertices", "isChanged", "isBoneWeighted", "isUsedInMeshSequence"],
     meshWorldVerticesLengths,
     meshesWithChangesInTimelines,
     meshesWithBoneWeights,
     meshesWithParents
   );
-  const table = createTable(mergedMap, [
-    "Слот",
-    "Вершины",
-    "Деформируется в таймлайнах",
-    "Связан с костями",
-    "Имеет родительский меш",
-  ]);
+  const columns: Column[] = [
+    { header: "Слот", accessor: "key" },
+    { header: "Вершины", accessor: "vertices" },
+    { header: "Деформируется в таймлайнах", accessor: "isChanged" },
+    { header: "Связан с костями", accessor: "isBoneWeighted" },
+    { header: "Имеет родительский меш", accessor: "isUsedInMeshSequence" },
+  ];
 
-  (mergedMap.keys() as any as Array<string>).forEach((key) => {
-    if (!mergedMap.get(key)!.isChanged && !mergedMap.get(key)!.isBoneWeighted) {
-      appendMeshMisuseInfo(key, mergedMap.get(key)!.isUsedInMeshSequence);
+  function interpolateColor(
+    color1: number[],
+    color2: number[],
+    factor: number
+  ): number[] {
+    if (factor <= 0) return color1;
+    if (factor >= 1) return color2;
+
+    return color1.map((v, i) => v + factor * (color2[i] - v));
+  }
+
+  function setRowColor(row: HTMLTableRowElement, vertexCount: number) {
+    const minVertices = 1;
+    const maxVertices = 2000;
+    const colorStart = [255, 243, 224]; // #fff3e0
+    const colorMiddle = [255, 204, 128]; // #ffcc80
+    const colorEnd = [239, 154, 154]; // #ef9a9a
+
+    // Calculate logarithmic factor
+    const logFactor = Math.log(vertexCount) / Math.log(maxVertices);
+
+    let color;
+    if (logFactor <= 0.5) {
+      color = interpolateColor(colorStart, colorMiddle, logFactor * 2);
+    } else {
+      color = interpolateColor(colorMiddle, colorEnd, (logFactor - 0.5) * 2);
     }
-  });
 
+    // Make color darker as it approaches maxVertices
+    const darkenFactor = Math.min(logFactor * 0.08, 0.08);
+    color = color.map((c) => Math.round(c * (1 - darkenFactor)));
+
+    row.style.backgroundColor = rgbToRgba(`rgb(${color})`);
+  }
+
+  const getStyle: StyleFunction = (row, accessor, value) => {
+    if (accessor === "vertices") {
+      setRowColor(row, value);
+    }
+  };
+
+  const table = createTable(mergedMap, columns, getStyle);
+  const meshTableContainer = document.getElementById("meshTableContainer");
+  if (meshTableContainer) {
+    meshTableContainer.innerHTML = "";
+    meshTableContainer.appendChild(table);
+    meshTableContainer.style.display = "block";
+  }
   document.getElementById("meshTableContainer")!.appendChild(table);
 
   console.groupEnd();
