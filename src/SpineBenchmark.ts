@@ -138,8 +138,11 @@ export class SpineBenchmark {
     animationsTitle.innerText = "animations";
     container.appendChild(animationsTitle);
 
-    animations.forEach((animation) => {
-      const button = document.createElement("button");
+    container.classList.remove('hidden');
+
+    animations.forEach(animation => {
+      const button = document.createElement('button');
+
       button.textContent = animation.name;
 
       button.addEventListener("click", () => {
@@ -152,10 +155,9 @@ export class SpineBenchmark {
 
   private createSkinButtons(spineInstance: Spine) {
     const skins = spineInstance.skeleton.data.skins;
-    const container = document.getElementById("optionsSkins")!;
-    const skinsTitle = document.createElement("h3");
-    skinsTitle.innerText = "skins";
-    container.appendChild(skinsTitle);
+
+    const container = document.getElementById('sidebarSkins')!;
+    container.classList.remove('hidden');
 
     skins.forEach((skin) => {
       const button = document.createElement("button");
