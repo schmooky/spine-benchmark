@@ -36,12 +36,10 @@ const benchmark = new SpineBenchmark(app);
 
 const dropArea = document.getElementById("dropArea")!;
 
-// Функция для скрытия дроп-зоны
 function hideDropArea() {
   dropArea.style.display = "none";
 }
 
-// Функция для отображения таблицы
 function showTable() {
   const meshTableContainer = document.getElementById("meshTableContainer");
   if (meshTableContainer) {
@@ -74,8 +72,8 @@ dropArea.addEventListener("drop", (e) => {
   const files = e.dataTransfer?.files;
   if (files) {
     benchmark.loadSpineFiles(files);
-    hideDropArea(); // Скрываем дроп-зону после загрузки файлов
-    showTable(); // Показываем таблицу после загрузки файлов
+    hideDropArea();
+    showTable();
   }
 });
 
@@ -116,4 +114,3 @@ if (ext) {
       "Total Buffers: " + bytesToSize(bufferSizeTotalBytes);
   }, 25);
 }
-// document.getElementById("meshTableContainer")!.appendChild(table);

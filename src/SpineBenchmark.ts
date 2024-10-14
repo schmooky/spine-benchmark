@@ -134,6 +134,9 @@ export class SpineBenchmark {
   private createAnimationButtons(spineInstance: Spine) {
     const animations = spineInstance.skeleton.data.animations;
     const container = document.getElementById("optionsAnimations")!;
+    const animationsTitle = document.createElement("h3");
+    animationsTitle.innerText = "animations";
+    container.appendChild(animationsTitle);
 
     animations.forEach((animation) => {
       const button = document.createElement("button");
@@ -150,6 +153,9 @@ export class SpineBenchmark {
   private createSkinButtons(spineInstance: Spine) {
     const skins = spineInstance.skeleton.data.skins;
     const container = document.getElementById("optionsSkins")!;
+    const skinsTitle = document.createElement("h3");
+    skinsTitle.innerText = "skins";
+    container.appendChild(skinsTitle);
 
     skins.forEach((skin) => {
       const button = document.createElement("button");
@@ -181,30 +187,30 @@ export class SpineBenchmark {
   // const spineInstance = new PIXI.spine.Spine(spineData);
   // const analysis = analyzeSpineSkeleton(spineInstance);
 
-  playSpineAnimationsInSequence(spineInstance: Spine) {
-    const animations = spineInstance.skeleton.data.animations;
-    let currentIndex = 0;
-    spineInstance.state.addListener({
-      complete: function (track) {
-        currentIndex++;
-        setTimeout(playNextAnimation, 250);
-      },
-    });
-    function playNextAnimation() {
-      if (currentIndex < animations.length) {
-        const animation = animations[currentIndex];
+  // playSpineAnimationsInSequence(spineInstance: Spine) {
+  //   const animations = spineInstance.skeleton.data.animations;
+  //   let currentIndex = 0;
+  //   spineInstance.state.addListener({
+  //     complete: function (track) {
+  //       currentIndex++;
+  //       setTimeout(playNextAnimation, 250);
+  //     },
+  //   });
+  //   function playNextAnimation() {
+  //     if (currentIndex < animations.length) {
+  //       const animation = animations[currentIndex];
 
-        // setAfterElementContent('pixiContainer',animation.name)
-        document.getElementById(
-          "currentAnimation"
-        )!.innerHTML = `Animation: ${animation.name}`;
-        spineInstance.state.setAnimation(0, animation.name, false);
-      } else {
-        currentIndex = 0;
-        setTimeout(playNextAnimation, 250);
-      }
-    }
+  //       // setAfterElementContent('pixiContainer',animation.name)
+  //       document.getElementById(
+  //         "currentAnimation"
+  //       )!.innerHTML = `Animation: ${animation.name}`;
+  //       spineInstance.state.setAnimation(0, animation.name, false);
+  //     } else {
+  //       currentIndex = 0;
+  //       setTimeout(playNextAnimation, 250);
+  //     }
+  //   }
 
-    playNextAnimation();
-  }
+  //   playNextAnimation();
+  // }
 }

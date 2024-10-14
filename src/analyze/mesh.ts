@@ -5,6 +5,7 @@ import {
 } from "@pixi-spine/all-4.1";
 import { Spine } from "pixi-spine";
 import { mergeMaps } from "../utils/mergeMaps";
+import { rgbToRgba } from "../utils/rgbToRgba";
 
 import { attributes, html } from "../text/mesh.md";
 
@@ -20,29 +21,6 @@ interface StyleFunction {
 document.title = attributes.title; // Hello from front-matter
 
 document.querySelector("#meshTableContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
-
-// function mergeMaps(
-//   map1: Map<string, any>,
-//   map2: Map<string, any>,
-//   map3: Map<string, any>,
-//   map4: Map<string, boolean>
-// ): Map<string, Record<string, any>> {
-//   const mergedMap = new Map();
-
-//   // Merge keys from both maps
-//   const allKeys = new Set([...map1.keys(), ...map2.keys(), ...map3.keys()]);
-
-//   allKeys.forEach((key) => {
-//     mergedMap.set(key, {
-//       vertices: map1.get(key) ?? "",
-//       isChanged: map2.get(key) ?? "",
-//       isBoneWeighted: map3.get(key) ?? 0,
-//       isUsedInMeshSequence: map4.get(key) ?? false,
-//     });
-//   });
-
-//   return mergedMap;
-// }
 
 function createTable(
   data: Map<string, Record<string, any>>,
@@ -68,7 +46,10 @@ function createTable(
     columns.forEach((column) => {
       const cell = row.insertCell();
       const value = column.accessor === "key" ? key : rowData[column.accessor];
-      cell.textContent = value?.toString() || "";
+      cell.textContent =
+        column.accessor === "isBoneWeighted" && value === ""
+          ? "0"
+          : value?.toString() || "";
 
       if (getStyle) {
         Object.assign(cell.style, getStyle(row, column.accessor, value));
@@ -165,6 +146,7 @@ export function analyzeMeshes(spineInstance: Spine) {
     meshesWithBoneWeights,
     meshesWithParents
   );
+
   const columns: Column[] = [
     { header: "Слот", accessor: "key" },
     { header: "Вершины", accessor: "vertices" },
@@ -217,7 +199,6 @@ export function analyzeMeshes(spineInstance: Spine) {
   const table = createTable(mergedMap, columns, getStyle);
   const meshTableContainer = document.getElementById("meshTableContainer");
   if (meshTableContainer) {
-    meshTableContainer.innerHTML = "";
     meshTableContainer.appendChild(table);
     meshTableContainer.style.display = "block";
   }
@@ -245,32 +226,4 @@ function appendMeshMisuseInfo(
   `;
 
   container.appendChild(infoBlock);
-}
-
-function rgbToRgba(rgbString: string, alpha = 0.8) {
-  // Regular expression to match the RGB values
-  const rgbRegex = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/;
-
-  // Extract RGB values from the input string
-  const match = rgbString.match(rgbRegex);
-
-  if (!match) {
-    throw new Error("Invalid RGB string format. Expected 'rgb(r, g, b)'");
-  }
-
-  // Parse the RGB values
-  const [, r, g, b] = match.map(Number);
-
-  // Validate RGB values
-  if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-    throw new Error("RGB values must be between 0 and 255");
-  }
-
-  // Validate alpha value
-  if (alpha < 0 || alpha > 1) {
-    throw new Error("Alpha value must be between 0 and 1");
-  }
-
-  // Construct the RGBA string
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
