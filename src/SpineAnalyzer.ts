@@ -1,8 +1,3 @@
-import {
-  Attachment,
-  DeformTimeline,
-  MeshAttachment,
-} from "@pixi-spine/all-4.1";
 import { AttachmentType, Spine } from "pixi-spine";
 import { Renderer } from "pixi.js";
 import { analyzeMeshes } from "./analyze/mesh";

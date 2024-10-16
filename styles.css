@@ -10,7 +10,8 @@
     U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-#benchmarkResults {
+#benchmarkResults,
+#benchmarkResults h2 {
   display: flex;
   flex-flow: column;
   align-items: center;
@@ -299,11 +300,8 @@ div#stats {
   user-select: none;
 }
 
-.options section {
-  margin-bottom: 20px;
-}
-
-.options-wrapper {
+.options #optionsSkins,
+.options #optionsAnimations {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -314,21 +312,25 @@ div#stats {
   margin-bottom: 10px;
 }
 
-.buttons-container {
+.buttonsСontainer {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 4px;
   justify-content: center;
 }
 
-.options #optionsSkins .buttons-container {
+.options #optionsSkins .buttonsСontainer {
   max-width: calc((150px * 2) + 8px);
 }
 
-.options #optionsAnimations .buttons-container {
+.options #optionsAnimations .buttonsСontainer {
   max-width: calc((150px * 3) + 8px);
 }
 
 .options section button {
   width: 150px;
+  margin: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

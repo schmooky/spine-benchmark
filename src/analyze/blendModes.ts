@@ -1,4 +1,5 @@
-import { Spine } from "@pixi-spine/all-4.1";
+// import { Spine } from "@pixi-spine/all-4.1";
+import { Spine } from "pixi-spine";
 import { BLEND_MODES } from "pixi.js";
 
 import { attributes, html } from "../text/blend.md";

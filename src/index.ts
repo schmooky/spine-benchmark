@@ -93,14 +93,14 @@ if (ext) {
   setInterval(() => {
     const textureSizeTotalBytes = ext
       .getResourcesInfo(WebGLTexture)
-      .map((t) => t.size)
-      .reduce((accumulator, currentValue) => {
+      .map((t: { size: number }) => t.size)
+      .reduce((accumulator: number, currentValue: number) => {
         return accumulator + currentValue;
       }, 0);
     const bufferSizeTotalBytes = ext
       .getResourcesInfo(WebGLBuffer)
-      .map((t) => t.size)
-      .reduce((accumulator, currentValue) => {
+      .map((t: { size: number }) => t.size)
+      .reduce((accumulator: number, currentValue: number) => {
         return accumulator + currentValue;
       }, 0);
     document.getElementById("currentResources")!.innerText = JSON.stringify(

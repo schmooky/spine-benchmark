@@ -18,7 +18,7 @@ export class SpineBenchmark {
   private app: Application;
   private performanceMonitor: PerformanceMonitor;
   private spineAnalyzer: SpineAnalyzer;
-  private spineInstance: Spine | null = null; // Store the single Spine instance
+  private spineInstance: Spine | null = null;
   private isBinary = false;
 
   constructor(app: Application) {
@@ -130,13 +130,21 @@ export class SpineBenchmark {
     }, 250);
   }
 
-  // UI functions:
   private createAnimationButtons(spineInstance: Spine) {
     const animations = spineInstance.skeleton.data.animations;
     const container = document.getElementById("optionsAnimations")!;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "optionsWrapper";
+    container.appendChild(wrapper);
+
     const animationsTitle = document.createElement("h3");
     animationsTitle.innerText = "animations";
-    container.appendChild(animationsTitle);
+    wrapper.appendChild(animationsTitle);
+
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "buttonsContainer";
+    wrapper.appendChild(buttonsContainer);
 
     animations.forEach((animation) => {
       const button = document.createElement("button");
@@ -146,16 +154,25 @@ export class SpineBenchmark {
         spineInstance.state.setAnimation(0, animation.name, false);
       });
 
-      container.appendChild(button);
+      buttonsContainer.appendChild(button);
     });
   }
 
   private createSkinButtons(spineInstance: Spine) {
     const skins = spineInstance.skeleton.data.skins;
     const container = document.getElementById("optionsSkins")!;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "optionsWrapper";
+    container.appendChild(wrapper);
+
     const skinsTitle = document.createElement("h3");
     skinsTitle.innerText = "skins";
-    container.appendChild(skinsTitle);
+    wrapper.appendChild(skinsTitle);
+
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "buttonsContainer";
+    wrapper.appendChild(buttonsContainer);
 
     skins.forEach((skin) => {
       const button = document.createElement("button");
@@ -166,7 +183,7 @@ export class SpineBenchmark {
         spineInstance.skeleton.setSlotsToSetupPose();
       });
 
-      container.appendChild(button);
+      buttonsContainer.appendChild(button);
     });
   }
 
