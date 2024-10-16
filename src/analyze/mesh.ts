@@ -147,6 +147,16 @@ export function analyzeMeshes(spineInstance: Spine) {
     meshesWithParents
   );
 
+  mergedMap.forEach((data, slotName) => {
+    const isDeformed = data.isChanged;
+    const hasBoneWeights = data.isBoneWeighted > 0;
+    const isInSequence = data.isUsedInMeshSequence;
+
+    if (!isDeformed && !hasBoneWeights) {
+      appendMeshMisuseInfo(slotName, isInSequence);
+    }
+  });
+
   const columns: Column[] = [
     { header: "Слот", accessor: "key" },
     { header: "Вершины", accessor: "vertices" },

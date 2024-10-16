@@ -1,116 +1,225 @@
-import "./webgl-memory.js";
-import { Application, Sprite } from "pixi.js";
-import { SpineBenchmark } from "./SpineBenchmark";
+import { Application, Assets, IRenderer } from "pixi.js";
+import { AttachmentType, Spine } from "pixi-spine";
+import { PerformanceMonitor } from "./PerformanceMonitor";
+import { SpineAnalyzer } from "./SpineAnalyzer";
+import {
+  AtlasAttachmentLoader,
+  DeformTimeline,
+  Skeleton,
+  SkeletonBinary,
+  SkeletonData,
+  SkeletonJson,
+  TextureAtlas,
+} from "@pixi-spine/all-4.1";
+import { createId } from "@paralleldrive/cuid2";
 import { CameraContainer } from "./CameraContainer";
 
-import * as PIXI from "pixi.js";
-import { gsap } from "gsap";
-import { PixiPlugin } from "gsap/PixiPlugin";
-import { addStats, Stats } from "pixi-stats";
+export class SpineBenchmark {
+  private app: Application;
+  private performanceMonitor: PerformanceMonitor;
+  private spineAnalyzer: SpineAnalyzer;
+  private spineInstance: Spine | null = null;
+  private isBinary = false;
 
-// import { attributes } from "./text/general.md";
-
-// document.title = attributes.title; // Hello from front-matter
-
-// document.querySelector("#generalRequirementsText")!.innerHTML = JSON.stringify(attributes); // <h1>Markdown File</h1>
-// register the plugin
-gsap.registerPlugin(PixiPlugin);
-
-// give the plugin a reference to the PIXI object
-PixiPlugin.registerPIXI(PIXI);
-
-const WIDTH = 400;
-const HEIGHT = 400;
-
-const app = new Application({
-  width: WIDTH,
-  height: HEIGHT,
-  backgroundColor: 0xf0f0f0,
-  view: document.getElementById("pixiCanvas")! as HTMLCanvasElement,
-});
-
-const camera = new CameraContainer({ width: WIDTH, height: HEIGHT, app: app });
-app.stage.addChild(camera as any);
-
-const benchmark = new SpineBenchmark(app);
-
-const dropArea = document.getElementById("dropArea")!;
-
-function hideDropArea() {
-  dropArea.style.display = "none";
-}
-
-function showTable() {
-  const meshTableContainer = document.getElementById("meshTableContainer");
-  if (meshTableContainer) {
-    meshTableContainer.style.display = "block";
+  constructor(app: Application) {
+    this.app = app;
+    this.performanceMonitor = new PerformanceMonitor();
+    this.spineAnalyzer = new SpineAnalyzer();
   }
-}
 
-dropArea.addEventListener("dragenter", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-});
+  public loadSpineFiles(files: FileList) {
+    const acceptedFiles = [...files];
+    const filesLength = acceptedFiles.length;
+    let count = 0;
 
-dropArea.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropArea.classList.add("highlight");
-});
+    let atlasText: string | undefined = undefined;
+    let json: any = undefined;
 
-dropArea.addEventListener("dragleave", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropArea.classList.remove("highlight");
-});
+    const getFilename = (str: string) =>
+      str.substring(str.lastIndexOf("/") + 1);
 
-dropArea.addEventListener("drop", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropArea.classList.remove("highlight");
+    acceptedFiles.forEach((file) => {
+      const filename = getFilename(file.name);
+      const reader = new FileReader();
 
-  const files = e.dataTransfer?.files;
-  if (files) {
-    benchmark.loadSpineFiles(files);
-    hideDropArea();
-    showTable();
+      if (file.type.match(/image/)) {
+        reader.readAsDataURL(file);
+      } else if (/^.+\.skel$/.test(filename)) {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+      reader.onload = (event) => {
+        if (file.type.match(/image/)) {
+          Assets.load(event.target!.result as string).then(() => {
+            count += 1;
+            Assets.cache.set(
+              file.name,
+              Assets.cache.get(event.target!.result as string)
+            );
+            if (count === filesLength) {
+              this.createSpineAsset(json, atlasText!);
+            }
+          });
+        } else if (file.type === "application/json") {
+          count += 1;
+          json = JSON.parse(event.target!.result as string);
+          // AnimationStore.instance.setSpineAnimations(Object.keys(json.animations));
+          if (count === filesLength) {
+            this.createSpineAsset(json, atlasText!);
+          }
+        } else if (/^.+\.skel$/.test(filename)) {
+          count += 1;
+          this.isBinary = true;
+          json = event.target!.result;
+          // AnimationStore.instance.setSpineAnimations(Object.keys(json.animations));
+          if (count === filesLength) {
+            this.createSpineAsset(json, atlasText!);
+          }
+        } else {
+          count += 1;
+          atlasText = event.target!.result as string;
+          if (count === filesLength) {
+            this.createSpineAsset(json, atlasText);
+          }
+        }
+      };
+    });
   }
-});
 
-function bytesToSize(bytes: number) {
-  const sizes = ["Bytes", "KB", "MB"];
-  if (bytes === 0) return "n/a";
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  if (i === 0) return `${bytes} ${sizes[i]}`;
-  return `${(bytes / 1024 ** i).toFixed(1)} ${sizes[i]}`;
-}
+  private createSpineAsset(data: any, atlasText: string): void {
+    const key = `spine-${createId()}`;
+    const spineAtlas = new TextureAtlas(atlasText, function (line, callback) {
+      callback(Assets.cache.get(line));
+    });
 
-const gl = (app.renderer as PIXI.Renderer).gl;
-const ext = gl.getExtension("GMAN_webgl_memory");
+    let skeletonData: SkeletonData;
+    if (this.isBinary) {
+      const spineBinaryParser = new SkeletonBinary(
+        new AtlasAttachmentLoader(spineAtlas)
+      );
+      skeletonData = spineBinaryParser.readSkeletonData(new Uint8Array(data));
+    } else {
+      const spineJsonParser = new SkeletonJson(
+        new AtlasAttachmentLoader(spineAtlas)
+      );
+      skeletonData = spineJsonParser.readSkeletonData(data);
+    }
 
-if (ext) {
-  const info = ext.getMemoryInfo();
-  setInterval(() => {
-    const textureSizeTotalBytes = ext
-      .getResourcesInfo(WebGLTexture)
-      .map((t: { size: number }) => t.size)
-      .reduce((accumulator: number, currentValue: number) => {
-        return accumulator + currentValue;
-      }, 0);
-    const bufferSizeTotalBytes = ext
-      .getResourcesInfo(WebGLBuffer)
-      .map((t: { size: number }) => t.size)
-      .reduce((accumulator: number, currentValue: number) => {
-        return accumulator + currentValue;
-      }, 0);
-    document.getElementById("currentResources")!.innerText = JSON.stringify(
-      info,
-      null,
-      "\t"
-    );
-    document.getElementById("totalTextures")!.innerText =
-      "Total Textures: " + bytesToSize(textureSizeTotalBytes);
-    document.getElementById("totalBuffers")!.innerText =
-      "Total Buffers: " + bytesToSize(bufferSizeTotalBytes);
-  }, 25);
+    Assets.cache.set(key, skeletonData);
+
+    setTimeout(() => {
+      const skeleton = new Spine(Assets.cache.get(key));
+      const camera = this.app.stage.children[0] as CameraContainer;
+
+      // Remove previous Spine instance if exists
+      if (this.spineInstance) {
+        camera.removeChild(this.spineInstance);
+      }
+
+      camera.addChild(skeleton);
+      camera.lookAtChild(skeleton);
+
+      // UI elements:
+      this.createAnimationButtons(skeleton);
+      this.createSkinButtons(skeleton);
+
+      this.spineInstance = skeleton;
+      this.updateBenchmarkResults();
+      document.getElementById("dropArea")?.remove();
+    }, 250);
+  }
+
+  private createAnimationButtons(spineInstance: Spine) {
+    const animations = spineInstance.skeleton.data.animations;
+    const container = document.getElementById("optionsAnimations")!;
+
+    const animationsTitle = document.createElement("h3");
+    animationsTitle.innerText = "animations";
+    container.appendChild(animationsTitle);
+
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "buttonsContainer";
+    container.appendChild(buttonsContainer);
+
+    animations.forEach((animation) => {
+      const button = document.createElement("button");
+      button.textContent = animation.name;
+
+      button.addEventListener("click", () => {
+        spineInstance.state.setAnimation(0, animation.name, false);
+      });
+
+      buttonsContainer.appendChild(button);
+    });
+  }
+
+  private createSkinButtons(spineInstance: Spine) {
+    const skins = spineInstance.skeleton.data.skins;
+    const container = document.getElementById("optionsSkins")!;
+
+    const skinsTitle = document.createElement("h3");
+    skinsTitle.innerText = "skins";
+    container.appendChild(skinsTitle);
+
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "buttonsContainer";
+    container.appendChild(buttonsContainer);
+
+    skins.forEach((skin) => {
+      const button = document.createElement("button");
+      button.textContent = skin.name;
+
+      button.addEventListener("click", () => {
+        spineInstance.skeleton.setSkinByName(skin.name);
+        spineInstance.skeleton.setSlotsToSetupPose();
+      });
+
+      buttonsContainer.appendChild(button);
+    });
+  }
+
+  private updateBenchmarkResults() {
+    if (!this.spineInstance) return;
+
+    const meshInfo = this.spineAnalyzer.analyzeMeshes([this.spineInstance]);
+    const performanceInfo = this.performanceMonitor.getPerformanceInfo();
+    //@ts-ignore
+    const drawCallInfo = this.spineAnalyzer.analyzeDrawCalls(this.app.renderer);
+
+    // Update benchmark results UI
+    // ... (Update the elements in the UI)
+  }
+
+  // Usage example:
+  // Assuming you have a Spine instance called 'spineInstance'
+  // const spineInstance = new PIXI.spine.Spine(spineData);
+  // const analysis = analyzeSpineSkeleton(spineInstance);
+
+  // playSpineAnimationsInSequence(spineInstance: Spine) {
+  //   const animations = spineInstance.skeleton.data.animations;
+  //   let currentIndex = 0;
+  //   spineInstance.state.addListener({
+  //     complete: function (track) {
+  //       currentIndex++;
+  //       setTimeout(playNextAnimation, 250);
+  //     },
+  //   });
+  //   function playNextAnimation() {
+  //     if (currentIndex < animations.length) {
+  //       const animation = animations[currentIndex];
+
+  //       // setAfterElementContent('pixiContainer',animation.name)
+  //       document.getElementById(
+  //         "currentAnimation"
+  //       )!.innerHTML = `Animation: ${animation.name}`;
+  //       spineInstance.state.setAnimation(0, animation.name, false);
+  //     } else {
+  //       currentIndex = 0;
+  //       setTimeout(playNextAnimation, 250);
+  //     }
+  //   }
+
+  //   playNextAnimation();
+  // }
 }

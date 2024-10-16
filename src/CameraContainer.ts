@@ -1,6 +1,6 @@
 import gsap from "gsap";
 import { Spine } from "pixi-spine";
-import { Application, Container } from "pixi.js";
+import { Application, Container, DisplayObject } from "pixi.js";
 
 export class CameraContainer extends Container {
   originalWidth: any;

@@ -22,11 +22,16 @@ PixiPlugin.registerPIXI(PIXI);
 const WIDTH = 400;
 const HEIGHT = 400;
 
+const pixiContainer = document.getElementById("pixiContainer");
+const canvas = document.createElement("canvas");
+canvas.id = "pixiCanvas";
+pixiContainer?.appendChild(canvas);
+
 const app = new Application({
   width: WIDTH,
   height: HEIGHT,
   backgroundColor: 0xf0f0f0,
-  view: document.getElementById("pixiCanvas")! as HTMLCanvasElement,
+  view: canvas,
 });
 
 const camera = new CameraContainer({ width: WIDTH, height: HEIGHT, app: app });
