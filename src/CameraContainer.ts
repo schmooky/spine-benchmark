@@ -63,7 +63,7 @@ export class CameraContainer extends Container {
     this.scale.set(scale);
     this.setCanvasScaleDebugInfo(scale);
     document
-      .getElementById("pixiContainer")!
+      .getElementById("pixiCanvas")!
       .addEventListener("wheel", (event) => {
         event.preventDefault();
 
