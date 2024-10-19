@@ -1,12 +1,11 @@
 import "./webgl-memory.js";
-import { Application, Sprite } from "pixi.js";
+import { Application } from "pixi.js";
 import { SpineBenchmark } from "./SpineBenchmark";
 import { CameraContainer } from "./CameraContainer";
 
 import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
-import { addStats, Stats } from "pixi-stats";
 
 // import { attributes } from "./text/general.md";
 
@@ -77,7 +76,7 @@ dropArea.addEventListener("drop", (e) => {
   const files = e.dataTransfer?.files;
   if (files) {
     benchmark.loadSpineFiles(files);
-    hideDropArea();
+    // hideDropArea();
     showTable();
   }
 });
