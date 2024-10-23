@@ -14,6 +14,8 @@ export enum SpineErrorCode {
   SPINE_INSTANCE_ERROR = 1013,
   CRITICAL_ASSET_ERROR = 1014,
   FILE_PROCESSING_ERROR = 1015,
+  MISSING_SKELETON_FILE = 1016,
+  MISSING_ATLAS_FILE = 1017,
 }
 
 interface SpineError {
@@ -55,6 +57,10 @@ export const SPINE_ERRORS: Record<SpineErrorCode, string> = {
     "Критическая ошибка при создании ассета: {0}",
   [SpineErrorCode.FILE_PROCESSING_ERROR]:
     "Произошла ошибка при обработке файла {0}: {1}",
+  [SpineErrorCode.MISSING_SKELETON_FILE]:
+    "Отсутствует файл скелета (.json или .skel). Загрузите файл скелета вместе с атласом.",
+  [SpineErrorCode.MISSING_ATLAS_FILE]:
+    "Отсутствует атлас файл (.atlas). Загрузите его вместе со скелетом.",
 };
 
 export function formatErrorMessage(

@@ -76,7 +76,6 @@ dropArea.addEventListener("drop", (e) => {
   const files = e.dataTransfer?.files;
   if (files) {
     benchmark.loadSpineFiles(files);
-    // hideDropArea();
     showTable();
   }
 });

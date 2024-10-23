@@ -39,9 +39,35 @@ export class SpineBenchmark {
 
     let atlasText: string | undefined = undefined;
     let json: any = undefined;
+    let hasSkeletonFile = false;
+    let hasAtlasFile = false;
 
     const getFilename = (str: string) =>
       str.substring(str.lastIndexOf("/") + 1);
+
+    acceptedFiles.forEach((file) => {
+      const filename = getFilename(file.name);
+      if (file.type === "application/json" || /^.+\.skel$/.test(filename)) {
+        hasSkeletonFile = true;
+      }
+      if (filename.endsWith(".atlas")) {
+        hasAtlasFile = true;
+      }
+    });
+
+    if (!hasAtlasFile) {
+      toast(formatErrorMessage(SpineErrorCode.MISSING_ATLAS_FILE));
+      return;
+    }
+
+    if (
+      !hasSkeletonFile &&
+      filesLength === 1 &&
+      acceptedFiles[0].name.endsWith(".atlas")
+    ) {
+      toast(formatErrorMessage(SpineErrorCode.MISSING_SKELETON_FILE));
+      return;
+    }
 
     acceptedFiles.forEach((file) => {
       const filename = getFilename(file.name);
@@ -69,7 +95,7 @@ export class SpineBenchmark {
                   file.name,
                   Assets.cache.get(event.target!.result as string)
                 );
-                if (count === filesLength) {
+                if (count === filesLength && hasSkeletonFile) {
                   this.createSpineAsset(json, atlasText!);
                 }
               })
@@ -96,7 +122,6 @@ export class SpineBenchmark {
                       version.toString()
                     )
                   );
-                  return;
                 }
               }
 
@@ -107,7 +132,6 @@ export class SpineBenchmark {
                     filename
                   )
                 );
-                return;
               }
             } catch (error: unknown) {
               const err = error as Error;
@@ -118,7 +142,6 @@ export class SpineBenchmark {
                   err.message
                 )
               );
-              return;
             }
 
             if (count === filesLength) {
@@ -133,7 +156,6 @@ export class SpineBenchmark {
               toast(
                 formatErrorMessage(SpineErrorCode.BINARY_FILE_ERROR, filename)
               );
-              return;
             }
 
             if (count === filesLength) {
@@ -147,7 +169,6 @@ export class SpineBenchmark {
               toast(
                 formatErrorMessage(SpineErrorCode.ATLAS_READ_ERROR, filename)
               );
-              return;
             }
 
             const atlasLines = atlasText.split("\n");
@@ -158,7 +179,6 @@ export class SpineBenchmark {
                   filename
                 )
               );
-              return;
             }
 
             if (count === filesLength) {
