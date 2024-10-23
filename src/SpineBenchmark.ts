@@ -126,7 +126,8 @@ export class SpineBenchmark {
 
       this.spineInstance = skeleton;
       this.updateBenchmarkResults();
-      document.getElementById("dropArea")?.remove();
+      document.getElementById("dropArea")?.style.setProperty("height", "60px");
+      document.getElementById('pixiContainer')?.style.setProperty('display', 'flex');
     }, 250);
   }
 
@@ -136,6 +137,10 @@ export class SpineBenchmark {
     const container = document.getElementById('sidebarAnimations')!;
 
     container.classList.remove('hidden');
+
+    while(container.firstChild) { 
+      container.removeChild(container.firstChild); 
+    } 
 
     animations.forEach(animation => {
       const button = document.createElement('button');
@@ -152,7 +157,12 @@ export class SpineBenchmark {
   private createSkinButtons(spineInstance: Spine) {
     const skins = spineInstance.skeleton.data.skins;
     const container = document.getElementById('sidebarSkins')!;
+
     container.classList.remove('hidden');
+
+    while(container.firstChild) { 
+      container.removeChild(container.firstChild); 
+    } 
 
     skins.forEach(skin => {
       const button = document.createElement('button');

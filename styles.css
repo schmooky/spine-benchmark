@@ -116,6 +116,7 @@ body {
   display: flex;
   flex-direction: row;
   height: 400px;
+  display: none;
 }
 
 #pixiContainer section {
