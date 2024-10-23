@@ -6,7 +6,7 @@ import { CameraContainer } from './CameraContainer';
 import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
-import { addStats, Stats } from 'pixi-stats';
+import { showPixiStats } from './utils/pixiStats.js';
 
 
 // import { attributes } from "./text/general.md";
@@ -30,7 +30,7 @@ const app = new Application({
     view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
 });
 
-// const stats = addStats(document,app);
+showPixiStats(app);
 
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});
 app.stage.addChild(camera as any)
