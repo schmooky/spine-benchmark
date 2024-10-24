@@ -126,8 +126,7 @@ export class SpineBenchmark {
 
       this.spineInstance = skeleton;
       this.updateBenchmarkResults();
-      document.getElementById("dropArea")?.style.setProperty("height", "60px");
-      document.getElementById('pixiContainer')?.style.setProperty('display', 'flex');
+      //show pixi container
     }, 250);
   }
 
@@ -208,7 +207,6 @@ export class SpineBenchmark {
       if (currentIndex < animations.length) {
         const animation = animations[currentIndex];
         
-        // setAfterElementContent('pixiContainer',animation.name)
         document.getElementById('currentAnimation')!.innerHTML = `Animation: ${animation.name}`;
         spineInstance.state.setAnimation(0, animation.name, false);
         

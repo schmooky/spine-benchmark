@@ -25,8 +25,8 @@ const HEIGHT = 400;
 
 const app = new Application({
     width: WIDTH,
-    height:HEIGHT,
-    backgroundColor: 0xf0f0f0,
+    height: HEIGHT,
+    backgroundColor: 0xf4f4f4,
     view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
 });
 
