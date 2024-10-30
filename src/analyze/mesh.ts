@@ -7,7 +7,7 @@ import { Spine } from "pixi-spine";
 
 import { attributes, html } from "../text/mesh.md";
 
-document.title = attributes.title; // Hello from front-matter
+
 
 document.querySelector("#meshTableContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 

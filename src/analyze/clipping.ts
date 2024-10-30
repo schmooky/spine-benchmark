@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import { attributes, html } from "../text/clipping.md";
 import { AttachmentType, ClippingAttachment, Spine } from '@pixi-spine/all-4.1';
 
-document.title = attributes.title; // Hello from front-matter
+
 
 document.querySelector("#clippingContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 

@@ -3,7 +3,7 @@ import { BLEND_MODES } from "pixi.js";
 
 import { attributes, html } from "../text/blend.md";
 
-document.title = attributes.title; // Hello from front-matter
+
 
 document.querySelector("#blendModesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 

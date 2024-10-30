@@ -1,47 +1,54 @@
-import { Bone, Spine } from "@pixi-spine/all-4.1";
-import { attributes, html } from "../text/names.md";
+import { Bone, Spine, AttachmentType, Attachment } from "@pixi-spine/all-4.1";
+import { attributes, html } from "../text/bones.md";
 
-document.title = attributes.title; // Hello from front-matter
+// Map attachment types to icons
+const attachmentTypeIcons: Record<AttachmentType, string> = {
+    [AttachmentType.Region]: '🖼️', // Image icon for Region
+    [AttachmentType.BoundingBox]: '📦', // Box icon for BoundingBox
+    [AttachmentType.Mesh]: '🔷', // Diamond icon for Mesh
+    [AttachmentType.LinkedMesh]: '🔗', // Link icon for LinkedMesh
+    [AttachmentType.Path]: '➰', // Curly loop icon for Path
+    [AttachmentType.Point]: '📍', // Pin icon for Point
+    [AttachmentType.Clipping]: '✂️', // Scissors icon for Clipping
+};
 
-document.querySelector("#namesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
-  
-function isBoneWithNumber(name: string) {
-    return /.*bone\d+$/.test(name);
-  }
+document.querySelector("#bonesContainerText")!.innerHTML = html;
 
-  function isSnakeCase(name: string) {
-    return /^[a-z]+(?:_[a-z]+)*(?:_[LR])?$/.test(name);
-}
-
-
-  export function analyzeSpineBoneNames(spineInstance: Spine) {
+export function analyzeSpineAttachments(spineInstance: Spine) {
     const skeleton = spineInstance.skeleton;
     const slots = skeleton.slots;
     const rootBone = skeleton.getRootBone();
 
-    // Create the root <ul> element
     const treeRoot = document.createElement('ul');
     treeRoot.classList.add('bone-tree');
 
-    // Create the tree structure
-    createBoneTree(rootBone, treeRoot, 0);
+    createBoneTree(rootBone, treeRoot, 0, slots);
 
-    // Append the tree to the document body (or any other container)
-    document.getElementById('namesContainer')!.appendChild(treeRoot);
+    document.getElementById('bonesContainer')!.appendChild(treeRoot);
 }
 
-function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {
+function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number, slots: Array<any>) {
     const li = document.createElement('li');
-    li.textContent = bone.data.name;
+    const contentSpan = document.createElement('span');
+    
+    // Find attachments for this bone
+    const boneAttachments = slots
+        .filter(slot => slot.bone === bone)
+        .map(slot => slot.attachment)
+        .filter(attachment => attachment != null) as Attachment[];
 
-    li.classList.add('good-bone');
+    // Create icon string based on attachments
+    const attachmentIcons = boneAttachments
+        .map(attachment => attachmentTypeIcons[attachment.type])
+        .filter(icon => icon != null)
+        .join(' ');
 
-    if (isBoneWithNumber(bone.data.name)) {
-        li.classList.add('default-name-bone');
-    }
-
-    if (!isSnakeCase(bone.data.name)) {
-        li.classList.add('wrong-case-name-bone');
+    // Add icons and bone name
+    contentSpan.innerHTML = `${attachmentIcons} ${bone.data.name}`;
+    li.appendChild(contentSpan);
+    
+    if (depth > 2) {
+        li.classList.add('deep-bone');
     }
 
     parentElement.appendChild(li);
@@ -51,7 +58,19 @@ function createBoneTree(bone: Bone, parentElement: HTMLElement, depth: number) {
         li.appendChild(ul);
 
         bone.children.forEach(childBone => {
-            createBoneTree(childBone, ul, depth + 1);
+            createBoneTree(childBone, ul, depth + 1, slots);
         });
     }
+}
+
+function getBoneDistanceFromRoot(bone: Bone, rootBone: Bone) {
+    let distance = 0;
+    let currentBone = bone;
+
+    while (currentBone && currentBone !== rootBone) {
+        distance++;
+        currentBone = currentBone.parent!;
+    }
+
+    return distance;
 }

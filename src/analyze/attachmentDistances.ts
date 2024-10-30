@@ -2,7 +2,7 @@ import { Bone, Spine } from "@pixi-spine/all-4.1";
 
 import { attributes, html } from "../text/bones.md";
 
-document.title = attributes.title; // Hello from front-matter
+
 
 document.querySelector("#bonesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 

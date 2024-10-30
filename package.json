@@ -11,6 +11,7 @@
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
     "@pixi-spine/all-4.1": "^4.0.4",
+    "@pixi/graphics-smooth": "^1.1.0",
     "@types/node": "^22.7.0",
     "gsap": "^3.12.5",
     "pixi-spine": "^4.0.3",

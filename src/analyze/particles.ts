@@ -1,7 +1,7 @@
 import { Bone, Spine } from "@pixi-spine/all-4.1";
 import { attributes, html } from "../text/particles.md";
 
-document.title = attributes.title; // Hello from front-matter
+
 
 document.querySelector("#particlesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 

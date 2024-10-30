@@ -4,7 +4,7 @@ import { Renderer } from "pixi.js";
 import { analyzeMeshes } from "./analyze/mesh";
 import { analyzeDeformations } from "./analyze/deformations";
 import { analyzeSpineAttachments } from "./analyze/attachmentDistances";
-import { analyzeSpineBoneNames } from "./analyze/boneName";
+import { analyzeSpineAttachments } from "./analyze/boneName";
 import { analyzeSpineForParticles } from "./analyze/particles";
 import { analyzeMasks } from "./analyze/clipping";
 import { analyzeSpineAnimations } from "./analyze/timelines";
@@ -32,7 +32,7 @@ export class SpineAnalyzer {
       analyzeMeshes(spine);
       analyzeDeformations(spine);
       analyzeSpineAttachments(spine as any);
-      analyzeSpineBoneNames(spine as any);
+      analyzeSpineAttachments(spine as any);
       analyzeSpineForParticles(spine as any);
       analyzeMasks(spine as any);
       analyzeSpineAnimations(spine as any);

@@ -1,6 +1,7 @@
 import gsap from "gsap";
-import { Spine } from "pixi-spine";
 import { Application, Container, DisplayObject } from "pixi.js";
+import { SpineMeshOutline } from "./Outline";
+import { Spine } from "@pixi-spine/all-4.1";
 
 export class CameraContainer extends Container {
   originalWidth: any;
@@ -29,6 +30,7 @@ export class CameraContainer extends Container {
   }
 
   lookAtChild(object: Spine) {
+    const meshOutline = new SpineMeshOutline(this.app,object);
     const padding = 20;
     // Get the bounds of the object in global space
     let bounds: { width: number; height: number; x: number; y: number } =
@@ -63,7 +65,7 @@ export class CameraContainer extends Container {
     this.scale.set(scale);
     this.setCanvasScaleDebugInfo(scale);
     document
-      .getElementById("pixiCanvas")!
+      .getElementById("leftPanel")!
       .addEventListener("wheel", (event) => {
         event.preventDefault();
 

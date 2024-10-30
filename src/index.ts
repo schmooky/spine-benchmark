@@ -9,7 +9,7 @@ import { PixiPlugin } from "gsap/PixiPlugin";
 
 // import { attributes } from "./text/general.md";
 
-// document.title = attributes.title; // Hello from front-matter
+// 
 
 // document.querySelector("#generalRequirementsText")!.innerHTML = JSON.stringify(attributes); // <h1>Markdown File</h1>
 // register the plugin
@@ -18,15 +18,29 @@ gsap.registerPlugin(PixiPlugin);
 // give the plugin a reference to the PIXI object
 PixiPlugin.registerPIXI(PIXI);
 
-const WIDTH = 400;
-const HEIGHT = 400;
+const WIDTH = 720;
+const HEIGHT = 720;
 
 const app = new Application({
-    width: WIDTH,
-    height: HEIGHT,
     backgroundColor: 0xf4f4f4,
     view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
+    resizeTo: document.getElementById('leftPanel')!
 });
+
+
+// // Set canvas size to match its container
+// function resizeCanvas() {
+//     const container = document.getElementById('leftPanel')!;
+//     app.renderer.resize(container.offsetWidth, container.offsetHeight);
+    
+// }
+
+// // Initial resize
+// resizeCanvas();
+
+// // Resize canvas when window is resized
+// window.addEventListener('resize', resizeCanvas);
+
 
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});
 app.stage.addChild(camera as any)
@@ -79,10 +93,10 @@ if (ext) {
     setInterval(()=>{
         const textureSizeTotalBytes = ext.getResourcesInfo(WebGLTexture).map(t => t.size).reduce((accumulator, currentValue) => {
             return accumulator + currentValue
-          },0);
-          const bufferSizeTotalBytes = ext.getResourcesInfo(WebGLBuffer).map(t => t.size).reduce((accumulator, currentValue) => {
+        },0);
+        const bufferSizeTotalBytes = ext.getResourcesInfo(WebGLBuffer).map(t => t.size).reduce((accumulator, currentValue) => {
             return accumulator + currentValue
-          },0);
+        },0);
         document.getElementById("currentResources")!.innerText = JSON.stringify(info, null, "\t");
         document.getElementById("totalTextures")!.innerText = 'Total Textures: ' + bytesToSize(textureSizeTotalBytes);
         document.getElementById("totalBuffers")!.innerText = 'Total Buffers: ' + bytesToSize(bufferSizeTotalBytes);
