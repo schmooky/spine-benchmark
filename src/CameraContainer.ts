@@ -10,6 +10,15 @@ export class CameraContainer extends Container {
   isDragging: boolean = false;
   lastPosition: { x: number; y: number } | null = null;
   initialPosition: { x: number; y: number } | null = null;
+  
+  meshOutline: SpineMeshOutline | null = null;
+  
+  
+  
+  private isMeshVisible: boolean = false;
+  private onMeshVisibilityChange?: (isVisible: boolean) => void;
+  
+  
   //@ts-ignore
   contextMenu: HTMLDivElement;
   
@@ -27,6 +36,13 @@ export class CameraContainer extends Container {
     
     window.addEventListener('resize', () => this.onResize());
   }
+  
+  
+  // Add this method to set the callback
+  public setMeshVisibilityCallback(callback: (isVisible: boolean) => void) {
+    this.onMeshVisibilityChange = callback;
+  }
+  
   
   private createContextMenu() {
     // Create context menu element
@@ -59,7 +75,65 @@ export class CameraContainer extends Container {
       this.hideContextMenu();
     });
     
+    // Create separator
+    const separator = document.createElement('div');
+    separator.style.height = '1px';
+    separator.style.backgroundColor = '#ccc';
+    separator.style.margin = '5px 0';
+    
+    // Create Show Mesh toggle button
+    const meshToggleContainer = document.createElement('div');
+    meshToggleContainer.style.padding = '5px 10px';
+    meshToggleContainer.style.cursor = 'pointer';
+    meshToggleContainer.style.userSelect = 'none';
+    meshToggleContainer.style.display = 'flex';
+    meshToggleContainer.style.alignItems = 'center';
+    meshToggleContainer.style.gap = '8px';
+    
+    const checkbox = document.createElement('div');
+    checkbox.style.width = '14px';
+    checkbox.style.height = '14px';
+    checkbox.style.border = '2px solid #666';
+    checkbox.style.display = 'flex';
+    checkbox.style.alignItems = 'center';
+    checkbox.style.justifyContent = 'center';
+    
+    const checkmark = document.createElement('div');
+    checkmark.style.width = '8px';
+    checkmark.style.height = '8px';
+    checkmark.style.backgroundColor = '#666';
+    checkmark.style.display = this.isMeshVisible ? 'block' : 'none';
+    
+    const label = document.createElement('span');
+    label.innerText = 'Show Mesh';
+    
+    checkbox.appendChild(checkmark);
+    meshToggleContainer.appendChild(checkbox);
+    meshToggleContainer.appendChild(label);
+    
+    meshToggleContainer.addEventListener('mouseenter', () => {
+      meshToggleContainer.style.backgroundColor = '#f0f0f0';
+    });
+    
+    meshToggleContainer.addEventListener('mouseleave', () => {
+      meshToggleContainer.style.backgroundColor = 'transparent';
+    });
+    
+    meshToggleContainer.addEventListener('click', () => {
+      this.isMeshVisible = !this.isMeshVisible;
+      checkmark.style.display = this.isMeshVisible ? 'block' : 'none';
+      
+      // Call the callback if it exists
+      if (this.onMeshVisibilityChange) {
+        this.onMeshVisibilityChange(this.isMeshVisible);
+      }
+    });
+    
+    // Add all elements to context menu
     this.contextMenu.appendChild(centerButton);
+    this.contextMenu.appendChild(separator);
+    this.contextMenu.appendChild(meshToggleContainer);
+    
     document.body.appendChild(this.contextMenu);
   }
   
@@ -142,7 +216,14 @@ export class CameraContainer extends Container {
   }
   
   lookAtChild(object: Spine) {
-    const meshOutline = new SpineMeshOutline(this.app,object);
+    this.meshOutline = new SpineMeshOutline(this.app,object);
+    this.meshOutline.graphics.visible = this.isMeshVisible;
+    this.setMeshVisibilityCallback((value: boolean)=> {
+      if(!this.meshOutline) return;
+      this.meshOutline.graphics.visible = value;
+    })
+
+
     const padding = 20;
     // Get the bounds of the object in global space
     let bounds: { width: number; height: number; x: number; y: number } =
@@ -204,7 +285,7 @@ export class CameraContainer extends Container {
     if (!debug) return;
     debug.innerText = `Scale: x${scale.toFixed(2)}`;
   }
-
+  
   public destroy() {
     // Remove event listeners
     window.removeEventListener('resize', this.onResize);
@@ -216,5 +297,24 @@ export class CameraContainer extends Container {
     
     // Call parent destroy method
     super.destroy();
+  }
+  
+  // Add getter for mesh visibility state
+  public getMeshVisibility(): boolean {
+    return this.isMeshVisible;
+  }
+  
+  // Add setter for mesh visibility state
+  public setMeshVisibility(isVisible: boolean) {
+    this.isMeshVisible = isVisible;
+    // Update checkbox visual if context menu exists
+    const checkmark = this.contextMenu.querySelector('div > div > div') as HTMLDivElement;
+    if (checkmark) {
+      checkmark.style.display = isVisible ? 'block' : 'none';
+    }
+    // Call the callback if it exists
+    if (this.onMeshVisibilityChange) {
+      this.onMeshVisibilityChange(isVisible);
+    }
   }
 }
