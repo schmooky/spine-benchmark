@@ -126,7 +126,7 @@ export class SpineBenchmark {
       //   camera.createDebugCanvas('debugContainer',slot.name);
       // });
 
-      camera.createDebugCanvas('debugContainer','bone_effect');
+      camera.createDebugCanvas('debugContainer','bokehh5');
 //       const DEBUG_CANVAS_WIDTH = 400;
 //       const DEBUG_CANVAS_HEIGHT = 400;
 //       const newCanvas = document.createElement('canvas');

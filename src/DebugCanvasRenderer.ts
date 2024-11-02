@@ -1,4 +1,4 @@
-import { Application, Container, DisplayObject, ICanvas, IRenderer, Renderer } from "pixi.js";
+import { Application, Container, DisplayObject, ICanvas, IRenderer, Renderer, UPDATE_PRIORITY } from "pixi.js";
   export class DebugCanvasRenderer {
     private canvas: HTMLCanvasElement;
     private renderer: Renderer;
@@ -20,19 +20,20 @@ import { Application, Container, DisplayObject, ICanvas, IRenderer, Renderer } f
       this.canvas.width = this.width;
       this.canvas.height = this.height;
       document.getElementById(containerId)?.appendChild(this.canvas);
-  
+      
       // Create renderer with shared context
       this.renderer = new Renderer({
         width: this.width,
         height: this.height,
         view: this.canvas,
         // Use shared context from main application
-        context: (this.app.renderer as any).context?.gl ||
-        (this.app.renderer as any).gl ||
-        (this.app.renderer as any).view.getContext('webgl'),
+        // context: (this.app.renderer as any).context?.gl ||
+        // (this.app.renderer as any).gl ||
+        // (this.app.renderer as any).view.getContext('webgl'),
         // Important settings for context sharing
         // shared: true,
         antialias: false, // Disable if not needed
+        
       });
   
       // Setup intersection observer
@@ -84,12 +85,12 @@ import { Application, Container, DisplayObject, ICanvas, IRenderer, Renderer } f
         // Center the container in this canvas view
         renderContainer.x = this.width / 2;
         renderContainer.y = this.height / 2;
-        
+        this.renderer.reset();
         // Render the centered view
         this.renderer.render(renderContainer);
 
         prev.addChildAt(this.targetStage,prevPos)
-      });
+      }, undefined, UPDATE_PRIORITY.HIGH);
     }
   
     private isCanvasVisible(): boolean {

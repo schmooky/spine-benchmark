@@ -1,4 +1,4 @@
-import './webgl-memory.js'
+// import './webgl-memory.js'
 import { Application, Sprite } from 'pixi.js';
 import { SpineBenchmark } from './SpineBenchmark';
 import { CameraContainer } from './CameraContainer';
@@ -85,21 +85,21 @@ function bytesToSize(bytes: number) {
     return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
 }
 
-const gl = (app.renderer as PIXI.Renderer).gl;
-const ext = gl.getExtension('GMAN_webgl_memory');
+// const gl = (app.renderer as PIXI.Renderer).gl;
+// const ext = gl.getExtension('GMAN_webgl_memory');
 
-if (ext) {
-    const info = ext.getMemoryInfo();
-    setInterval(()=>{
-        const textureSizeTotalBytes = ext.getResourcesInfo(WebGLTexture).map(t => t.size).reduce((accumulator, currentValue) => {
-            return accumulator + currentValue
-        },0);
-        const bufferSizeTotalBytes = ext.getResourcesInfo(WebGLBuffer).map(t => t.size).reduce((accumulator, currentValue) => {
-            return accumulator + currentValue
-        },0);
-        document.getElementById("currentResources")!.innerText = JSON.stringify(info, null, "\t");
-        document.getElementById("totalTextures")!.innerText = 'Total Textures: ' + bytesToSize(textureSizeTotalBytes);
-        document.getElementById("totalBuffers")!.innerText = 'Total Buffers: ' + bytesToSize(bufferSizeTotalBytes);
-    },25)
-}
+// if (ext) {
+//     const info = ext.getMemoryInfo();
+//     setInterval(()=>{
+//         const textureSizeTotalBytes = ext.getResourcesInfo(WebGLTexture).map(t => t.size).reduce((accumulator, currentValue) => {
+//             return accumulator + currentValue
+//         },0);
+//         const bufferSizeTotalBytes = ext.getResourcesInfo(WebGLBuffer).map(t => t.size).reduce((accumulator, currentValue) => {
+//             return accumulator + currentValue
+//         },0);
+//         document.getElementById("currentResources")!.innerText = JSON.stringify(info, null, "\t");
+//         document.getElementById("totalTextures")!.innerText = 'Total Textures: ' + bytesToSize(textureSizeTotalBytes);
+//         document.getElementById("totalBuffers")!.innerText = 'Total Buffers: ' + bytesToSize(bufferSizeTotalBytes);
+//     },25)
+// }
 // document.getElementById("meshTableContainer")!.appendChild(table);
