@@ -109,6 +109,7 @@ body {
   display: flex;
   flex-flow: column;  
   align-items: center;
+  margin: 0;
 }
 
 .bone-tree {
@@ -209,10 +210,9 @@ canvas {
   height: 100px;
   line-height: 60px;
   border: 2px dashed #ccc;
-  border-radius: 20px;
   font-family: Arial, sans-serif;
   text-align: center;
-  padding: 20px;
+  padding: 0px;
   box-sizing: border-box;
   position: absolute;
   width:100%;
@@ -314,7 +314,6 @@ div#stats {
 .left-panel {
   width: 50%;
   height: 100vh;
-  background-color: #1a1a1a;
   position: fixed;
   left: 0;
 }
@@ -364,4 +363,12 @@ div#stats {
   top: 0;
   right: 0;
   z-index: 1000;
+}
+
+section>canvas {
+border: 1px solid #000;
+height: 400px;
+width: 400px;
+margin: auto 32px;
+margin-bottom: 32px;
 }

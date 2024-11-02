@@ -2,6 +2,7 @@ import gsap from "gsap";
 import { Application, Container, DisplayObject } from "pixi.js";
 import { SpineMeshOutline } from "./Outline";
 import { Spine } from "@pixi-spine/all-4.1";
+import { DebugCanvasRenderer } from "./DebugCanvasRenderer";
 
 export class CameraContainer extends Container {
   originalWidth: any;
@@ -18,6 +19,7 @@ export class CameraContainer extends Container {
   private isMeshVisible: boolean = false;
   private onMeshVisibilityChange?: (isVisible: boolean) => void;
   
+  target?: Spine; 
   
   //@ts-ignore
   contextMenu: HTMLDivElement;
@@ -213,6 +215,9 @@ export class CameraContainer extends Container {
     
     this.x = w / 2;
     this.y = h / 2;
+
+    this.originalWidth = w;
+    this.originalHeight = h;
   }
   
   lookAtChild(object: Spine) {
@@ -222,8 +227,8 @@ export class CameraContainer extends Container {
       if(!this.meshOutline) return;
       this.meshOutline.graphics.visible = value;
     })
-
-
+    
+    this.target = object;
     const padding = 20;
     // Get the bounds of the object in global space
     let bounds: { width: number; height: number; x: number; y: number } =
@@ -317,4 +322,73 @@ export class CameraContainer extends Container {
       this.onMeshVisibilityChange(isVisible);
     }
   }
+  
+  private debugRenderers: DebugCanvasRenderer[] = [];
+  
+  // Method to create a new debug canvas
+  public createDebugCanvas(containerId: string, name: string): void {
+        // Check if we can create more WebGL contexts
+        if (!WebGLContextManager.canCreateContext()) {
+          console.warn('Maximum WebGL context limit reached. Cannot create more debug canvases.');
+          return;
+        }
+
+    console.log('🎥 Creating Debug View', {containerId})
+    console.log(this.target!.skeleton.data.findBoneIndex(name))
+    
+    let targetMeta: {type: 'bone' | 'slot', index: number} | undefined = undefined;
+    let renderTarget: Container<DisplayObject> | undefined = undefined;
+    if(this.target!.skeleton.data.findBoneIndex(name) >= 0) {
+      targetMeta = {type: 'bone', index: this.target!.skeleton.data.findBoneIndex(name)}
+    }
+
+    if(this.target!.skeleton.data.findSlotIndex(name) >= 0) {
+      targetMeta = {type: 'slot', index: this.target!.skeleton.data.findSlotIndex(name)}
+    }
+    
+    
+    if(targetMeta && targetMeta.type === 'bone'){
+      console.log(`🦴 Rendering Bone at ${containerId}`);
+      renderTarget = this.target!.slotContainers[targetMeta.index]
+      console.log(this.target!.slotContainers[targetMeta.index]);
+      // renderTarget = this.target!.
+      const debugRenderer = new DebugCanvasRenderer(this.app, renderTarget, containerId);
+      this.debugRenderers.push(debugRenderer);
+    }
+
+    if(targetMeta && targetMeta.type === 'slot'){
+      console.log(`🖼️ Rendering Slot at ${containerId}`);
+      renderTarget = this.target!.slotContainers[targetMeta.index]
+      console.log(this.target!.slotContainers[targetMeta.index]);
+      // renderTarget = this.target!.
+      const debugRenderer = new DebugCanvasRenderer(this.app, renderTarget, containerId);
+      this.debugRenderers.push(debugRenderer);
+      this.app.ticker.add(() => {this.app.renderer.resize()})
+    }
+    
+  }
+  
+  // Method to clean up debug canvases
+  public destroyDebugCanvases(): void {
+    this.debugRenderers.forEach(renderer => renderer.destroy());
+    this.debugRenderers = [];
+  }
 }
+
+  // Static context management
+  class WebGLContextManager {
+    private static maxContexts = 16; // WebGL typically limits to 16 contexts
+    private static activeContexts: Set<WebGLRenderingContext> = new Set();
+  
+    static canCreateContext(): boolean {
+      return this.activeContexts.size < this.maxContexts;
+    }
+  
+    static registerContext(context: WebGLRenderingContext): void {
+      this.activeContexts.add(context);
+    }
+  
+    static unregisterContext(context: WebGLRenderingContext): void {
+      this.activeContexts.delete(context);
+    }
+  }

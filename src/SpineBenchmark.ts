@@ -1,5 +1,5 @@
-import { Application, Assets, IRenderer } from "pixi.js";
-import { AttachmentType, Spine } from "pixi-spine";
+import { Application, Assets, IRenderer, Renderer } from "pixi.js";
+import { AttachmentType } from "pixi-spine";
 import { PerformanceMonitor } from "./PerformanceMonitor";
 import { SpineAnalyzer } from "./SpineAnalyzer";
 import {
@@ -10,6 +10,7 @@ import {
   SkeletonData,
   SkeletonJson,
   TextureAtlas,
+  Spine
 } from "@pixi-spine/all-4.1";
 import { createId } from "@paralleldrive/cuid2";
 import { CameraContainer } from "./CameraContainer";
@@ -119,6 +120,36 @@ export class SpineBenchmark {
 
       camera.addChild(skeleton);
       camera.lookAtChild(skeleton);
+
+      // skeleton.skeleton.data.slots.forEach(slot => {
+      //   if(!slot.attachmentName) return
+      //   camera.createDebugCanvas('debugContainer',slot.name);
+      // });
+
+      camera.createDebugCanvas('debugContainer','bone_effect');
+//       const DEBUG_CANVAS_WIDTH = 400;
+//       const DEBUG_CANVAS_HEIGHT = 400;
+//       const newCanvas = document.createElement('canvas');
+//       newCanvas.width  = DEBUG_CANVAS_WIDTH;
+//       newCanvas.height = DEBUG_CANVAS_HEIGHT;
+//       document.getElementById('clippingContainer')!.appendChild(newCanvas);
+
+//       const renderer1 = new Renderer({
+//         width: DEBUG_CANVAS_WIDTH,
+//         height: DEBUG_CANVAS_HEIGHT,
+//         view: newCanvas
+//     });
+//     let ticker = this.app.ticker;
+
+// ticker.add( (time) => {
+//   const renderTarget = this.app.stage;
+//   const prev = {x: renderTarget.x,y:renderTarget.y};
+//   renderTarget.x = DEBUG_CANVAS_WIDTH/2;
+//   renderTarget.y = DEBUG_CANVAS_HEIGHT/2;
+// renderer1.render(this.app.stage);
+// renderTarget.x = prev.x;
+// renderTarget.y = prev.y;
+// });
 
       // UI elements:
       this.createAnimationButtons(skeleton);
