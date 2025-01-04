@@ -106,24 +106,13 @@ function appendBlendModeWarning(
   });
   
   const infoBlock = document.createElement("div");
-  infoBlock.className = "warning";
+  infoBlock.className = "";
   infoBlock.innerHTML = `
-    <h3>Blend Mode Usage Summary</h3>
     <p><strong>Total non-normal blend modes:</strong> ${nonNormalCount}</p>
-    <p><strong>Blend mode counts:</strong></p>
-    <ul>
-      ${Array.from(blendModeCount).map(([mode, count]) => `
-        <li>${BlendMode[mode]}: ${count}</li>
+          ${Array.from(blendModeCount).map(([mode, count]) => `
+        <p>${BlendMode[mode]} blend mode: ${count}</p>
       `).join('')}
-    </ul>
-        <details>
-    <summary><strong>Slots with non-normal blend modes:</strong></summary>
-        <ul>
-        ${Array.from(blendModeMap).filter(([_, mode]) => mode !== BlendMode.Normal)
-          .map(([slot, mode]) => `<li>${slot}: ${BlendMode[mode]}</li>`).join('')}
-        </ul>
-    </details>
   `;
   
-  container.appendChild(infoBlock);
+  document.getElementById('benchmarkSummary')!.appendChild(infoBlock);
 }

@@ -216,12 +216,13 @@ export class CameraContainer extends Container {
   }
   
   lookAtChild(object: Spine) {
-    this.meshOutline = new SpineMeshOutline(this.app,object);
-    this.meshOutline.graphics.visible = this.isMeshVisible;
-    this.setMeshVisibilityCallback((value: boolean)=> {
-      if(!this.meshOutline) return;
-      this.meshOutline.graphics.visible = value;
-    })
+    console.log(`Looking at: `, object)
+    // this.meshOutline = new SpineMeshOutline(this.app,object);
+    // this.meshOutline.graphics.visible = this.isMeshVisible;
+    // this.setMeshVisibilityCallback((value: boolean)=> {
+    //   if(!this.meshOutline) return;
+    //   this.meshOutline.graphics.visible = value;
+    // })
 
 
     const padding = 20;

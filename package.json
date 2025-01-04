@@ -11,6 +11,7 @@
   "dependencies": {
     "@esotericsoftware/spine-pixi-v7": "^4.2.70",
     "@paralleldrive/cuid2": "^2.2.2",
+    "@pixi/devtools": "^2.0.1",
     "@pixi/graphics-smooth": "^1.1.0",
     "@types/node": "^22.7.0",
     "gsap": "^3.12.5",

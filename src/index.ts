@@ -1,4 +1,3 @@
-import './webgl-memory.js'
 import { Application, Sprite } from 'pixi.js';
 import { SpineBenchmark } from './SpineBenchmark';
 import { CameraContainer } from './CameraContainer';
@@ -39,8 +38,8 @@ gsap.registerPlugin(PixiPlugin);
 // give the plugin a reference to the PIXI object
 PixiPlugin.registerPIXI(PIXI);
 
-const WIDTH = 720;
-const HEIGHT = 720;
+const WIDTH = 360;
+const HEIGHT = 360;
 
 const app = new Application({
     backgroundColor: 0xf4f4f4,
@@ -48,6 +47,11 @@ const app = new Application({
     resizeTo: document.getElementById('leftPanel')!
 });
 
+import { initDevtools } from '@pixi/devtools';
+
+initDevtools({ app });
+
+globalThis.__PIXI_APP__ = app;
 
 // // Set canvas size to match its container
 // function resizeCanvas() {
@@ -98,29 +102,3 @@ dropArea.addEventListener('drop', (e) => {
         benchmark.loadSpineFiles(files);
     }
 });
-function bytesToSize(bytes: number) {
-    const sizes = ['Bytes', 'KB', 'MB']
-    if (bytes === 0) return 'n/a'
-    const i = Math.floor(Math.log(bytes) / Math.log(1024))
-    if (i === 0) return `${bytes} ${sizes[i]}`
-    return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
-}
-
-const gl = (app.renderer as PIXI.Renderer).gl;
-const ext = gl.getExtension('GMAN_webgl_memory');
-
-if (ext) {
-    const info = ext.getMemoryInfo();
-    setInterval(()=>{
-        const textureSizeTotalBytes = ext.getResourcesInfo(WebGLTexture).map(t => t.size).reduce((accumulator, currentValue) => {
-            return accumulator + currentValue
-        },0);
-        const bufferSizeTotalBytes = ext.getResourcesInfo(WebGLBuffer).map(t => t.size).reduce((accumulator, currentValue) => {
-            return accumulator + currentValue
-        },0);
-        document.getElementById("currentResources")!.innerText = JSON.stringify(info, null, "\t");
-        document.getElementById("totalTextures")!.innerText = 'Total Textures: ' + bytesToSize(textureSizeTotalBytes);
-        document.getElementById("totalBuffers")!.innerText = 'Total Buffers: ' + bytesToSize(bufferSizeTotalBytes);
-    },25)
-}
-// document.getElementById("meshTableContainer")!.appendChild(table);

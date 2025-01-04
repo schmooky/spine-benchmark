@@ -1,10 +1,17 @@
-import { Application, Assets, IRenderer } from "pixi.js";
+import { Application, Assets, IRenderer, Sprite } from "pixi.js";
 import { PerformanceMonitor } from "./PerformanceMonitor";
 import { SpineAnalyzer } from "./SpineAnalyzer";
 import { createId } from "@paralleldrive/cuid2";
 import { CameraContainer } from "./CameraContainer";
 import { toast } from "./utils/toast";
-import { AtlasAttachmentLoader, SkeletonBinary, SkeletonData, SkeletonJson, Spine, TextureAtlas } from "@esotericsoftware/spine-pixi-v7";
+import {
+  AtlasAttachmentLoader,
+  SkeletonBinary,
+  SkeletonData,
+  SkeletonJson,
+  Spine,
+  TextureAtlas,
+} from "@esotericsoftware/spine-pixi-v7";
 
 export class SpineBenchmark {
   private app: Application;
@@ -79,8 +86,8 @@ export class SpineBenchmark {
     });
   }
 
-  private createSpineAsset(data: any, atlasText: string): void {
-    console.log('Creating Spine Asset')
+  private async createSpineAsset(data: any, atlasText: string): Promise<void> {
+    console.log("Creating Spine Asset");
     const key = `spine-${createId()}`;
     const spineAtlas = new TextureAtlas(atlasText);
 
@@ -96,13 +103,23 @@ export class SpineBenchmark {
       );
       skeletonData = spineJsonParser.readSkeletonData(data);
     }
+    console.log(Assets.cache);
 
-    Assets.cache.set(key, skeletonData);
+    Assets.cache.set(key + "Data", data);
+    Assets.cache.set(key + "Atlas", spineAtlas);
 
-    toast(`Loaded skeleton`)
+    toast(`Loaded skeleton`);
 
     setTimeout(() => {
-      const skeleton = new Spine(Assets.cache.get(key));
+      const darkTint = false;
+      const autoUpdate = true;
+      const cacheKey = `${key}`;
+
+      Spine.skeletonCache[cacheKey] = skeletonData;
+      const skeleton = new Spine({ skeletonData, darkTint, autoUpdate });
+
+      const a = Spine.from({ atlas: key + "Atlas", skeleton: key + "Data" });
+      console.log(a);
       const camera = this.app.stage.children[0] as CameraContainer;
 
       // Remove previous Spine instance if exists
@@ -126,19 +143,19 @@ export class SpineBenchmark {
   // UI functions:
   private createAnimationButtons(spineInstance: Spine) {
     const animations = spineInstance.skeleton.data.animations;
-    const container = document.getElementById('sidebarAnimations')!;
+    const container = document.getElementById("sidebarAnimations")!;
 
-    container.classList.remove('hidden');
+    container.classList.remove("hidden");
 
-    while(container.firstChild) { 
-      container.removeChild(container.firstChild); 
-    } 
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
 
-    animations.forEach(animation => {
-      const button = document.createElement('button');
+    animations.forEach((animation) => {
+      const button = document.createElement("button");
       button.textContent = animation.name;
 
-      button.addEventListener('click', () => {
+      button.addEventListener("click", () => {
         spineInstance.state.setAnimation(0, animation.name, false);
       });
 
@@ -148,19 +165,19 @@ export class SpineBenchmark {
 
   private createSkinButtons(spineInstance: Spine) {
     const skins = spineInstance.skeleton.data.skins;
-    const container = document.getElementById('sidebarSkins')!;
+    const container = document.getElementById("sidebarSkins")!;
 
-    container.classList.remove('hidden');
+    container.classList.remove("hidden");
 
-    while(container.firstChild) { 
-      container.removeChild(container.firstChild); 
-    } 
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
 
-    skins.forEach(skin => {
-      const button = document.createElement('button');
+    skins.forEach((skin) => {
+      const button = document.createElement("button");
       button.textContent = skin.name;
 
-      button.addEventListener('click', () => {
+      button.addEventListener("click", () => {
         spineInstance.skeleton.setSkinByName(skin.name);
         spineInstance.skeleton.setSlotsToSetupPose();
       });
@@ -190,26 +207,25 @@ export class SpineBenchmark {
     const animations = spineInstance.skeleton.data.animations;
     let currentIndex = 0;
     spineInstance.state.addListener({
-      complete: function(track) {
+      complete: function (track) {
         currentIndex++;
         setTimeout(playNextAnimation, 250);
-        
-      }
+      },
     });
     function playNextAnimation() {
       if (currentIndex < animations.length) {
         const animation = animations[currentIndex];
-        
-        document.getElementById('currentAnimation')!.innerHTML = `Animation: ${animation.name}`;
+
+        document.getElementById(
+          "currentAnimation"
+        )!.innerHTML = `Animation: ${animation.name}`;
         spineInstance.state.setAnimation(0, animation.name, false);
-        
-        
       } else {
         currentIndex = 0;
         setTimeout(playNextAnimation, 250);
       }
     }
-    
+
     playNextAnimation();
   }
 }
