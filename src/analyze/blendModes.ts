@@ -6,6 +6,7 @@ import { BlendMode, Spine } from "@esotericsoftware/spine-pixi-v7";
 document.querySelector("#blendModesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
 export function analyzeSpineBlendModes(spine: Spine): void {
+  console.log('Analyze: Blend Modes')
   const skeletonData = spine.skeleton.data;
   const animations = skeletonData.animations;
   const slots = skeletonData.slots;

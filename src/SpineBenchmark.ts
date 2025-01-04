@@ -103,6 +103,7 @@ export class SpineBenchmark {
       );
       skeletonData = spineJsonParser.readSkeletonData(data);
     }
+    
     console.log(Assets.cache);
 
     Assets.cache.set(key + "Data", data);
@@ -117,6 +118,11 @@ export class SpineBenchmark {
 
       Spine.skeletonCache[cacheKey] = skeletonData;
       const skeleton = new Spine({ skeletonData, darkTint, autoUpdate });
+
+      const bounds = skeleton.getBounds();
+      console.log(`Skeleton position: (${skeleton.x}, ${skeleton.y}), bounds: (${bounds.x}, ${bounds.y}, ${bounds.width}, ${bounds.height})`);
+
+      console.log(`Skeleton visibility: ${skeleton.visible}, alpha: ${skeleton.alpha}`);
 
       const a = Spine.from({ atlas: key + "Atlas", skeleton: key + "Data" });
       console.log(a);
@@ -135,7 +141,8 @@ export class SpineBenchmark {
       this.createSkinButtons(skeleton);
 
       this.spineInstance = skeleton;
-      this.updateBenchmarkResults();
+
+      this.spineAnalyzer.analyzeMeshes(skeleton);
       //show pixi container
     }, 250);
   }
@@ -156,6 +163,7 @@ export class SpineBenchmark {
       button.textContent = animation.name;
 
       button.addEventListener("click", () => {
+        console.log(`Set ${animation.name}`)
         spineInstance.state.setAnimation(0, animation.name, false);
       });
 
@@ -184,18 +192,6 @@ export class SpineBenchmark {
 
       container.appendChild(button);
     });
-  }
-
-  private updateBenchmarkResults() {
-    if (!this.spineInstance) return;
-
-    const meshInfo = this.spineAnalyzer.analyzeMeshes([this.spineInstance]);
-    const performanceInfo = this.performanceMonitor.getPerformanceInfo();
-    //@ts-ignore
-    const drawCallInfo = this.spineAnalyzer.analyzeDrawCalls(this.app.renderer);
-
-    // Update benchmark results UI
-    // ... (Update the elements in the UI)
   }
 
   // Usage example:

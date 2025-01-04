@@ -1,42 +1,20 @@
 import { Renderer } from "pixi.js";
-import { analyzeMeshes } from "./analyze/mesh";
-import { analyzeDeformations } from "./analyze/deformations";
-import { analyzeSpineForParticles } from "./analyze/particles";
-import { analyzeMasks } from "./analyze/clipping";
-import { analyzeSpineAnimations } from "./analyze/timelines";
+import { analyzeClipping } from "./analyze/clipping";
 import { analyzeSpineBlendModes } from "./analyze/blendModes";
 import { Spine, VertexAttachment } from "@esotericsoftware/spine-pixi-v7";
 
 export class SpineAnalyzer {
-  public analyzeMeshes(spineInstances: Spine[]) {
-    let totalMeshes = 0;
-    let totalVertices = 0;
-    
-    spineInstances.forEach((spine) => {
-      spine.skeleton.slots.forEach((slot) => {
-        if (
-          slot.getAttachment() &&
-          (slot.getAttachment() as VertexAttachment).worldVerticesLength
-        ) {
-          totalMeshes++;
-          totalVertices +=
-          (slot.getAttachment() as VertexAttachment).worldVerticesLength / 2;
-        }
-      });
-    });
-    
-    spineInstances.forEach((spine) => {
+  public analyzeMeshes(spineInstance: Spine) {
       // analyzeMeshes(spine);
       // analyzeDeformations(spine);
       // analyzeSpineAttachments(spine as any);
       // analyzeSpineAttachments(spine as any);
       // analyzeSpineForParticles(spine as any);
-      // analyzeMasks(spine as any);
+      analyzeClipping(spineInstance);
       // analyzeSpineAnimations(spine as any);
-      analyzeSpineBlendModes(spine);
-    });
-    
-    return { totalMeshes, totalVertices };
+      analyzeSpineBlendModes(spineInstance);
+  
+    return undefined;
   }
   
   public analyzeDrawCalls(renderer: Renderer) {
