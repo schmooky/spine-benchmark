@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    
     <div class="left-panel"     id="leftPanel">
         <canvas id="pixiCanvas"></canvas>
 
@@ -24,15 +23,20 @@
 
     
         <div id="dropArea">Drop Spine files here (JSON, Atlas, and Image)</div>
+        <div class="debugInfo">        <p id="currentAnimation"></p>
+            <p id="canvasScale">Scale: N/A</p>
+            <p id="totalTextures">Total Textures: N/A</p>
+            <p id="totalBuffers">Total Buffers: N/A</p></div>
     </div>
     
     <div class="right-panel">
-        <p id="currentAnimation"></p>
-        <p id="canvasScale">Scale: N/A</p>
-        <p id="totalTextures">Total Textures: N/A</p>
-        <p id="totalBuffers">Total Buffers: N/A</p>
+
         
         <div id="benchmarkResults">
+            <section id="benchmarkSummary">
+                <h2>Summary</h2>
+                <p id="benchmarkSummaryText"></p>
+            </section>
             <section id="generalRequirements">
                 <h2>Общие Требования</h2>
                 <p id="generalRequirementsText"></p>

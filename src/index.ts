@@ -6,6 +6,29 @@ import { CameraContainer } from './CameraContainer';
 import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
+import translationEN from './locales/en.json';
+import translationRU from './locales/ru.json';
+import i18next from 'i18next';
+import { toast } from './utils/toast.js';
+
+i18next.init({
+  lng: 'en', // if you're using a language detector, do not define the lng option
+  debug: true,
+  resources: {
+    en: {
+      translation: translationEN
+    },
+    ru: {
+      translation: translationRU
+    }
+  },
+  fallbackLng: 'en',
+});
+// initialized and ready to go!
+// i18next is already initialized, because the translation resources where passed via init function
+document.getElementById('benchmarkSummaryText').innerHTML = i18next.t('key');
+
+toast( i18next.t('error.1001','foo.txt') )
 
 // import { attributes } from "./text/general.md";
 

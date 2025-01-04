@@ -14,6 +14,7 @@
     "@pixi/graphics-smooth": "^1.1.0",
     "@types/node": "^22.7.0",
     "gsap": "^3.12.5",
+    "i18next": "^24.2.0",
     "pixi-spine": "^4.0.3",
     "pixi.js": "^7.4.2",
     "vite": "^5.4.5",
@@ -22,7 +23,7 @@
   },
   "devDependencies": {
     "http-server": "^14.1.1",
-    "typescript": "^4.9.5"
+    "typescript": "^5.7.2"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.24.0"

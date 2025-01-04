@@ -13,6 +13,7 @@ import {
 } from "@pixi-spine/all-4.1";
 import { createId } from "@paralleldrive/cuid2";
 import { CameraContainer } from "./CameraContainer";
+import { toast } from "./utils/toast";
 
 export class SpineBenchmark {
   private app: Application;
@@ -107,6 +108,8 @@ export class SpineBenchmark {
     }
 
     Assets.cache.set(key, skeletonData);
+
+    toast(`Loaded skeleton`)
 
     setTimeout(() => {
       const skeleton = new Spine(Assets.cache.get(key));
