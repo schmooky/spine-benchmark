@@ -1,7 +1,6 @@
-import { AttachmentType, MeshAttachment, NumberArrayLike, Spine } from "@pixi-spine/all-4.1";
 import { Application } from "pixi.js";
 import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
-
+import {NumberArrayLike, Spine, VertexAttachment} from '@esotericsoftware/spine-pixi-v7'
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NONE;
 
@@ -114,27 +113,27 @@ export class SpineMeshOutline {
             const attachment = slot.attachment;
             
             // Check if attachment is a mesh
-            if (attachment && attachment.type === AttachmentType.Mesh) {
+            if (attachment && (attachment as VertexAttachment).vertices) {
                 if(slot.color.a == 0 || attachment.name == null) continue;
                 // Get mesh vertices
-                const vertices = new Float32Array((attachment as MeshAttachment).vertices.length);
-                (attachment as MeshAttachment).computeWorldVertices(
+                const vertices = new Float32Array((attachment as VertexAttachment).vertices.length);
+                (attachment as VertexAttachment).computeWorldVertices(
                     slot,
                     0,
-                    (attachment as MeshAttachment).vertices.length,
+                    (attachment as VertexAttachment).vertices.length,
                     vertices,
                     0,
                     2
                 );
 
                 // Draw outline for this mesh
-                this.drawMeshOutline(
-                    vertices,
-                    (attachment as MeshAttachment).triangles,
-                    0xf0f, // Red color
-                    1, // Line thickness
-                    0.32
-                );
+                // this.drawMeshOutline(
+                //     vertices,
+                //     (attachment as VertexAttachment).triangles,
+                //     0xf0f, // Red color
+                //     1, // Line thickness
+                //     0.32
+                // );
             }
         }
     }

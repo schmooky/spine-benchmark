@@ -1,7 +1,7 @@
 import gsap from "gsap";
 import { Application, Container, DisplayObject } from "pixi.js";
 import { SpineMeshOutline } from "./Outline";
-import { Spine } from "@pixi-spine/all-4.1";
+import { Spine } from "@esotericsoftware/spine-pixi-v7";
 
 export class CameraContainer extends Container {
   originalWidth: any;
