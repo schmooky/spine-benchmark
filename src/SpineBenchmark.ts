@@ -1,19 +1,10 @@
 import { Application, Assets, IRenderer } from "pixi.js";
-import { AttachmentType, Spine } from "pixi-spine";
 import { PerformanceMonitor } from "./PerformanceMonitor";
 import { SpineAnalyzer } from "./SpineAnalyzer";
-import {
-  AtlasAttachmentLoader,
-  DeformTimeline,
-  Skeleton,
-  SkeletonBinary,
-  SkeletonData,
-  SkeletonJson,
-  TextureAtlas,
-} from "@pixi-spine/all-4.1";
 import { createId } from "@paralleldrive/cuid2";
 import { CameraContainer } from "./CameraContainer";
 import { toast } from "./utils/toast";
+import { AtlasAttachmentLoader, SkeletonBinary, SkeletonData, SkeletonJson, Spine, TextureAtlas } from "@esotericsoftware/spine-pixi-v7";
 
 export class SpineBenchmark {
   private app: Application;
@@ -89,10 +80,9 @@ export class SpineBenchmark {
   }
 
   private createSpineAsset(data: any, atlasText: string): void {
+    console.log('Creating Spine Asset')
     const key = `spine-${createId()}`;
-    const spineAtlas = new TextureAtlas(atlasText, function (line, callback) {
-      callback(Assets.cache.get(line));
-    });
+    const spineAtlas = new TextureAtlas(atlasText);
 
     let skeletonData: SkeletonData;
     if (this.isBinary) {

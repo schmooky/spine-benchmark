@@ -1,20 +1,18 @@
-import { Spine } from "@pixi-spine/all-4.1";
-import { BLEND_MODES } from "pixi.js";
-
-import { attributes, html } from "../text/blend.md";
+import { html } from "../text/blend.md";
+import { BlendMode, Spine } from "@esotericsoftware/spine-pixi-v7";
 
 
 
 document.querySelector("#blendModesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
 export function analyzeSpineBlendModes(spine: Spine): void {
-  const skeletonData = spine.spineData;
+  const skeletonData = spine.skeleton.data;
   const animations = skeletonData.animations;
   const slots = skeletonData.slots;
   
   // Helper function to check if a blend mode is non-normal
-  const isNonNormalBlendMode = (blendMode: BLEND_MODES): boolean => {
-    return blendMode !== BLEND_MODES.NORMAL;
+  const isNonNormalBlendMode = (blendMode: BlendMode): boolean => {
+    return blendMode !== BlendMode.Normal;
   };
   
   const nonNormalBlendModeSlots = checkSkeletonForNonNormalBlendModes(spine);
@@ -75,14 +73,14 @@ function appendBlendModeAnimationWarning(
   
   container.appendChild(infoBlock);
 }
-function checkSkeletonForNonNormalBlendModes(spine: Spine): Map<string,BLEND_MODES> {
-  const nonNormalBlendModeSlots = new Map<string,BLEND_MODES>();
+function checkSkeletonForNonNormalBlendModes(spine: Spine): Map<string,BlendMode> {
+  const nonNormalBlendModeSlots = new Map<string,BlendMode>();
   const skeletonData = spine.skeleton.data;
   
   for (let i = 0; i < skeletonData.slots.length; i++) {
     const slotData = skeletonData.slots[i];
     const blendMode = slotData.blendMode;
-    if (blendMode !== BLEND_MODES.NORMAL) {
+    if (blendMode !== BlendMode.Normal) {
       nonNormalBlendModeSlots.set(slotData.name, blendMode);
     }
   }
@@ -91,18 +89,18 @@ function checkSkeletonForNonNormalBlendModes(spine: Spine): Map<string,BLEND_MOD
 }
 
 function appendBlendModeWarning(
-  blendModeMap: Map<string, BLEND_MODES>
+  blendModeMap: Map<string, BlendMode>
 ): void {
   const container = document.getElementById("blendModesContainer");
   if (!container) return;
   
   // Count occurrences of each blend mode
-  const blendModeCount = new Map<BLEND_MODES, number>();
+  const blendModeCount = new Map<BlendMode, number>();
   let nonNormalCount = 0;
   
   blendModeMap.forEach((blendMode, slotName) => {
     blendModeCount.set(blendMode, (blendModeCount.get(blendMode) || 0) + 1);
-    if (blendMode !== BLEND_MODES.NORMAL) {
+    if (blendMode !== BlendMode.Normal) {
       nonNormalCount++;
     }
   });
@@ -115,14 +113,14 @@ function appendBlendModeWarning(
     <p><strong>Blend mode counts:</strong></p>
     <ul>
       ${Array.from(blendModeCount).map(([mode, count]) => `
-        <li>${BLEND_MODES[mode]}: ${count}</li>
+        <li>${BlendMode[mode]}: ${count}</li>
       `).join('')}
     </ul>
         <details>
     <summary><strong>Slots with non-normal blend modes:</strong></summary>
         <ul>
-        ${Array.from(blendModeMap).filter(([_, mode]) => mode !== BLEND_MODES.NORMAL)
-          .map(([slot, mode]) => `<li>${slot}: ${BLEND_MODES[mode]}</li>`).join('')}
+        ${Array.from(blendModeMap).filter(([_, mode]) => mode !== BlendMode.Normal)
+          .map(([slot, mode]) => `<li>${slot}: ${BlendMode[mode]}</li>`).join('')}
         </ul>
     </details>
   `;

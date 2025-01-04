@@ -1,14 +1,11 @@
-import { Attachment, DeformTimeline, MeshAttachment } from "@pixi-spine/all-4.1";
-import { AttachmentType, Spine } from "pixi-spine";
 import { Renderer } from "pixi.js";
 import { analyzeMeshes } from "./analyze/mesh";
 import { analyzeDeformations } from "./analyze/deformations";
-import { analyzeSpineAttachments } from "./analyze/attachmentDistances";
-import { analyzeSpineAttachments } from "./analyze/boneName";
 import { analyzeSpineForParticles } from "./analyze/particles";
 import { analyzeMasks } from "./analyze/clipping";
 import { analyzeSpineAnimations } from "./analyze/timelines";
 import { analyzeSpineBlendModes } from "./analyze/blendModes";
+import { Spine, VertexAttachment } from "@esotericsoftware/spine-pixi-v7";
 
 export class SpineAnalyzer {
   public analyzeMeshes(spineInstances: Spine[]) {
@@ -19,24 +16,24 @@ export class SpineAnalyzer {
       spine.skeleton.slots.forEach((slot) => {
         if (
           slot.getAttachment() &&
-          slot.getAttachment().type === AttachmentType.Mesh
+          (slot.getAttachment() as VertexAttachment).worldVerticesLength
         ) {
           totalMeshes++;
           totalVertices +=
-          (slot.getAttachment() as any).worldVerticesLength / 2;
+          (slot.getAttachment() as VertexAttachment).worldVerticesLength / 2;
         }
       });
     });
     
     spineInstances.forEach((spine) => {
-      analyzeMeshes(spine);
-      analyzeDeformations(spine);
-      analyzeSpineAttachments(spine as any);
-      analyzeSpineAttachments(spine as any);
-      analyzeSpineForParticles(spine as any);
-      analyzeMasks(spine as any);
-      analyzeSpineAnimations(spine as any);
-      analyzeSpineBlendModes(spine as any);
+      // analyzeMeshes(spine);
+      // analyzeDeformations(spine);
+      // analyzeSpineAttachments(spine as any);
+      // analyzeSpineAttachments(spine as any);
+      // analyzeSpineForParticles(spine as any);
+      // analyzeMasks(spine as any);
+      // analyzeSpineAnimations(spine as any);
+      analyzeSpineBlendModes(spine);
     });
     
     return { totalMeshes, totalVertices };

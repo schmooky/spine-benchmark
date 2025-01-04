@@ -28,8 +28,6 @@ i18next.init({
 // i18next is already initialized, because the translation resources where passed via init function
 document.getElementById('benchmarkSummaryText')!.innerHTML = i18next.t('key');
 
-toast( i18next.t('error.1001','foo.txt') )
-
 // import { attributes } from "./text/general.md";
 
 // 
