@@ -1,8 +1,6 @@
 import { DeformTimeline, MeshAttachment, Spine } from "@esotericsoftware/spine-pixi-v8";
 import { attributes, html } from "../text/mesh.md";
 
-
-
 document.querySelector("#meshTableContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
 function mergeMaps(
@@ -198,12 +196,6 @@ export function analyzeMeshes(spineInstance: Spine) {
     "Связан с костями",
     "Имеет родительский меш",
   ]);
-
-  (mergedMap.keys() as any as Array<string>).forEach((key) => {
-    if (!mergedMap.get(key)!.isChanged && !mergedMap.get(key)!.isBoneWeighted) {
-      appendMeshMisuseInfo(key, mergedMap.get(key)!.isUsedInMeshSequence);
-    }
-  });
 
   document.getElementById("meshTableContainer")!.appendChild(table);
 

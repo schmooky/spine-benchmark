@@ -2,7 +2,6 @@ import { html } from "../text/blend.md";
 import { BlendMode, Spine } from "@esotericsoftware/spine-pixi-v8";
 
 
-
 document.querySelector("#blendModesContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
 export function analyzeSpineBlendModes(spine: Spine): void {

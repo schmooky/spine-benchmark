@@ -49,7 +49,7 @@ export class CameraContainer extends Container {
     this.contextMenu = document.createElement('div');
     this.contextMenu.style.position = 'fixed';
     this.contextMenu.style.display = 'none';
-    this.contextMenu.style.backgroundColor = 'white';
+    this.contextMenu.style.backgroundColor = '#282b30';
     this.contextMenu.style.border = '1px solid #ccc';
     this.contextMenu.style.padding = '5px';
     this.contextMenu.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.2)';
@@ -63,7 +63,7 @@ export class CameraContainer extends Container {
     centerButton.style.userSelect = 'none';
     
     centerButton.addEventListener('mouseenter', () => {
-      centerButton.style.backgroundColor = '#f0f0f0';
+      centerButton.style.backgroundColor = '#383b40';
     });
     
     centerButton.addEventListener('mouseleave', () => {
@@ -78,7 +78,7 @@ export class CameraContainer extends Container {
     // Create separator
     const separator = document.createElement('div');
     separator.style.height = '1px';
-    separator.style.backgroundColor = '#ccc';
+    separator.style.backgroundColor = '#383b40';
     separator.style.margin = '5px 0';
     
     // Create Show Mesh toggle button
@@ -112,7 +112,7 @@ export class CameraContainer extends Container {
     meshToggleContainer.appendChild(label);
     
     meshToggleContainer.addEventListener('mouseenter', () => {
-      meshToggleContainer.style.backgroundColor = '#f0f0f0';
+      meshToggleContainer.style.backgroundColor = '#383b40';
     });
     
     meshToggleContainer.addEventListener('mouseleave', () => {

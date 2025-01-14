@@ -25,16 +25,7 @@ i18next.init({
   },
   fallbackLng: 'en',
 });
-// initialized and ready to go!
-// i18next is already initialized, because the translation resources where passed via init function
-document.getElementById('benchmarkSummaryText')!.innerHTML = i18next.t('key');
 
-// import { attributes } from "./text/general.md";
-
-// 
-
-// document.querySelector("#generalRequirementsText")!.innerHTML = JSON.stringify(attributes); // <h1>Markdown File</h1>
-// register the plugin
 gsap.registerPlugin(PixiPlugin);
 
 // give the plugin a reference to the PIXI object
@@ -46,7 +37,7 @@ const HEIGHT = 360;
 const app = new Application();
 
 await app.init({
-  backgroundColor: 0xf4f4f4,
+  backgroundColor: 0x282b30,
   view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
   resizeTo: document.getElementById('leftPanel')!,
   antialias: true,
