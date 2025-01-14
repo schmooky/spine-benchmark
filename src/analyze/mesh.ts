@@ -1,13 +1,5 @@
-import {
-  AttachmentType,
-  DeformTimeline,
-  MeshAttachment,
-} from "@pixi-spine/all-4.1";
-import { Spine } from "pixi-spine";
-
+import { DeformTimeline, MeshAttachment, Spine } from "@esotericsoftware/spine-pixi-v8";
 import { attributes, html } from "../text/mesh.md";
-
-
 
 document.querySelector("#meshTableContainerText")!.innerHTML = html; // <h1>Markdown File</h1>
 
@@ -72,7 +64,7 @@ function createTable(
     //   row.classList.add("warn");
     // }
 
-    function interpolateColor(color1, color2, factor) {
+    function interpolateColor(color1: [number,number,number], color2: [number,number,number], factor: number) {
       const result = color1.slice();
       for (let i = 0; i < 3; i++) {
         result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
@@ -80,26 +72,13 @@ function createTable(
       return result;
     }
 
-    // Function to convert RGB to hex
-    function rgbToHex(rgb) {
-      return (
-        "#" +
-        rgb
-          .map((x) => {
-            const hex = x.toString(16);
-            return hex.length === 1 ? "0" + hex : hex;
-          })
-          .join("")
-      );
-    }
-
     // Set color based on vertex count
     function setRowColor(row: HTMLTableRowElement, vertexCount: number) {
       const minVertices = 1;
       const maxVertices = 2000;
-      const colorStart = [255, 243, 224]; // #fff3e0
-      const colorMiddle = [255, 204, 128]; // #ffcc80
-      const colorEnd = [239, 154, 154]; // #ef9a9a
+      const colorStart: [number,number,number] = [255, 243, 224]; // #fff3e0
+      const colorMiddle: [number,number,number] = [255, 204, 128]; // #ffcc80
+      const colorEnd: [number,number,number] = [239, 154, 154]; // #ef9a9a
 
       // Calculate logarithmic factor
       const logFactor = Math.log(vertexCount) / Math.log(maxVertices);
@@ -132,7 +111,7 @@ export function analyzeMeshes(spineInstance: Spine) {
   }
   console.group("analyzeMeshes");
   const skeleton = spineInstance.skeleton;
-  const animations = spineInstance.spineData.animations;
+  const animations = spineInstance.skeleton.data.animations;
 
   let totalMeshCount = 0;
   let changedMeshCount = 0;
@@ -142,18 +121,17 @@ export function analyzeMeshes(spineInstance: Spine) {
   const meshesWithParents = new Map<string, boolean>();
   // Count total meshes
   skeleton.slots.forEach((slot) => {
+    const attachment = slot.getAttachment();
     if (
-      slot.getAttachment() &&
-      slot.getAttachment().type === AttachmentType.Mesh
+      attachment &&
+      attachment instanceof MeshAttachment
     ) {
-      const attachment = slot.getAttachment()! as MeshAttachment;
-
       totalMeshCount++;
       if (attachment.bones?.length)
         meshesWithBoneWeights.set(slot.data.name, attachment.bones.length);
       meshWorldVerticesLengths.set(
         slot.data.name,
-        (slot.getAttachment() as MeshAttachment).worldVerticesLength
+        attachment.worldVerticesLength
       );
       meshesWithChangesInTimelines.set(slot.data.name, false);
       meshesWithParents.set(slot.data.name, attachment.getParentMesh() != null);
@@ -176,10 +154,11 @@ export function analyzeMeshes(spineInstance: Spine) {
       if (timeline instanceof DeformTimeline) {
         const slotIndex = timeline.slotIndex;
         const slot = skeleton.slots[slotIndex];
+        const attachment = slot.getAttachment();
 
         if (
-          slot.getAttachment() &&
-          slot.getAttachment().type === AttachmentType.Mesh
+          attachment &&
+          attachment instanceof MeshAttachment
         ) {
           meshesWithChangesInTimelines.set(slot.data.name, true);
         }
@@ -217,12 +196,6 @@ export function analyzeMeshes(spineInstance: Spine) {
     "Связан с костями",
     "Имеет родительский меш",
   ]);
-
-  (mergedMap.keys() as any as Array<string>).forEach((key) => {
-    if (!mergedMap.get(key)!.isChanged && !mergedMap.get(key)!.isBoneWeighted) {
-      appendMeshMisuseInfo(key, mergedMap.get(key)!.isUsedInMeshSequence);
-    }
-  });
 
   document.getElementById("meshTableContainer")!.appendChild(table);
 

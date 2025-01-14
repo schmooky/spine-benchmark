@@ -1,7 +1,7 @@
 import gsap from "gsap";
-import { Application, Container, DisplayObject } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { SpineMeshOutline } from "./Outline";
-import { Spine } from "@pixi-spine/all-4.1";
+import { Spine } from "@esotericsoftware/spine-pixi-v8";
 
 export class CameraContainer extends Container {
   originalWidth: any;
@@ -49,7 +49,7 @@ export class CameraContainer extends Container {
     this.contextMenu = document.createElement('div');
     this.contextMenu.style.position = 'fixed';
     this.contextMenu.style.display = 'none';
-    this.contextMenu.style.backgroundColor = 'white';
+    this.contextMenu.style.backgroundColor = '#282b30';
     this.contextMenu.style.border = '1px solid #ccc';
     this.contextMenu.style.padding = '5px';
     this.contextMenu.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.2)';
@@ -63,7 +63,7 @@ export class CameraContainer extends Container {
     centerButton.style.userSelect = 'none';
     
     centerButton.addEventListener('mouseenter', () => {
-      centerButton.style.backgroundColor = '#f0f0f0';
+      centerButton.style.backgroundColor = '#383b40';
     });
     
     centerButton.addEventListener('mouseleave', () => {
@@ -78,7 +78,7 @@ export class CameraContainer extends Container {
     // Create separator
     const separator = document.createElement('div');
     separator.style.height = '1px';
-    separator.style.backgroundColor = '#ccc';
+    separator.style.backgroundColor = '#383b40';
     separator.style.margin = '5px 0';
     
     // Create Show Mesh toggle button
@@ -112,7 +112,7 @@ export class CameraContainer extends Container {
     meshToggleContainer.appendChild(label);
     
     meshToggleContainer.addEventListener('mouseenter', () => {
-      meshToggleContainer.style.backgroundColor = '#f0f0f0';
+      meshToggleContainer.style.backgroundColor = '#383b40';
     });
     
     meshToggleContainer.addEventListener('mouseleave', () => {
@@ -215,8 +215,10 @@ export class CameraContainer extends Container {
     this.y = h / 2;
   }
   
-  lookAtChild(object: Spine) {
-    this.meshOutline = new SpineMeshOutline(this.app,object);
+  lookAtChild(spine: Spine) {
+    console.log(`Looking at: `, spine)
+    this.meshOutline = new SpineMeshOutline(this.app,spine);
+    const object = this.meshOutline;
     this.meshOutline.graphics.visible = this.isMeshVisible;
     this.setMeshVisibilityCallback((value: boolean)=> {
       if(!this.meshOutline) return;
@@ -227,16 +229,17 @@ export class CameraContainer extends Container {
     const padding = 20;
     // Get the bounds of the object in global space
     let bounds: { width: number; height: number; x: number; y: number } =
-    object.getBounds();
+    object.spine.getBounds();
     if (bounds.width == 0 || bounds.height == 0) {
-      bounds.width = object.skeleton.data.width / 2;
-      bounds.height = object.skeleton.data.height / 2;
+      bounds.width = object.spine.skeleton.data.width / 2;
+      bounds.height = object.spine.skeleton.data.height / 2;
     }
     
     // Calculate the scale needed to fit the object within the screen
     const scaleX = (this.app.screen.width - padding * 2) / bounds.width;
     const scaleY = (this.app.screen.height - padding * 2) / bounds.height;
     let scale = Math.min(scaleX, scaleY);
+    spine.scale = scale;
     
     const minScale = 0.2;
     const maxScale = 10;
@@ -317,4 +320,5 @@ export class CameraContainer extends Container {
       this.onMeshVisibilityChange(isVisible);
     }
   }
+  
 }

@@ -1,53 +1,13 @@
-import { Attachment, DeformTimeline, MeshAttachment } from "@pixi-spine/all-4.1";
-import { AttachmentType, Spine } from "pixi-spine";
 import { Renderer } from "pixi.js";
-import { analyzeMeshes } from "./analyze/mesh";
-import { analyzeDeformations } from "./analyze/deformations";
-import { analyzeSpineAttachments } from "./analyze/attachmentDistances";
-import { analyzeSpineAttachments } from "./analyze/boneName";
-import { analyzeSpineForParticles } from "./analyze/particles";
-import { analyzeMasks } from "./analyze/clipping";
-import { analyzeSpineAnimations } from "./analyze/timelines";
+import { analyzeClipping } from "./analyze/clipping";
 import { analyzeSpineBlendModes } from "./analyze/blendModes";
+import { Spine, VertexAttachment } from "@esotericsoftware/spine-pixi-v8";
+import { analyzeMeshes } from "./analyze/mesh";
 
 export class SpineAnalyzer {
-  public analyzeMeshes(spineInstances: Spine[]) {
-    let totalMeshes = 0;
-    let totalVertices = 0;
-    
-    spineInstances.forEach((spine) => {
-      spine.skeleton.slots.forEach((slot) => {
-        if (
-          slot.getAttachment() &&
-          slot.getAttachment().type === AttachmentType.Mesh
-        ) {
-          totalMeshes++;
-          totalVertices +=
-          (slot.getAttachment() as any).worldVerticesLength / 2;
-        }
-      });
-    });
-    
-    spineInstances.forEach((spine) => {
-      analyzeMeshes(spine);
-      analyzeDeformations(spine);
-      analyzeSpineAttachments(spine as any);
-      analyzeSpineAttachments(spine as any);
-      analyzeSpineForParticles(spine as any);
-      analyzeMasks(spine as any);
-      analyzeSpineAnimations(spine as any);
-      analyzeSpineBlendModes(spine as any);
-    });
-    
-    return { totalMeshes, totalVertices };
+  static analyze(spineInstance: Spine) {
+      analyzeClipping(spineInstance);
+      analyzeSpineBlendModes(spineInstance);
+      analyzeMeshes(spineInstance);
   }
-  
-  public analyzeDrawCalls(renderer: Renderer) {
-    // This is a simplified approximation and may not be 100% accurate
-    const drawCalls = 0; //renderer.renderCounter;
-    const triangles = 0; //renderer.geometry.boundCounters.points / 3;
-    
-    return { drawCalls, triangles };
-  }
-  
 }

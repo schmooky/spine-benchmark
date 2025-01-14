@@ -1,4 +1,3 @@
-import './webgl-memory.js'
 import { Application, Sprite } from 'pixi.js';
 import { SpineBenchmark } from './SpineBenchmark';
 import { CameraContainer } from './CameraContainer';
@@ -6,27 +5,50 @@ import { CameraContainer } from './CameraContainer';
 import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
+import translationEN from './locales/en.json';
+import translationRU from './locales/ru.json';
+import i18next from 'i18next';
+import { toast } from './utils/toast';
 
-// import { attributes } from "./text/general.md";
+import { initDevtools } from '@pixi/devtools';
 
-// 
+i18next.init({
+  lng: 'en', // if you're using a language detector, do not define the lng option
+  debug: true,
+  resources: {
+    en: {
+      translation: translationEN
+    },
+    ru: {
+      translation: translationRU
+    }
+  },
+  fallbackLng: 'en',
+});
 
-// document.querySelector("#generalRequirementsText")!.innerHTML = JSON.stringify(attributes); // <h1>Markdown File</h1>
-// register the plugin
 gsap.registerPlugin(PixiPlugin);
 
 // give the plugin a reference to the PIXI object
 PixiPlugin.registerPIXI(PIXI);
 
-const WIDTH = 720;
-const HEIGHT = 720;
+const WIDTH = 360;
+const HEIGHT = 360;
 
-const app = new Application({
-    backgroundColor: 0xf4f4f4,
-    view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
-    resizeTo: document.getElementById('leftPanel')!
-});
+const app = new Application();
 
+await app.init({
+  backgroundColor: 0x282b30,
+  view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
+  resizeTo: document.getElementById('leftPanel')!,
+  antialias: true,
+  resolution: 2,
+  autoDensity: true,
+})
+
+
+initDevtools({ app });
+
+globalThis.__PIXI_APP__ = app;
 
 // // Set canvas size to match its container
 // function resizeCanvas() {
@@ -77,29 +99,3 @@ dropArea.addEventListener('drop', (e) => {
         benchmark.loadSpineFiles(files);
     }
 });
-function bytesToSize(bytes: number) {
-    const sizes = ['Bytes', 'KB', 'MB']
-    if (bytes === 0) return 'n/a'
-    const i = Math.floor(Math.log(bytes) / Math.log(1024))
-    if (i === 0) return `${bytes} ${sizes[i]}`
-    return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
-}
-
-const gl = (app.renderer as PIXI.Renderer).gl;
-const ext = gl.getExtension('GMAN_webgl_memory');
-
-if (ext) {
-    const info = ext.getMemoryInfo();
-    setInterval(()=>{
-        const textureSizeTotalBytes = ext.getResourcesInfo(WebGLTexture).map(t => t.size).reduce((accumulator, currentValue) => {
-            return accumulator + currentValue
-        },0);
-        const bufferSizeTotalBytes = ext.getResourcesInfo(WebGLBuffer).map(t => t.size).reduce((accumulator, currentValue) => {
-            return accumulator + currentValue
-        },0);
-        document.getElementById("currentResources")!.innerText = JSON.stringify(info, null, "\t");
-        document.getElementById("totalTextures")!.innerText = 'Total Textures: ' + bytesToSize(textureSizeTotalBytes);
-        document.getElementById("totalBuffers")!.innerText = 'Total Buffers: ' + bytesToSize(bufferSizeTotalBytes);
-    },25)
-}
-// document.getElementById("meshTableContainer")!.appendChild(table);

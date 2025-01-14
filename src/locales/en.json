@@ -1,0 +1,21 @@
+{
+  "error": {
+    "1001": "File read error: {0}",
+    "1002": "Image load error {0}: {1}",
+    "1003": "JSON parse error for skeleton file {0}: {1}",
+    "1004": "Unsupported Spine version: {0}. Maximum supported version: 4.1",
+    "1005": "Incorrect structure in skeleton JSON file: {0}",
+    "1006": "Error reading binary skeleton file: {0}",
+    "1007": "Error reading atlas file: {0}",
+    "1008": "Invalid atlas file structure: {0}",
+    "1009": "Texture not found: {0}",
+    "1010": "Error creating atlas: {0}",
+    "1011": "Skeleton contains no bones",
+    "1012": "Skeleton parse error: {0}",
+    "1013": "Error creating Spine instance: {0}",
+    "1014": "Critical error creating asset: {0}",
+    "1015": "File processing error {0}: {1}",
+    "1016": "Missing skeleton file (.json or .skel). Please upload the skeleton file along with the atlas.",
+    "1017": "Missing atlas file (.atlas). Please upload it along with the skeleton."
+  }
+}
