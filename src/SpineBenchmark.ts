@@ -36,11 +36,13 @@ extensions.add(blobParser);
 export class SpineBenchmark {
   private app: Application;
   private spineInstance: Spine | null = null; // Store the single Spine instance
-
+  private isBinary = false;
+  
   constructor(app: Application) {
     this.app = app;
   }
-  private async loadSpineFiles(files: FileList) {
+
+  public async loadSpineFiles(files: FileList) {
     const acceptedFiles = Array.from(files);
     const imageFiles = acceptedFiles.filter(file => file.type.match(/image/));
     
