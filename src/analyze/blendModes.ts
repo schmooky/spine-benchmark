@@ -25,13 +25,13 @@ export function analyzeSpineBlendModes(spine: Spine): void {
     const nonNormalBlendModeSlots: Set<string> = new Set();
     
     // Check each keyframe of the animation
-    for (let time = 0; time <= animation.duration; time += 1/30) { // Assuming 30 FPS
+    for (let time = 0; time <= animation.duration; time += 1/60) { // Assuming 30 FPS
       let visibleNonNormalBlendModes = 0;
       
       slots.forEach(slot => {
         if(!slot.attachmentName) return
         const attachment = spine.skeleton.getAttachmentByName(slot.name,slot.attachmentName);
-        if (attachment) {
+        if (attachment && slot.visible && slot.color.a > 0) {
           const blendMode = slot.blendMode;
           if (isNonNormalBlendMode(blendMode)) {
             visibleNonNormalBlendModes++;
@@ -61,15 +61,7 @@ function appendBlendModeAnimationWarning(
   const infoBlock = document.createElement("div");
   infoBlock.className = "warning";
   infoBlock.innerHTML = `
-    <h3>Potential Blend Mode Overuse Detected</h3>
-    <p><strong>Animation:</strong> ${animationName}</p>
-    <p><strong>Max visible non-normal blend modes:</strong> ${maxVisibleNonNormalBlendModes}</p>
-    <details>
-      <summary><strong>Affected slots:</strong></summary>
-        <ul>
-          ${affectedSlots.map(slot => `<li>${slot}</li>`).join('')}
-        </ul>
-    </details>
+    <h3>Blend Mode Problems in ${animationName}</h3>
   `;
   
   container.appendChild(infoBlock);

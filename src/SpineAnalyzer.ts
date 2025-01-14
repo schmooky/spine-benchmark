@@ -2,10 +2,10 @@ import { Renderer } from "pixi.js";
 import { analyzeClipping } from "./analyze/clipping";
 import { analyzeSpineBlendModes } from "./analyze/blendModes";
 import { Spine, VertexAttachment } from "@esotericsoftware/spine-pixi-v8";
+import { analyzeMeshes } from "./analyze/mesh";
 
 export class SpineAnalyzer {
-  public analyzeMeshes(spineInstance: Spine) {
-      // analyzeMeshes(spine);
+  static analyze(spineInstance: Spine) {
       // analyzeDeformations(spine);
       // analyzeSpineAttachments(spine as any);
       // analyzeSpineAttachments(spine as any);
@@ -13,6 +13,8 @@ export class SpineAnalyzer {
       analyzeClipping(spineInstance);
       // analyzeSpineAnimations(spine as any);
       analyzeSpineBlendModes(spineInstance);
+      
+      analyzeMeshes(spineInstance);
   
     return undefined;
   }

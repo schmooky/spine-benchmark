@@ -35,15 +35,10 @@ extensions.add(blobParser);
 
 export class SpineBenchmark {
   private app: Application;
-  private performanceMonitor: PerformanceMonitor;
-  private spineAnalyzer: SpineAnalyzer;
   private spineInstance: Spine | null = null; // Store the single Spine instance
-  private isBinary = false;
 
   constructor(app: Application) {
     this.app = app;
-    this.performanceMonitor = new PerformanceMonitor();
-    this.spineAnalyzer = new SpineAnalyzer();
   }
   private async loadSpineFiles(files: FileList) {
     const acceptedFiles = Array.from(files);
@@ -174,6 +169,8 @@ private async createSpineAsset(
 
   camera.addChild(spine);
   camera.lookAtChild(spine);
+
+  SpineAnalyzer.analyze(spine)
 
   this.createAnimationButtons(spine);
   this.createSkinButtons(spine);
