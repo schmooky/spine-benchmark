@@ -1,20 +1,21 @@
-import { Application } from "pixi.js";
-import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
+import { Application, Container, Graphics } from "pixi.js";
 import {NumberArrayLike, Spine, VertexAttachment} from '@esotericsoftware/spine-pixi-v8'
 
-settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NONE;
 
 const areaThreshold = 72;
+
+const outlineColor = 0x2a2a2a;
 
 export class SpineMeshOutline {
     app: Application;
     spine: Spine;
     graphics: Graphics;
+    scale: number = 1;
 
     constructor(app: Application, spineInstance: Spine) {
         this.spine = spineInstance;
         this.graphics = new Graphics();
-        this.spine.addChild(this.graphics);
+        this.spine.addChild(this.graphics as unknown as Container);
         
         // Bind the update method to maintain correct context
         this.update = this.update.bind(this);
@@ -34,13 +35,13 @@ export class SpineMeshOutline {
             return area;
         }
 
-    drawMeshOutline(vertices: NumberArrayLike, triangles: Array<number>, color = 0xFF0000, thickness = 2, alpha = 1) {
+    drawMeshOutline(vertices: NumberArrayLike, triangles: Array<number>, color = outlineColor, thickness = 2, alpha = 0.8) {
         const graphics = this.graphics;
         
         // Clear previous drawings
         
         // Set line style
-        graphics.lineStyle(thickness, color, alpha);
+        graphics.lineStyle(thickness*this.scale, color, alpha);
 
         // Create a Set to store unique edges
         const edges = new Set<string>();
@@ -66,7 +67,7 @@ export class SpineMeshOutline {
                         const area = this.calculateTriangleArea(vertices1  as [number,number], vertices2  as [number,number], vertices3  as [number,number]);
                         // If area is less than threshold, fill the triangle with semi-transparent red
                         if (area < areaThreshold) {
-                            graphics.beginFill(0xFF0000, 0.2); // Red color with 20% opacity
+                            graphics.beginFill(outlineColor, 0.2); // Red color with 20% opacity
                             graphics.moveTo(vertices1[0], vertices1[1]);
                             graphics.lineTo(vertices2[0], vertices2[1]);
                             graphics.lineTo(vertices3[0], vertices3[1]);
@@ -103,40 +104,40 @@ export class SpineMeshOutline {
     }
 
     update() {
-        // console.log(this.graphics.parent.parent.scale)
-        // const fontScale = 1/Math.max (this.graphics.parent.parent.scale.x,1)
-        // Clear previous drawings
-        this.graphics.clear();
+    // Clear previous drawings
+    this.graphics?.clear();
 
-        // Iterate through all slots
-        for (const slot of this.spine.skeleton.slots) {
-            const attachment = slot.attachment;
-            
-            // Check if attachment is a mesh
-            if (attachment && (attachment as VertexAttachment).vertices) {
-                if(slot.color.a == 0 || attachment.name == null) continue;
-                // Get mesh vertices
-                const vertices = new Float32Array((attachment as VertexAttachment).vertices.length);
-                (attachment as VertexAttachment).computeWorldVertices(
-                    slot,
-                    0,
-                    (attachment as VertexAttachment).vertices.length,
-                    vertices,
-                    0,
-                    2
-                );
+    // Iterate through all slots
+    for (const slot of this.spine.skeleton.slots) {
+        const attachment = slot.attachment;
+        
+        // Check if attachment is a mesh
+        if (attachment && (attachment as VertexAttachment).vertices) {
+            // Skip if slot is invisible or attachment has no name
+            if(slot.color.a === 0 || attachment.name == null) continue;
 
-                // Draw outline for this mesh
-                // this.drawMeshOutline(
-                //     vertices,
-                //     (attachment as VertexAttachment).triangles,
-                //     0xf0f, // Red color
-                //     1, // Line thickness
-                //     0.32
-                // );
-            }
+            // Get mesh vertices
+            const vertices = new Float32Array((attachment as VertexAttachment).vertices.length);
+            (attachment as VertexAttachment).computeWorldVertices(
+                slot,
+                0,
+                (attachment as VertexAttachment).vertices.length,
+                vertices,
+                0,
+                2
+            );
+
+            // Draw outline for this mesh
+            this.drawMeshOutline(
+                vertices,
+                (attachment as any).triangles, // Cast to any to access triangles
+                outlineColor, // Red color
+                0.75, // Line thickness
+                0.75 // Alpha
+            );
         }
     }
+}
 
     destroy() {
         this.app.ticker.remove(this.update);

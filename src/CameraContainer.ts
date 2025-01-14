@@ -1,5 +1,5 @@
 import gsap from "gsap";
-import { Application, Container, DisplayObject } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { SpineMeshOutline } from "./Outline";
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
 
@@ -215,29 +215,31 @@ export class CameraContainer extends Container {
     this.y = h / 2;
   }
   
-  lookAtChild(object: Spine) {
-    console.log(`Looking at: `, object)
-    // this.meshOutline = new SpineMeshOutline(this.app,object);
-    // this.meshOutline.graphics.visible = this.isMeshVisible;
-    // this.setMeshVisibilityCallback((value: boolean)=> {
-    //   if(!this.meshOutline) return;
-    //   this.meshOutline.graphics.visible = value;
-    // })
+  lookAtChild(spine: Spine) {
+    console.log(`Looking at: `, spine)
+    this.meshOutline = new SpineMeshOutline(this.app,spine);
+    const object = this.meshOutline;
+    this.meshOutline.graphics.visible = this.isMeshVisible;
+    this.setMeshVisibilityCallback((value: boolean)=> {
+      if(!this.meshOutline) return;
+      this.meshOutline.graphics.visible = value;
+    })
 
 
     const padding = 20;
     // Get the bounds of the object in global space
     let bounds: { width: number; height: number; x: number; y: number } =
-    object.getBounds();
+    object.spine.getBounds();
     if (bounds.width == 0 || bounds.height == 0) {
-      bounds.width = object.skeleton.data.width / 2;
-      bounds.height = object.skeleton.data.height / 2;
+      bounds.width = object.spine.skeleton.data.width / 2;
+      bounds.height = object.spine.skeleton.data.height / 2;
     }
     
     // Calculate the scale needed to fit the object within the screen
     const scaleX = (this.app.screen.width - padding * 2) / bounds.width;
     const scaleY = (this.app.screen.height - padding * 2) / bounds.height;
     let scale = Math.min(scaleX, scaleY);
+    spine.scale = scale;
     
     const minScale = 0.2;
     const maxScale = 10;
@@ -318,4 +320,5 @@ export class CameraContainer extends Container {
       this.onMeshVisibilityChange(isVisible);
     }
   }
+  
 }
