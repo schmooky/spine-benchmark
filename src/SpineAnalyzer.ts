@@ -1,7 +1,7 @@
 import { Renderer } from "pixi.js";
 import { analyzeClipping } from "./analyze/clipping";
 import { analyzeSpineBlendModes } from "./analyze/blendModes";
-import { Spine, VertexAttachment } from "@esotericsoftware/spine-pixi-v7";
+import { Spine, VertexAttachment } from "@esotericsoftware/spine-pixi-v8";
 
 export class SpineAnalyzer {
   public analyzeMeshes(spineInstance: Spine) {

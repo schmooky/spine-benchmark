@@ -10,6 +10,8 @@ import translationRU from './locales/ru.json';
 import i18next from 'i18next';
 import { toast } from './utils/toast';
 
+import { initDevtools } from '@pixi/devtools';
+
 i18next.init({
   lng: 'en', // if you're using a language detector, do not define the lng option
   debug: true,
@@ -41,13 +43,14 @@ PixiPlugin.registerPIXI(PIXI);
 const WIDTH = 360;
 const HEIGHT = 360;
 
-const app = new Application({
-    backgroundColor: 0xf4f4f4,
-    view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
-    resizeTo: document.getElementById('leftPanel')!
-});
+const app = new Application();
 
-import { initDevtools } from '@pixi/devtools';
+await app.init({
+  backgroundColor: 0xf4f4f4,
+  view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
+  resizeTo: document.getElementById('leftPanel')!
+})
+
 
 initDevtools({ app });
 

@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { attributes, html } from "../text/clipping.md";
-import { ClippingAttachment, Spine } from '@esotericsoftware/spine-pixi-v7';
+import { ClippingAttachment, Spine } from '@esotericsoftware/spine-pixi-v8';
 
 
 

@@ -1,7 +1,7 @@
 {
   "name": "spine-benchmark",
   "version": "1.0.0",
-  "description": "Spine Benchmark for PixiJS v7",
+  "description": "Spine Benchmark for PixiJS v8",
   "main": "dist/index.js",
   "scripts": {
     "build": "vite build",
@@ -9,14 +9,14 @@
     "dev": "vite --host 0.0.0.0"
   },
   "dependencies": {
-    "@esotericsoftware/spine-pixi-v7": "^4.2.70",
+    "@esotericsoftware/spine-pixi-v8": "^4.2.70",
     "@paralleldrive/cuid2": "^2.2.2",
     "@pixi/devtools": "^2.0.1",
     "@pixi/graphics-smooth": "^1.1.0",
     "@types/node": "^22.7.0",
     "gsap": "^3.12.5",
     "i18next": "^24.2.0",
-    "pixi.js": "^7.4.2",
+    "pixi.js": "^8.6.6",
     "vite": "^5.4.5",
     "vite-plugin-markdown": "^2.2.0",
     "vite-plugin-md-to-html": "^0.0.18"

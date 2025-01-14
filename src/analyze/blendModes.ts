@@ -1,5 +1,5 @@
 import { html } from "../text/blend.md";
-import { BlendMode, Spine } from "@esotericsoftware/spine-pixi-v7";
+import { BlendMode, Spine } from "@esotericsoftware/spine-pixi-v8";
 
 
 

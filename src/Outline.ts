@@ -1,6 +1,6 @@
 import { Application } from "pixi.js";
 import { SmoothGraphics as Graphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
-import {NumberArrayLike, Spine, VertexAttachment} from '@esotericsoftware/spine-pixi-v7'
+import {NumberArrayLike, Spine, VertexAttachment} from '@esotericsoftware/spine-pixi-v8'
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NONE;
 
