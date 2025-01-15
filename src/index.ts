@@ -1,4 +1,4 @@
-import { Application, Sprite } from 'pixi.js';
+import { Application } from 'pixi.js';
 import { SpineBenchmark } from './SpineBenchmark';
 import { CameraContainer } from './CameraContainer';
 
@@ -8,9 +8,6 @@ import { PixiPlugin } from "gsap/PixiPlugin";
 import translationEN from './locales/en.json';
 import translationRU from './locales/ru.json';
 import i18next from 'i18next';
-import { toast } from './utils/toast';
-
-import { initDevtools } from '@pixi/devtools';
 
 i18next.init({
   lng: 'en', // if you're using a language detector, do not define the lng option
@@ -46,24 +43,6 @@ await app.init({
 })
 
 
-initDevtools({ app });
-
-globalThis.__PIXI_APP__ = app;
-
-// // Set canvas size to match its container
-// function resizeCanvas() {
-//     const container = document.getElementById('leftPanel')!;
-//     app.renderer.resize(container.offsetWidth, container.offsetHeight);
-    
-// }
-
-// // Initial resize
-// resizeCanvas();
-
-// // Resize canvas when window is resized
-// window.addEventListener('resize', resizeCanvas);
-
-
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});
 app.stage.addChild(camera as any)
 
@@ -92,6 +71,9 @@ dropArea.addEventListener('dragleave', (e) => {
 dropArea.addEventListener('drop', (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    console.log('Drop!');
+
     dropArea.classList.remove('highlight');
     
     const files = e.dataTransfer?.files;

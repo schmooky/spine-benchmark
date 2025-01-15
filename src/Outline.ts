@@ -37,7 +37,7 @@ export class SpineMeshOutline {
 
     drawMeshOutline(vertices: NumberArrayLike, triangles: Array<number>, color = outlineColor, thickness = 2, alpha = 0.8) {
         const graphics = this.graphics;
-        
+        if(!triangles) return;
         // Clear previous drawings
         
         // Set line style
