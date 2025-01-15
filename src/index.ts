@@ -33,15 +33,19 @@ const HEIGHT = 360;
 
 const app = new Application();
 
+console.log('Initializing PIXI App')
+
 await app.init({
   backgroundColor: 0x282b30,
-  view: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
+  canvas: document.getElementById('pixiCanvas')! as HTMLCanvasElement,
   resizeTo: document.getElementById('leftPanel')!,
   antialias: true,
   resolution: 2,
   autoDensity: true,
 })
 
+
+console.log('PIXI App Initialized')
 
 const camera = new CameraContainer({width:WIDTH,height:HEIGHT,app:app});
 app.stage.addChild(camera as any)
