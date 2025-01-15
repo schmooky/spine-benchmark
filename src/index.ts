@@ -49,7 +49,7 @@ app.stage.addChild(camera as any)
 
 const benchmark = new SpineBenchmark(app);
 
-const dropArea = document.getElementById('dropArea')!;
+const dropArea = document.getElementById('leftPanel')!;
 
 dropArea.addEventListener('dragenter', (e) => {
     e.preventDefault();
