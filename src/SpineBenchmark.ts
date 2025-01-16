@@ -12,7 +12,7 @@ import {
   Spine,
   SpineTexture,
   TextureAtlas,
-} from "@esotericsoftware/spine-pixi-v8";
+} from "@esotericsoftware/spine-pixi-v7";
 import * as PIXI from 'pixi.js'
 
 import { ALPHA_MODES } from 'pixi.js';

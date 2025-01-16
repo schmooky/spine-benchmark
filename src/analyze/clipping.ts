@@ -1,4 +1,4 @@
-import { ClippingAttachment, Spine } from '@esotericsoftware/spine-pixi-v8';
+import { ClippingAttachment, Spine } from '@esotericsoftware/spine-pixi-v7';
 import { html } from "../text/clipping.md";
 
 document.querySelector("#clippingContainerText")!.innerHTML = html; // <h1>Markdown File</h1>

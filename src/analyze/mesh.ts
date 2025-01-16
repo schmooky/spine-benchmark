@@ -1,4 +1,4 @@
-import { DeformTimeline, MeshAttachment, Spine } from "@esotericsoftware/spine-pixi-v8";
+import { DeformTimeline, MeshAttachment, Spine } from "@esotericsoftware/spine-pixi-v7";
 import { attributes, html } from "../text/mesh.md";
 
 document.querySelector("#meshTableContainerText")!.innerHTML = html; // <h1>Markdown File</h1>

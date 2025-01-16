@@ -1,5 +1,5 @@
 import { Application, Container, Graphics } from "pixi.js";
-import {NumberArrayLike, Spine, VertexAttachment} from '@esotericsoftware/spine-pixi-v8'
+import {NumberArrayLike, Spine, VertexAttachment} from '@esotericsoftware/spine-pixi-v7'
 
 
 const areaThreshold = 72;
