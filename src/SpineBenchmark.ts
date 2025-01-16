@@ -42,141 +42,132 @@ export class SpineBenchmark {
     this.app = app;
   }
 
-  public async loadSpineFiles(files: FileList) {
-    const acceptedFiles = Array.from(files);
-    const imageFiles = acceptedFiles.filter(file => file.type.match(/image/));
-    
-    try {
-        // Load textures
-        const assetBundle: Record<string, any> = {};
-        
-        await Promise.all(imageFiles.map(async (file) => {
-            const base64 = await new Promise<string>((resolve) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as string);
-                reader.readAsDataURL(file);
-            });
-            
-            assetBundle[file.name] = {
-                src: base64,
-                data: { type: file.type }
-            };
-        }));
-        
-        // Add and load bundle
-        Assets.addBundle('spineAssets', assetBundle);
-        const textures = await Assets.loadBundle('spineAssets');
+  public loadSpineFiles(files: FileList) {
+    const acceptedFiles = [...files];
+    const filesLength = acceptedFiles.length;
+    let count = 0;
 
-        // Load skeleton and atlas files
-        const skelFile = acceptedFiles.find(file => /^.+\.skel$/.test(file.name));
-        const jsonFile = acceptedFiles.find(file => file.type === "application/json");
-        const atlasFile = acceptedFiles.find(file => file.name.endsWith('.atlas'));
-        
-        let skeletonData;
-        if (skelFile) {
-            this.isBinary = true;
-            skeletonData = await this.readFileAsArrayBuffer(skelFile);
-        } else if (jsonFile) {
-            const jsonText = await this.readFileAsText(jsonFile);
-            skeletonData = JSON.parse(jsonText);
-        } else {
-            throw new Error('No skeleton file (.skel or .json) found');
-        }
-        
-        if (!atlasFile) {
-            throw new Error('No atlas file found');
-        }
-        const atlasText = await this.readFileAsText(atlasFile);
-        
-        // Create spine asset
-        await this.createSpineAsset(skeletonData, atlasText, textures);
-        
-    } catch (error) {
-        console.error('Error loading Spine files:', error);
-    }
-}
+    let atlasText: string | undefined = undefined;
+    let json: any = undefined;
 
-private readFileAsText(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
+    const getFilename = (str: string) =>
+      str.substring(str.lastIndexOf("/") + 1);
+
+    acceptedFiles.forEach((file) => {
+      const filename = getFilename(file.name);
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsText(file);
-  });
-}
 
-private readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
-  return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsArrayBuffer(file);
-  });
-}
-
-private async createSpineAsset(
-  data: any, 
-  atlasText: string, 
-  textures: Record<string, Texture>
-): Promise<void> {
-  console.log("Creating Spine Asset");
-  const key = `spine-${createId()}`;
-
-  // Create atlas
-  const spineAtlas = new TextureAtlas(atlasText);
-  
-  // Process each page in the atlas
-  for (const page of spineAtlas.pages) {
-      const pageName = page.name;
-      const texture = textures[pageName];
-
-      if (!texture) {
-          console.error(`Missing texture for page: ${pageName}`);
-          throw new Error(`Missing texture for page: ${pageName}`);
+      if (file.type.match(/image/)) {
+        reader.readAsDataURL(file);
+      } else if (/^.+\.skel$/.test(filename)) {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
       }
-      console.log(texture)
-      // Create SpineTexture from the PIXI Texture
-      const spineTexture = SpineTexture.from(texture.baseTexture);
-      
-      // Set the texture for the page
-      page.setTexture(spineTexture);
-
-      // Handle PMA (Premultiplied Alpha) if needed
-      // if (page.pma) {
-      //     texture.alphaMode = ALPHA_MODES.PREMULTIPLIED_ALPHA;
-      // } else {
-      //     texture.alphaMode = ALPHA_MODES.PREMULTIPLY_ON_UPLOAD;
-      // }
-      
+      reader.onload = (event) => {
+        if (file.type.match(/image/)) {
+          Assets.load(event.target!.result as string).then(() => {
+            count += 1;
+            Assets.cache.set(
+              file.name,
+              Assets.cache.get(event.target!.result as string)
+            );
+            if (count === filesLength) {
+              this.createSpineAsset(json, atlasText!);
+            }
+          });
+        } else if (file.type === "application/json") {
+          count += 1;
+          json = JSON.parse(event.target!.result as string);
+          // AnimationStore.instance.setSpineAnimations(Object.keys(json.animations));
+          if (count === filesLength) {
+            this.createSpineAsset(json, atlasText!);
+          }
+        } else if (/^.+\.skel$/.test(filename)) {
+          count += 1;
+          this.isBinary = true;
+          json = event.target!.result;
+          // AnimationStore.instance.setSpineAnimations(Object.keys(json.animations));
+          if (count === filesLength) {
+            this.createSpineAsset(json, atlasText!);
+          }
+        } else {
+          count += 1;
+          atlasText = event.target!.result as string;
+          if (count === filesLength) {
+            this.createSpineAsset(json, atlasText);
+          }
+        }
+      };
+    });
   }
+  private async createSpineAsset(data: any, atlasText: string): Promise<void> {
+    console.log("Creating Spine Asset");
+    const key = `spine-${createId()}`;
+    const spineAtlas = new TextureAtlas(atlasText);
+    console.log(spineAtlas)
+    spineAtlas.pages.forEach(page=> {
+      console.log('PAGE',page.name);
+      const sprite = new Sprite(Assets.cache.get<Texture>(page.name));
+      this.app.stage.addChild(sprite);
+      sprite.position.set(200,200)
+      page.setTexture(SpineTexture.from(Assets.cache.get<Texture>(page.name).baseTexture))
+    })
+    let skeletonData: SkeletonData;
+    if (this.isBinary) {
+      const spineBinaryParser = new SkeletonBinary(
+        new AtlasAttachmentLoader(spineAtlas)
+      );
+      skeletonData = spineBinaryParser.readSkeletonData(new Uint8Array(data));
+    } else {
+      const spineJsonParser = new SkeletonJson(
+        new AtlasAttachmentLoader(spineAtlas)
+      );
+      skeletonData = spineJsonParser.readSkeletonData(data);
+    }
+    
+    console.log(Assets.cache);
 
-  // Create attachment loader
-  const atlasLoader = new AtlasAttachmentLoader(spineAtlas);
+    Assets.cache.set(key + "Data", data);
+    Assets.cache.set(key + "Atlas", spineAtlas);
 
-  // Create skeleton data
-  const skeletonJson = new SkeletonJson(atlasLoader);
-  const skeletonData = skeletonJson.readSkeletonData(data);
+    toast(`Loaded skeleton`);
 
-  // Create spine instance
-  const spine = new Spine(skeletonData);
-  this.app.stage.addChild(spine
-  );
+    setTimeout(() => {
+      const darkTint = false;
+      const autoUpdate = true;
+      const cacheKey = `${key}`;
 
-  const camera = this.app.stage.children[0] as CameraContainer;
+      Spine.skeletonCache[cacheKey] = skeletonData;
+      const skeleton = new Spine({ skeletonData, darkTint, autoUpdate });
 
-  // Remove previous Spine instance if exists
-  if (this.spineInstance) {
-    camera.removeChild(this.spineInstance);
+      const bounds = skeleton.getBounds();
+      console.log(`Skeleton position: (${skeleton.x}, ${skeleton.y}), bounds: (${bounds.x}, ${bounds.y}, ${bounds.width}, ${bounds.height})`);
+
+      console.log(`Skeleton visibility: ${skeleton.visible}, alpha: ${skeleton.alpha}`);
+
+      const a = Spine.from({ atlas: key + "Atlas", skeleton: key + "Data" });
+      console.log(a);
+      const camera = this.app.stage.children[0] as CameraContainer;
+
+      // Remove previous Spine instance if exists
+      if (this.spineInstance) {
+        camera.removeChild(this.spineInstance);
+      }
+
+      camera.addChild(skeleton);
+      camera.lookAtChild(skeleton);
+
+      // UI elements:
+      this.createAnimationButtons(skeleton);
+      this.createSkinButtons(skeleton);
+
+      this.spineInstance = skeleton;
+
+      SpineAnalyzer.analyze(skeleton);
+      //show pixi container
+    }, 250);
   }
-
-  camera.addChild(spine);
-  camera.lookAtChild(spine);
-
-  SpineAnalyzer.analyze(spine)
-
-  this.createAnimationButtons(spine);
-  this.createSkinButtons(spine);
-}
 
   // UI functions:
   private createAnimationButtons(spineInstance: Spine) {
