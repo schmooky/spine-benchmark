@@ -107,10 +107,6 @@ export class SpineBenchmark {
     const spineAtlas = new TextureAtlas(atlasText);
     console.log(spineAtlas)
     spineAtlas.pages.forEach(page=> {
-      console.log('PAGE',page.name);
-      const sprite = new Sprite(Assets.cache.get<Texture>(page.name));
-      this.app.stage.addChild(sprite);
-      sprite.position.set(200,200)
       page.setTexture(SpineTexture.from(Assets.cache.get<Texture>(page.name).baseTexture))
     })
     let skeletonData: SkeletonData;
