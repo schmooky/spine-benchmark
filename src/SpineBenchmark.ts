@@ -134,9 +134,9 @@ private async createSpineAsset(
           console.error(`Missing texture for page: ${pageName}`);
           throw new Error(`Missing texture for page: ${pageName}`);
       }
-
+      console.log(texture)
       // Create SpineTexture from the PIXI Texture
-      const spineTexture = SpineTexture.from(texture.source);
+      const spineTexture = SpineTexture.from(texture.baseTexture);
       
       // Set the texture for the page
       page.setTexture(spineTexture);

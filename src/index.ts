@@ -31,18 +31,17 @@ PixiPlugin.registerPIXI(PIXI);
 const WIDTH = 360;
 const HEIGHT = 360;
 
-const app = new Application();
+const app = new Application({
+  backgroundColor: 0x282b30,
+  view: document.getElementById("pixiCanvas")! as HTMLCanvasElement,
+  resizeTo: document.getElementById("leftPanel")!,
+  antialias: true,
+  resolution: 2,
+  autoDensity: true,
+});
 
 console.log("Initializing PIXI App");
 (async () => {
-  await app.init({
-    backgroundColor: 0x282b30,
-    canvas: document.getElementById("pixiCanvas")! as HTMLCanvasElement,
-    resizeTo: document.getElementById("leftPanel")!,
-    antialias: true,
-    resolution: 2,
-    autoDensity: true,
-  });
 
   console.log("PIXI App Initialized");
 
