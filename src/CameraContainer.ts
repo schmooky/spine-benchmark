@@ -1,7 +1,7 @@
 import gsap from "gsap";
 import { Application, Container } from "pixi.js";
 import { SpineMeshOutline } from "./Outline";
-import { Spine } from "@esotericsoftware/spine-pixi-v8";
+import { Spine, SpineDebugRenderer } from "@esotericsoftware/spine-pixi-v8";
 
 export class CameraContainer extends Container {
   originalWidth: any;
@@ -216,23 +216,37 @@ export class CameraContainer extends Container {
   }
   
   lookAtChild(spine: Spine) {
-    console.log(`Looking at: `, spine)
-    this.meshOutline = new SpineMeshOutline(this.app,spine);
-    const object = this.meshOutline;
-    this.meshOutline.graphics.visible = this.isMeshVisible;
-    this.setMeshVisibilityCallback((value: boolean)=> {
-      if(!this.meshOutline) return;
-      this.meshOutline.graphics.visible = value;
-    })
+    const debugRenderer = new SpineDebugRenderer();
+    debugRenderer.registerSpine(spine);
 
+    this.app.ticker.add(() => {
+      if(this.isMeshVisible)      debugRenderer.renderDebug(spine);
+      else {
+        const debugDisplayObjects = debugRenderer['registeredSpines'].get(spine);
+        debugDisplayObjects.skeletonXY.clear();
+        debugDisplayObjects.regionAttachmentsShape.clear();
+        debugDisplayObjects.meshTrianglesLine.clear();
+        debugDisplayObjects.meshHullLine.clear();
+        debugDisplayObjects.clippingPolygon.clear();
+        debugDisplayObjects.boundingBoxesRect.clear();
+        debugDisplayObjects.boundingBoxesCircle.clear();
+        debugDisplayObjects.boundingBoxesPolygon.clear();
+        debugDisplayObjects.pathsCurve.clear();
+        debugDisplayObjects.pathsLine.clear();
+        for (let len = debugDisplayObjects.bones.children.length; len > 0; len--) {
+          debugDisplayObjects.bones.children[len - 1].destroy({ children: true, texture: true, textureSource: true });
+      }
+      }
+    });
+    console.log(`Looking at: `, spine)
 
     const padding = 20;
     // Get the bounds of the object in global space
     let bounds: { width: number; height: number; x: number; y: number } =
-    object.spine.getBounds();
+    spine.getBounds();
     if (bounds.width == 0 || bounds.height == 0) {
-      bounds.width = object.spine.skeleton.data.width / 2;
-      bounds.height = object.spine.skeleton.data.height / 2;
+      bounds.width = spine.skeleton.data.width / 2;
+      bounds.height = spine.skeleton.data.height / 2;
     }
     
     // Calculate the scale needed to fit the object within the screen
