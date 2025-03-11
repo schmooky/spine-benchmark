@@ -7,62 +7,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="description" content="A tool for benchmarking and analyzing Spine animations" />
   </head>
   <body>
+    <div id="root"></div>
     <div id="toast-container"></div>
-    <div class="left-panel" id="leftPanel">
-      <canvas id="pixiCanvas"></canvas>
-
-      <section id="sidebarSkins" class="hidden">
-        <h3>Skins</h3>
-      </section>
-
-      <section id="sidebarAnimations" class="hidden">
-        <h3>Animations</h3>
-      </section>
-
-      <div id="dropArea">Drop Spine files here (JSON, Atlas, and Image)</div>
-      <div class="debugInfo">
-        <p id="currentAnimation"></p>
-        <p id="canvasScale">Scale: N/A</p>
-      </div>
-    </div>
-
-    <div class="right-panel">
-      <div id="benchmarkResults">
-        <section id="benchmarkSummary">
-          <h2>Summary</h2>
-          <p id="benchmarkSummaryText"></p>
-        </section>
-        <section id="generalRequirements">
-          <h2>Общие Требования</h2>
-          <p id="generalRequirementsText"></p>
-        </section>
-        <section id="meshTableContainer">
-          <h2>Анализ Мешей</h2>
-          <p id="meshTableContainerText"></p>
-        </section>
-        <section id="clippingContainer">
-          <h2>Маски</h2>
-          <p id="clippingContainerText"></p>
-        </section>
-        <section id="blendModesContainer">
-          <h2>Режимы Наложения</h2>
-          <p id="blendModesContainerText"></p>
-        </section>
-      </div>
-      <!-- Add more sections as needed -->
-    </div>
-
-    <!-- 
-    <div class="options">
-
-    </div> -->
-
-    <script type="module" src="src/index.ts"></script>
+    <div id="info-panel-container"></div>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
