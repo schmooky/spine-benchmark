@@ -1,4 +1,4 @@
-import { Spine, VertexAttachment, MeshAttachment, ClippingAttachment, DeformTimeline, BlendMode } from "@esotericsoftware/spine-pixi-v8";
+import { Spine, MeshAttachment, ClippingAttachment, DeformTimeline, BlendMode } from "@esotericsoftware/spine-pixi-v8";
 import { BenchmarkData } from "../hooks/useSpineApp";
 
 export class SpineAnalyzer {
@@ -29,7 +29,6 @@ export class SpineAnalyzer {
     const animations = spineInstance.skeleton.data.animations;
 
     let totalMeshCount = 0;
-    let highVertexCount = 0;
     const meshesWithChangesInTimelines = new Map();
     const meshWorldVerticesLengths = new Map<string, number>();
     const meshesWithBoneWeights = new Map<string, number>();

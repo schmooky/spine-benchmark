@@ -16,7 +16,8 @@
     "pixi.js": "^8.8.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "terser": "^5.39.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",

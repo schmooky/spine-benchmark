@@ -207,7 +207,6 @@ export class SpineLoader {
     isBinary: boolean
   ): Promise<Spine> {
     console.log("Creating Spine Asset");
-    const key = `spine-${createId()}`;
 
     // Create atlas
     const spineAtlas = new TextureAtlas(atlasText);

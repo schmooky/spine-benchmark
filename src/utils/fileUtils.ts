@@ -17,6 +17,7 @@ interface FileSystemDirectoryReader {
 }
 
 // Extending DataTransferItem to include webkitGetAsEntry
+//@ts-ignore
 interface ExtendedDataTransferItem extends DataTransferItem {
   webkitGetAsEntry(): FileSystemEntry | null;
 }

@@ -1,21 +1,14 @@
-import { Application, Assets, Sprite } from "pixi.js";
-import { PerformanceMonitor } from "./PerformanceMonitor";
+import { Application, Assets } from "pixi.js";
 import { SpineAnalyzer } from "./SpineAnalyzer";
-import { createId } from "@paralleldrive/cuid2";
 import { CameraContainer } from "./CameraContainer";
-import { toast } from "./utils/toast";
+
 import {
   AtlasAttachmentLoader,
-  SkeletonBinary,
-  SkeletonData,
   SkeletonJson,
   Spine,
   SpineTexture,
   TextureAtlas,
 } from "@esotericsoftware/spine-pixi-v8";
-import * as PIXI from 'pixi.js'
-
-import { ALPHA_MODES } from 'pixi.js';
 import { extensions, ExtensionType, Texture } from 'pixi.js';
 
 const blobParser = {
@@ -37,7 +30,7 @@ export class SpineBenchmark {
   private app: Application;
   private spineInstance: Spine | null = null; // Store the single Spine instance
   private isBinary = false;
-  
+
   constructor(app: Application) {
     this.app = app;
   }
@@ -120,8 +113,6 @@ private async createSpineAsset(
   textures: Record<string, Texture>
 ): Promise<void> {
   console.log("Creating Spine Asset");
-  const key = `spine-${createId()}`;
-
   // Create atlas
   const spineAtlas = new TextureAtlas(atlasText);
   
@@ -234,7 +225,7 @@ private async createSpineAsset(
     const animations = spineInstance.skeleton.data.animations;
     let currentIndex = 0;
     spineInstance.state.addListener({
-      complete: function (track) {
+      complete: function () {
         currentIndex++;
         setTimeout(playNextAnimation, 250);
       },

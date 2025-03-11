@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Application } from 'pixi.js';
-import { SpineBenchmark } from './components/SpineBenchmark';
 import { ToastContainer } from 'react-toastify'; // Import from react-toastify
 import 'react-toastify/dist/ReactToastify.css'; // Import toastify CSS
 import { AnimationControls } from './components/AnimationControls';
