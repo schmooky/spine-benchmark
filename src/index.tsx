@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { ToastProvider } from './hooks/ToastContext';
 import './styles.css';
+// Import the custom toastify styles
+import './toastify.css'; // Make sure to create this file with the custom styles
 
 // Create root element
 const container = document.getElementById('root');

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Application } from 'pixi.js';
 import { SpineBenchmark } from './components/SpineBenchmark';
-import { ToastContainer } from './components/ToastContainer';
+import { ToastContainer } from 'react-toastify'; // Import from react-toastify
+import 'react-toastify/dist/ReactToastify.css'; // Import toastify CSS
 import { AnimationControls } from './components/AnimationControls';
 import { InfoPanel } from './components/InfoPanel';
 import { ColorPicker } from './components/ColorPicker';
@@ -308,7 +309,19 @@ return (
       />
     )}
     
-    <ToastContainer />
+    {/* React Toastify Container with dark theme */}
+    <ToastContainer
+      position="top-center"
+      autoClose={2000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+    />
   </div>
 );
 };

@@ -16,7 +16,7 @@ interface AnimationControlsProps {
 
 export const AnimationControls: React.FC<AnimationControlsProps> = ({ spineInstance }) => {
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isLooping, setIsLooping] = useState(true);
+  const [isLooping, setIsLooping] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState<string>('');
   const [animations, setAnimations] = useState<string[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
@@ -30,7 +30,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({ spineInsta
     
     if (animationNames.length > 0) {
       setCurrentAnimation(animationNames[0]);
-      playAnimation(animationNames[0], true);
+      playAnimation(animationNames[0], false);
     }
     
     return () => {
