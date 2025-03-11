@@ -110,20 +110,6 @@ The benchmark highlights several key performance factors:
 - Large numbers of bones impact CPU performance
 - Complex constraints add overhead
 
-## Special Thanks and Gratitude
-
-This project wouldn't have been possible without the contributions and support from some amazing individuals:
-
-### Key Contributors
-
-- **[Ivan Popelyshev](https://github.com/ivanpopelyshev)** - For his invaluable expertise in PixiJS and rendering optimizations. Ivan's deep knowledge of WebGL and graphics pipelines helped shape the core rendering analysis capabilities of this tool.
-
-- **[Alexey Koktysh](https://github.com/HorusAK)** - For crucial contributions to the Spine animation processing and performance analysis algorithms. Horus's insights into animation optimization techniques have been instrumental in identifying performance bottlenecks.
-
-- **[Gleb Kaverin](https://github.com/gkavee)** - For his exceptional work on the UI/UX design and implementation of the analysis visualizations. Gleb's commitment to creating intuitive interfaces has made complex performance data accessible to all users.
-
-Their dedication, technical expertise, and passion for the Spine ecosystem have significantly elevated the quality and capabilities of this benchmark tool. We are deeply grateful for their continuous support and contributions to the open-source community.
-
 ## Compatibility Notes
 
 - **Spine Version**: Designed for Spine 4.2.x (will automatically convert 4.1.x files but will leave artifacts, you can use https://spine-4-1.ddstnd.space/ for simple preview of such assets)
