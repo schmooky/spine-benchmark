@@ -4,6 +4,7 @@ import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { CameraContainer } from '../core/CameraContainer';
 import { SpineLoader } from '../core/SpineLoader';
 import { SpineAnalyzer } from '../core/SpineAnalyzer';
+import { BackgroundManager } from '../core/BackgroundManager';
 import { useToast } from './ToastContext';
 
 export interface BenchmarkData {
@@ -19,6 +20,7 @@ export function useSpineApp(app: Application | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkData | null>(null);
   const cameraContainerRef = useRef<CameraContainer | null>(null);
+  const backgroundManagerRef = useRef<BackgroundManager | null>(null);
   const { addToast } = useToast();
 
   // This effect runs when the app instance changes
@@ -34,12 +36,21 @@ export function useSpineApp(app: Application | null) {
     
     app.stage.addChild(cameraContainer);
     cameraContainerRef.current = cameraContainer;
+    
+    // Create the background manager
+    const backgroundManager = new BackgroundManager(app);
+    backgroundManagerRef.current = backgroundManager;
 
     return () => {
       if (cameraContainer) {
         cameraContainer.destroy();
       }
       cameraContainerRef.current = null;
+      
+      if (backgroundManager) {
+        backgroundManager.destroy();
+      }
+      backgroundManagerRef.current = null;
     };
   }, [app]);
 
@@ -124,11 +135,39 @@ export function useSpineApp(app: Application | null) {
       setIsLoading(false);
     }
   };
+  
+  // Function to set the background image using base64 data
+  const setBackgroundImage = async (base64Data: string) => {
+    if (!backgroundManagerRef.current) {
+      addToast('Background manager not initialized', 'error');
+      return;
+    }
+    
+    try {
+      await backgroundManagerRef.current.setBackgroundImage(base64Data);
+      addToast('Background image set successfully', 'success');
+    } catch (error) {
+      console.error('Error setting background image:', error);
+      addToast(`Error setting background image: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+    }
+  };
+  
+  // Function to clear the background image
+  const clearBackgroundImage = () => {
+    if (!backgroundManagerRef.current) {
+      return;
+    }
+    
+    backgroundManagerRef.current.clearBackground();
+    addToast('Background image removed', 'info');
+  };
 
   return {
     spineInstance,
     loadSpineFiles,
     isLoading,
     benchmarkData,
+    setBackgroundImage,
+    clearBackgroundImage,
   };
 }

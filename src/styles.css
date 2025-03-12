@@ -649,3 +649,31 @@ body {
     right: -80px;
   }
 }
+
+/* Background Image Styles */
+.background-image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.background-image-uploader {
+  display: inline-block;
+}
+
+/* Add a subtle overlay to make controls and text more visible when an image is used as background */
+.app-container:has(.background-image-container) .controls-container {
+  background-color: rgba(0, 0, 0, 0.7); /* Darker background for better contrast */
+}
+
+.app-container:has(.background-image-container) .drop-area p {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 16px;
+  border-radius: var(--radius-md);
+}
