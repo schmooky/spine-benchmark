@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { Application } from 'pixi.js';
+import React, { useEffect, useRef, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AnimationControls } from './components/AnimationControls';
-import { InfoPanel } from './components/InfoPanel';
 import { ColorPicker } from './components/ColorPicker';
+import { DebugToggle, IkIcon, MeshIcon, PhysicsIcon } from './components/DebugToggle';
 import { IconButton } from './components/IconButton';
-import { 
-  DocumentTextIcon, 
+import {
+  DocumentTextIcon,
+  ImageIcon,
   QuestionMarkCircleIcon,
-  XMarkIcon,
-  ImageIcon
+  XMarkIcon
 } from './components/Icons';
+import { InfoPanel } from './components/InfoPanel';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { useSpineApp } from './hooks/useSpineApp';
@@ -31,7 +32,13 @@ const App: React.FC = () => {
     isLoading: spineLoading,
     benchmarkData,
     setBackgroundImage,
-    clearBackgroundImage
+    clearBackgroundImage,
+    toggleMeshes,
+    togglePhysics,
+    toggleIk,
+    meshesVisible,
+    physicsVisible,
+    ikVisible
   } = useSpineApp(app);
 
   useEffect(() => {
@@ -308,12 +315,24 @@ const App: React.FC = () => {
     setHasBackgroundImage(false);
   };
 
-  // Update background color when it changes
   useEffect(() => {
     if (app) {
       app.renderer.background.color = parseInt(backgroundColor.replace('#', '0x'));
     }
   }, [backgroundColor, app]);
+  
+  // Effect to ensure debug renderer is cleaned up when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clean up debug rendering if any was active
+      if (spineInstance && (meshesVisible || physicsVisible || ikVisible)) {
+        // Reset debug flags and force clear
+        if (app && app.ticker) {
+          app.ticker.update();
+        }
+      }
+    };
+  }, [spineInstance, meshesVisible, physicsVisible, ikVisible]);
 
   return (
     <div className="app-container" style={{ backgroundColor }}>
@@ -363,6 +382,31 @@ const App: React.FC = () => {
               tooltip="Remove Background Image"
             />
           )}
+          
+          {/* Add individual debug toggle buttons */}
+          {spineInstance && (
+            <>
+              <DebugToggle 
+                icon={<MeshIcon />} 
+                onClick={toggleMeshes}
+                active={meshesVisible}
+                tooltip="Toggle Mesh Visualization"
+              />
+              <DebugToggle 
+                icon={<PhysicsIcon />} 
+                onClick={togglePhysics}
+                active={physicsVisible}
+                tooltip="Toggle Physics Constraints"
+              />
+              <DebugToggle 
+                icon={<IkIcon />} 
+                onClick={toggleIk}
+                active={ikVisible}
+                tooltip="Toggle IK Constraints"
+              />
+            </>
+          )}
+          
           <input
             type="file"
             ref={fileInputRef}

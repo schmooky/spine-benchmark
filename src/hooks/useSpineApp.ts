@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { Application } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
-import { CameraContainer } from '../core/CameraContainer';
-import { SpineLoader } from '../core/SpineLoader';
-import { SpineAnalyzer } from '../core/SpineAnalyzer';
+import { Application } from 'pixi.js';
+import { useEffect, useRef, useState } from 'react';
 import { BackgroundManager } from '../core/BackgroundManager';
+import { CameraContainer } from '../core/CameraContainer';
+import { SpineAnalyzer } from '../core/SpineAnalyzer';
+import { SpineLoader } from '../core/SpineLoader';
 import { useToast } from './ToastContext';
 
 export interface BenchmarkData {
@@ -13,12 +13,33 @@ export interface BenchmarkData {
   blendModeAnalysis: any;
   skeletonTree: any;
   summary: any;
+  physicsAnalysis: any;
+}
+
+export interface DebugFlags {
+  showBones: boolean;
+  showRegionAttachments: boolean;
+  showMeshTriangles: boolean;
+  showMeshHull: boolean;
+  showBoundingBoxes: boolean;
+  showPaths: boolean;
+  showClipping: boolean;
+  showPhysics: boolean;
+  showIkConstraints: boolean;
+  showTransformConstraints: boolean;
+  showPathConstraints: boolean;
 }
 
 export function useSpineApp(app: Application | null) {
   const [spineInstance, setSpineInstance] = useState<Spine | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkData | null>(null);
+  
+  // Separate flags for each debug visualization type
+  const [meshesVisible, setMeshesVisible] = useState(false);
+  const [physicsVisible, setPhysicsVisible] = useState(false);
+  const [ikVisible, setIkVisible] = useState(false);
+  
   const cameraContainerRef = useRef<CameraContainer | null>(null);
   const backgroundManagerRef = useRef<BackgroundManager | null>(null);
   const { addToast } = useToast();
@@ -127,6 +148,29 @@ export function useSpineApp(app: Application | null) {
       
       setSpineInstance(newSpineInstance);
       addToast('Spine files loaded successfully', 'success');
+      
+      // Reset all debug flags
+      setMeshesVisible(false);
+      setPhysicsVisible(false);
+      setIkVisible(false);
+      
+      // Ensure debug visualization is turned off by default
+      if (cameraContainerRef.current) {
+        cameraContainerRef.current.setDebugFlags({
+          showBones: false,
+          showMeshTriangles: false,
+          showMeshHull: false,
+          showRegionAttachments: false,
+          showBoundingBoxes: false,
+          showPaths: false,
+          showClipping: false,
+          showPhysics: false,
+          showIkConstraints: false,
+          showTransformConstraints: false,
+          showPathConstraints: false
+        });
+      }
+      
     } catch (error) {
       console.error('Error loading Spine files:', error);
       addToast(`Error loading Spine files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
@@ -134,6 +178,65 @@ export function useSpineApp(app: Application | null) {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Toggle meshes visualization
+  const toggleMeshes = () => {
+    if (!cameraContainerRef.current) return;
+    
+    const newValue = !meshesVisible;
+    setMeshesVisible(newValue);
+    
+    // Get current state of all flags to preserve other toggles
+    const currentFlags = cameraContainerRef.current.getDebugFlags ? 
+      cameraContainerRef.current.getDebugFlags() : {};
+    
+    cameraContainerRef.current.setDebugFlags({
+      ...currentFlags,
+      showBones: newValue,
+      showMeshTriangles: newValue,
+      showMeshHull: newValue,
+      showRegionAttachments: newValue,
+      showBoundingBoxes: newValue,
+      showPaths: newValue,
+      showClipping: newValue
+    });
+  };
+  
+  // Toggle physics constraints visualization
+  const togglePhysics = () => {
+    if (!cameraContainerRef.current) return;
+    
+    const newValue = !physicsVisible;
+    setPhysicsVisible(newValue);
+    
+    // Get current state of all flags to preserve other toggles
+    const currentFlags = cameraContainerRef.current.getDebugFlags ? 
+      cameraContainerRef.current.getDebugFlags() : {};
+    
+    cameraContainerRef.current.setDebugFlags({
+      ...currentFlags,
+      showPhysics: newValue,
+      showTransformConstraints: newValue,
+      showPathConstraints: newValue
+    });
+  };
+  
+  // Toggle IK constraints visualization
+  const toggleIk = () => {
+    if (!cameraContainerRef.current) return;
+    
+    const newValue = !ikVisible;
+    setIkVisible(newValue);
+    
+    // Get current state of all flags to preserve other toggles
+    const currentFlags = cameraContainerRef.current.getDebugFlags ? 
+      cameraContainerRef.current.getDebugFlags() : {};
+    
+    cameraContainerRef.current.setDebugFlags({
+      ...currentFlags,
+      showIkConstraints: newValue
+    });
   };
   
   // Function to set the background image using base64 data
@@ -169,5 +272,11 @@ export function useSpineApp(app: Application | null) {
     benchmarkData,
     setBackgroundImage,
     clearBackgroundImage,
+    toggleMeshes,
+    togglePhysics,
+    toggleIk,
+    meshesVisible,
+    physicsVisible,
+    ikVisible
   };
 }
