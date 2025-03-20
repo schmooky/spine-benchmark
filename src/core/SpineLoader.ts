@@ -1,12 +1,13 @@
-import { Application, Assets, Texture } from 'pixi.js';
 import {
   AtlasAttachmentLoader,
+  SkeletonBinary,
+  SkeletonData,
   SkeletonJson,
   Spine,
   SpineTexture,
   TextureAtlas,
 } from '@esotericsoftware/spine-pixi-v8';
-import { createId } from '@paralleldrive/cuid2';
+import { Application, Assets, Texture } from 'pixi.js';
 
 export class SpineLoader {
   private app: Application;
@@ -73,9 +74,11 @@ export class SpineLoader {
       const isBinary = !!skelFile;
       
       if (skelFile) {
+        console.log('Binary Format')
         // Binary format
         skeletonData = await this.readFileAsArrayBuffer(skelFile);
       } else if (jsonFile) {
+        console.log('JSON Format')
         // JSON format
         const jsonText = await this.readFileAsText(jsonFile);
         try {
@@ -206,7 +209,7 @@ export class SpineLoader {
     textures: Record<string, Texture>,
     isBinary: boolean
   ): Promise<Spine> {
-    console.log("Creating Spine Asset");
+    console.log(`Creating ${isBinary ? 'Binary' : 'JSON'} Spine Asset`);
 
     // Create atlas
     const spineAtlas = new TextureAtlas(atlasText);
@@ -249,9 +252,18 @@ export class SpineLoader {
     const atlasLoader = new AtlasAttachmentLoader(spineAtlas);
 
     // Create skeleton data
-    const skeletonJson = new SkeletonJson(atlasLoader);
-    const skeletonData = skeletonJson.readSkeletonData(data);
+    let skeletonData: SkeletonData | undefined = undefined;
 
+    if(isBinary) {
+      const skeletonBinary = new SkeletonBinary(atlasLoader);
+      console.log(skeletonBinary)
+     skeletonData = skeletonBinary.readSkeletonData(data);
+    } else {
+      const skeletonJson = new SkeletonJson(atlasLoader);
+      console.log(skeletonJson)
+     skeletonData = skeletonJson.readSkeletonData(data);
+    }
+    
     // Create spine instance
     return new Spine(skeletonData);
   }
