@@ -733,7 +733,9 @@ export class SpineAnalyzer {
     html += `</div>`;
     
     return html;
-  }}
+  }
+  return html;
+}
 
   // Helper methods to calculate performance impact of constraints
   private static calculateIkImpact(ikData: any[]): number {
