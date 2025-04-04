@@ -6,6 +6,151 @@
 
 **Live Demo**: [https://spine.ddstnd.space/](https://spine.ddstnd.space/)
 
+## Spine Benchmark Performance Scoring System
+
+The Spine benchmark performance scoring system uses a logarithmic approach to provide more meaningful and practical performance scores. The system is designed so that:
+
+- A score of 100 represents optimal performance
+- Scores of 85-90 represent good performance
+- Scores decline gradually as complexity increases
+- Even complex animations maintain usable scores (minimum floor of 40)
+
+This logarithmic approach prevents overly dramatic scoring drops for minor complexity increases while still highlighting performance concerns appropriately.
+
+## Scoring Formula
+
+The main performance score is calculated as:
+
+```
+performanceScore = 100 - (weightedComponentPenalties)
+```
+
+Where the weighted component penalties are based on five key areas:
+
+1. Bone Structure (15% weight)
+2. Mesh Complexity (25% weight)
+3. Clipping Masks (20% weight)
+4. Blend Modes (15% weight)
+5. Constraints (25% weight)
+
+Each component is evaluated on a 0-100 scale, with the penalty being the difference from 100.
+
+## Component Scoring Methods
+
+### 1. Bone Structure Score
+
+```
+boneScore = 100 - log₂(totalBones/idealBones + 1) * 15 - (maxDepth * depthFactor)
+
+Where:
+- idealBones = 30
+- depthFactor = 1.5
+```
+
+This formula creates a logarithmic penalty based on the ratio of bones to the ideal number, plus an additional penalty for deep hierarchies.
+
+### 2. Mesh Complexity Score
+
+```
+meshScore = 100 - log₂(totalMeshes/idealMeshes + 1) * 15
+             - log₂(totalVertices/idealVertices + 1) * 10
+             - (deformedMeshes * deformationFactor)
+             - (weightedMeshes * weightFactor)
+
+Where:
+- idealMeshes = 15
+- idealVertices = 300
+- deformationFactor = 1.5
+- weightFactor = 2.0
+```
+
+This evaluates mesh complexity considering count, vertices, deformation, and bone weights.
+
+### 3. Clipping Masks Score
+
+```
+clippingScore = 100 - log₂(maskCount/idealMasks + 1) * 20
+                - log₂(vertexCount + 1) * 5
+                - (complexMasks * 10)
+
+Where:
+- idealMasks = 2
+- complexMasks = masks with >4 vertices
+```
+
+Clipping masks are heavily penalized as they significantly impact performance.
+
+### 4. Blend Mode Score
+
+```
+blendModeScore = 100 - log₂(nonNormalCount/idealBlendModes + 1) * 20
+                 - (additiveCount * 2)
+
+Where:
+- idealBlendModes = 2
+```
+
+Non-normal blend modes create additional rendering passes, with additive modes having the highest impact.
+
+### 5. Constraint Score
+
+```
+constraintScore = 100 - (constraintImpact * 0.5)
+
+Where constraintImpact is calculated from:
+- IK constraints: log₂(ikCount + 1) * 20 + log₂(totalBones + 1) * 10 + chainComplexity * 2
+- Physics constraints: log₂(physicsCount + 1) * 30 + propertiesComplexity * 5
+- Path constraints: log₂(pathCount + 1) * 20 + log₂(totalBones + 1) * 10 + modeComplexity * 7
+- Transform constraints: log₂(transformCount + 1) * 15 + log₂(totalBones + 1) * 8 + propComplexity * 5
+```
+
+The impact of each constraint type is weighted according to its performance cost, with physics constraints having the highest weight (40%).
+
+## Why Logarithmic Scaling?
+
+Logarithmic scaling is ideal for Spine performance scoring because:
+
+1. **Progressive Impact**: The first few bones/meshes/constraints have minimal performance impact, but each additional element adds incrementally more burden.
+
+2. **Real-world Performance Correlation**: Performance in graphical rendering typically doesn't degrade linearly; it often follows a logarithmic pattern as rendering pipelines handle initial complexity well but struggle with edge cases.
+
+3. **Meaningful Scores**: Linear scoring would lead to extreme scores (either very high or very low) that don't provide useful guidance.
+
+4. **Reference Calibration**: We've calibrated the scoring parameters to ensure that reference animations like symbols (100), announcers (85-95) receive appropriate scores that match their known performance characteristics.
+
+5. **Practical User Guidance**: The resulting scores provide clear indicators for optimization without being alarmist about moderate complexity.
+
+## Performance Score Interpretation
+
+| Score Range | Performance Rating | Interpretation |
+|-------------|-------------------|----------------|
+| 85-100 | Excellent | Suitable for all platforms and continuous animations |
+| 70-84 | Good | Works well on most platforms but may have issues on low-end devices |
+| 55-69 | Moderate | May cause performance dips, especially with multiple instances |
+| 40-54 | Poor | Performance issues likely on most devices |
+
+## Computational Complexity Factors
+
+The following factors increase computational complexity:
+
+### Mesh Factors
+- **Vertex Count**: Each vertex requires memory and transform calculations
+- **Deformation**: Runtime vertex calculations cost CPU cycles
+- **Bone Weights**: Matrix multiplication operations for weighted vertices
+- **Parent Meshes**: Dependency complexity increases state management
+
+### Physics Factors
+- **Property Count**: Each affected property (position, rotation, scale) adds calculations
+- **Damping/Strength**: Affect iteration count for physics simulations
+- **Wind/Gravity**: Additional vector calculations
+
+### Path Constraint Factors
+- **Rotate Mode**: ChainScale is most expensive as it recalculates multiple bones
+- **Spacing Mode**: Proportional spacing requires additional calculations
+- **Position Calculation**: More curve segments increase complexity
+
+This benchmark analyzes and weights all these factors to provide an accurate performance score that correlates with real-world rendering costs.
+
 ## Features
 
 - **Drag & Drop Interface**: Easily load Spine animations by dropping files or entire folders
