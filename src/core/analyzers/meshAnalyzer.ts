@@ -82,7 +82,8 @@ export function analyzeMeshes(spineInstance: Spine): { html: string, metrics: an
     deformedMeshCount,
     avgVerticesPerMesh: totalMeshCount > 0 ? totalVertices / totalMeshCount : 0,
     highVertexMeshes: meshData.filter(mesh => mesh.vertices > 50).length,
-    complexMeshes: meshData.filter(mesh => mesh.vertices > 20 && (mesh.isDeformed || mesh.boneWeights > 0)).length
+    complexMeshes: meshData.filter(mesh => mesh.vertices > 20 && (mesh.isDeformed || mesh.boneWeights > 0)).length,
+    score: 0
   };
   
   // Calculate mesh score using logarithmic scale

@@ -86,8 +86,8 @@ export function analyzePhysics(spineInstance: Spine): { html: string, metrics: a
     affectsX: constraint.data.x > 0,
     affectsY: constraint.data.y > 0,
     affectsRotation: constraint.data.rotate > 0,
-    affectsScale: constraint.data.scaleX > 0 || constraint.data.scaleY > 0,
-    affectsShear: constraint.data.shearX > 0 || constraint.data.shearY > 0,
+    affectsScale: constraint.data.scaleX > 0,
+    affectsShear: constraint.data.shearX > 0,
     isActive: constraint.isActive()
   }));
   
