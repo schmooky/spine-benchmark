@@ -10,12 +10,14 @@ import {
   DocumentTextIcon,
   ImageIcon,
   QuestionMarkCircleIcon,
-  XMarkIcon
+  XMarkIcon,
+  TimelineIcon
 } from './components/Icons';
 import { InfoPanel } from './components/InfoPanel';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { useSpineApp } from './hooks/useSpineApp';
+import EventTimeline from './components/EventTimeline';
     
 const App: React.FC = () => {
   const [app, setApp] = useState<Application | null>(null);
@@ -25,6 +27,11 @@ const App: React.FC = () => {
   const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
   const [hasBackgroundImage, setHasBackgroundImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentAnimation, setCurrentAnimation] = useState('');
+  const [showEventTimeline, setShowEventTimeline] = useState(false);
+  const toggleEventTimeline = () => {
+    setShowEventTimeline(!showEventTimeline);
+  };
   const { addToast } = useToast();
   const { 
     spineInstance, 
@@ -375,6 +382,12 @@ const App: React.FC = () => {
             onClick={handleBackgroundButtonClick}
             tooltip="Upload Background Image"
           />
+          <IconButton 
+  icon={<TimelineIcon />} 
+  onClick={toggleEventTimeline}
+  active={showEventTimeline}
+  tooltip="Event Timeline"
+/>
           {hasBackgroundImage && (
             <IconButton 
               icon={<XMarkIcon />} 
@@ -382,6 +395,7 @@ const App: React.FC = () => {
               tooltip="Remove Background Image"
             />
           )}
+          
           
           {/* Add individual debug toggle buttons */}
           {spineInstance && (
@@ -417,7 +431,10 @@ const App: React.FC = () => {
         </div>
         
         <div className="center-controls">
-          {spineInstance && <AnimationControls spineInstance={spineInstance} />}
+          {spineInstance && <AnimationControls 
+  spineInstance={spineInstance} 
+  onAnimationChange={setCurrentAnimation} 
+/>}
         </div>
         
         <div className="right-controls">
@@ -448,6 +465,27 @@ const App: React.FC = () => {
         pauseOnHover
         theme="dark"
       />
+      {showEventTimeline && spineInstance && (
+  <div className="timeline-modal">
+    <div className="timeline-modal-content">
+      <div className="timeline-modal-header">
+        <h2>Animation Event Timeline</h2>
+        <button 
+          className="timeline-modal-close" 
+          onClick={() => setShowEventTimeline(false)}
+        >
+          &times;
+        </button>
+      </div>
+      <div className="timeline-modal-body">
+        <EventTimeline 
+          spineInstance={spineInstance} 
+          currentAnimation={currentAnimation}
+        />
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
