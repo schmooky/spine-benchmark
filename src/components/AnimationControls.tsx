@@ -12,9 +12,13 @@ import { IconButton } from './IconButton';
 
 interface AnimationControlsProps {
   spineInstance: Spine;
+  onAnimationChange?: (animationName: string) => void;
 }
 
-export const AnimationControls: React.FC<AnimationControlsProps> = ({ spineInstance }) => {
+export const AnimationControls: React.FC<AnimationControlsProps> = ({ 
+  spineInstance, 
+  onAnimationChange 
+}) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLooping, setIsLooping] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState<string>('');
@@ -55,6 +59,11 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({ spineInsta
     spineInstance.state.setAnimation(currentTrack, name, loop);
     setCurrentAnimation(name);
     setIsPlaying(true);
+    
+    // Notify parent component about animation change
+    if (onAnimationChange) {
+      onAnimationChange(name);
+    }
   };
   
   const togglePlay = () => {

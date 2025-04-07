@@ -100,7 +100,7 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
     }
   }
   
-    // A new method to check if any debug visualization is active
+    // A method to check if any debug visualization is active
   private isAnyDebugActive(): boolean {
     return this.flags.showBones || 
            this.flags.showRegionAttachments || 
@@ -206,7 +206,7 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
     }
   }
   
-  // New method to draw physics constraints
+  // Methods to draw various constraint types
   private drawPhysicsConstraints(spine: Spine, debugObjects: PhysicsDebugDisplayObjects): void {
     const { physicsConstraints } = debugObjects;
     const physicsConstraintList = spine.skeleton.physicsConstraints;
@@ -233,24 +233,6 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
       
       // Add spring visualization
       this.drawSpring(physicsConstraints, x, y, bone.data.length, bone.rotation);
-      
-      // Show affected properties
-      let yOffset = 20;
-      // if (constraint.data.x > 0) {
-      //   this.drawPropertyIndicator(physicsConstraints, x, y + yOffset, "X");
-      //   yOffset += 15;
-      // }
-      // if (constraint.data.y > 0) {
-      //   this.drawPropertyIndicator(physicsConstraints, x, y + yOffset, "Y");
-      //   yOffset += 15;
-      // }
-      // if (constraint.data.rotate > 0) {
-      //   this.drawPropertyIndicator(physicsConstraints, x, y + yOffset, "R");
-      //   yOffset += 15;
-      // }
-      // if (constraint.data.scaleX > 0) {
-      //   this.drawPropertyIndicator(physicsConstraints, x, y + yOffset, "S");
-      // }
     }
   }
   
@@ -276,26 +258,6 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
       const coilX = springX + (i * coilSpacing);
       graphics.lineTo(coilX, springY + ((i % 2 === 0) ? -coilWidth : coilWidth));
     }
-  }
-  
-  // Draw indicators for which properties are affected
-  private drawPropertyIndicator(graphics: Graphics, x: number, y: number, property: string): void {
-    graphics.beginFill(0xFF00FF);
-    graphics.drawCircle(x, y, 7);
-    graphics.endFill();
-    
-    // Create text
-    const text = new Text({
-      text: property,
-      style: {
-        fontSize: 10,
-        fill: 0xFFFFFF
-      }
-    });
-    
-    // Center the text
-    text.position.set(x - 3, y - 5);
-    graphics.addChild(text);
   }
   
   // Draw IK constraints
@@ -449,21 +411,21 @@ export class CameraContainer extends Container {
   lastPosition: { x: number; y: number } | null = null;
   initialPosition: { x: number; y: number } | null = null;
   
-  private debugFlags: DebugFlags = {
-    showBones: true,
-    showRegionAttachments: true,
-    showMeshTriangles: true,
-    showMeshHull: true,
-    showBoundingBoxes: true,
-    showPaths: true,
-    showClipping: true,
-    showPhysics: true,
-    showIkConstraints: true,
-    showTransformConstraints: true,
-    showPathConstraints: true
+  debugFlags: DebugFlags = {
+    showBones: false,
+    showRegionAttachments: false,
+    showMeshTriangles: false,
+    showMeshHull: false,
+    showBoundingBoxes: false,
+    showPaths: false,
+    showClipping: false,
+    showPhysics: false,
+    showIkConstraints: false,
+    showTransformConstraints: false,
+    showPathConstraints: false
   };
-  private debugRenderer: EnhancedSpineDebugRenderer | null = null;
-  private currentSpine: Spine | null = null;
+  debugRenderer: EnhancedSpineDebugRenderer | null = null;
+  currentSpine: Spine | null = null;
   
   constructor(options: { width: number; height: number; app: Application }) {
     super();
@@ -559,12 +521,18 @@ export class CameraContainer extends Container {
       // Add ticker for debug rendering
       this.app.ticker.add(() => {
         if (this.currentSpine && this.debugRenderer) {
+          // Always call setDebugFlags to ensure flags are applied
+          this.debugRenderer.setDebugFlags(this.debugFlags);
+          
           // Check if any debug flags are enabled
           const anyDebugEnabled = Object.values(this.debugFlags).some(flag => flag);
           
           if (anyDebugEnabled) {
-            this.debugRenderer.setDebugFlags(this.debugFlags);
+            // Only render if any debug flag is enabled
             this.debugRenderer.renderDebug(this.currentSpine);
+          } else {
+            // If no debug flags are enabled, forcefully clear any existing graphics
+            this.clearAllDebugGraphics(this.currentSpine);
           }
         }
       });
@@ -614,54 +582,140 @@ export class CameraContainer extends Container {
     }
   }
   
-  // Update debug visibility flags
-  public setDebugFlags(flags: Partial<DebugFlags>): void {
-    this.debugFlags = { ...this.debugFlags, ...flags };
+  // Function to forcefully clear all debug graphics
+  private clearAllDebugGraphics(spine: Spine): void {
+    if (!this.debugRenderer) return;
+    
+    // Get access to the debug display objects
+    const registeredSpines = (this.debugRenderer as any)['registeredSpines'];
+    if (!registeredSpines) return;
+    
+    // Clear base renderer graphics
+    const debugObjs = this.debugRenderer['baseRenderer']?.['registeredSpines']?.get(spine);
+    if (debugObjs) {
+      // Clear all standard debug objects
+      if (debugObjs.skeletonXY) debugObjs.skeletonXY.clear();
+      if (debugObjs.regionAttachmentsShape) debugObjs.regionAttachmentsShape.clear();
+      if (debugObjs.meshTrianglesLine) debugObjs.meshTrianglesLine.clear();
+      if (debugObjs.meshHullLine) debugObjs.meshHullLine.clear();
+      if (debugObjs.clippingPolygon) debugObjs.clippingPolygon.clear();
+      if (debugObjs.boundingBoxesRect) debugObjs.boundingBoxesRect.clear();
+      if (debugObjs.boundingBoxesCircle) debugObjs.boundingBoxesCircle.clear();
+      if (debugObjs.boundingBoxesPolygon) debugObjs.boundingBoxesPolygon.clear();
+      if (debugObjs.pathsCurve) debugObjs.pathsCurve.clear();
+      if (debugObjs.pathsLine) debugObjs.pathsLine.clear();
+      
+      // Remove bone dots
+      if (debugObjs.bones && debugObjs.bones.children) {
+        while (debugObjs.bones.children.length > 0) {
+          const child = debugObjs.bones.children[0];
+          debugObjs.bones.removeChild(child);
+          if (child.destroy) {
+            child.destroy({children: true});
+          }
+        }
+      }
+    }
+    
+    // Clear custom constraint graphics
+    const customDebug = registeredSpines.get(spine);
+    if (customDebug) {
+      if (customDebug.physicsConstraints) customDebug.physicsConstraints.clear();
+      if (customDebug.ikConstraints) customDebug.ikConstraints.clear();
+      if (customDebug.transformConstraints) customDebug.transformConstraints.clear();
+      if (customDebug.pathConstraints) customDebug.pathConstraints.clear();
+    }
+    
+    // Force a render update
+    this.app.renderer.render(this.app.stage);
   }
   
+  // Set debug flags
+  public setDebugFlags(flags: Partial<DebugFlags>): void {
+    this.debugFlags = { ...this.debugFlags, ...flags };
+    
+    if (this.debugRenderer) {
+      this.debugRenderer.setDebugFlags(this.debugFlags);
+    }
+  }
+  
+  // Get debug flags
   public getDebugFlags(): DebugFlags {
     return { ...this.debugFlags };
   }
   
-  // Toggle individual debug flags
-  public toggleBones(visible?: boolean): void {
-    this.debugFlags.showBones = visible !== undefined ? visible : !this.debugFlags.showBones;
-  }
-  
+  // Updated toggle methods that forcefully clear graphics when disabling
   public toggleMeshes(visible?: boolean): void {
-    this.debugFlags.showMeshTriangles = visible !== undefined ? visible : !this.debugFlags.showMeshTriangles;
-    this.debugFlags.showMeshHull = visible !== undefined ? visible : !this.debugFlags.showMeshHull;
+    const newValue = visible !== undefined ? visible : !this.debugFlags.showMeshTriangles;
+    
+    this.debugFlags.showMeshTriangles = newValue;
+    this.debugFlags.showMeshHull = newValue;
+    this.debugFlags.showRegionAttachments = newValue;
+    this.debugFlags.showBoundingBoxes = newValue;
+    this.debugFlags.showPaths = newValue;
+    this.debugFlags.showClipping = newValue;
+    this.debugFlags.showBones = newValue;
+    
+    if (this.debugRenderer) {
+      this.debugRenderer.setDebugFlags(this.debugFlags);
+    }
+    
+    // Force clear graphics if turning off
+    if (!newValue && this.currentSpine) {
+      this.clearAllDebugGraphics(this.currentSpine);
+    }
   }
   
   public togglePhysics(visible?: boolean): void {
-    this.debugFlags.showPhysics = visible !== undefined ? visible : !this.debugFlags.showPhysics;
+    const newValue = visible !== undefined ? visible : !this.debugFlags.showPhysics;
+    
+    this.debugFlags.showPhysics = newValue;
+    this.debugFlags.showTransformConstraints = newValue;
+    this.debugFlags.showPathConstraints = newValue;
+    
+    if (this.debugRenderer) {
+      this.debugRenderer.setDebugFlags(this.debugFlags);
+    }
+    
+    // Force clear graphics if turning off
+    if (!newValue && this.currentSpine) {
+      this.clearAllDebugGraphics(this.currentSpine);
+    }
   }
   
   public toggleIkConstraints(visible?: boolean): void {
-    this.debugFlags.showIkConstraints = visible !== undefined ? visible : !this.debugFlags.showIkConstraints;
+    const newValue = visible !== undefined ? visible : !this.debugFlags.showIkConstraints;
+    
+    this.debugFlags.showIkConstraints = newValue;
+    
+    if (this.debugRenderer) {
+      this.debugRenderer.setDebugFlags(this.debugFlags);
+    }
+    
+    // Force clear graphics if turning off
+    if (!newValue && this.currentSpine) {
+      this.clearAllDebugGraphics(this.currentSpine);
+    }
   }
   
-  public toggleTransformConstraints(visible?: boolean): void {
-    this.debugFlags.showTransformConstraints = visible !== undefined ? visible : !this.debugFlags.showTransformConstraints;
-  }
-  
-  public togglePathConstraints(visible?: boolean): void {
-    this.debugFlags.showPathConstraints = visible !== undefined ? visible : !this.debugFlags.showPathConstraints;
-  }
-  
-  // Backwards compatibility - matches original implementation
-  public setMeshVisibility(isVisible: boolean): void {
-    this.debugFlags.showBones = isVisible;
-    this.debugFlags.showMeshTriangles = isVisible;
-    this.debugFlags.showMeshHull = isVisible;
-    this.debugFlags.showRegionAttachments = isVisible;
-    this.debugFlags.showBoundingBoxes = isVisible;
-    this.debugFlags.showPaths = isVisible;
-    this.debugFlags.showClipping = isVisible;
-  }
-  
-  public getMeshVisibility(): boolean {
-    return this.debugFlags.showMeshTriangles && this.debugFlags.showMeshHull;
+  // Force reset debug graphics completely
+  public forceResetDebugGraphics(): void {
+    if (!this.currentSpine || !this.debugRenderer) return;
+    
+    // First, try to unregister the spine instance from the debug renderer
+    this.debugRenderer.unregisterSpine(this.currentSpine);
+    
+    // Then create a new debug renderer instance to replace the old one
+    this.debugRenderer = new EnhancedSpineDebugRenderer();
+    
+    // Register the spine instance with the new renderer
+    if (this.currentSpine) {
+      this.debugRenderer.registerSpine(this.currentSpine);
+      this.debugRenderer.setDebugFlags(this.debugFlags);
+    }
+    
+    // Force a render update
+    this.app.renderer.render(this.app.stage);
   }
   
   // Center the view
@@ -677,47 +731,14 @@ export class CameraContainer extends Container {
     });
   }
   
-  // Run physics simulation
-  public runPhysicsSimulation(duration: number = 1): void {
-    if (!this.currentSpine) return;
-    
-    // Save current spine time
-    const originalTime = this.currentSpine.skeleton.time;
-    
-    // Set up physics simulation interval
-    const fps = 60;
-    const totalFrames = duration * fps;
-    let currentFrame = 0;
-    
-    const intervalId = setInterval(() => {
-      if (!this.currentSpine) {
-        clearInterval(intervalId);
-        return;
-      }
-      
-      // Update spine with small time increment
-      this.currentSpine.update(1/fps);
-      
-      // Force physics update
-      this.currentSpine.skeleton.updateWorldTransform(Physics.update);
-      
-      currentFrame++;
-      if (currentFrame >= totalFrames) {
-        clearInterval(intervalId);
-      }
-    }, 1000/fps);
-  }
-  
   public override destroy(): void {
     // Remove event listeners
     window.removeEventListener('resize', this.onResize);
     
     // Cleanup ticker
-    this.app.ticker.remove(() => {
-      if (this.currentSpine && this.debugRenderer) {
-        this.debugRenderer.renderDebug(this.currentSpine);
-      }
-    });
+    if (this.currentSpine && this.debugRenderer) {
+      this.debugRenderer.unregisterSpine(this.currentSpine);
+    }
     
     // Call parent destroy method
     super.destroy();

@@ -180,63 +180,137 @@ export function useSpineApp(app: Application | null) {
     }
   };
   
-  // Toggle meshes visualization
+  // New function to forcefully remove all debug graphics
+  const removeAllDebugGraphics = () => {
+    if (!spineInstance || !cameraContainerRef.current) return;
+    
+    // Set all debug flags to false in the camera container
+    if (cameraContainerRef.current.setDebugFlags) {
+      cameraContainerRef.current.setDebugFlags({
+        showBones: false,
+        showRegionAttachments: false,
+        showMeshTriangles: false,
+        showMeshHull: false,
+        showBoundingBoxes: false,
+        showPaths: false,
+        showClipping: false,
+        showPhysics: false,
+        showIkConstraints: false,
+        showTransformConstraints: false,
+        showPathConstraints: false
+      });
+    }
+    
+    // Get the debug renderer
+    const debugRenderer = (cameraContainerRef.current as any).debugRenderer;
+    if (!debugRenderer) return;
+    
+    // Get access to registered spines
+    const registeredSpines = debugRenderer.registeredSpines;
+    if (!registeredSpines) return;
+    
+    // Get debug display objects for our spine instance
+    const debugObjs = registeredSpines.get(spineInstance);
+    if (!debugObjs) return;
+    
+    // Clear all graphics objects
+    const graphicsProps = [
+      'skeletonXY', 
+      'regionAttachmentsShape', 
+      'meshTrianglesLine',
+      'meshHullLine', 
+      'clippingPolygon', 
+      'boundingBoxesRect',
+      'boundingBoxesCircle', 
+      'boundingBoxesPolygon', 
+      'pathsCurve',
+      'pathsLine'
+    ];
+    
+    graphicsProps.forEach(prop => {
+      if (debugObjs[prop] && typeof debugObjs[prop].clear === 'function') {
+        debugObjs[prop].clear();
+      }
+    });
+    
+    // Remove bone dots (which are children of the bones container)
+    if (debugObjs.bones && debugObjs.bones.children) {
+      while (debugObjs.bones.children.length > 0) {
+        const bone = debugObjs.bones.children[0];
+        debugObjs.bones.removeChild(bone);
+        if (bone.destroy) {
+          bone.destroy({children: true});
+        }
+      }
+    }
+    
+    // Clear custom constraint graphics
+    const customGraphicsProps = [
+      'physicsConstraints',
+      'ikConstraints',
+      'transformConstraints',
+      'pathConstraints'
+    ];
+    
+    customGraphicsProps.forEach(prop => {
+      if (debugObjs[prop] && typeof debugObjs[prop].clear === 'function') {
+        debugObjs[prop].clear();
+      }
+    });
+    
+    // Force a render update
+    if (app) {
+      app.renderer.render(app.stage);
+    }
+  };
+
+  // Updated toggle functions
   const toggleMeshes = () => {
     if (!cameraContainerRef.current) return;
     
     const newValue = !meshesVisible;
     setMeshesVisible(newValue);
     
-    // Get current state of all flags to preserve other toggles
-    const currentFlags = cameraContainerRef.current.getDebugFlags ? 
-      cameraContainerRef.current.getDebugFlags() : {};
-    
-    cameraContainerRef.current.setDebugFlags({
-      ...currentFlags,
-      showBones: newValue,
-      showMeshTriangles: newValue,
-      showMeshHull: newValue,
-      showRegionAttachments: newValue,
-      showBoundingBoxes: newValue,
-      showPaths: newValue,
-      showClipping: newValue
-    });
+    if (newValue) {
+      // Turn on meshes visualization
+      cameraContainerRef.current.toggleMeshes(true);
+    } else {
+      // Turn off and forcefully clear
+      cameraContainerRef.current.toggleMeshes(false);
+      removeAllDebugGraphics();
+    }
   };
   
-  // Toggle physics constraints visualization
   const togglePhysics = () => {
     if (!cameraContainerRef.current) return;
     
     const newValue = !physicsVisible;
     setPhysicsVisible(newValue);
     
-    // Get current state of all flags to preserve other toggles
-    const currentFlags = cameraContainerRef.current.getDebugFlags ? 
-      cameraContainerRef.current.getDebugFlags() : {};
-    
-    cameraContainerRef.current.setDebugFlags({
-      ...currentFlags,
-      showPhysics: newValue,
-      showTransformConstraints: newValue,
-      showPathConstraints: newValue
-    });
+    if (newValue) {
+      // Turn on physics visualization
+      cameraContainerRef.current.togglePhysics(true);
+    } else {
+      // Turn off and forcefully clear
+      cameraContainerRef.current.togglePhysics(false);
+      removeAllDebugGraphics();
+    }
   };
   
-  // Toggle IK constraints visualization
   const toggleIk = () => {
     if (!cameraContainerRef.current) return;
     
     const newValue = !ikVisible;
     setIkVisible(newValue);
     
-    // Get current state of all flags to preserve other toggles
-    const currentFlags = cameraContainerRef.current.getDebugFlags ? 
-      cameraContainerRef.current.getDebugFlags() : {};
-    
-    cameraContainerRef.current.setDebugFlags({
-      ...currentFlags,
-      showIkConstraints: newValue
-    });
+    if (newValue) {
+      // Turn on IK constraints visualization
+      cameraContainerRef.current.toggleIkConstraints(true);
+    } else {
+      // Turn off and forcefully clear
+      cameraContainerRef.current.toggleIkConstraints(false);
+      removeAllDebugGraphics();
+    }
   };
   
   // Function to set the background image using base64 data

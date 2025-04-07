@@ -884,3 +884,233 @@ body {
 .icon-button:active {
   transform: translateY(0);
 }
+
+/* Event Timeline Styles */
+.event-timeline-container {
+  background-color: var(--color-darker);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  width: 100%;
+  max-height: 500px;
+  overflow-y: auto;
+  color: var(--color-light);
+  box-shadow: var(--shadow-md);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.timeline-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.time-display {
+  font-family: monospace;
+  font-size: 0.9rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.timeline {
+  position: relative;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+  margin: 12px 0;
+  cursor: pointer;
+}
+
+.timeline-track {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.2);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.time-indicator {
+  position: absolute;
+  width: 2px;
+  height: 40px;
+  background-color: var(--color-accent);
+  top: 0;
+  transform: translateX(-1px);
+  transition: left 0.1s ease;
+}
+
+.event-marker {
+  position: absolute;
+  width: 6px;
+  height: 30px;
+  transform: translateX(-3px) translateY(-15px);
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: currentColor;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.event-tooltip {
+  position: absolute;
+  background-color: #212121;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  min-width: 120px;
+  transform: translateX(-50%);
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.event-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.event-time {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 4px;
+}
+
+.event-value {
+  font-size: 0.8rem;
+  word-break: break-word;
+}
+
+.event-value span {
+  font-family: monospace;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.event-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-label {
+  font-size: 0.8rem;
+}
+
+.events-list {
+  margin-top: 20px;
+}
+
+.events-list h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.events-table th,
+.events-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.events-table th {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.type-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.no-events {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  text-align: center;
+}
+
+.active-event {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dialog/Modal for timeline */
+.timeline-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.timeline-modal-content {
+  width: 90%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: var(--color-darker);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.timeline-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-modal-close {
+  background: none;
+  border: none;
+  color: var(--color-light);
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.timeline-modal-body {
+  padding: 16px;
+}
