@@ -1,8 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 
+// Define interfaces for the component props and event structure
+interface EventTimelineProps {
+  spineInstance: Spine;
+  currentAnimation: string;
+}
+
+interface AnimationEvent {
+  name: string;
+  time: number;
+  value: string | number | boolean | object | null;
+  valueType: 'string' | 'number' | 'boolean' | 'object' | 'default';
+}
+
 // Event type color mapping
-const EVENT_TYPE_COLORS = {
+const EVENT_TYPE_COLORS: Record<string, string> = {
   string: '#4caf50', // Green
   number: '#2196f3', // Blue
   boolean: '#ff9800', // Orange
@@ -11,15 +24,15 @@ const EVENT_TYPE_COLORS = {
 };
 
 // Timeline component that displays events in the animation
-const EventTimeline = ({ spineInstance, currentAnimation }) => {
-  const [events, setEvents] = useState([]);
-  const [hoverEvent, setHoverEvent] = useState(null);
-  const [timelineWidth, setTimelineWidth] = useState(0);
-  const timelineRef = useRef(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const animationFrameRef = useRef(null);
+const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAnimation }) => {
+  const [events, setEvents] = useState<AnimationEvent[]>([]);
+  const [hoverEvent, setHoverEvent] = useState<AnimationEvent | null>(null);
+  const [timelineWidth, setTimelineWidth] = useState<number>(0);
+  const timelineRef = useRef<HTMLDivElement | null>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Extract events from the animation
   useEffect(() => {
@@ -32,15 +45,15 @@ const EventTimeline = ({ spineInstance, currentAnimation }) => {
     setDuration(animation.duration);
     
     // Extract events from timelines
-    const extractedEvents = [];
+    const extractedEvents: AnimationEvent[] = [];
     
     // Search through timelines for event timelines
-    animation.timelines.forEach(timeline => {
+    animation.timelines.forEach((timeline: any) => {
       // Check if this is an event timeline
       if (timeline.events) {
-        timeline.events.forEach(evt => {
+        timeline.events.forEach((evt: any) => {
           const value = evt.data.stringValue || evt.data.intValue || evt.data.floatValue || evt.data.audioPath || null;
-          let valueType = 'default';
+          let valueType: AnimationEvent['valueType'] = 'default';
           
           if (typeof value === 'string') valueType = 'string';
           else if (typeof value === 'number') valueType = 'number';
@@ -77,7 +90,7 @@ const EventTimeline = ({ spineInstance, currentAnimation }) => {
     let lastTime = 0;
     let animationTime = 0;
     
-    const updateAnimation = (time) => {
+    const updateAnimation = (time: number) => {
       if (!lastTime) {
         lastTime = time;
         animationFrameRef.current = requestAnimationFrame(updateAnimation);
@@ -91,7 +104,7 @@ const EventTimeline = ({ spineInstance, currentAnimation }) => {
         if (spineInstance && spineInstance.state) {
           const track = spineInstance.state.tracks[0];
           if (track) {
-            animationTime = track.animationTime;
+            animationTime = track.getAnimationTime();
             setCurrentTime(animationTime);
           }
         }
@@ -106,23 +119,23 @@ const EventTimeline = ({ spineInstance, currentAnimation }) => {
     const checkPlayState = () => {
       if (spineInstance && spineInstance.state) {
         const track = spineInstance.state.tracks[0];
-        setIsPlaying(track && !track.trackTime);
+        setIsPlaying(track ? !track.trackTime : false);
       }
     };
     
     // Listen for animation events directly from Spine
     const listener = {
-      start: (entry) => {
+      start: (entry: any) => {
         if (entry.animation.name === currentAnimation) {
           setIsPlaying(true);
         }
       },
-      complete: (entry) => {
+      complete: (entry: any) => {
         if (entry.animation.name === currentAnimation) {
           setIsPlaying(false);
         }
       },
-      event: (entry, event) => {
+      event: (entry: any, event: any) => {
         // This is triggered when an event occurs during animation playback
         console.log('Event fired:', event.data.name, event.time, event.data);
       }
@@ -140,13 +153,13 @@ const EventTimeline = ({ spineInstance, currentAnimation }) => {
   }, [spineInstance, currentAnimation, isPlaying]);
 
   // Calculate event position on timeline
-  const getEventPosition = (eventTime) => {
+  const getEventPosition = (eventTime: number) => {
     if (duration <= 0) return 0;
     return (eventTime / duration) * timelineWidth;
   };
 
   // Skip to a specific time in the animation
-  const handleTimelineClick = (e) => {
+  const handleTimelineClick = (e: React.MouseEvent) => {
     if (!timelineRef.current || !spineInstance || !currentAnimation) return;
     
     const rect = timelineRef.current.getBoundingClientRect();
@@ -163,7 +176,7 @@ const EventTimeline = ({ spineInstance, currentAnimation }) => {
   };
   
   // Format time display as seconds with 2 decimal places
-  const formatTime = (time) => {
+  const formatTime = (time: number) => {
     return time.toFixed(2) + 's';
   };
 
