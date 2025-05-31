@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Button, Space, Select, Switch, Tooltip } from 'antd';
 import {
@@ -19,6 +20,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   spineInstance, 
   onAnimationChange 
 }) => {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLooping, setIsLooping] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState<string>('');
@@ -122,19 +124,19 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
           onChange={(value) => playAnimation(value)}
           style={{ width: 180 }}
           options={animations.map(name => ({ label: name, value: name }))}
-          placeholder="Select animation"
+          placeholder={t('controls.selectAnimation')}
         />
         
         <Space>
-          <Tooltip title="Previous Animation">
+          <Tooltip title={t('controls.previousAnimation')}>
             <Button icon={<StepBackwardOutlined />} onClick={previousAnimation} />
           </Tooltip>
           
-          <Tooltip title="Stop">
+          <Tooltip title={t('controls.stop')}>
             <Button icon={<StopOutlined />} onClick={stopAnimation} />
           </Tooltip>
           
-          <Tooltip title={isPlaying ? "Pause" : "Play"}>
+          <Tooltip title={isPlaying ? t('controls.pause') : t('controls.play')}>
             <Button 
               type="primary" 
               icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />} 
@@ -143,18 +145,18 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
             />
           </Tooltip>
           
-          <Tooltip title="Restart Animation">
+          <Tooltip title={t('controls.restart')}>
             <Button icon={<ReloadOutlined />} onClick={rewindAnimation} />
           </Tooltip>
           
-          <Tooltip title="Next Animation">
+          <Tooltip title={t('controls.nextAnimation')}>
             <Button icon={<StepForwardOutlined />} onClick={nextAnimation} />
           </Tooltip>
         </Space>
         
         <Switch 
-          checkedChildren="Loop" 
-          unCheckedChildren="Once" 
+          checkedChildren={t('controls.loop')} 
+          unCheckedChildren={t('controls.once')} 
           checked={isLooping} 
           onChange={toggleLoop} 
         />

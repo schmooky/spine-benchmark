@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Card, Typography, Progress, Tag, Table, Space, Row, Col, Empty, Slider, Tooltip } from 'antd';
 import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
@@ -26,6 +27,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 };
 
 const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAnimation }) => {
+  const { t } = useTranslation();
   const [events, setEvents] = useState<AnimationEvent[]>([]);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -135,7 +137,7 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
 
   const columns = [
     {
-      title: <Text style={{ color: '#fff' }}>Time</Text>,
+      title: <Text style={{ color: '#fff' }}>{t('drawer.time')}</Text>,
       dataIndex: 'time',
       key: 'time',
       width: 100,
@@ -146,13 +148,13 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
       ),
     },
     {
-      title: <Text style={{ color: '#fff' }}>Name</Text>,
+      title: <Text style={{ color: '#fff' }}>{t('drawer.name')}</Text>,
       dataIndex: 'name',
       key: 'name',
       render: (name: string) => <Text style={{ color: '#fff' }}>{name}</Text>,
     },
     {
-      title: <Text style={{ color: '#fff' }}>Type</Text>,
+      title: <Text style={{ color: '#fff' }}>{t('drawer.type')}</Text>,
       dataIndex: 'valueType',
       key: 'valueType',
       width: 100,
@@ -163,7 +165,7 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
       ),
     },
     {
-      title: <Text style={{ color: '#fff' }}>Value</Text>,
+      title: <Text style={{ color: '#fff' }}>{t('drawer.value')}</Text>,
       dataIndex: 'value',
       key: 'value',
       render: (value: any) => (
@@ -177,7 +179,7 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
   if (!currentAnimation) {
     return (
       <Empty 
-        description={<Text style={{ color: 'rgba(255, 255, 255, 0.45)' }}>No animation selected</Text>}
+        description={<Text style={{ color: 'rgba(255, 255, 255, 0.45)' }}>{t('drawer.noAnimationSelected')}</Text>}
         style={{ marginTop: 48 }}
       />
     );
@@ -229,7 +231,7 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
       </Card>
 
       <Card 
-        title={<Text style={{ color: '#fff' }}>Events ({events.length})</Text>}
+        title={<Text style={{ color: '#fff' }}>{t('drawer.events')} ({events.length})</Text>}
         style={{ background: '#141414', borderColor: '#303030' }}
         bodyStyle={{ padding: 0 }}
       >
@@ -247,14 +249,14 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
           />
         ) : (
           <Empty 
-            description={<Text style={{ color: 'rgba(255, 255, 255, 0.45)' }}>No events found in this animation</Text>}
+            description={<Text style={{ color: 'rgba(255, 255, 255, 0.45)' }}>{t('drawer.noEvents')}</Text>}
             style={{ padding: 24 }}
           />
         )}
       </Card>
 
       <Card style={{ background: '#141414', borderColor: '#303030' }}>
-        <Title level={5} style={{ color: '#fff' }}>Event Type Legend</Title>
+        <Title level={5} style={{ color: '#fff' }}>{t('drawer.eventTypeLegend')}</Title>
         <Space wrap>
           {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
             <Tag key={type} color={color}>

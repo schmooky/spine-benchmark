@@ -1,5 +1,6 @@
 import { Application } from 'pixi.js';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Layout, Menu, Button, Space, Drawer, Tabs, Card, Progress, Typography, Tooltip, ColorPicker, Select, Switch, Spin } from 'antd';
@@ -25,7 +26,8 @@ import {
   SettingOutlined,
   AppstoreOutlined,
   DashboardOutlined,
-  LoadingOutlined
+  LoadingOutlined,
+  GlobalOutlined
 } from '@ant-design/icons';
 import { AnimationControls } from './components/AnimationControls';
 import { InfoPanel } from './components/InfoPanel';
@@ -38,6 +40,7 @@ const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 
 const App: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [app, setApp] = useState<Application | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +51,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState('');
   const [showEventTimeline, setShowEventTimeline] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useSafeLocalStorage('spine-benchmark-language', 'en');
   
   const { addToast } = useToast();
   const { 
@@ -64,6 +68,10 @@ const App: React.FC = () => {
     physicsVisible,
     ikVisible
   } = useSpineApp(app);
+
+  useEffect(() => {
+    i18n.changeLanguage(currentLanguage);
+  }, [currentLanguage, i18n]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -90,7 +98,7 @@ const App: React.FC = () => {
         };
       } catch (error) {
         console.error("Failed to initialize Pixi application:", error);
-        addToast(`Failed to initialize graphics: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+        addToast(t('errors.applicationNotInitialized') + `: ${error instanceof Error ? error.message : t('errors.unknownError')}`, 'error');
       }
     };
     
@@ -147,7 +155,7 @@ const App: React.FC = () => {
       
     } catch (error) {
       console.error('Error processing dropped items:', error);
-      addToast(`Error processing dropped files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(`Error processing dropped files: ${error instanceof Error ? error.message : t('errors.unknownError')}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +179,7 @@ const App: React.FC = () => {
       if (jsonFile) {
         const content = await jsonFile.text();
         if (content.includes('"spine":"4.1')) {
-          addToast('Warning: This file uses Spine 4.1. The benchmark is designed for Spine 4.2. Version will be adjusted automatically.', 'warning');
+          addToast(t('warning.spine41Warning'), 'warning');
           
           const modifiedContent = content.replace(/"spine":"4.1[^"]*"/, '"spine":"4.2.0"');
           const modifiedFile = new File([modifiedContent], jsonFile.name, { type: 'application/json' });
@@ -193,7 +201,7 @@ const App: React.FC = () => {
       await loadSpineFiles(files);
     } catch (error) {
       console.error("Error handling Spine files:", error);
-      addToast(`Error loading Spine files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(`${t('errors.errorLoadingFiles')}: ${error instanceof Error ? error.message : t('errors.unknownError')}`, 'error');
     }
   };
 
@@ -203,7 +211,7 @@ const App: React.FC = () => {
       const file = files[0];
       
       if (!file.type.startsWith('image/')) {
-        addToast('Please select an image file.', 'error');
+        addToast(t('errors.selectImageFile'), 'error');
         return;
       }
       
@@ -217,15 +225,15 @@ const App: React.FC = () => {
             setHasBackgroundImage(true);
           } catch (error) {
             console.error('Error setting background image:', error);
-            addToast('Failed to set background image.', 'error');
+            addToast(t('errors.failedToSetBackground'), 'error');
           }
         } else {
-          addToast('Failed to read image file.', 'error');
+          addToast(t('errors.failedToReadImage'), 'error');
         }
       };
       
       reader.onerror = () => {
-        addToast('Error reading the image file.', 'error');
+        addToast(t('errors.errorReadingImage'), 'error');
       };
       
       reader.readAsDataURL(file);
@@ -241,6 +249,11 @@ const App: React.FC = () => {
     setHasBackgroundImage(false);
   };
 
+  const handleLanguageChange = (value: string) => {
+    setCurrentLanguage(value);
+    i18n.changeLanguage(value);
+  };
+
   useEffect(() => {
     if (app) {
       app.renderer.background.color = parseInt(backgroundColor.replace('#', '0x'));
@@ -251,24 +264,24 @@ const App: React.FC = () => {
     {
       key: 'info',
       icon: <InfoCircleOutlined />,
-      label: 'Information',
+      label: t('menu.information'),
       children: [
         {
           key: 'benchmark',
           icon: <DashboardOutlined />,
-          label: 'Benchmark Info',
+          label: t('menu.benchmarkInfo'),
           onClick: () => setShowBenchmark(!showBenchmark)
         },
         {
           key: 'docs',
           icon: <FileTextOutlined />,
-          label: 'Documentation',
+          label: t('menu.documentation'),
           onClick: () => window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank')
         },
         {
           key: 'timeline',
           icon: <LineChartOutlined />,
-          label: 'Event Timeline',
+          label: t('menu.eventTimeline'),
           onClick: () => setShowEventTimeline(!showEventTimeline)
         }
       ]
@@ -276,12 +289,12 @@ const App: React.FC = () => {
     {
       key: 'visuals',
       icon: <SettingOutlined />,
-      label: 'Visual Settings',
+      label: t('menu.visualSettings'),
       children: [
         {
           key: 'background',
           icon: <PictureOutlined />,
-          label: 'Background Image',
+          label: t('menu.backgroundImage'),
           onClick: () => fileInputRef.current?.click()
         },
         {
@@ -289,14 +302,14 @@ const App: React.FC = () => {
           icon: <BgColorsOutlined />,
           label: (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              Background Color
+              {t('menu.backgroundColor')}
               <ColorPicker 
                 value={backgroundColor} 
                 onChange={(color) => setBackgroundColor(color.toHexString())}
                 size="small"
                 presets={[
                   {
-                    label: 'Dark Theme',
+                    label: t('themes.darkTheme'),
                     colors: [
                       '#282b30', '#1a1a1a', '#333333', '#121212', '#2c2c2c',
                       '#2b2d42', '#1d3557', '#3c096c', '#240046', '#1b263b'
@@ -312,14 +325,14 @@ const App: React.FC = () => {
     {
       key: 'debug',
       icon: <ApiOutlined />,
-      label: 'Debug Visualization',
+      label: t('menu.debugVisualization'),
       children: [
         {
           key: 'meshes',
           icon: <AppstoreOutlined />,
           label: (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span>Mesh Visualization</span>
+              <span>{t('menu.meshVisualization')}</span>
               <Switch checked={meshesVisible} onChange={toggleMeshes} size="small" />
             </div>
           )
@@ -329,7 +342,7 @@ const App: React.FC = () => {
           icon: <ThunderboltOutlined />,
           label: (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span>Physics Constraints</span>
+              <span>{t('menu.physicsConstraints')}</span>
               <Switch checked={physicsVisible} onChange={togglePhysics} size="small" />
             </div>
           )
@@ -339,7 +352,7 @@ const App: React.FC = () => {
           icon: <LinkOutlined />,
           label: (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <span>IK Constraints</span>
+              <span>{t('menu.ikConstraints')}</span>
               <Switch checked={ikVisible} onChange={toggleIk} size="small" />
             </div>
           )
@@ -414,7 +427,7 @@ const App: React.FC = () => {
           borderBottom: '1px solid #303030'
         }}>
           <Title level={4} style={{ margin: 0, color: '#fff' }}>
-            {collapsed ? 'SB' : 'Spine Benchmark'}
+            {collapsed ? t('app.titleShort') : t('app.title')}
           </Title>
         </div>
         <Menu
@@ -446,16 +459,29 @@ const App: React.FC = () => {
             }}
           />
           
-          {hasBackgroundImage && (
-            <Button 
-              type="text"
-              icon={<CloseOutlined />}
-              onClick={handleRemoveBackground}
-              style={{ color: '#fff' }}
-            >
-              Remove Background
-            </Button>
-          )}
+          <Space>
+            {hasBackgroundImage && (
+              <Button 
+                type="text"
+                icon={<CloseOutlined />}
+                onClick={handleRemoveBackground}
+                style={{ color: '#fff' }}
+              >
+                {t('controls.removeBackground')}
+              </Button>
+            )}
+            
+            <Select
+              value={currentLanguage}
+              onChange={handleLanguageChange}
+              style={{ width: 120 }}
+              suffixIcon={<GlobalOutlined />}
+              options={[
+                { label: 'English', value: 'en' },
+                { label: 'Русский', value: 'ru' }
+              ]}
+            />
+          </Space>
         </Header>
         
         <Content style={{ 
@@ -474,14 +500,14 @@ const App: React.FC = () => {
             {!spineInstance && (
               <div className="drop-area">
                 <AppstoreOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-                <p>Drop Spine files or folders here (JSON, Atlas, and Images)</p>
+                <p>{t('dropArea.message')}</p>
               </div>
             )}
             
             {(isLoading || spineLoading) && (
               <div className="loading-indicator">
                 <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
-                <p>Loading...</p>
+                <p>{t('dropArea.loading')}</p>
               </div>
             )}
           </div>
@@ -506,7 +532,7 @@ const App: React.FC = () => {
       </Layout>
       
       <Drawer
-        title="Spine Benchmark Analysis"
+        title={t('analysis.title')}
         placement="right"
         width={800}
         onClose={() => setShowBenchmark(false)}
@@ -517,7 +543,7 @@ const App: React.FC = () => {
       </Drawer>
       
       <Drawer
-        title="Animation Event Timeline"
+        title={t('drawer.animationEventTimeline')}
         placement="bottom"
         height={600}
         onClose={() => setShowEventTimeline(false)}

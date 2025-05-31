@@ -15,9 +15,12 @@
     "@vitejs/plugin-react": "^4.3.4",
     "antd": "^5.25.4",
     "gsap": "^3.12.7",
+    "i18next": "^25.2.1",
+    "i18next-browser-languagedetector": "^8.1.0",
     "pixi.js": "^8.8.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^15.5.2",
     "react-toastify": "^11.0.5",
     "terser": "^5.39.0"
   },

@@ -1,0 +1,146 @@
+{
+  "app": {
+    "title": "Spine Benchmark",
+    "titleShort": "SB"
+  },
+  "menu": {
+    "information": "Information",
+    "benchmarkInfo": "Benchmark Info",
+    "documentation": "Documentation",
+    "eventTimeline": "Event Timeline",
+    "visualSettings": "Visual Settings",
+    "backgroundImage": "Background Image",
+    "backgroundColor": "Background Color",
+    "debugVisualization": "Debug Visualization",
+    "meshVisualization": "Mesh Visualization",
+    "physicsConstraints": "Physics Constraints",
+    "ikConstraints": "IK Constraints"
+  },
+  "controls": {
+    "removeBackground": "Remove Background",
+    "selectAnimation": "Select animation",
+    "previousAnimation": "Previous Animation",
+    "nextAnimation": "Next Animation",
+    "stop": "Stop",
+    "pause": "Pause",
+    "play": "Play",
+    "restart": "Restart Animation",
+    "loop": "Loop",
+    "once": "Once"
+  },
+  "dropArea": {
+    "message": "Drop Spine files or folders here (JSON, Atlas, and Images)",
+    "loading": "Loading..."
+  },
+  "analysis": {
+    "title": "Spine Performance Analysis",
+    "summary": "Summary",
+    "meshAnalysis": "Mesh Analysis",
+    "clipping": "Clipping",
+    "blendModes": "Blend Modes",
+    "skeletonTree": "Skeleton Tree"
+  },
+  "performance": {
+    "overallScore": "Overall Performance Score",
+    "excellent": "Excellent",
+    "good": "Good",
+    "moderate": "Moderate",
+    "poor": "Poor",
+    "performance": "Performance",
+    "componentScores": "Component Scores",
+    "score": "Score",
+    "weight": "Weight",
+    "meter": "Meter",
+    "boneStructure": "Bone Structure",
+    "meshComplexity": "Mesh Complexity",
+    "clippingMasks": "Clipping Masks",
+    "blendModes": "Blend Modes",
+    "constraints": "Constraints"
+  },
+  "interpretation": {
+    "excellent": "Suitable for all platforms and continuous animations",
+    "good": "Works well on most platforms but may have issues on low-end devices",
+    "moderate": "May cause performance dips, especially with multiple instances",
+    "poor": "Performance issues likely on most devices"
+  },
+  "stats": {
+    "skeletonStats": "Skeleton Statistics",
+    "totalBones": "Total Bones",
+    "maxBoneDepth": "Max Bone Depth",
+    "totalMeshes": "Total Meshes",
+    "totalVertices": "Total Vertices",
+    "clippingMasks": "Clipping Masks",
+    "nonNormalBlendModes": "Non-Normal Blend Modes",
+    "totalConstraints": "Total Constraints",
+    "animations": "Animations",
+    "skins": "Skins"
+  },
+  "optimization": {
+    "title": "Optimization Recommendations",
+    "tips": {
+      "reduceBoneDepth": "Reduce bone hierarchy depth by flattening the structure where possible.",
+      "reduceBoneCount": "Consider reducing the total number of bones by simplifying the skeleton.",
+      "reduceVertices": "Reduce the total number of vertices across all meshes.",
+      "minimizeDeformedMeshes": "Minimize the number of deformed meshes, especially those with high vertex counts.",
+      "reduceWeightedMeshes": "Reduce the number of meshes with bone weights, as they require more calculations.",
+      "limitClippingMasks": "Limit the number of clipping masks as they significantly impact performance.",
+      "simplifyComplexMasks": "Simplify complex clipping masks to use fewer vertices (4 or less is optimal).",
+      "reduceBlendModes": "Reduce the number of non-normal blend modes to minimize render state changes.",
+      "minimizeAdditiveBlends": "Minimize the use of additive blend modes as they are particularly expensive.",
+      "reducePhysicsConstraints": "Physics constraints are particularly expensive - consider reducing their number or complexity.",
+      "simplifyIkConstraints": "Simplify IK constraints by reducing chain length or number of affected bones.",
+      "optimizePathConstraints": "Optimize path constraints by simplifying paths or reducing the number of constrained bones."
+    }
+  },
+  "details": {
+    "meshStats": "Mesh Statistics",
+    "slot": "Slot",
+    "vertices": "Vertices",
+    "deformed": "Deformed",
+    "boneWeights": "Bone Weights",
+    "hasParentMesh": "Has Parent Mesh",
+    "yes": "Yes",
+    "no": "No",
+    "status": "Status",
+    "optimal": "Optimal",
+    "acceptable": "Acceptable",
+    "highVertexCount": "High Vertex Count",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "drawer": {
+    "animationEventTimeline": "Animation Event Timeline",
+    "noAnimationSelected": "No animation selected",
+    "events": "Events",
+    "time": "Time",
+    "name": "Name",
+    "type": "Type",
+    "value": "Value",
+    "noEvents": "No events found in this animation",
+    "eventTypeLegend": "Event Type Legend"
+  },
+  "themes": {
+    "darkTheme": "Dark Theme"
+  },
+  "errors": {
+    "applicationNotInitialized": "Application not initialized",
+    "errorLoadingFiles": "Error loading Spine files",
+    "unknownError": "Unknown error",
+    "backgroundManagerNotInitialized": "Background manager not initialized",
+    "errorSettingBackground": "Error setting background image",
+    "selectImageFile": "Please select an image file.",
+    "failedToSetBackground": "Failed to set background image.",
+    "failedToReadImage": "Failed to read image file.",
+    "errorReadingImage": "Error reading the image file."
+  },
+  "success": {
+    "filesLoaded": "Spine files loaded successfully",
+    "backgroundSet": "Background image set successfully"
+  },
+  "info": {
+    "backgroundRemoved": "Background image removed"
+  },
+  "warning": {
+    "spine41Warning": "Warning: This file uses Spine 4.1. The benchmark is designed for Spine 4.2. Version will be adjusted automatically."
+  }
+}

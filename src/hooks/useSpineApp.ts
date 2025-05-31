@@ -1,6 +1,7 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Application } from 'pixi.js';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BackgroundManager } from '../core/BackgroundManager';
 import { CameraContainer } from '../core/CameraContainer';
 import { SpineAnalyzer } from '../core/SpineAnalyzer';
@@ -31,6 +32,7 @@ export interface DebugFlags {
 }
 
 export function useSpineApp(app: Application | null) {
+  const { t } = useTranslation();
   const [spineInstance, setSpineInstance] = useState<Spine | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkData | null>(null);
@@ -78,7 +80,7 @@ export function useSpineApp(app: Application | null) {
   // Function to load spine files
   const loadSpineFiles = async (files: FileList) => {
     if (!app || !cameraContainerRef.current) {
-      addToast('Application not initialized', 'error');
+      addToast(t('errors.applicationNotInitialized'), 'error');
       return;
     }
 
@@ -147,7 +149,7 @@ export function useSpineApp(app: Application | null) {
       setBenchmarkData(analysisData);
       
       setSpineInstance(newSpineInstance);
-      addToast('Spine files loaded successfully', 'success');
+      addToast(t('success.filesLoaded'), 'success');
       
       // Reset all debug flags
       setMeshesVisible(false);
@@ -173,7 +175,7 @@ export function useSpineApp(app: Application | null) {
       
     } catch (error) {
       console.error('Error loading Spine files:', error);
-      addToast(`Error loading Spine files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(`${t('errors.errorLoadingFiles')}: ${error instanceof Error ? error.message : t('errors.unknownError')}`, 'error');
       throw error; // Re-throw to allow the calling code to handle it
     } finally {
       setIsLoading(false);
@@ -316,16 +318,16 @@ export function useSpineApp(app: Application | null) {
   // Function to set the background image using base64 data
   const setBackgroundImage = async (base64Data: string) => {
     if (!backgroundManagerRef.current) {
-      addToast('Background manager not initialized', 'error');
+      addToast(t('errors.backgroundManagerNotInitialized'), 'error');
       return;
     }
     
     try {
       await backgroundManagerRef.current.setBackgroundImage(base64Data);
-      addToast('Background image set successfully', 'success');
+      addToast(t('success.backgroundSet'), 'success');
     } catch (error) {
       console.error('Error setting background image:', error);
-      addToast(`Error setting background image: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(`${t('errors.errorSettingBackground')}: ${error instanceof Error ? error.message : t('errors.unknownError')}`, 'error');
     }
   };
   
@@ -336,7 +338,7 @@ export function useSpineApp(app: Application | null) {
     }
     
     backgroundManagerRef.current.clearBackground();
-    addToast('Background image removed', 'info');
+    addToast(t('info.backgroundRemoved'), 'info');
   };
 
   return {
