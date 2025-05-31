@@ -2,36 +2,53 @@ import { Application } from 'pixi.js';
 import React, { useEffect, useRef, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { AnimationControls } from './components/AnimationControls';
-import { ColorPicker } from './components/ColorPicker';
-import { DebugToggle, IkIcon, MeshIcon, PhysicsIcon } from './components/DebugToggle';
-import { IconButton } from './components/IconButton';
+import { Layout, Menu, Button, Space, Drawer, Tabs, Card, Progress, Typography, Tooltip, ColorPicker, Select, Switch, Spin } from 'antd';
 import {
-  DocumentTextIcon,
-  ImageIcon,
-  QuestionMarkCircleIcon,
-  XMarkIcon,
-  TimelineIcon
-} from './components/Icons';
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  FileTextOutlined,
+  QuestionCircleOutlined,
+  PictureOutlined,
+  CloseOutlined,
+  BgColorsOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  StopOutlined,
+  StepBackwardOutlined,
+  StepForwardOutlined,
+  ReloadOutlined,
+  ApiOutlined,
+  ThunderboltOutlined,
+  LinkOutlined,
+  LineChartOutlined,
+  InfoCircleOutlined,
+  SettingOutlined,
+  AppstoreOutlined,
+  DashboardOutlined,
+  LoadingOutlined
+} from '@ant-design/icons';
+import { AnimationControls } from './components/AnimationControls';
 import { InfoPanel } from './components/InfoPanel';
+import EventTimeline from './components/EventTimeline';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { useSpineApp } from './hooks/useSpineApp';
-import EventTimeline from './components/EventTimeline';
-    
+
+const { Header, Sider, Content } = Layout;
+const { Title, Text } = Typography;
+
 const App: React.FC = () => {
   const [app, setApp] = useState<Application | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
   const [showBenchmark, setShowBenchmark] = useState(false);
   const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
   const [hasBackgroundImage, setHasBackgroundImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState('');
   const [showEventTimeline, setShowEventTimeline] = useState(false);
-  const toggleEventTimeline = () => {
-    setShowEventTimeline(!showEventTimeline);
-  };
+  
   const { addToast } = useToast();
   const { 
     spineInstance, 
@@ -53,7 +70,6 @@ const App: React.FC = () => {
     
     let cleanupFunction: (() => void) | undefined;
     
-    // Initialize PIXI Application (async)
     const initApp = async () => {
       try {
         const pixiApp = new Application();
@@ -66,11 +82,9 @@ const App: React.FC = () => {
           autoDensity: true,
         });
         
-        // Store app in state for other components to use
-        app?.destroy(); // Clean up old app if exists
+        app?.destroy();
         setApp(pixiApp);
         
-        // Setup cleanup function
         cleanupFunction = () => {
           pixiApp.destroy();
         };
@@ -82,96 +96,34 @@ const App: React.FC = () => {
     
     initApp();
     
-    // Return a cleanup function
     return () => {
       if (cleanupFunction) cleanupFunction();
     };
   }, []);
 
-  // Function to traverse file/directory structure
-  function traverseFileTree(item: any, path: string, fileList: File[]): Promise<void> {
-    path = path || "";
-    
-    return new Promise((resolve, reject) => {
-        if (item.isFile) {
-            // Get file
-            item.file((file: File) => {
-                console.log("File found:", path + file.name);
-                // Store the path in a custom property
-                Object.defineProperty(file, 'fullPath', {
-                    value: path + file.name,
-                    writable: false
-                });
-                fileList.push(file);
-                resolve();
-            }, reject);
-        } else if (item.isDirectory) {
-            // Get folder contents
-            const dirReader = item.createReader();
-            
-            // Function to read all entries in the directory
-            const readAllEntries = (entries: any[] = []): Promise<any[]> => {
-                return new Promise((resolveEntries, rejectEntries) => {
-                    dirReader.readEntries((results: any[]) => {
-                        if (results.length) {
-                            // More entries to process
-                            entries = entries.concat(Array.from(results));
-                            readAllEntries(entries).then(resolveEntries).catch(rejectEntries);
-                        } else {
-                            // No more entries, we have all of them
-                            resolveEntries(entries);
-                        }
-                    }, rejectEntries);
-                });
-            };
-            
-            readAllEntries().then((entries) => {
-                console.log(`Directory found: ${path + item.name}/ (${entries.length} entries)`);
-                
-                // Process all entries in the directory
-                const promises = entries.map(entry => 
-                    traverseFileTree(entry, path + item.name + "/", fileList)
-                );
-                
-                Promise.all(promises)
-                    .then(() => resolve())
-                    .catch(reject);
-            }).catch(reject);
-        } else {
-            resolve(); // Not a file or directory, just resolve
-        }
-    });
-  }
-
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Clear highlighting
     e.currentTarget.classList.remove('highlight');
     
     try {
       setIsLoading(true);
       
-      // Process dropped items using the working approach from your other project
       const items = e.dataTransfer?.items;
       if (!items || items.length === 0) {
         if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) {
           addToast('No files were dropped', 'error');
           return;
         }
-        // If we only have files (not items), use the simple approach
         handleSpineFiles(e.dataTransfer.files);
         return;
       }
       
-      // Convert DataTransferItemList to array
       const itemsArray = Array.from(items);
       const fileList: File[] = [];
       
-      // Process all dropped items (files and directories)
       const promises = itemsArray.map(item => {
-        // webkitGetAsEntry is where the magic happens
         const entry = item.webkitGetAsEntry();
         if (entry) {
             return traverseFileTree(entry, "", fileList);
@@ -180,23 +132,17 @@ const App: React.FC = () => {
         }
       });
       
-      // When all traversal is complete
       await Promise.all(promises);
-      console.log(`Traversal complete, found ${fileList.length} files`);
       
       if (fileList.length === 0) {
         addToast('No valid files found in the dropped items', 'error');
         return;
       }
       
-      console.log('Files collected:', fileList.map(f => (f as any).fullPath || f.name));
-      
-      // Convert to FileList-like object
       const dataTransfer = new DataTransfer();
       fileList.forEach(file => dataTransfer.items.add(file));
       const files = dataTransfer.files;
       
-      // Load files into SpineBenchmark
       await handleSpineFiles(files);
       
     } catch (error) {
@@ -221,24 +167,20 @@ const App: React.FC = () => {
 
   const handleSpineFiles = async (files: FileList) => {
     try {
-      // Check for JSON skeleton file
       const jsonFile = Array.from(files).find(file => file.name.endsWith('.json'));
       if (jsonFile) {
         const content = await jsonFile.text();
         if (content.includes('"spine":"4.1')) {
           addToast('Warning: This file uses Spine 4.1. The benchmark is designed for Spine 4.2. Version will be adjusted automatically.', 'warning');
           
-          // Create a modified file with version replaced
           const modifiedContent = content.replace(/"spine":"4.1[^"]*"/, '"spine":"4.2.0"');
           const modifiedFile = new File([modifiedContent], jsonFile.name, { type: 'application/json' });
           
-          // Replace the original file in the list
           const newFileList = Array.from(files);
           const index = newFileList.findIndex(f => f.name === jsonFile.name);
           if (index !== -1) {
             newFileList[index] = modifiedFile;
             
-            // Convert back to FileList-like object
             const dataTransfer = new DataTransfer();
             newFileList.forEach(file => dataTransfer.items.add(file));
             
@@ -255,42 +197,22 @@ const App: React.FC = () => {
     }
   };
 
-  const openGitHubReadme = () => {
-    window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank');
-  };
-
-  const handleBgColorChange = (color: string) => {
-    setBackgroundColor(color);
-  };
-
-  // Handle background image upload button click
-  const handleBackgroundButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  // Handle file input change for background image
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       const file = files[0];
       
-      // Check if the file is an image
       if (!file.type.startsWith('image/')) {
         addToast('Please select an image file.', 'error');
         return;
       }
       
-      // Convert the file to base64
       const reader = new FileReader();
       reader.onload = async (e) => {
         if (e.target && typeof e.target.result === 'string') {
-          // Get the base64 string
           const base64Data = e.target.result;
           
           try {
-            // Set the background image using the BackgroundManager
             await setBackgroundImage(base64Data);
             setHasBackgroundImage(true);
           } catch (error) {
@@ -306,17 +228,14 @@ const App: React.FC = () => {
         addToast('Error reading the image file.', 'error');
       };
       
-      // Read the file as a data URL (base64)
       reader.readAsDataURL(file);
       
-      // Reset the input to allow selecting the same file again
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
 
-  // Handle removing background image
   const handleRemoveBackground = () => {
     clearBackgroundImage();
     setHasBackgroundImage(false);
@@ -327,99 +246,245 @@ const App: React.FC = () => {
       app.renderer.background.color = parseInt(backgroundColor.replace('#', '0x'));
     }
   }, [backgroundColor, app]);
-  
-  // Effect to ensure debug renderer is cleaned up when component unmounts
-  useEffect(() => {
-    return () => {
-      // Clean up debug rendering if any was active
-      if (spineInstance && (meshesVisible || physicsVisible || ikVisible)) {
-        // Reset debug flags and force clear
-        if (app && app.ticker) {
-          app.ticker.update();
+
+  const menuItems = [
+    {
+      key: 'info',
+      icon: <InfoCircleOutlined />,
+      label: 'Information',
+      children: [
+        {
+          key: 'benchmark',
+          icon: <DashboardOutlined />,
+          label: 'Benchmark Info',
+          onClick: () => setShowBenchmark(!showBenchmark)
+        },
+        {
+          key: 'docs',
+          icon: <FileTextOutlined />,
+          label: 'Documentation',
+          onClick: () => window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank')
+        },
+        {
+          key: 'timeline',
+          icon: <LineChartOutlined />,
+          label: 'Event Timeline',
+          onClick: () => setShowEventTimeline(!showEventTimeline)
         }
-      }
-    };
-  }, [spineInstance, meshesVisible, physicsVisible, ikVisible]);
+      ]
+    },
+    {
+      key: 'visuals',
+      icon: <SettingOutlined />,
+      label: 'Visual Settings',
+      children: [
+        {
+          key: 'background',
+          icon: <PictureOutlined />,
+          label: 'Background Image',
+          onClick: () => fileInputRef.current?.click()
+        },
+        {
+          key: 'bgcolor',
+          icon: <BgColorsOutlined />,
+          label: (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              Background Color
+              <ColorPicker 
+                value={backgroundColor} 
+                onChange={(color) => setBackgroundColor(color.toHexString())}
+                size="small"
+                presets={[
+                  {
+                    label: 'Dark Theme',
+                    colors: [
+                      '#282b30', '#1a1a1a', '#333333', '#121212', '#2c2c2c',
+                      '#2b2d42', '#1d3557', '#3c096c', '#240046', '#1b263b'
+                    ],
+                  },
+                ]}
+              />
+            </div>
+          )
+        }
+      ]
+    },
+    {
+      key: 'debug',
+      icon: <ApiOutlined />,
+      label: 'Debug Visualization',
+      children: [
+        {
+          key: 'meshes',
+          icon: <AppstoreOutlined />,
+          label: (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <span>Mesh Visualization</span>
+              <Switch checked={meshesVisible} onChange={toggleMeshes} size="small" />
+            </div>
+          )
+        },
+        {
+          key: 'physics',
+          icon: <ThunderboltOutlined />,
+          label: (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <span>Physics Constraints</span>
+              <Switch checked={physicsVisible} onChange={togglePhysics} size="small" />
+            </div>
+          )
+        },
+        {
+          key: 'ik',
+          icon: <LinkOutlined />,
+          label: (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <span>IK Constraints</span>
+              <Switch checked={ikVisible} onChange={toggleIk} size="small" />
+            </div>
+          )
+        }
+      ]
+    }
+  ];
+
+  function traverseFileTree(item: any, path: string, fileList: File[]): Promise<void> {
+    path = path || "";
+    
+    return new Promise((resolve, reject) => {
+        if (item.isFile) {
+            item.file((file: File) => {
+                console.log("File found:", path + file.name);
+                Object.defineProperty(file, 'fullPath', {
+                    value: path + file.name,
+                    writable: false
+                });
+                fileList.push(file);
+                resolve();
+            }, reject);
+        } else if (item.isDirectory) {
+            const dirReader = item.createReader();
+            
+            const readAllEntries = (entries: any[] = []): Promise<any[]> => {
+                return new Promise((resolveEntries, rejectEntries) => {
+                    dirReader.readEntries((results: any[]) => {
+                        if (results.length) {
+                            entries = entries.concat(Array.from(results));
+                            readAllEntries(entries).then(resolveEntries).catch(rejectEntries);
+                        } else {
+                            resolveEntries(entries);
+                        }
+                    }, rejectEntries);
+                });
+            };
+            
+            readAllEntries().then((entries) => {
+                console.log(`Directory found: ${path + item.name}/ (${entries.length} entries)`);
+                
+                const promises = entries.map(entry => 
+                    traverseFileTree(entry, path + item.name + "/", fileList)
+                );
+                
+                Promise.all(promises)
+                    .then(() => resolve())
+                    .catch(reject);
+            }).catch(reject);
+        } else {
+            resolve();
+        }
+    });
+  }
 
   return (
-    <div className="app-container" style={{ backgroundColor }}>
-      <div 
-        className="canvas-container"
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
+    <Layout style={{ height: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          background: '#1f1f1f',
+          borderRight: '1px solid #303030'
+        }}
       >
-        <canvas ref={canvasRef} id="pixiCanvas" />
-        
-        {!spineInstance && (
-          <div className="drop-area">
-            <p>Drop Spine files or folders here (JSON, Atlas, and Images)</p>
-          </div>
-        )}
-        
-        {(isLoading || spineLoading) && (
-          <div className="loading-indicator">
-            <p>Loading...</p>
-          </div>
-        )}
-      </div>
+        <div style={{ 
+          height: 64, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          borderBottom: '1px solid #303030'
+        }}>
+          <Title level={4} style={{ margin: 0, color: '#fff' }}>
+            {collapsed ? 'SB' : 'Spine Benchmark'}
+          </Title>
+        </div>
+        <Menu
+          theme="dark"
+          mode="inline"
+          items={menuItems}
+          style={{ background: 'transparent' }}
+        />
+      </Sider>
       
-      <div className="controls-container">
-        <div className="left-controls">
-          <IconButton 
-            icon={<DocumentTextIcon />} 
-            onClick={() => setShowBenchmark(!showBenchmark)}
-            active={showBenchmark}
-            tooltip="Toggle Benchmark Info"
+      <Layout>
+        <Header style={{ 
+          padding: '0 24px', 
+          background: '#141414',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid #303030'
+        }}>
+          <Button
+            type="text"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{
+              fontSize: '16px',
+              width: 64,
+              height: 64,
+              color: '#fff'
+            }}
           />
-          <IconButton 
-            icon={<QuestionMarkCircleIcon />} 
-            onClick={openGitHubReadme}
-            tooltip="Open Documentation"
-          />
-          <IconButton 
-            icon={<ImageIcon />} 
-            onClick={handleBackgroundButtonClick}
-            tooltip="Upload Background Image"
-          />
-          <IconButton 
-  icon={<TimelineIcon />} 
-  onClick={toggleEventTimeline}
-  active={showEventTimeline}
-  tooltip="Event Timeline"
-/>
+          
           {hasBackgroundImage && (
-            <IconButton 
-              icon={<XMarkIcon />} 
+            <Button 
+              type="text"
+              icon={<CloseOutlined />}
               onClick={handleRemoveBackground}
-              tooltip="Remove Background Image"
-            />
+              style={{ color: '#fff' }}
+            >
+              Remove Background
+            </Button>
           )}
-          
-          
-          {/* Add individual debug toggle buttons */}
-          {spineInstance && (
-            <>
-              <DebugToggle 
-                icon={<MeshIcon />} 
-                onClick={toggleMeshes}
-                active={meshesVisible}
-                tooltip="Toggle Mesh Visualization"
-              />
-              <DebugToggle 
-                icon={<PhysicsIcon />} 
-                onClick={togglePhysics}
-                active={physicsVisible}
-                tooltip="Toggle Physics Constraints"
-              />
-              <DebugToggle 
-                icon={<IkIcon />} 
-                onClick={toggleIk}
-                active={ikVisible}
-                tooltip="Toggle IK Constraints"
-              />
-            </>
-          )}
+        </Header>
+        
+        <Content style={{ 
+          position: 'relative',
+          background: backgroundColor,
+          overflow: 'hidden'
+        }}>
+          <div 
+            className="canvas-container"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <canvas ref={canvasRef} id="pixiCanvas" />
+            
+            {!spineInstance && (
+              <div className="drop-area">
+                <AppstoreOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                <p>Drop Spine files or folders here (JSON, Atlas, and Images)</p>
+              </div>
+            )}
+            
+            {(isLoading || spineLoading) && (
+              <div className="loading-indicator">
+                <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+                <p>Loading...</p>
+              </div>
+            )}
+          </div>
           
           <input
             type="file"
@@ -428,31 +493,44 @@ const App: React.FC = () => {
             accept="image/*"
             style={{ display: 'none' }}
           />
-        </div>
-        
-        <div className="center-controls">
-          {spineInstance && <AnimationControls 
-  spineInstance={spineInstance} 
-  onAnimationChange={setCurrentAnimation} 
-/>}
-        </div>
-        
-        <div className="right-controls">
-          <ColorPicker 
-            color={backgroundColor} 
-            onChange={handleBgColorChange} 
+          
+          {spineInstance && (
+            <div className="playback-controls-container">
+              <AnimationControls 
+                spineInstance={spineInstance} 
+                onAnimationChange={setCurrentAnimation} 
+              />
+            </div>
+          )}
+        </Content>
+      </Layout>
+      
+      <Drawer
+        title="Spine Benchmark Analysis"
+        placement="right"
+        width={800}
+        onClose={() => setShowBenchmark(false)}
+        open={showBenchmark}
+        bodyStyle={{ padding: 0 }}
+      >
+        {benchmarkData && <InfoPanel data={benchmarkData} onClose={() => setShowBenchmark(false)} />}
+      </Drawer>
+      
+      <Drawer
+        title="Animation Event Timeline"
+        placement="bottom"
+        height={600}
+        onClose={() => setShowEventTimeline(false)}
+        open={showEventTimeline}
+      >
+        {spineInstance && (
+          <EventTimeline 
+            spineInstance={spineInstance} 
+            currentAnimation={currentAnimation}
           />
-        </div>
-      </div>
+        )}
+      </Drawer>
       
-      {showBenchmark && benchmarkData && (
-        <InfoPanel 
-          data={benchmarkData}
-          onClose={() => setShowBenchmark(false)}
-        />
-      )}
-      
-      {/* React Toastify Container with dark theme */}
       <ToastContainer
         position="top-center"
         autoClose={2000}
@@ -465,28 +543,7 @@ const App: React.FC = () => {
         pauseOnHover
         theme="dark"
       />
-      {showEventTimeline && spineInstance && (
-  <div className="timeline-modal">
-    <div className="timeline-modal-content">
-      <div className="timeline-modal-header">
-        <h2>Animation Event Timeline</h2>
-        <button 
-          className="timeline-modal-close" 
-          onClick={() => setShowEventTimeline(false)}
-        >
-          &times;
-        </button>
-      </div>
-      <div className="timeline-modal-body">
-        <EventTimeline 
-          spineInstance={spineInstance} 
-          currentAnimation={currentAnimation}
-        />
-      </div>
-    </div>
-  </div>
-)}
-    </div>
+    </Layout>
   );
 };
 

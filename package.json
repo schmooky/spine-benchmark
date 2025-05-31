@@ -9,9 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.0.0",
     "@esotericsoftware/spine-pixi-v8": "^4.2.74",
     "@paralleldrive/cuid2": "^2.2.2",
     "@vitejs/plugin-react": "^4.3.4",
+    "antd": "^5.25.4",
     "gsap": "^3.12.7",
     "pixi.js": "^8.8.0",
     "react": "^19.0.0",

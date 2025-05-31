@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
-import { 
-  PlayIcon, 
-  PauseIcon, 
-  StopIcon, 
-  RewindIcon,
-  ForwardIcon,
-  ArrowPathIcon
-} from './Icons';
-import { IconButton } from './IconButton';
+import { Button, Space, Select, Switch, Tooltip } from 'antd';
+import {
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  StopOutlined,
+  StepBackwardOutlined,
+  StepForwardOutlined,
+  ReloadOutlined
+} from '@ant-design/icons';
 
 interface AnimationControlsProps {
   spineInstance: Spine;
@@ -25,7 +25,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const [animations, setAnimations] = useState<string[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   
-  // Initialize animations list and set default animation
   useEffect(() => {
     if (!spineInstance) return;
     
@@ -42,7 +41,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     };
   }, [spineInstance]);
   
-  // Handle play/pause
   useEffect(() => {
     if (!spineInstance) return;
     
@@ -60,7 +58,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     setCurrentAnimation(name);
     setIsPlaying(true);
     
-    // Notify parent component about animation change
     if (onAnimationChange) {
       onAnimationChange(name);
     }
@@ -73,7 +70,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const toggleLoop = () => {
     setIsLooping(!isLooping);
     
-    // Reapply the current animation with new loop setting
     if (currentAnimation) {
       playAnimation(currentAnimation, !isLooping);
     }
@@ -89,7 +85,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const rewindAnimation = () => {
     if (!spineInstance || !currentAnimation) return;
     
-    // Restart the current animation
     playAnimation(currentAnimation);
   };
   
@@ -110,65 +105,60 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   };
   
   return (
-    <div className="animation-controls">
-      <div className="animation-name">
-        {currentAnimation}
-      </div>
-      
-      <div className="playback-controls">
-        <IconButton 
-          icon={<RewindIcon />} 
-          onClick={previousAnimation}
-          tooltip="Previous Animation"
-        />
-        
-        <IconButton 
-          icon={<StopIcon />} 
-          onClick={stopAnimation}
-          tooltip="Stop"
-        />
-        
-        <IconButton 
-          icon={isPlaying ? <PauseIcon /> : <PlayIcon />} 
-          onClick={togglePlay}
-          tooltip={isPlaying ? "Pause" : "Play"}
-        />
-        
-        <IconButton 
-          icon={<ArrowPathIcon />} 
-          onClick={rewindAnimation}
-          tooltip="Restart Animation"
-        />
-        
-        <IconButton 
-          icon={<ForwardIcon />} 
-          onClick={nextAnimation}
-          tooltip="Next Animation"
-        />
-      </div>
-      
-      <div className="animation-settings">
-        <label className="loop-toggle">
-          <input
-            type="checkbox"
-            checked={isLooping}
-            onChange={toggleLoop}
-          />
-          Loop
-        </label>
-        
-        <select 
+    <div style={{ 
+      position: 'fixed', 
+      bottom: 20, 
+      left: '50%', 
+      transform: 'translateX(-50%)',
+      background: 'rgba(0, 0, 0, 0.7)',
+      padding: '12px 24px',
+      borderRadius: 8,
+      backdropFilter: 'blur(10px)',
+      zIndex: 1000
+    }}>
+      <Space size="large">
+        <Select
           value={currentAnimation}
-          onChange={(e) => playAnimation(e.target.value)}
-          className="animation-selector"
-        >
-          {animations.map(name => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </div>
+          onChange={(value) => playAnimation(value)}
+          style={{ width: 180 }}
+          options={animations.map(name => ({ label: name, value: name }))}
+          placeholder="Select animation"
+        />
+        
+        <Space>
+          <Tooltip title="Previous Animation">
+            <Button icon={<StepBackwardOutlined />} onClick={previousAnimation} />
+          </Tooltip>
+          
+          <Tooltip title="Stop">
+            <Button icon={<StopOutlined />} onClick={stopAnimation} />
+          </Tooltip>
+          
+          <Tooltip title={isPlaying ? "Pause" : "Play"}>
+            <Button 
+              type="primary" 
+              icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />} 
+              onClick={togglePlay}
+              size="large"
+            />
+          </Tooltip>
+          
+          <Tooltip title="Restart Animation">
+            <Button icon={<ReloadOutlined />} onClick={rewindAnimation} />
+          </Tooltip>
+          
+          <Tooltip title="Next Animation">
+            <Button icon={<StepForwardOutlined />} onClick={nextAnimation} />
+          </Tooltip>
+        </Space>
+        
+        <Switch 
+          checkedChildren="Loop" 
+          unCheckedChildren="Once" 
+          checked={isLooping} 
+          onChange={toggleLoop} 
+        />
+      </Space>
     </div>
   );
 };

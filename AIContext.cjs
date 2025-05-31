@@ -3,7 +3,7 @@ const path = require('path');
 
 // Configuration
 const outputFile = 'concatenated_files.md';
-const dirsToSearch = ['.', './src'];
+const dirsToSearch = ['./src'];
 const excludedDirs = ['node_modules', 'examples', 'assets', '.git'];
 
 // Improved function to check if a path should be excluded

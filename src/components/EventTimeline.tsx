@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
+import { Card, Typography, Progress, Tag, Table, Space, Row, Col, Empty, Slider, Tooltip } from 'antd';
+import { PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
 
-// Define interfaces for the component props and event structure
+const { Title, Text } = Typography;
+
 interface EventTimelineProps {
   spineInstance: Spine;
   currentAnimation: string;
@@ -14,42 +17,32 @@ interface AnimationEvent {
   valueType: 'string' | 'number' | 'boolean' | 'object' | 'default';
 }
 
-// Event type color mapping
 const EVENT_TYPE_COLORS: Record<string, string> = {
-  string: '#4caf50', // Green
-  number: '#2196f3', // Blue
-  boolean: '#ff9800', // Orange
-  object: '#9c27b0', // Purple
-  default: '#757575'  // Gray for unknown types
+  string: 'green',
+  number: 'blue',
+  boolean: 'orange',
+  object: 'purple',
+  default: 'default'
 };
 
-// Timeline component that displays events in the animation
 const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAnimation }) => {
   const [events, setEvents] = useState<AnimationEvent[]>([]);
-  const [hoverEvent, setHoverEvent] = useState<AnimationEvent | null>(null);
-  const [timelineWidth, setTimelineWidth] = useState<number>(0);
-  const timelineRef = useRef<HTMLDivElement | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Extract events from the animation
   useEffect(() => {
     if (!spineInstance || !currentAnimation) return;
     
     const animation = spineInstance.skeleton.data.findAnimation(currentAnimation);
     if (!animation) return;
 
-    // Set animation duration
     setDuration(animation.duration);
     
-    // Extract events from timelines
     const extractedEvents: AnimationEvent[] = [];
     
-    // Search through timelines for event timelines
     animation.timelines.forEach((timeline: any) => {
-      // Check if this is an event timeline
       if (timeline.events) {
         timeline.events.forEach((evt: any) => {
           const value = evt.data.stringValue || evt.data.intValue || evt.data.floatValue || evt.data.audioPath || null;
@@ -70,25 +63,14 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
       }
     });
     
-    // Sort by time
     extractedEvents.sort((a, b) => a.time - b.time);
     setEvents(extractedEvents);
   }, [spineInstance, currentAnimation]);
 
-  // Update timeline width when it's mounted
-  useEffect(() => {
-    if (timelineRef.current) {
-      setTimelineWidth(timelineRef.current.offsetWidth);
-    }
-  }, [timelineRef, events]);
-
-  // Animation playback tracking
   useEffect(() => {
     if (!spineInstance || !currentAnimation) return;
 
-    // Start tracking animation time
     let lastTime = 0;
-    let animationTime = 0;
     
     const updateAnimation = (time: number) => {
       if (!lastTime) {
@@ -97,16 +79,11 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
         return;
       }
 
-      const deltaTime = (time - lastTime) / 1000;
-      lastTime = time;
-      
-      if (isPlaying) {
-        if (spineInstance && spineInstance.state) {
-          const track = spineInstance.state.tracks[0];
-          if (track) {
-            animationTime = track.getAnimationTime();
-            setCurrentTime(animationTime);
-          }
+      if (isPlaying && spineInstance && spineInstance.state) {
+        const track = spineInstance.state.tracks[0];
+        if (track) {
+          const animationTime = track.getAnimationTime();
+          setCurrentTime(animationTime);
         }
       }
       
@@ -115,15 +92,6 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
     
     animationFrameRef.current = requestAnimationFrame(updateAnimation);
     
-    // Detect when animation is playing
-    const checkPlayState = () => {
-      if (spineInstance && spineInstance.state) {
-        const track = spineInstance.state.tracks[0];
-        setIsPlaying(track ? !track.trackTime : false);
-      }
-    };
-    
-    // Listen for animation events directly from Spine
     const listener = {
       start: (entry: any) => {
         if (entry.animation.name === currentAnimation) {
@@ -136,13 +104,11 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
         }
       },
       event: (entry: any, event: any) => {
-        // This is triggered when an event occurs during animation playback
         console.log('Event fired:', event.data.name, event.time, event.data);
       }
     };
     
     spineInstance.state.addListener(listener);
-    checkPlayState();
     
     return () => {
       if (animationFrameRef.current) {
@@ -152,141 +118,152 @@ const EventTimeline: React.FC<EventTimelineProps> = ({ spineInstance, currentAni
     };
   }, [spineInstance, currentAnimation, isPlaying]);
 
-  // Calculate event position on timeline
-  const getEventPosition = (eventTime: number) => {
-    if (duration <= 0) return 0;
-    return (eventTime / duration) * timelineWidth;
-  };
-
-  // Skip to a specific time in the animation
-  const handleTimelineClick = (e: React.MouseEvent) => {
-    if (!timelineRef.current || !spineInstance || !currentAnimation) return;
+  const handleSliderChange = (value: number) => {
+    if (!spineInstance || !currentAnimation) return;
     
-    const rect = timelineRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = clickX / rect.width;
-    const targetTime = percentage * duration;
-    
-    // Set spine animation to this time
+    const targetTime = (value / 100) * duration;
     const track = spineInstance.state.setAnimation(0, currentAnimation, false);
     if (track) {
       track.trackTime = targetTime;
       setCurrentTime(targetTime);
     }
   };
-  
-  // Format time display as seconds with 2 decimal places
+
   const formatTime = (time: number) => {
     return time.toFixed(2) + 's';
   };
 
+  const columns = [
+    {
+      title: <Text style={{ color: '#fff' }}>Time</Text>,
+      dataIndex: 'time',
+      key: 'time',
+      width: 100,
+      render: (time: number) => (
+        <Tag color={currentTime >= time && currentTime < time + 0.1 ? 'blue' : 'default'}>
+          {formatTime(time)}
+        </Tag>
+      ),
+    },
+    {
+      title: <Text style={{ color: '#fff' }}>Name</Text>,
+      dataIndex: 'name',
+      key: 'name',
+      render: (name: string) => <Text style={{ color: '#fff' }}>{name}</Text>,
+    },
+    {
+      title: <Text style={{ color: '#fff' }}>Type</Text>,
+      dataIndex: 'valueType',
+      key: 'valueType',
+      width: 100,
+      render: (type: string) => (
+        <Tag color={EVENT_TYPE_COLORS[type] || 'default'}>
+          {type}
+        </Tag>
+      ),
+    },
+    {
+      title: <Text style={{ color: '#fff' }}>Value</Text>,
+      dataIndex: 'value',
+      key: 'value',
+      render: (value: any) => (
+        <Text code={value !== null} style={{ color: value !== null ? '#52c41a' : '#fff' }}>
+          {value !== null ? String(value) : '-'}
+        </Text>
+      ),
+    },
+  ];
+
+  if (!currentAnimation) {
+    return (
+      <Empty 
+        description={<Text style={{ color: 'rgba(255, 255, 255, 0.45)' }}>No animation selected</Text>}
+        style={{ marginTop: 48 }}
+      />
+    );
+  }
+
   return (
-    <div className="event-timeline-container">
-      <div className="timeline-header">
-        <h3>Animation Events: {currentAnimation}</h3>
-        <div className="time-display">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </div>
-      </div>
-      
-      <div 
-        className="timeline" 
-        ref={timelineRef} 
-        onClick={handleTimelineClick}
+    <Space direction="vertical" size="large" style={{ width: '100%', padding: 24 }}>
+      <Card style={{ background: '#141414', borderColor: '#303030' }}>
+        <Row gutter={24} align="middle">
+          <Col span={16}>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Title level={4} style={{ margin: 0, color: '#fff' }}>
+                {isPlaying ? <PlayCircleOutlined /> : <PauseCircleOutlined />} {currentAnimation}
+              </Title>
+              <Slider
+                value={(currentTime / duration) * 100}
+                onChange={handleSliderChange}
+                tooltip={{
+                  formatter: (value) => value ? formatTime((value / 100) * duration) : '0s'
+                }}
+                marks={events.reduce((acc, evt) => {
+                  const percent = (evt.time / duration) * 100;
+                  acc[percent] = {
+                    style: { color: '#fff' },
+                    label: <Tooltip title={evt.name}><div style={{ width: 2, height: 16, background: '#1890ff' }} /></Tooltip>
+                  };
+                  return acc;
+                }, {} as any)}
+                style={{ margin: '20px 0' }}
+              />
+            </Space>
+          </Col>
+          <Col span={8}>
+            <Space direction="vertical" align="center" style={{ width: '100%' }}>
+              <Text style={{ color: '#fff', fontSize: 24, fontFamily: 'monospace' }}>
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </Text>
+              <Progress 
+                type="circle" 
+                percent={Math.round((currentTime / duration) * 100)} 
+                size={80}
+                format={() => (
+                  <Text style={{ color: '#fff' }}>{Math.round((currentTime / duration) * 100)}%</Text>
+                )}
+              />
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      <Card 
+        title={<Text style={{ color: '#fff' }}>Events ({events.length})</Text>}
+        style={{ background: '#141414', borderColor: '#303030' }}
+        bodyStyle={{ padding: 0 }}
       >
-        {/* Timeline track */}
-        <div className="timeline-track">
-          {/* Current time indicator */}
-          <div 
-            className="time-indicator" 
-            style={{ left: `${(currentTime / duration) * 100}%` }}
-          />
-          
-          {/* Event markers */}
-          {events.map((event, index) => (
-            <div 
-              key={index}
-              className="event-marker"
-              style={{ 
-                left: `${(event.time / duration) * 100}%`,
-                backgroundColor: EVENT_TYPE_COLORS[event.valueType] 
-              }}
-              onMouseEnter={() => setHoverEvent(event)}
-              onMouseLeave={() => setHoverEvent(null)}
-            >
-              <div className="event-dot" />
-            </div>
-          ))}
-        </div>
-        
-        {/* Event tooltip */}
-        {hoverEvent && (
-          <div 
-            className="event-tooltip"
-            style={{ 
-              left: `${(hoverEvent.time / duration) * 100}%`,
-              bottom: '20px'
-            }}
-          >
-            <div className="event-name">{hoverEvent.name}</div>
-            <div className="event-time">{formatTime(hoverEvent.time)}</div>
-            {hoverEvent.value !== null && (
-              <div className="event-value">
-                Value: <span>{String(hoverEvent.value)}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {/* Event legend */}
-      <div className="event-legend">
-        {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
-          <div key={type} className="legend-item">
-            <span className="legend-color" style={{ backgroundColor: color }}></span>
-            <span className="legend-label">{type}</span>
-          </div>
-        ))}
-      </div>
-      
-      {/* Events list */}
-      <div className="events-list">
-        <h4>Events ({events.length})</h4>
         {events.length > 0 ? (
-          <table className="events-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event, index) => (
-                <tr 
-                  key={index}
-                  className={currentTime >= event.time && currentTime < event.time + 0.1 ? 'active-event' : ''}
-                >
-                  <td>{formatTime(event.time)}</td>
-                  <td>{event.name}</td>
-                  <td>
-                    <span 
-                      className="type-indicator" 
-                      style={{ backgroundColor: EVENT_TYPE_COLORS[event.valueType] }}
-                    />
-                    {event.valueType}
-                  </td>
-                  <td>{event.value !== null ? String(event.value) : '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table
+            columns={columns}
+            dataSource={events}
+            rowKey={(record) => `${record.name}-${record.time}`}
+            pagination={false}
+            size="small"
+            style={{ background: '#141414' }}
+            rowClassName={(record) => 
+              currentTime >= record.time && currentTime < record.time + 0.1 ? 'active-event' : ''
+            }
+          />
         ) : (
-          <p className="no-events">No events found in this animation</p>
+          <Empty 
+            description={<Text style={{ color: 'rgba(255, 255, 255, 0.45)' }}>No events found in this animation</Text>}
+            style={{ padding: 24 }}
+          />
         )}
-      </div>
-    </div>
+      </Card>
+
+      <Card style={{ background: '#141414', borderColor: '#303030' }}>
+        <Title level={5} style={{ color: '#fff' }}>Event Type Legend</Title>
+        <Space wrap>
+          {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
+            <Tag key={type} color={color}>
+              {type}
+            </Tag>
+          ))}
+        </Space>
+      </Card>
+    </Space>
   );
 };
 
