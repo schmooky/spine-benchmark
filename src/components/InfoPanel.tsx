@@ -49,40 +49,35 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
       case 'summary':
         return (
           <div className="tab-content">
-            case 'summary':
-              return (
-                <div className="tab-content">
-                  <div dangerouslySetInnerHTML={{ __html: data.summary || `<p>${t('infoPanel.noData.summary')}</p>` }} />
-                </div>
-              );
-            case 'meshAnalysis':
-              return (
-                <div className="tab-content">
-                  <div dangerouslySetInnerHTML={{ __html: data.meshAnalysis || `<p>${t('infoPanel.noData.meshAnalysis')}</p>` }} />
-                </div>
-              );
-            case 'clippingAnalysis':
-              return (
-                <div className="tab-content">
-                  <div dangerouslySetInnerHTML={{ __html: data.clippingAnalysis || `<p>${t('infoPanel.noData.clipping')}</p>` }} />
-                </div>
-              );
-            case 'blendModeAnalysis':
-              return (
-                <div className="tab-content">
-                  <div dangerouslySetInnerHTML={{ __html: data.blendModeAnalysis || `<p>${t('infoPanel.noData.blendModes')}</p>` }} />
-                </div>
-              );
-            case 'skeletonTree':
-              return (
-                <div className="tab-content">
-                  <div dangerouslySetInnerHTML={{ __html: data.skeletonTree || `<p>${t('infoPanel.noData.skeletonTree')}</p>` }} />
-                </div>
-              );
+            <div dangerouslySetInnerHTML={{ __html: data.summary || `<p>${t('infoPanel.content.noData', { 0: 'summary' })}</p>` }} />
+          </div>
+        );
+      case 'meshAnalysis':
+        return (
+          <div className="tab-content">
+            <div dangerouslySetInnerHTML={{ __html: data.meshAnalysis || `<p>${t('infoPanel.content.noData', { 0: 'mesh analysis' })}</p>` }} />
+          </div>
+        );
+      case 'clippingAnalysis':
+        return (
+          <div className="tab-content">
+            <div dangerouslySetInnerHTML={{ __html: data.clippingAnalysis || `<p>${t('infoPanel.content.noData', { 0: 'clipping analysis' })}</p>` }} />
+          </div>
+        );
+      case 'blendModeAnalysis':
+        return (
+          <div className="tab-content">
+            <div dangerouslySetInnerHTML={{ __html: data.blendModeAnalysis || `<p>${t('infoPanel.content.noData', { 0: 'blend mode analysis' })}</p>` }} />
+          </div>
+        );
+      case 'skeletonTree':
+        return (
+          <div className="tab-content">
+            <div dangerouslySetInnerHTML={{ __html: data.skeletonTree || `<p>${t('infoPanel.content.noData', { 0: 'skeleton tree' })}</p>` }} />
           </div>
         );
       default:
-        return <div>Select a tab to view benchmark information</div>;
+        return <div>{t('infoPanel.content.selectTab')}</div>;
     }
   };
   
