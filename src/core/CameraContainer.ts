@@ -446,7 +446,7 @@ export class CameraContainer extends Container {
   }
   
   private setupEventListeners(): void {
-    const view = this.app.view;
+    const view = this.app.canvas;
     
     if (!view) return;
     

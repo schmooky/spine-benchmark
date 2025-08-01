@@ -13,7 +13,7 @@
     "@paralleldrive/cuid2": "^2.2.2",
     "@vitejs/plugin-react": "^4.3.4",
     "gsap": "^3.12.7",
-    "pixi.js": "^8.8.0",
+    "pixi.js": "^8.11.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-toastify": "^11.0.5",
