@@ -211,7 +211,7 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
     const { physicsConstraints } = debugObjects;
     const physicsConstraintList = spine.skeleton.physicsConstraints;
     
-    physicsConstraints.lineStyle(2, 0xFF00FF, 1); // Magenta for physics
+    physicsConstraints.stroke({ color: 0xFF00FF, width: 1, pixelLine: true });
     
     for (const constraint of physicsConstraintList) {
       if (!constraint.isActive()) continue;
@@ -222,14 +222,14 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
       
       // Draw a distinctive marker for physics constraints
       // Circle with cross
-      physicsConstraints.beginFill(0xFF00FF, 0.3);
-      physicsConstraints.drawCircle(x, y, 15);
-      physicsConstraints.endFill();
-      
-      physicsConstraints.moveTo(x - 10, y - 10);
-      physicsConstraints.lineTo(x + 10, y + 10);
-      physicsConstraints.moveTo(x + 10, y - 10);
-      physicsConstraints.lineTo(x - 10, y + 10);
+      physicsConstraints.fill({ color: 0xFF00FF, alpha: 0.3 })
+        .circle(x, y, 15)
+        .fill()
+        .stroke({ color: 0xFF00FF, width: 1, pixelLine: true })
+        .moveTo(x - 10, y - 10)
+        .lineTo(x + 10, y + 10)
+        .moveTo(x + 10, y - 10)
+        .lineTo(x - 10, y + 10);
       
       // Add spring visualization
       this.drawSpring(physicsConstraints, x, y, bone.data.length, bone.rotation);
@@ -247,8 +247,9 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
     const springY = y + (dy * 0.3);
     
     // Draw spring coils
-    graphics.lineStyle(1.5, 0xFF00FF, 1);
-    graphics.moveTo(springX, springY);
+    // Draw spring coils
+    graphics.stroke({ color: 0xFF00FF, width: 1, pixelLine: true })
+      .moveTo(springX, springY);
     
     const coils = 5;
     const coilWidth = 10;
@@ -264,8 +265,7 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
   private drawIkConstraints(spine: Spine, debugObjects: PhysicsDebugDisplayObjects): void {
     const { ikConstraints } = debugObjects;
     const ikConstraintList = spine.skeleton.ikConstraints;
-    
-    ikConstraints.lineStyle(2, 0x00FFFF, 1); // Cyan for IK
+    ikConstraints.stroke({ color: 0x00FFFF, width: 1, pixelLine: true });
     
     for (const constraint of ikConstraintList) {
       if (!constraint.isActive()) continue;
@@ -278,24 +278,24 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
         const bone1 = bones[i];
         const bone2 = bones[i + 1];
         
-        ikConstraints.moveTo(bone1.worldX, bone1.worldY);
-        ikConstraints.lineTo(bone2.worldX, bone2.worldY);
+        ikConstraints.moveTo(bone1.worldX, bone1.worldY)
+          .lineTo(bone2.worldX, bone2.worldY);
       }
       
       // Draw connection to target
       const lastBone = bones[bones.length - 1];
-      ikConstraints.moveTo(lastBone.worldX, lastBone.worldY);
-      ikConstraints.lineTo(target.worldX, target.worldY);
+      ikConstraints.moveTo(lastBone.worldX, lastBone.worldY)
+        .lineTo(target.worldX, target.worldY);
       
       // Draw target marker
-      ikConstraints.beginFill(0x00FFFF, 0.3);
-      ikConstraints.drawCircle(target.worldX, target.worldY, 10);
-      ikConstraints.endFill();
-      
-      ikConstraints.moveTo(target.worldX - 5, target.worldY);
-      ikConstraints.lineTo(target.worldX + 5, target.worldY);
-      ikConstraints.moveTo(target.worldX, target.worldY - 5);
-      ikConstraints.lineTo(target.worldX, target.worldY + 5);
+      ikConstraints.fill({ color: 0x00FFFF, alpha: 0.3 })
+        .circle(target.worldX, target.worldY, 10)
+        .fill()
+        .stroke({ color: 0x00FFFF, width: 1, pixelLine: true })
+        .moveTo(target.worldX - 5, target.worldY)
+        .lineTo(target.worldX + 5, target.worldY)
+        .moveTo(target.worldX, target.worldY - 5)
+        .lineTo(target.worldX, target.worldY + 5);
     }
   }
   
@@ -304,7 +304,7 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
     const { transformConstraints } = debugObjects;
     const transformConstraintList = spine.skeleton.transformConstraints;
     
-    transformConstraints.lineStyle(2, 0xFFFF00, 1); // Yellow for transform
+    transformConstraints.stroke({ color: 0xFFFF00, width: 1, pixelLine: true });
     
     for (const constraint of transformConstraintList) {
       if (!constraint.isActive()) continue;
@@ -314,17 +314,16 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
       
       // Connect all constrained bones to target
       for (const bone of bones) {
-        transformConstraints.moveTo(bone.worldX, bone.worldY);
-        transformConstraints.lineTo(target.worldX, target.worldY);
+        transformConstraints.moveTo(bone.worldX, bone.worldY)
+          .lineTo(target.worldX, target.worldY);
       }
       
       // Draw target marker
-      transformConstraints.beginFill(0xFFFF00, 0.3);
-      transformConstraints.drawCircle(target.worldX, target.worldY, 10);
-      transformConstraints.endFill();
-      
-      // Draw transform symbol
-      transformConstraints.drawRect(target.worldX - 5, target.worldY - 5, 10, 10);
+      transformConstraints.fill({ color: 0xFFFF00, alpha: 0.3 })
+        .circle(target.worldX, target.worldY, 10)
+        .fill()
+        .stroke({ color: 0xFFFF00, width: 1, pixelLine: true })
+        .rect(target.worldX - 5, target.worldY - 5, 10, 10);
     }
   }
   
@@ -333,7 +332,7 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
     const { pathConstraints } = debugObjects;
     const pathConstraintList = spine.skeleton.pathConstraints;
     
-    pathConstraints.lineStyle(2, 0x00FF00, 1); // Green for path
+    pathConstraints.stroke({ color: 0x00FF00, width: 1, pixelLine: true });
     
     for (const constraint of pathConstraintList) {
       if (!constraint.isActive()) continue;
@@ -351,16 +350,16 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
           pathConstraints.lineTo(x, y);
           
           // Draw point markers
-          pathConstraints.beginFill(0x00FF00, 0.5);
-          pathConstraints.drawCircle(x, y, 4);
-          pathConstraints.endFill();
+          pathConstraints.fill({ color: 0x00FF00, alpha: 0.5 })
+            .circle(x, y, 4)
+            .fill();
         }
       }
       
       // Connect bones to their positions on the path
       for (const bone of bones) {
-        pathConstraints.lineStyle(1, 0x00FF00, 0.5);
-        pathConstraints.moveTo(bone.worldX, bone.worldY);
+        pathConstraints.stroke({ color: 0x00FF00, width: 1, pixelLine: true, alpha: 0.5 })
+          .moveTo(bone.worldX, bone.worldY);
         
         // Find the closest point on the path (simplified)
         if (constraint.world && constraint.world.length > 0) {
@@ -386,10 +385,10 @@ class EnhancedSpineDebugRenderer implements ISpineDebugRenderer {
       }
       
       // Highlight the target slot
-      pathConstraints.lineStyle(2, 0x00FF00, 1);
-      pathConstraints.beginFill(0x00FF00, 0.2);
-      pathConstraints.drawCircle(target.bone.worldX, target.bone.worldY, 15);
-      pathConstraints.endFill();
+      pathConstraints.stroke({ color: 0x00FF00, width: 1, pixelLine: true })
+        .fill({ color: 0x00FF00, alpha: 0.2 })
+        .circle(target.bone.worldX, target.bone.worldY, 15)
+        .fill();
     }
   }
 }

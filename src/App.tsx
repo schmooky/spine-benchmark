@@ -14,9 +14,12 @@ import {
   TimelineIcon
 } from './components/Icons';
 import { InfoPanel } from './components/InfoPanel';
+import { CommandPalette } from './components/CommandPalette';
+import { VersionDisplay } from './components/VersionDisplay';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { useSpineApp } from './hooks/useSpineApp';
+import { useCommandRegistration } from './hooks/useCommandRegistration';
 import EventTimeline from './components/EventTimeline';
     
 const App: React.FC = () => {
@@ -33,8 +36,8 @@ const App: React.FC = () => {
     setShowEventTimeline(!showEventTimeline);
   };
   const { addToast } = useToast();
-  const { 
-    spineInstance, 
+  const {
+    spineInstance,
     loadSpineFiles,
     isLoading: spineLoading,
     benchmarkData,
@@ -47,6 +50,7 @@ const App: React.FC = () => {
     physicsVisible,
     ikVisible
   } = useSpineApp(app);
+
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -341,6 +345,25 @@ const App: React.FC = () => {
     };
   }, [spineInstance, meshesVisible, physicsVisible, ikVisible]);
 
+  // Register commands for the command palette
+  useCommandRegistration({
+    spineInstance,
+    toggleMeshes,
+    togglePhysics,
+    toggleIk,
+    meshesVisible,
+    physicsVisible,
+    ikVisible,
+    showBenchmark,
+    setShowBenchmark,
+    showEventTimeline,
+    setShowEventTimeline,
+    openGitHubReadme,
+    handleBackgroundButtonClick,
+    handleRemoveBackground,
+    hasBackgroundImage
+  });
+
   return (
     <div className="app-container" style={{ backgroundColor }}>
       <div 
@@ -486,6 +509,15 @@ const App: React.FC = () => {
     </div>
   </div>
 )}
+      
+      {/* Command Palette */}
+      <CommandPalette />
+      
+      {/* Version Display */}
+      <VersionDisplay
+        appVersion="1.0.0"
+        spineVersion="4.2.74"
+      />
     </div>
   );
 };

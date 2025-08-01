@@ -1,0 +1,313 @@
+/* Command Palette Styles */
+.command-palette-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.command-palette-positioner {
+  /* This class is no longer needed since we merged it with backdrop */
+}
+
+.command-palette-content {
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 600px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #cccccc;
+}
+
+.command-palette-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.command-palette-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #cccccc;
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.command-palette-input::placeholder {
+  color: #6c6c6c;
+}
+
+.command-palette-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.command-palette-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.command-palette-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.empty-message {
+  font-size: 16px;
+  color: #cccccc;
+  margin-bottom: 8px;
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: #6c6c6c;
+}
+
+/* Command Category Sections */
+.command-category-section {
+  margin-bottom: 8px;
+}
+
+.command-category-header {
+  padding: 8px 16px 4px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c6c6c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #2d2d2d;
+  margin-bottom: 4px;
+}
+
+.command-category-items {
+  /* No additional styling needed */
+}
+
+/* Command Items */
+.command-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  border-left: 3px solid transparent;
+}
+
+.command-item:hover {
+  background: #2a2a2a;
+}
+
+.command-item.selected {
+  background: #094771;
+  border-left-color: #007acc;
+}
+
+.command-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.command-title {
+  font-size: 14px;
+  color: #cccccc;
+  font-weight: 500;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-description {
+  font-size: 12px;
+  color: #9d9d9d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-category {
+  font-size: 11px;
+  color: #6c6c6c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.command-palette-footer {
+  padding: 8px 16px;
+  border-top: 1px solid #3c3c3c;
+  background: #252526;
+}
+
+.command-palette-shortcuts {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #6c6c6c;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcut kbd {
+  background: #3c3c3c;
+  border: 1px solid #5c5c5c;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-family: monospace;
+  color: #cccccc;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Scrollbar styling */
+.command-palette-results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.command-palette-results::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.command-palette-results::-webkit-scrollbar-thumb {
+  background: #3c3c3c;
+  border-radius: 4px;
+}
+
+.command-palette-results::-webkit-scrollbar-thumb:hover {
+  background: #4c4c4c;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .command-palette-positioner {
+    padding-top: 5vh;
+  }
+  
+  .command-palette-content {
+    width: 95%;
+    max-height: 80vh;
+  }
+  
+  .command-palette-input {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .command-palette-shortcuts {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .command-palette-content {
+    background: #1e1e1e;
+    border-color: #3c3c3c;
+  }
+}
+
+/* Light theme (if needed) */
+@media (prefers-color-scheme: light) {
+  .command-palette-content {
+    background: #ffffff;
+    border-color: #e1e4e8;
+    color: #24292e;
+  }
+  
+  .command-palette-input {
+    color: #24292e;
+  }
+  
+  .command-palette-input::placeholder {
+    color: #6a737d;
+  }
+  
+  .command-category-header {
+    color: #6a737d;
+    border-bottom-color: #e1e4e8;
+  }
+  
+  .command-item:hover {
+    background: #f6f8fa;
+  }
+  
+  .command-item.selected {
+    background: #0366d6;
+    color: #ffffff;
+  }
+  
+  .command-item.selected .command-title {
+    color: #ffffff;
+  }
+  
+  .command-item.selected .command-description {
+    color: #ffffff;
+    opacity: 0.8;
+  }
+  
+  .command-title {
+    color: #24292e;
+  }
+  
+  .command-description {
+    color: #6a737d;
+  }
+  
+  .command-category {
+    color: #6a737d;
+  }
+  
+  .command-palette-footer {
+    background: #f6f8fa;
+    border-top-color: #e1e4e8;
+  }
+  
+  .command-palette-shortcuts {
+    color: #6a737d;
+  }
+  
+  .shortcut kbd {
+    background: #fafbfc;
+    border-color: #d1d5da;
+    color: #24292e;
+  }
+}
