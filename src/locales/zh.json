@@ -1,0 +1,128 @@
+{
+  "error": {
+    "1001": "檔案讀取錯誤：{0}",
+    "1002": "圖片載入錯誤 {0}：{1}",
+    "1003": "骨架檔案 {0} JSON 解析錯誤：{1}",
+    "1004": "不支援的 Spine 版本：{0}。最大支援版本：4.1",
+    "1005": "骨架 JSON 檔案結構不正確：{0}",
+    "1006": "讀取二進位骨架檔案錯誤：{0}",
+    "1007": "讀取圖集檔案錯誤：{0}",
+    "1008": "無效的圖集檔案結構：{0}",
+    "1009": "找不到材質：{0}",
+    "1010": "建立圖集錯誤：{0}",
+    "1011": "骨架不包含骨骼",
+    "1012": "骨架解析錯誤：{0}",
+    "1013": "建立 Spine 實例錯誤：{0}",
+    "1014": "建立資產時發生嚴重錯誤：{0}",
+    "1015": "檔案處理錯誤 {0}：{1}",
+    "1016": "缺少骨架檔案（.json 或 .skel）。請與圖集一起上傳骨架檔案。",
+    "1017": "缺少圖集檔案（.atlas）。請與骨架一起上傳。",
+    "failedToInitialize": "初始化圖形失敗：{0}",
+    "noFilesDropped": "沒有拖放檔案",
+    "noValidFiles": "在拖放的項目中找不到有效檔案",
+    "processingError": "處理拖放檔案錯誤：{0}",
+    "loadingError": "載入 Spine 檔案錯誤：{0}"
+  },
+  "ui": {
+    "dropArea": "將 Spine 檔案或資料夾拖放到此處（JSON、Atlas 和圖片）",
+    "loading": "載入中...",
+    "helpText": "Ctrl+K 開啟面板",
+    "close": "關閉"
+  },
+  "commands": {
+    "categories": {
+      "recentlyUsed": "最近使用",
+      "debug": "除錯指令",
+      "animation": "動畫指令",
+      "skin": "外觀指令",
+      "performance": "效能指令",
+      "language": "語言指令"
+    },
+    "animation": {
+      "playPause": "播放/暫停動畫",
+      "playPauseDescription": "切換動畫播放",
+      "stop": "停止動畫",
+      "stopDescription": "停止目前動畫",
+      "restart": "重新開始動畫",
+      "restartDescription": "從頭重新開始目前動畫"
+    },
+    "skin": {
+      "switchTo": "切換到 {0}",
+      "switchToDescription": "套用 {0} 外觀"
+    },
+    "performance": {
+      "showBenchmark": "顯示基準測試資訊",
+      "showBenchmarkDescription": "顯示效能基準測試面板"
+    },
+    "help": {
+      "documentation": "開啟說明文件",
+      "documentationDescription": "開啟 GitHub README 說明文件"
+    },
+    "language": {
+      "switchTo": "切換到 {0}",
+      "switchToDescription": "將介面語言變更為 {0}"
+    },
+    "keywords": {
+      "animation": "動畫",
+      "play": "播放",
+      "pause": "暫停",
+      "toggle": "切換",
+      "stop": "停止",
+      "restart": "重新開始",
+      "reset": "重設",
+      "skin": "外觀",
+      "performance": "效能",
+      "benchmark": "基準測試",
+      "info": "資訊",
+      "stats": "統計",
+      "show": "顯示",
+      "help": "說明",
+      "documentation": "說明文件",
+      "readme": "readme",
+      "github": "github",
+      "language": "語言",
+      "switch": "切換"
+    }
+  },
+  "commandPalette": {
+    "placeholder": "輸入指令或搜尋...",
+    "noCommands": "找不到指令",
+    "tryDifferent": "嘗試不同的搜尋詞",
+    "shortcuts": {
+      "navigate": "導航",
+      "select": "選擇",
+      "close": "關閉"
+    }
+  },
+  "infoPanel": {
+    "title": "Spine 基準測試分析",
+    "tabs": {
+      "summary": "摘要",
+      "meshAnalysis": "網格分析",
+      "clipping": "裁剪",
+      "blendModes": "混合模式",
+      "skeletonTree": "骨架樹"
+    },
+    "content": {
+      "summaryTitle": "基準測試摘要",
+      "meshAnalysisTitle": "網格分析",
+      "clippingTitle": "裁剪分析",
+      "blendModesTitle": "混合模式分析",
+      "skeletonTreeTitle": "骨架樹",
+      "noData": "沒有 {0} 資料可用",
+      "selectTab": "選擇標籤以檢視基準測試資訊"
+    }
+  },
+  "warnings": {
+    "spineVersion": "警告：此檔案使用 Spine 4.1。基準測試是為 Spine 4.2 設計的。版本將自動調整。"
+  },
+  "language": {
+    "name": "繁體中文",
+    "selector": "語言",
+    "modal": {
+      "title": "選擇語言"
+    },
+    "changeLanguage": "變更語言",
+    "changeLanguageDescription": "開啟語言選擇模態視窗"
+  }
+}

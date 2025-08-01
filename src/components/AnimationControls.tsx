@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
-import { 
-  PlayIcon, 
-  PauseIcon, 
-  StopIcon, 
+import {
+  PlayIcon,
+  PauseIcon,
+  StopIcon,
   RewindIcon,
   ForwardIcon,
   ArrowPathIcon
 } from './Icons';
 import { IconButton } from './IconButton';
+import { ToggleSwitch } from './ToggleSwitch';
+import { ModernSelect } from './ModernSelect';
 
 interface AnimationControlsProps {
   spineInstance: Spine;
@@ -109,6 +111,16 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     playAnimation(animations[newIndex]);
   };
   
+  // Debug logging to validate assumptions
+  console.log('AnimationControls rendering:', {
+    spineInstance: !!spineInstance,
+    currentAnimation,
+    animations: animations.length,
+    isPlaying,
+    isLooping
+  });
+  console.log('Rendering playback controls with buttons');
+
   return (
     <div className="animation-controls">
       <div className="animation-name">
@@ -116,58 +128,54 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
       </div>
       
       <div className="playback-controls">
-        <IconButton 
-          icon={<RewindIcon />} 
+        <IconButton
+          icon={<RewindIcon />}
           onClick={previousAnimation}
           tooltip="Previous Animation"
         />
         
-        <IconButton 
-          icon={<StopIcon />} 
+        <IconButton
+          icon={<StopIcon />}
           onClick={stopAnimation}
           tooltip="Stop"
         />
         
-        <IconButton 
-          icon={isPlaying ? <PauseIcon /> : <PlayIcon />} 
+        <IconButton
+          icon={isPlaying ? <PauseIcon /> : <PlayIcon />}
           onClick={togglePlay}
           tooltip={isPlaying ? "Pause" : "Play"}
         />
         
-        <IconButton 
-          icon={<ArrowPathIcon />} 
+        <IconButton
+          icon={<ArrowPathIcon />}
           onClick={rewindAnimation}
           tooltip="Restart Animation"
         />
         
-        <IconButton 
-          icon={<ForwardIcon />} 
+        <IconButton
+          icon={<ForwardIcon />}
           onClick={nextAnimation}
           tooltip="Next Animation"
         />
       </div>
       
       <div className="animation-settings">
-        <label className="loop-toggle">
-          <input
-            type="checkbox"
-            checked={isLooping}
-            onChange={toggleLoop}
-          />
-          Loop
-        </label>
+        <ToggleSwitch
+          checked={isLooping}
+          onChange={toggleLoop}
+          label="Loop"
+          tooltip="Toggle animation looping"
+        />
         
-        <select 
+        <ModernSelect
           value={currentAnimation}
-          onChange={(e) => playAnimation(e.target.value)}
-          className="animation-selector"
-        >
-          {animations.map(name => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => playAnimation(value)}
+          options={animations.map(name => ({
+            value: name,
+            label: name
+          }))}
+          placeholder="Select Animation"
+        />
       </div>
     </div>
   );

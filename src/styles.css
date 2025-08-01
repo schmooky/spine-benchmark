@@ -34,20 +34,21 @@ body {
 }
 
 /* App Container */
+/* App Container */
 .app-container {
   position: relative;
   width: 100vw;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
-/* Canvas Container */
+/* Canvas Container - now takes full screen */
 .canvas-container {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  flex: 1;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -57,8 +58,46 @@ body {
   height: 100%;
 }
 
-/* Controls container at the bottom */
+/* Help text for when no Spine file is loaded */
+.help-text {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 50;
+  animation: fade-in 0.3s ease;
+}
+
+.help-text p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  text-align: center;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Controls container - now overlays at the bottom */
 .controls-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -67,6 +106,21 @@ body {
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
   z-index: 100;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: bottom;
+}
+
+/* Controls container visibility states */
+.controls-container.hidden {
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+.controls-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .left-controls,
@@ -177,6 +231,7 @@ body {
   gap: 12px;
   padding: 0 16px;
   height: 100%;
+  min-width: 400px !important;
 }
 
 .animation-name {
@@ -202,69 +257,12 @@ body {
   gap: 12px;
 }
 
+/* Legacy styles - keeping for backward compatibility */
 .loop-toggle {
   display: flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
-}
-
-/* Animation Selector Dropdown Dark Styling */
-.animation-selector {
-  background-color: rgba(0, 0, 0, 0.3);
-  color: var(--color-light);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  appearance: none; /* Remove default styling */
-  cursor: pointer;
-  /* Add custom dropdown arrow */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  padding-right: 28px; /* Space for the arrow */
-}
-
-/* Style the dropdown options */
-.animation-selector option {
-  background-color: #1a1a1a; /* Dark background for options */
-  color: var(--color-light);
-  padding: 8px 12px;
-}
-
-/* Firefox specific styling */
-@-moz-document url-prefix() {
-  .animation-selector {
-    text-indent: 0.01px;
-    text-overflow: '';
-    padding-right: 28px; /* Space for the arrow */
-  }
-  
-  .animation-selector:-moz-focusring {
-    color: transparent;
-    text-shadow: 0 0 0 var(--color-light);
-  }
-}
-
-/* Hover and focus states */
-.animation-selector:hover,
-.animation-selector:focus {
-  border-color: rgba(255, 255, 255, 0.2);
-  outline: none;
-}
-
-/* For WebKit browsers (Chrome, Safari) */
-.animation-selector::-webkit-scrollbar {
-  width: 8px;
-}
-
-.animation-selector::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.animation-selector::-webkit-scrollbar-thumb {
-  background-color: rgba(100, 100, 100, 0.4);
-  border-radius: 4px;
 }
 
 /* Color Picker */
@@ -680,28 +678,23 @@ body {
 
 /* Debug toggle specific additions to existing CSS */
 
-/* Improve icon button for debug toggles */
+/* Enhanced icon button styling for better consistency */
 .icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
   background-color: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--color-light);
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
 }
 
 .icon-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .icon-button:active {
   background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(0);
 }
 
 .icon-button.active {
@@ -710,15 +703,49 @@ body {
   color: white;
 }
 
-/* Physics toggle specific styles */
+/* Color variables for debug types */
+:root {
+  --mesh-color: #fdcb6e;
+  --physics-color: #e84393;
+  --ik-color: #00cec9;
+  --transform-color: #fdcb6e;
+  --path-color: #00b894;
+}
+
+/* Debug button specific colors and effects */
+.icon-button.active[title*="Mesh"] {
+  background-color: var(--mesh-color);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 8px rgba(253, 203, 110, 0.5);
+}
+
 .icon-button.active[title*="Physics"] {
-  background-color: #e84393; /* A purple/magenta color for physics */
+  background-color: var(--physics-color);
+  border-color: rgba(255, 255, 255, 0.3);
   box-shadow: 0 0 8px rgba(232, 67, 147, 0.5);
 }
 
-/* Text button for "Run Physics" */
+.icon-button.active[title*="IK"] {
+  background-color: var(--ik-color);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 8px rgba(0, 206, 201, 0.5);
+}
+
+/* Custom SVG text styling for IK icon */
+.icon-button svg text {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* Improve visibility of debug toggles with active state */
+.left-controls .icon-button.active {
+  transform: scale(1.05);
+}
+
+/* Text button for physics simulation */
 .text-button {
-  background-color: #e84393; /* Match physics button color */
+  background-color: var(--physics-color);
   border: none;
   border-radius: var(--radius-sm);
   color: white;
@@ -728,6 +755,7 @@ body {
   padding: 6px 12px;
   margin: 0 4px;
   transition: background-color 0.2s ease, transform 0.1s ease;
+  animation: pulse-physics 2s infinite;
 }
 
 .text-button:hover {
@@ -739,7 +767,7 @@ body {
   transform: translateY(0px);
 }
 
-/* Add physics debug animation effect */
+/* Physics debug animation effect */
 @keyframes pulse-physics {
   0% {
     box-shadow: 0 0 0 0 rgba(232, 67, 147, 0.4);
@@ -750,139 +778,6 @@ body {
   100% {
     box-shadow: 0 0 0 0 rgba(232, 67, 147, 0);
   }
-}
-
-.text-button {
-  animation: pulse-physics 2s infinite;
-}
-
-/* For physics constraints visualization colors in the debug view */
-:root {
-  /* Add physics debug colors */
-  --physics-color: #e84393;
-  --ik-color: #00cec9;
-  --transform-color: #fdcb6e;
-  --path-color: #00b894;
-}
-
-/* Debug toggle specific additions to existing CSS */
-
-/* Color variables for the different debug types */
-:root {
-  --mesh-color: #fdcb6e;
-  --physics-color: #e84393;
-  --ik-color: #00cec9;
-}
-
-/* Icon button styling - use existing styles and add specifics for debug buttons */
-.icon-button.active[title*="Mesh"] {
-  background-color: var(--mesh-color);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.icon-button.active[title*="Physics"] {
-  background-color: var(--physics-color);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.icon-button.active[title*="IK"] {
-  background-color: var(--ik-color);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* Add subtle glow for active debug buttons */
-.icon-button.active[title*="Mesh"] {
-  box-shadow: 0 0 8px rgba(253, 203, 110, 0.5);
-}
-
-.icon-button.active[title*="Physics"] {
-  box-shadow: 0 0 8px rgba(232, 67, 147, 0.5);
-}
-
-.icon-button.active[title*="IK"] {
-  box-shadow: 0 0 8px rgba(0, 206, 201, 0.5);
-}
-
-/* Custom SVG text styling for IK icon */
-.icon-button svg text {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 10px;
-  font-weight: bold;
-}
-
-/* Improve visibility of debug toggles with active state */
-.left-controls .icon-button.active {
-  transform: scale(1.05);
-}
-
-/* Improve hover feedback for debug buttons */
-.icon-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.icon-button:active {
-  transform: translateY(0);
-}
-
-/* Debug toggle specific additions to existing CSS */
-
-/* Color variables for the different debug types */
-:root {
-  --mesh-color: #888888;
-  --physics-color: #e84393;
-  --ik-color: #00cec9;
-}
-
-/* Icon button styling - use existing styles and add specifics for debug buttons */
-.icon-button.active[title*="Mesh"] {
-  background-color: var(--mesh-color);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.icon-button.active[title*="Physics"] {
-  background-color: var(--physics-color);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.icon-button.active[title*="IK"] {
-  background-color: var(--ik-color);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* Add subtle glow for active debug buttons */
-.icon-button.active[title*="Mesh"] {
-  box-shadow: 0 0 8px rgba(253, 203, 110, 0.5);
-}
-
-.icon-button.active[title*="Physics"] {
-  box-shadow: 0 0 8px rgba(232, 67, 147, 0.5);
-}
-
-.icon-button.active[title*="IK"] {
-  box-shadow: 0 0 8px rgba(0, 206, 201, 0.5);
-}
-
-/* Custom SVG text styling for IK icon */
-.icon-button svg text {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 10px;
-  font-weight: bold;
-}
-
-/* Improve visibility of debug toggles with active state */
-.left-controls .icon-button.active {
-  transform: scale(1.05);
-}
-
-/* Improve hover feedback for debug buttons */
-.icon-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.icon-button:active {
-  transform: translateY(0);
 }
 
 /* Event Timeline Styles */
@@ -1142,4 +1037,368 @@ body {
   .version-display {
     color: rgba(0, 0, 0, 0.6);
   }
+}
+
+/* ToggleSwitch Component */
+.toggle-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  border-radius: 12px;
+}
+
+.toggle-switch:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.toggle-switch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-track {
+  width: 100%;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background-color: var(--color-light);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Checked state */
+.toggle-switch.checked .toggle-track {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.toggle-switch.checked .toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* Variant colors */
+.toggle-switch.yellow.checked .toggle-track {
+  background-color: var(--mesh-color, #fdcb6e);
+  border-color: var(--mesh-color, #fdcb6e);
+}
+
+.toggle-switch.magenta.checked .toggle-track {
+  background-color: var(--physics-color, #e84393);
+  border-color: var(--physics-color, #e84393);
+}
+
+.toggle-switch.cyan.checked .toggle-track {
+  background-color: var(--ik-color, #00cec9);
+  border-color: var(--ik-color, #00cec9);
+}
+
+/* Hover effects */
+.toggle-switch:not(.disabled):hover .toggle-track {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.toggle-switch.checked:not(.disabled):hover .toggle-track {
+  filter: brightness(1.1);
+}
+
+.toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-light);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch.disabled + .toggle-label {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ModernSelect Component */
+.modern-select-container {
+  position: relative;
+  min-width: 120px;
+}
+
+.modern-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 12px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--color-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  user-select: none;
+}
+
+.modern-select:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.modern-select:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+}
+
+.modern-select.open {
+  border-color: var(--color-accent);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modern-select.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modern-select-value {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modern-select-arrow {
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modern-select.open .modern-select-arrow {
+  transform: rotate(180deg);
+}
+
+.modern-select-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-color: var(--color-darker);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.modern-select-dropdown.dropdown-down {
+  top: calc(100% + 4px);
+  animation: dropdown-appear-down 0.15s ease;
+}
+
+.modern-select-dropdown.dropdown-up {
+  bottom: calc(100% + 4px);
+  animation: dropdown-appear-up 0.15s ease;
+}
+
+@keyframes dropdown-appear-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdown-appear-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modern-select-option {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--color-light);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modern-select-option:last-child {
+  border-bottom: none;
+}
+
+.modern-select-option:hover,
+.modern-select-option.focused {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modern-select-option.selected {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.modern-select-option.selected:hover,
+.modern-select-option.selected.focused {
+  background-color: rgba(88, 101, 242, 0.8);
+}
+
+/* Custom scrollbar for dropdown */
+.modern-select-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modern-select-dropdown::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.modern-select-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.modern-select-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Visual separators for control groups */
+.controls-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 16px;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+/* Add subtle separators between control groups */
+.left-controls {
+  display: flex;
+  gap: 8px;
+  position: relative;
+}
+
+.left-controls::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 32px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0.15) 80%,
+    transparent
+  );
+}
+
+.center-controls {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.center-controls::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 32px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0.15) 80%,
+    transparent
+  );
+}
+
+.right-controls {
+  display: flex;
+  gap: 8px;
+}
+
+/* Ensure consistent height for all controls */
+.toggle-switch,
+.modern-select,
+.icon-button {
+  height: 36px;
+}
+
+/* Improve spacing and alignment for debug toggles */
+.left-controls .toggle-switch-container {
+  margin-left: 4px;
+}
+
+/* Add subtle background for control groups */
+.left-controls,
+.center-controls,
+.right-controls {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(5px);
+}
+
+/* Animation controls specific styling */
+.animation-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  height: 100%;
+  background: none;
+}
+
+/* Improve animation settings layout */
+.animation-settings {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Ensure proper spacing for toggle switches in animation settings */
+.animation-settings .toggle-switch-container {
+  min-width: auto;
 }

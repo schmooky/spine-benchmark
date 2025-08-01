@@ -1,0 +1,128 @@
+{
+  "error": {
+    "1001": "Erro de leitura do arquivo: {0}",
+    "1002": "Erro de carregamento da imagem {0}: {1}",
+    "1003": "Erro de análise JSON do arquivo de esqueleto {0}: {1}",
+    "1004": "Versão do Spine não suportada: {0}. Versão máxima suportada: 4.1",
+    "1005": "Estrutura incorreta no arquivo JSON do esqueleto: {0}",
+    "1006": "Erro ao ler arquivo binário do esqueleto: {0}",
+    "1007": "Erro ao ler arquivo do atlas: {0}",
+    "1008": "Estrutura de arquivo do atlas inválida: {0}",
+    "1009": "Textura não encontrada: {0}",
+    "1010": "Erro ao criar atlas: {0}",
+    "1011": "Esqueleto não contém ossos",
+    "1012": "Erro de análise do esqueleto: {0}",
+    "1013": "Erro ao criar instância do Spine: {0}",
+    "1014": "Erro crítico ao criar asset: {0}",
+    "1015": "Erro de processamento do arquivo {0}: {1}",
+    "1016": "Arquivo de esqueleto ausente (.json ou .skel). Por favor, envie o arquivo de esqueleto junto com o atlas.",
+    "1017": "Arquivo de atlas ausente (.atlas). Por favor, envie-o junto com o esqueleto.",
+    "failedToInitialize": "Falha ao inicializar gráficos: {0}",
+    "noFilesDropped": "Nenhum arquivo foi solto",
+    "noValidFiles": "Nenhum arquivo válido encontrado nos itens soltos",
+    "processingError": "Erro ao processar arquivos soltos: {0}",
+    "loadingError": "Erro ao carregar arquivos do Spine: {0}"
+  },
+  "ui": {
+    "dropArea": "Solte arquivos ou pastas do Spine aqui (JSON, Atlas e Imagens)",
+    "loading": "Carregando...",
+    "helpText": "Ctrl+K abre um painel",
+    "close": "Fechar"
+  },
+  "commands": {
+    "categories": {
+      "recentlyUsed": "Usados recentemente",
+      "debug": "Comandos de depuração",
+      "animation": "Comandos de animação",
+      "skin": "Comandos de skin",
+      "performance": "Comandos de performance",
+      "language": "Comandos de idioma"
+    },
+    "animation": {
+      "playPause": "Reproduzir/Pausar animação",
+      "playPauseDescription": "Alternar reprodução da animação",
+      "stop": "Parar animação",
+      "stopDescription": "Parar animação atual",
+      "restart": "Reiniciar animação",
+      "restartDescription": "Reiniciar animação atual do início"
+    },
+    "skin": {
+      "switchTo": "Mudar para {0}",
+      "switchToDescription": "Aplicar skin {0}"
+    },
+    "performance": {
+      "showBenchmark": "Mostrar informações de benchmark",
+      "showBenchmarkDescription": "Mostrar painel de benchmark de performance"
+    },
+    "help": {
+      "documentation": "Abrir documentação",
+      "documentationDescription": "Abrir documentação do GitHub README"
+    },
+    "language": {
+      "switchTo": "Mudar para {0}",
+      "switchToDescription": "Alterar idioma da interface para {0}"
+    },
+    "keywords": {
+      "animation": "animação",
+      "play": "reproduzir",
+      "pause": "pausar",
+      "toggle": "alternar",
+      "stop": "parar",
+      "restart": "reiniciar",
+      "reset": "resetar",
+      "skin": "skin",
+      "performance": "performance",
+      "benchmark": "benchmark",
+      "info": "info",
+      "stats": "estatísticas",
+      "show": "mostrar",
+      "help": "ajuda",
+      "documentation": "documentação",
+      "readme": "readme",
+      "github": "github",
+      "language": "idioma",
+      "switch": "mudar"
+    }
+  },
+  "commandPalette": {
+    "placeholder": "Digite um comando ou pesquise...",
+    "noCommands": "Nenhum comando encontrado",
+    "tryDifferent": "Tente um termo de pesquisa diferente",
+    "shortcuts": {
+      "navigate": "para navegar",
+      "select": "para selecionar",
+      "close": "para fechar"
+    }
+  },
+  "infoPanel": {
+    "title": "Análise de benchmark do Spine",
+    "tabs": {
+      "summary": "Resumo",
+      "meshAnalysis": "Análise de malha",
+      "clipping": "Recorte",
+      "blendModes": "Modos de mistura",
+      "skeletonTree": "Árvore do esqueleto"
+    },
+    "content": {
+      "summaryTitle": "Resumo do benchmark",
+      "meshAnalysisTitle": "Análise de malha",
+      "clippingTitle": "Análise de recorte",
+      "blendModesTitle": "Análise de modos de mistura",
+      "skeletonTreeTitle": "Árvore do esqueleto",
+      "noData": "Nenhum dado de {0} disponível",
+      "selectTab": "Selecione uma aba para ver informações do benchmark"
+    }
+  },
+  "warnings": {
+    "spineVersion": "Aviso: Este arquivo usa Spine 4.1. O benchmark é projetado para Spine 4.2. A versão será ajustada automaticamente."
+  },
+  "language": {
+    "name": "Português (Brasil)",
+    "selector": "Idioma",
+    "modal": {
+      "title": "Selecionar idioma"
+    },
+    "changeLanguage": "Alterar idioma",
+    "changeLanguageDescription": "Abrir modal de seleção de idioma"
+  }
+}

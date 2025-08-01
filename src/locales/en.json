@@ -16,6 +16,113 @@
     "1014": "Critical error creating asset: {0}",
     "1015": "File processing error {0}: {1}",
     "1016": "Missing skeleton file (.json or .skel). Please upload the skeleton file along with the atlas.",
-    "1017": "Missing atlas file (.atlas). Please upload it along with the skeleton."
+    "1017": "Missing atlas file (.atlas). Please upload it along with the atlas.",
+    "failedToInitialize": "Failed to initialize graphics: {0}",
+    "noFilesDropped": "No files were dropped",
+    "noValidFiles": "No valid files found in the dropped items",
+    "processingError": "Error processing dropped files: {0}",
+    "loadingError": "Error loading Spine files: {0}"
+  },
+  "ui": {
+    "dropArea": "Drop Spine files or folders here (JSON, Atlas, and Images)",
+    "loading": "Loading...",
+    "helpText": "Ctrl+K opens a panel",
+    "close": "Close"
+  },
+  "commands": {
+    "categories": {
+      "recentlyUsed": "Recently Used",
+      "debug": "Debug Commands",
+      "animation": "Animation Commands",
+      "skin": "Skin Commands",
+      "performance": "Performance Commands",
+      "language": "Language Commands"
+    },
+    "animation": {
+      "playPause": "Play/Pause Animation",
+      "playPauseDescription": "Toggle animation playback",
+      "stop": "Stop Animation",
+      "stopDescription": "Stop current animation",
+      "restart": "Restart Animation",
+      "restartDescription": "Restart current animation from beginning"
+    },
+    "skin": {
+      "switchTo": "Switch to {0}",
+      "switchToDescription": "Apply {0} skin"
+    },
+    "performance": {
+      "showBenchmark": "Show Benchmark Info",
+      "showBenchmarkDescription": "Show performance benchmark panel"
+    },
+    "help": {
+      "documentation": "Open Documentation",
+      "documentationDescription": "Open GitHub README documentation"
+    },
+    "language": {
+      "switchTo": "Switch to {0}",
+      "switchToDescription": "Change interface language to {0}"
+    },
+    "keywords": {
+      "animation": "animation",
+      "play": "play",
+      "pause": "pause",
+      "toggle": "toggle",
+      "stop": "stop",
+      "restart": "restart",
+      "reset": "reset",
+      "skin": "skin",
+      "performance": "performance",
+      "benchmark": "benchmark",
+      "info": "info",
+      "stats": "stats",
+      "show": "show",
+      "help": "help",
+      "documentation": "documentation",
+      "readme": "readme",
+      "github": "github",
+      "language": "language",
+      "switch": "switch"
+    }
+  },
+  "commandPalette": {
+    "placeholder": "Type a command or search...",
+    "noCommands": "No commands found",
+    "tryDifferent": "Try a different search term",
+    "shortcuts": {
+      "navigate": "to navigate",
+      "select": "to select",
+      "close": "to close"
+    }
+  },
+  "infoPanel": {
+    "title": "Spine Benchmark Analysis",
+    "tabs": {
+      "summary": "Summary",
+      "meshAnalysis": "Mesh Analysis",
+      "clipping": "Clipping",
+      "blendModes": "Blend Modes",
+      "skeletonTree": "Skeleton Tree"
+    },
+    "content": {
+      "summaryTitle": "Benchmark Summary",
+      "meshAnalysisTitle": "Mesh Analysis",
+      "clippingTitle": "Clipping Analysis",
+      "blendModesTitle": "Blend Mode Analysis",
+      "skeletonTreeTitle": "Skeleton Tree",
+      "noData": "No {0} data available",
+      "selectTab": "Select a tab to view benchmark information"
+    }
+  },
+  "warnings": {
+    "spineVersion": "Warning: This file uses Spine 4.1. The benchmark is designed for Spine 4.2. Version will be adjusted automatically."
+  },
+  "language": {
+    "name": "English",
+    "selector": "Language",
+    "modal": {
+      "title": "Select Language"
+    },
+    "changeLanguage": "Change Language",
+    "changeLanguageDescription": "Open language selection modal"
   }
 }

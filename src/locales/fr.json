@@ -1,0 +1,128 @@
+{
+  "error": {
+    "1001": "Erreur de lecture du fichier : {0}",
+    "1002": "Erreur de chargement de l'image {0} : {1}",
+    "1003": "Erreur d'analyse JSON du fichier squelette {0} : {1}",
+    "1004": "Version Spine non supportée : {0}. Version maximale supportée : 4.1",
+    "1005": "Structure incorrecte dans le fichier JSON du squelette : {0}",
+    "1006": "Erreur de lecture du fichier squelette binaire : {0}",
+    "1007": "Erreur de lecture du fichier atlas : {0}",
+    "1008": "Structure de fichier atlas invalide : {0}",
+    "1009": "Texture non trouvée : {0}",
+    "1010": "Erreur de création de l'atlas : {0}",
+    "1011": "Le squelette ne contient aucun os",
+    "1012": "Erreur d'analyse du squelette : {0}",
+    "1013": "Erreur de création de l'instance Spine : {0}",
+    "1014": "Erreur critique lors de la création de l'asset : {0}",
+    "1015": "Erreur de traitement du fichier {0} : {1}",
+    "1016": "Fichier squelette manquant (.json ou .skel). Veuillez télécharger le fichier squelette avec l'atlas.",
+    "1017": "Fichier atlas manquant (.atlas). Veuillez le télécharger avec le squelette.",
+    "failedToInitialize": "Échec de l'initialisation des graphiques : {0}",
+    "noFilesDropped": "Aucun fichier n'a été déposé",
+    "noValidFiles": "Aucun fichier valide trouvé dans les éléments déposés",
+    "processingError": "Erreur de traitement des fichiers déposés : {0}",
+    "loadingError": "Erreur de chargement des fichiers Spine : {0}"
+  },
+  "ui": {
+    "dropArea": "Déposez les fichiers ou dossiers Spine ici (JSON, Atlas et Images)",
+    "loading": "Chargement...",
+    "helpText": "Ctrl+K ouvre un panneau",
+    "close": "Fermer"
+  },
+  "commands": {
+    "categories": {
+      "recentlyUsed": "Récemment utilisées",
+      "debug": "Commandes de débogage",
+      "animation": "Commandes d'animation",
+      "skin": "Commandes de skin",
+      "performance": "Commandes de performance",
+      "language": "Commandes de langue"
+    },
+    "animation": {
+      "playPause": "Lecture/Pause de l'animation",
+      "playPauseDescription": "Basculer la lecture de l'animation",
+      "stop": "Arrêter l'animation",
+      "stopDescription": "Arrêter l'animation actuelle",
+      "restart": "Redémarrer l'animation",
+      "restartDescription": "Redémarrer l'animation actuelle depuis le début"
+    },
+    "skin": {
+      "switchTo": "Basculer vers {0}",
+      "switchToDescription": "Appliquer le skin {0}"
+    },
+    "performance": {
+      "showBenchmark": "Afficher les informations de benchmark",
+      "showBenchmarkDescription": "Afficher le panneau de benchmark de performance"
+    },
+    "help": {
+      "documentation": "Ouvrir la documentation",
+      "documentationDescription": "Ouvrir la documentation GitHub README"
+    },
+    "language": {
+      "switchTo": "Basculer vers {0}",
+      "switchToDescription": "Changer la langue de l'interface vers {0}"
+    },
+    "keywords": {
+      "animation": "animation",
+      "play": "lecture",
+      "pause": "pause",
+      "toggle": "basculer",
+      "stop": "arrêter",
+      "restart": "redémarrer",
+      "reset": "réinitialiser",
+      "skin": "skin",
+      "performance": "performance",
+      "benchmark": "benchmark",
+      "info": "info",
+      "stats": "statistiques",
+      "show": "afficher",
+      "help": "aide",
+      "documentation": "documentation",
+      "readme": "readme",
+      "github": "github",
+      "language": "langue",
+      "switch": "basculer"
+    }
+  },
+  "commandPalette": {
+    "placeholder": "Tapez une commande ou recherchez...",
+    "noCommands": "Aucune commande trouvée",
+    "tryDifferent": "Essayez un terme de recherche différent",
+    "shortcuts": {
+      "navigate": "pour naviguer",
+      "select": "pour sélectionner",
+      "close": "pour fermer"
+    }
+  },
+  "infoPanel": {
+    "title": "Analyse de benchmark Spine",
+    "tabs": {
+      "summary": "Résumé",
+      "meshAnalysis": "Analyse de maillage",
+      "clipping": "Découpage",
+      "blendModes": "Modes de fusion",
+      "skeletonTree": "Arbre du squelette"
+    },
+    "content": {
+      "summaryTitle": "Résumé du benchmark",
+      "meshAnalysisTitle": "Analyse de maillage",
+      "clippingTitle": "Analyse de découpage",
+      "blendModesTitle": "Analyse des modes de fusion",
+      "skeletonTreeTitle": "Arbre du squelette",
+      "noData": "Aucune donnée {0} disponible",
+      "selectTab": "Sélectionnez un onglet pour voir les informations de benchmark"
+    }
+  },
+  "warnings": {
+    "spineVersion": "Attention : Ce fichier utilise Spine 4.1. Le benchmark est conçu pour Spine 4.2. La version sera ajustée automatiquement."
+  },
+  "language": {
+    "name": "Français",
+    "selector": "Langue",
+    "modal": {
+      "title": "Sélectionner la langue"
+    },
+    "changeLanguage": "Changer de langue",
+    "changeLanguageDescription": "Ouvrir la fenêtre de sélection de langue"
+  }
+}

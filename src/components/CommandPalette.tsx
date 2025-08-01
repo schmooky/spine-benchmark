@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCommandPalette } from '../hooks/useCommandPalette';
 import { Command, CommandCategory } from '../utils/commandRegistry';
 import './CommandPalette.css';
@@ -64,6 +65,7 @@ const CommandCategorySection: React.FC<CommandCategoryProps> = ({
 };
 
 export const CommandPalette: React.FC = () => {
+  const { t } = useTranslation();
   const {
     isOpen,
     query,
@@ -124,7 +126,7 @@ export const CommandPalette: React.FC = () => {
                 type="text"
                 value={query}
                 onChange={handleInputChange}
-                placeholder="Type a command or search..."
+                placeholder={t('commandPalette.placeholder')}
                 className="command-palette-input"
                 autoComplete="off"
                 spellCheck={false}
@@ -134,8 +136,8 @@ export const CommandPalette: React.FC = () => {
             <div className="command-palette-body">
               {totalCommands === 0 ? (
                 <div className="command-palette-empty">
-                  <div className="empty-message">No commands found</div>
-                  <div className="empty-hint">Try a different search term</div>
+                  <div className="empty-message">{t('commandPalette.noCommands')}</div>
+                  <div className="empty-hint">{t('commandPalette.tryDifferent')}</div>
                 </div>
               ) : (
                 <div className="command-palette-results" role="listbox">
@@ -155,13 +157,13 @@ export const CommandPalette: React.FC = () => {
             <div className="command-palette-footer">
               <div className="command-palette-shortcuts">
                 <span className="shortcut">
-                  <kbd>↑</kbd><kbd>↓</kbd> to navigate
+                  <kbd>↑</kbd><kbd>↓</kbd> {t('commandPalette.shortcuts.navigate')}
                 </span>
                 <span className="shortcut">
-                  <kbd>Enter</kbd> to select
+                  <kbd>Enter</kbd> {t('commandPalette.shortcuts.select')}
                 </span>
                 <span className="shortcut">
-                  <kbd>Esc</kbd> to close
+                  <kbd>Esc</kbd> {t('commandPalette.shortcuts.close')}
                 </span>
               </div>
             </div>

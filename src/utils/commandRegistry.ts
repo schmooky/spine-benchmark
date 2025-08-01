@@ -1,7 +1,7 @@
 export interface Command {
   id: string;
   title: string;
-  category: 'recently-used' | 'debug' | 'animation' | 'skin' | 'performance';
+  category: 'recently-used' | 'debug' | 'animation' | 'skin' | 'performance' | 'language';
   description?: string;
   icon?: string;
   execute: () => void | Promise<void>;
@@ -20,6 +20,7 @@ class CommandRegistry {
   private maxRecentCommands = 10;
 
   register(command: Command): void {
+    console.log('📝 Registering command:', { id: command.id, title: command.title, category: command.category });
     this.commands.set(command.id, command);
   }
 
@@ -46,13 +47,23 @@ class CommandRegistry {
   }
 
   executeCommand(commandId: string): void {
+    console.log('⚡ Executing command:', commandId);
     const command = this.commands.get(commandId);
     if (command) {
+      console.log('✅ Command found:', { title: command.title, category: command.category });
       // Add to recent commands
       this.addToRecent(commandId);
       
       // Execute the command
-      command.execute();
+      try {
+        command.execute();
+        console.log('🎯 Command executed successfully');
+      } catch (error) {
+        console.error('❌ Command execution failed:', error);
+      }
+    } else {
+      console.error('❌ Command not found:', commandId);
+      console.log('Available commands:', Array.from(this.commands.keys()));
     }
   }
 
@@ -112,37 +123,42 @@ class CommandRegistry {
     });
   }
 
-  getGroupedCommands(query?: string): CommandCategory[] {
+  getGroupedCommands(query?: string, t?: (key: string) => string): CommandCategory[] {
     const commands = query ? this.search(query) : this.getAllCommands();
     const recentCommands = this.getRecentCommands();
 
     const categories: CommandCategory[] = [
       {
         id: 'recently-used',
-        title: 'Recently Used',
-        commands: query ? recentCommands.filter(cmd => 
+        title: t ? t('commands.categories.recentlyUsed') : 'Recently Used',
+        commands: query ? recentCommands.filter(cmd =>
           cmd.title.toLowerCase().includes(query.toLowerCase())
         ) : recentCommands
       },
       {
         id: 'debug',
-        title: 'Debug Commands',
+        title: t ? t('commands.categories.debug') : 'Debug Commands',
         commands: commands.filter(cmd => cmd.category === 'debug')
       },
       {
         id: 'animation',
-        title: 'Animation Commands',
+        title: t ? t('commands.categories.animation') : 'Animation Commands',
         commands: commands.filter(cmd => cmd.category === 'animation')
       },
       {
         id: 'skin',
-        title: 'Skin Commands',
+        title: t ? t('commands.categories.skin') : 'Skin Commands',
         commands: commands.filter(cmd => cmd.category === 'skin')
       },
       {
         id: 'performance',
-        title: 'Performance Commands',
+        title: t ? t('commands.categories.performance') : 'Performance Commands',
         commands: commands.filter(cmd => cmd.category === 'performance')
+      },
+      {
+        id: 'language',
+        title: t ? t('commands.categories.language') : 'Language Commands',
+        commands: commands.filter(cmd => cmd.category === 'language')
       }
     ];
 
@@ -152,3 +168,9 @@ class CommandRegistry {
 }
 
 export const commandRegistry = new CommandRegistry();
+
+// Expose to global scope for debugging
+if (typeof window !== 'undefined') {
+  (window as any).commandRegistry = commandRegistry;
+  console.log('🌍 Command registry exposed to window.commandRegistry for debugging');
+}

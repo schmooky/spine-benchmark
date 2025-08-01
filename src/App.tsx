@@ -1,56 +1,74 @@
 import { Application } from 'pixi.js';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useTranslation } from 'react-i18next';
 import { AnimationControls } from './components/AnimationControls';
-import { ColorPicker } from './components/ColorPicker';
-import { DebugToggle, IkIcon, MeshIcon, PhysicsIcon } from './components/DebugToggle';
-import { IconButton } from './components/IconButton';
-import {
-  DocumentTextIcon,
-  ImageIcon,
-  QuestionMarkCircleIcon,
-  XMarkIcon,
-  TimelineIcon
-} from './components/Icons';
 import { InfoPanel } from './components/InfoPanel';
 import { CommandPalette } from './components/CommandPalette';
 import { VersionDisplay } from './components/VersionDisplay';
+import { LanguageModal } from './components/LanguageModal';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { useSpineApp } from './hooks/useSpineApp';
 import { useCommandRegistration } from './hooks/useCommandRegistration';
-import EventTimeline from './components/EventTimeline';
+import { useUrlHash } from './hooks/useUrlHash';
+    const App: React.FC = () => {
+      const { t } = useTranslation();
+      const [app, setApp] = useState<Application | null>(null);
+      const canvasRef = useRef<HTMLCanvasElement>(null);
+      const [showBenchmark, setShowBenchmark] = useState(false);
+      const [showLanguageModal, setShowLanguageModal] = useState(false);
     
-const App: React.FC = () => {
-  const [app, setApp] = useState<Application | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showBenchmark, setShowBenchmark] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
-  const [hasBackgroundImage, setHasBackgroundImage] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentAnimation, setCurrentAnimation] = useState('');
-  const [showEventTimeline, setShowEventTimeline] = useState(false);
-  const toggleEventTimeline = () => {
-    setShowEventTimeline(!showEventTimeline);
-  };
-  const { addToast } = useToast();
+      // Debug log for language modal state changes
+      useEffect(() => {
+        console.log('🏠 App: Language modal state changed:', showLanguageModal);
+      }, [showLanguageModal]);
+    
+      // Enhanced setShowLanguageModal with additional logging
+      const setShowLanguageModalWithLogging = (show: boolean) => {
+        console.log('🏠 App: setShowLanguageModal called with:', show);
+        console.log('🏠 App: Current modal state before change:', showLanguageModal);
+        setShowLanguageModal(show);
+        console.log('🏠 App: setShowLanguageModal completed');
+      };
+      const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
+      const [isLoading, setIsLoading] = useState(false);
+      const [currentAnimation, setCurrentAnimation] = useState('');
+      const { addToast } = useToast();
+      const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
   const {
     spineInstance,
     loadSpineFiles,
     isLoading: spineLoading,
     benchmarkData,
-    setBackgroundImage,
-    clearBackgroundImage,
-    toggleMeshes,
-    togglePhysics,
-    toggleIk,
-    meshesVisible,
-    physicsVisible,
-    ikVisible
   } = useSpineApp(app);
 
+
+  // Check initial hash state for benchmark panel
+  useEffect(() => {
+    const hashState = getStateFromHash();
+    if (hashState.benchmarkInfo) {
+      setShowBenchmark(true);
+    }
+  }, [getStateFromHash]);
+
+  // Listen for browser navigation changes
+  useEffect(() => {
+    const cleanup = onHashChange((hashState) => {
+      setShowBenchmark(hashState.benchmarkInfo);
+    });
+    
+    return cleanup;
+  }, [onHashChange]);
+
+  // Update hash when showBenchmark changes (but avoid infinite loops)
+  useEffect(() => {
+    const currentHashState = getStateFromHash();
+    if (currentHashState.benchmarkInfo !== showBenchmark) {
+      updateHash({ benchmarkInfo: showBenchmark });
+    }
+  }, [showBenchmark, updateHash, getStateFromHash]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -80,7 +98,7 @@ const App: React.FC = () => {
         };
       } catch (error) {
         console.error("Failed to initialize Pixi application:", error);
-        addToast(`Failed to initialize graphics: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+        addToast(t('error.failedToInitialize', error instanceof Error ? error.message : 'Unknown error'), 'error');
       }
     };
     
@@ -161,7 +179,7 @@ const App: React.FC = () => {
       const items = e.dataTransfer?.items;
       if (!items || items.length === 0) {
         if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) {
-          addToast('No files were dropped', 'error');
+          addToast(t('error.noFilesDropped'), 'error');
           return;
         }
         // If we only have files (not items), use the simple approach
@@ -189,7 +207,7 @@ const App: React.FC = () => {
       console.log(`Traversal complete, found ${fileList.length} files`);
       
       if (fileList.length === 0) {
-        addToast('No valid files found in the dropped items', 'error');
+        addToast(t('error.noValidFiles'), 'error');
         return;
       }
       
@@ -205,7 +223,7 @@ const App: React.FC = () => {
       
     } catch (error) {
       console.error('Error processing dropped items:', error);
-      addToast(`Error processing dropped files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(t('error.processingError', error instanceof Error ? error.message : 'Unknown error'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +248,7 @@ const App: React.FC = () => {
       if (jsonFile) {
         const content = await jsonFile.text();
         if (content.includes('"spine":"4.1')) {
-          addToast('Warning: This file uses Spine 4.1. The benchmark is designed for Spine 4.2. Version will be adjusted automatically.', 'warning');
+          addToast(t('warnings.spineVersion'), 'warning');
           
           // Create a modified file with version replaced
           const modifiedContent = content.replace(/"spine":"4.1[^"]*"/, '"spine":"4.2.0"');
@@ -255,7 +273,7 @@ const App: React.FC = () => {
       await loadSpineFiles(files);
     } catch (error) {
       console.error("Error handling Spine files:", error);
-      addToast(`Error loading Spine files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(t('error.loadingError', error instanceof Error ? error.message : 'Unknown error'), 'error');
     }
   };
 
@@ -263,68 +281,6 @@ const App: React.FC = () => {
     window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank');
   };
 
-  const handleBgColorChange = (color: string) => {
-    setBackgroundColor(color);
-  };
-
-  // Handle background image upload button click
-  const handleBackgroundButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  // Handle file input change for background image
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      
-      // Check if the file is an image
-      if (!file.type.startsWith('image/')) {
-        addToast('Please select an image file.', 'error');
-        return;
-      }
-      
-      // Convert the file to base64
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        if (e.target && typeof e.target.result === 'string') {
-          // Get the base64 string
-          const base64Data = e.target.result;
-          
-          try {
-            // Set the background image using the BackgroundManager
-            await setBackgroundImage(base64Data);
-            setHasBackgroundImage(true);
-          } catch (error) {
-            console.error('Error setting background image:', error);
-            addToast('Failed to set background image.', 'error');
-          }
-        } else {
-          addToast('Failed to read image file.', 'error');
-        }
-      };
-      
-      reader.onerror = () => {
-        addToast('Error reading the image file.', 'error');
-      };
-      
-      // Read the file as a data URL (base64)
-      reader.readAsDataURL(file);
-      
-      // Reset the input to allow selecting the same file again
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  // Handle removing background image
-  const handleRemoveBackground = () => {
-    clearBackgroundImage();
-    setHasBackgroundImage(false);
-  };
 
   useEffect(() => {
     if (app) {
@@ -332,40 +288,22 @@ const App: React.FC = () => {
     }
   }, [backgroundColor, app]);
   
-  // Effect to ensure debug renderer is cleaned up when component unmounts
-  useEffect(() => {
-    return () => {
-      // Clean up debug rendering if any was active
-      if (spineInstance && (meshesVisible || physicsVisible || ikVisible)) {
-        // Reset debug flags and force clear
-        if (app && app.ticker) {
-          app.ticker.update();
-        }
-      }
-    };
-  }, [spineInstance, meshesVisible, physicsVisible, ikVisible]);
-
+  // Enhanced setShowBenchmark function that updates hash
+  const setShowBenchmarkWithHash = useCallback((show: boolean) => {
+    setShowBenchmark(show);
+    updateHash({ benchmarkInfo: show });
+  }, [updateHash]);
   // Register commands for the command palette
   useCommandRegistration({
     spineInstance,
-    toggleMeshes,
-    togglePhysics,
-    toggleIk,
-    meshesVisible,
-    physicsVisible,
-    ikVisible,
     showBenchmark,
-    setShowBenchmark,
-    showEventTimeline,
-    setShowEventTimeline,
+    setShowBenchmark: setShowBenchmarkWithHash,
     openGitHubReadme,
-    handleBackgroundButtonClick,
-    handleRemoveBackground,
-    hasBackgroundImage
+    setShowLanguageModal: setShowLanguageModalWithLogging
   });
 
   return (
-    <div className="app-container" style={{ backgroundColor }}>
+    <div className="app-container">
       <div 
         className="canvas-container"
         onDrop={handleDrop}
@@ -376,102 +314,52 @@ const App: React.FC = () => {
         
         {!spineInstance && (
           <div className="drop-area">
-            <p>Drop Spine files or folders here (JSON, Atlas, and Images)</p>
+            <p>{t('ui.dropArea')}</p>
           </div>
         )}
         
         {(isLoading || spineLoading) && (
           <div className="loading-indicator">
-            <p>Loading...</p>
+            <p>{t('ui.loading')}</p>
           </div>
         )}
       </div>
       
-      <div className="controls-container">
+      {/* Help text when no Spine file is loaded */}
+      {!spineInstance && (
+        <div className="help-text">
+          <p>{t('ui.helpText')}</p>
+        </div>
+      )}
+      
+      {/* Controls container - only visible when Spine file is loaded */}
+      <div className={`controls-container ${spineInstance ? 'visible' : 'hidden'}`}>
         <div className="left-controls">
-          <IconButton 
-            icon={<DocumentTextIcon />} 
-            onClick={() => setShowBenchmark(!showBenchmark)}
-            active={showBenchmark}
-            tooltip="Toggle Benchmark Info"
-          />
-          <IconButton 
-            icon={<QuestionMarkCircleIcon />} 
-            onClick={openGitHubReadme}
-            tooltip="Open Documentation"
-          />
-          <IconButton 
-            icon={<ImageIcon />} 
-            onClick={handleBackgroundButtonClick}
-            tooltip="Upload Background Image"
-          />
-          <IconButton 
-  icon={<TimelineIcon />} 
-  onClick={toggleEventTimeline}
-  active={showEventTimeline}
-  tooltip="Event Timeline"
-/>
-          {hasBackgroundImage && (
-            <IconButton 
-              icon={<XMarkIcon />} 
-              onClick={handleRemoveBackground}
-              tooltip="Remove Background Image"
-            />
-          )}
-          
-          
-          {/* Add individual debug toggle buttons */}
-          {spineInstance && (
-            <>
-              <DebugToggle 
-                icon={<MeshIcon />} 
-                onClick={toggleMeshes}
-                active={meshesVisible}
-                tooltip="Toggle Mesh Visualization"
-              />
-              <DebugToggle 
-                icon={<PhysicsIcon />} 
-                onClick={togglePhysics}
-                active={physicsVisible}
-                tooltip="Toggle Physics Constraints"
-              />
-              <DebugToggle 
-                icon={<IkIcon />} 
-                onClick={toggleIk}
-                active={ikVisible}
-                tooltip="Toggle IK Constraints"
-              />
-            </>
-          )}
-          
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            style={{ display: 'none' }}
-          />
+          {/* Left controls are now empty - removed benchmark toggle */}
         </div>
         
         <div className="center-controls">
-          {spineInstance && <AnimationControls 
-  spineInstance={spineInstance} 
-  onAnimationChange={setCurrentAnimation} 
-/>}
+          {spineInstance && (() => {
+            console.log('App center-controls render:', {
+              hasSpineInstance: !!spineInstance,
+              spineInstanceType: spineInstance?.constructor?.name
+            });
+            return <AnimationControls
+              spineInstance={spineInstance}
+              onAnimationChange={setCurrentAnimation}
+            />;
+          })()}
         </div>
         
         <div className="right-controls">
-          <ColorPicker 
-            color={backgroundColor} 
-            onChange={handleBgColorChange} 
-          />
+          {/* Right controls are now empty - removed color picker */}
         </div>
       </div>
       
       {showBenchmark && benchmarkData && (
-        <InfoPanel 
+        <InfoPanel
           data={benchmarkData}
-          onClose={() => setShowBenchmark(false)}
+          onClose={() => setShowBenchmarkWithHash(false)}
         />
       )}
       
@@ -488,35 +376,23 @@ const App: React.FC = () => {
         pauseOnHover
         theme="dark"
       />
-      {showEventTimeline && spineInstance && (
-  <div className="timeline-modal">
-    <div className="timeline-modal-content">
-      <div className="timeline-modal-header">
-        <h2>Animation Event Timeline</h2>
-        <button 
-          className="timeline-modal-close" 
-          onClick={() => setShowEventTimeline(false)}
-        >
-          &times;
-        </button>
-      </div>
-      <div className="timeline-modal-body">
-        <EventTimeline 
-          spineInstance={spineInstance} 
-          currentAnimation={currentAnimation}
-        />
-      </div>
-    </div>
-  </div>
-)}
       
       {/* Command Palette */}
       <CommandPalette />
       
       {/* Version Display */}
       <VersionDisplay
-        appVersion="1.0.0"
-        spineVersion="4.2.74"
+        appVersion="1.1.0"
+        spineVersion="4.2.*"
+      />
+      
+      {/* Language Modal */}
+      <LanguageModal
+        isOpen={showLanguageModal}
+        onClose={() => {
+          console.log('🏠 App: Closing language modal');
+          setShowLanguageModalWithLogging(false);
+        }}
       />
     </div>
   );

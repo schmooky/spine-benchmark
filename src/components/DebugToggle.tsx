@@ -1,4 +1,5 @@
 import React from 'react';
+import { ToggleSwitch } from './ToggleSwitch';
 
 // Icon for the meshes debug button
 export const MeshIcon: React.FC = () => (
@@ -23,16 +24,43 @@ export const IkIcon: React.FC = () => (
 );
 
 interface DebugToggleProps {
+  onChange: (checked: boolean) => void;
+  checked: boolean;
+  tooltip: string;
+  variant?: 'default' | 'yellow' | 'magenta' | 'cyan';
+  label?: string;
+}
+
+export const DebugToggle: React.FC<DebugToggleProps> = ({
+  onChange,
+  checked,
+  tooltip,
+  variant = 'default',
+  label
+}) => {
+  return (
+    <ToggleSwitch
+      checked={checked}
+      onChange={onChange}
+      tooltip={tooltip}
+      variant={variant}
+      label={label}
+    />
+  );
+};
+
+// Legacy component for backward compatibility
+interface LegacyDebugToggleProps {
   onClick: () => void;
   active: boolean;
   tooltip: string;
   icon: React.ReactNode;
 }
 
-export const DebugToggle: React.FC<DebugToggleProps> = ({ onClick, active, tooltip, icon }) => {
+export const LegacyDebugToggle: React.FC<LegacyDebugToggleProps> = ({ onClick, active, tooltip, icon }) => {
   return (
-    <button 
-      className={`icon-button ${active ? 'active' : ''}`} 
+    <button
+      className={`icon-button ${active ? 'active' : ''}`}
       onClick={onClick}
       title={tooltip}
     >
