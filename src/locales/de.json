@@ -95,13 +95,15 @@
     }
   },
   "infoPanel": {
-    "title": "Spine-Benchmark-Analyse",
+    "title": "Spine Benchmark-Analyse",
+    "close": "Schließen",
     "tabs": {
       "summary": "Zusammenfassung",
       "meshAnalysis": "Mesh-Analyse",
       "clipping": "Clipping",
       "blendModes": "Blend-Modi",
-      "skeletonTree": "Skelett-Baum"
+      "skeletonTree": "Skelett-Baum",
+      "physicsAnalysis": "Physik/Constraints"
     },
     "content": {
       "summaryTitle": "Benchmark-Zusammenfassung",
@@ -124,5 +126,332 @@
     },
     "changeLanguage": "Sprache ändern",
     "changeLanguageDescription": "Sprachauswahl-Modal öffnen"
+  },
+  "analysis": {
+    "summary": {
+      "title": "Spine Leistungsanalyse",
+      "skeletonLabel": "Skelett: {{name}}",
+      "performanceLabel": "{{rating}} Leistung",
+      "componentScoresTitle": "Komponenten-Bewertungen",
+      "skeletonStatsTitle": "Skelett-Statistiken",
+      "optimizationTitle": "Optimierungsempfehlungen",
+      "performanceExplanationTitle": "Leistungsbewertung Interpretation",
+      "components": {
+        "boneStructure": "Knochenstruktur",
+        "meshComplexity": "Mesh-Komplexität",
+        "clippingMasks": "Clipping-Masken",
+        "blendModes": "Blend-Modi",
+        "constraints": "Constraints"
+      },
+      "tableHeaders": {
+        "component": "Komponente",
+        "score": "Bewertung",
+        "weight": "Gewicht",
+        "meter": "Anzeige",
+        "scoreRange": "Bewertungsbereich",
+        "rating": "Einstufung",
+        "interpretation": "Interpretation"
+      },
+      "statistics": {
+        "totalBones": "Gesamte Knochen",
+        "maxBoneDepth": "Max. Knochentiefe",
+        "totalMeshes": "Gesamte Meshes",
+        "totalVertices": "Gesamte Vertices",
+        "clippingMasks": "Clipping-Masken",
+        "nonNormalBlendModes": "Nicht-normale Blend-Modi",
+        "totalConstraints": "Gesamte Constraints",
+        "animations": "Animationen",
+        "skins": "Skins"
+      },
+      "recommendations": {
+        "reduceBoneDepth": "Reduzieren Sie die Knochenhierarchie-Tiefe durch Vereinfachung der Struktur wo möglich.",
+        "reduceTotalBones": "Erwägen Sie eine Reduzierung der Gesamtanzahl der Knochen durch Vereinfachung des Skeletts.",
+        "reduceVertices": "Reduzieren Sie die Gesamtanzahl der Vertices in allen Meshes.",
+        "minimizeDeformedMeshes": "Minimieren Sie die Anzahl deformierter Meshes, besonders solche mit hoher Vertex-Anzahl.",
+        "reduceWeightedMeshes": "Reduzieren Sie die Anzahl der Meshes mit Knochengewichten, da sie mehr Berechnungen erfordern.",
+        "limitClippingMasks": "Begrenzen Sie die Anzahl der Clipping-Masken, da sie die Leistung erheblich beeinträchtigen.",
+        "simplifyComplexMasks": "Vereinfachen Sie komplexe Clipping-Masken, um weniger Vertices zu verwenden (4 oder weniger ist optimal).",
+        "reduceNonNormalBlendModes": "Reduzieren Sie die Anzahl nicht-normaler Blend-Modi, um Render-Zustandsänderungen zu minimieren.",
+        "minimizeAdditiveBlendModes": "Minimieren Sie die Verwendung additiver Blend-Modi, da sie besonders teuer sind.",
+        "reducePhysicsConstraints": "Physik-Constraints sind besonders teuer - erwägen Sie eine Reduzierung ihrer Anzahl oder Komplexität.",
+        "simplifyIkConstraints": "Vereinfachen Sie IK-Constraints durch Reduzierung der Kettenlänge oder Anzahl betroffener Knochen.",
+        "optimizePathConstraints": "Optimieren Sie Pfad-Constraints durch Vereinfachung der Pfade oder Reduzierung der Anzahl eingeschränkter Knochen."
+      },
+      "performanceRanges": {
+        "excellent": {
+          "range": "85-100",
+          "rating": "Ausgezeichnet",
+          "description": "Geeignet für alle Plattformen und kontinuierliche Animationen"
+        },
+        "good": {
+          "range": "70-84",
+          "rating": "Gut",
+          "description": "Funktioniert gut auf den meisten Plattformen, aber kann Probleme auf schwachen Geräten haben"
+        },
+        "moderate": {
+          "range": "55-69",
+          "rating": "Mäßig",
+          "description": "Kann Leistungseinbußen verursachen, besonders bei mehreren Instanzen"
+        },
+        "poor": {
+          "range": "40-54",
+          "rating": "Schlecht",
+          "description": "Leistungsprobleme wahrscheinlich auf den meisten Geräten"
+        }
+      }
+    },
+    "scores": {
+      "ratings": {
+        "excellent": "Ausgezeichnet",
+        "good": "Gut",
+        "moderate": "Mäßig",
+        "poor": "Schlecht",
+        "veryPoor": "Sehr schlecht"
+      },
+      "interpretations": {
+        "excellent": "Geeignet für alle Plattformen und kontinuierliche Animationen",
+        "good": "Funktioniert gut auf den meisten Plattformen, aber kann Probleme auf schwachen Geräten haben",
+        "moderate": "Kann Leistungseinbußen verursachen, besonders bei mehreren Instanzen",
+        "poor": "Leistungsprobleme wahrscheinlich auf den meisten Geräten",
+        "veryPoor": "Erhebliche Leistungsprobleme auf allen Geräten"
+      }
+    },
+    "mesh": {
+      "title": "Mesh-Statistiken",
+      "statistics": {
+        "totalMeshes": "Gesamte Meshes: {{count}}",
+        "totalVertices": "Gesamte Vertices: {{count}}",
+        "meshesWithDeformation": "Meshes mit Deformation: {{count}}",
+        "meshesWithBoneWeights": "Meshes mit Knochengewichten: {{count}}",
+        "meshesWithParentMesh": "Meshes mit Parent-Mesh: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Mesh-Leistungsbewertung: {{score}}/100"
+      },
+      "formula": {
+        "title": "Leistungsauswirkung-Formel:",
+        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+      },
+      "tableHeaders": {
+        "slot": "Slot",
+        "vertices": "Vertices",
+        "deformed": "Deformiert",
+        "boneWeights": "Knochengewichte",
+        "hasParentMesh": "Hat Parent-Mesh"
+      },
+      "values": {
+        "yes": "Ja",
+        "no": "Nein"
+      },
+      "notes": {
+        "title": "Mesh-Leistungsauswirkung:",
+        "vertexCount": "Vertex-Anzahl: Jeder Vertex benötigt Speicher und Verarbeitungszeit. Hohe Vertex-Anzahlen (>50) haben erhebliche Auswirkungen.",
+        "deformation": "Deformation: Deformierende Meshes benötigen zusätzliche Berechnungen pro Frame - {{factor}}× teurer als statische Meshes.",
+        "boneWeights": "Knochengewichte: Jedes Knochengewicht fügt Matrixmultiplikations-Operationen hinzu - {{factor}}× mehr Auswirkung pro gewichtetem Vertex.",
+        "optimizationTip": "Optimierungstipp: Verwenden Sie weniger Vertices für Meshes, die sich deformieren oder Knochengewichte haben. Erwägen Sie Region-Attachments für einfache Formen."
+      }
+    },
+    "clipping": {
+      "title": "Clipping-Masken",
+      "statistics": {
+        "totalMasks": "Gesamte Masken: {{count}}",
+        "totalVerticesInMasks": "Gesamte Vertices in Masken: {{count}}",
+        "complexMasks": "Komplexe Masken (>4 Vertices): {{count}}"
+      },
+      "performanceScore": {
+        "title": "Clipping-Leistungsbewertung: {{score}}/100"
+      },
+      "formula": {
+        "title": "Leistungsauswirkung-Formel:",
+        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+      },
+      "tableHeaders": {
+        "slotName": "Slot-Name",
+        "vertexCount": "Vertex-Anzahl",
+        "status": "Status"
+      },
+      "status": {
+        "optimal": "Optimal",
+        "acceptable": "Akzeptabel",
+        "highVertexCount": "Hohe Vertex-Anzahl"
+      },
+      "noMasks": "Keine Clipping-Masken in diesem Skelett gefunden.",
+      "notes": {
+        "title": "Hinweise zu Clipping-Masken:",
+        "highImpact": "Hohe Auswirkung: Clipping-Masken sind eine der teuersten Operationen im Spine-Rendering",
+        "vertexCount": "Vertex-Anzahl: Jeder Vertex in einer Maske erhöht die Berechnungskosten",
+        "optimalConfiguration": "Optimale Konfiguration: Verwenden Sie dreieckige oder viereckige Masken (3-4 Vertices) wenn möglich",
+        "gpuCost": "GPU-Kosten: Jede Clipping-Maske erfordert zusätzliche GPU-Rendering-Durchgänge (Stencil-Buffer-Operationen)",
+        "recommendation": "Empfehlung: Begrenzen Sie auf 2-3 Masken pro Skelett, mit weniger als 6 Vertices jeweils"
+      }
+    },
+    "blendMode": {
+      "title": "Blend-Modi",
+      "statistics": {
+        "nonNormalBlendModes": "Nicht-normale Blend-Modi: {{count}}",
+        "additiveBlendModes": "Additive Blend-Modi: {{count}}",
+        "multiplyBlendModes": "Multiplikative Blend-Modi: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Blend-Modi-Leistungsbewertung: {{score}}/100"
+      },
+      "formula": {
+        "title": "Leistungsauswirkung-Formel:",
+        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+      },
+      "tableHeaders": {
+        "blendMode": "Blend-Modus",
+        "count": "Anzahl",
+        "slotName": "Slot-Name"
+      },
+      "slotsWithNonNormalTitle": "Slots mit nicht-normalen Blend-Modi:",
+      "notes": {
+        "title": "Hinweise zu Blend-Modi:",
+        "normalBlendMode": "Normaler Blend-Modus: Am effizientesten, erfordert einen einzigen Rendering-Durchgang",
+        "nonNormalBlendModes": "Nicht-normale Blend-Modi: Jeder erfordert einen separaten Render-Durchgang oder Shader-Wechsel",
+        "renderingCost": "Rendering-Kosten: Jeder Blend-Modi-Wechsel erzwingt eine Renderer-\"Flush\"-Operation",
+        "additiveBlend": "Additives Blending: Höhere Kosten als normales Blending aufgrund von Blending-Berechnungen",
+        "multiplyBlend": "Multiplikatives Blending: Ähnlich wie additiv, erfordert zusätzliche GPU-Operationen",
+        "recommendation": "Empfehlung: Begrenzen Sie auf 2 nicht-normale Blend-Modi pro Skelett"
+      }
+    },
+    "skeleton": {
+      "title": "Skelett-Struktur",
+      "statistics": {
+        "totalBones": "Gesamte Knochen: {{count}}",
+        "rootBones": "Wurzel-Knochen: {{count}}",
+        "maxDepth": "Max. Tiefe: {{depth}}"
+      },
+      "performanceScore": {
+        "title": "Knochenstruktur-Leistungsbewertung: {{score}}/100"
+      },
+      "formula": {
+        "title": "Leistungsauswirkung-Formel:",
+        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+      },
+      "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
+      "notes": {
+        "title": "Hinweise zur Knochenstruktur:",
+        "boneCount": "Knochenanzahl: Jeder Knochen erfordert Matrixberechnungen pro Frame",
+        "hierarchyDepth": "Hierarchietiefe: Tiefe Hierarchien erhöhen die Transformationskomplexität exponentiell",
+        "recommendation": "Empfehlung: Halten Sie Knochenhierarchien unter 5 Ebenen Tiefe wenn möglich",
+        "optimalStructure": "Optimale Struktur: Flache Hierarchien mit wenigen Eltern-Kind-Beziehungen funktionieren besser"
+      }
+    },
+    "physics": {
+      "title": "Constraint-Analyse",
+      "statistics": {
+        "totalConstraints": "Gesamte Constraints: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Constraint-Leistungsbewertung: {{score}}/100"
+      },
+      "formula": {
+        "title": "Leistungsauswirkung-Formel:",
+        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
+        "explanation": "Wobei constraintImpact eine gewichtete Summe der IK-, Transform-, Pfad- und Physik-Constraint-Auswirkungen ist"
+      },
+      "impactBreakdown": {
+        "title": "Auswirkungsaufschlüsselung:",
+        "tableHeaders": {
+          "constraintType": "Constraint-Typ",
+          "count": "Anzahl",
+          "impactLevel": "Auswirkungsgrad",
+          "weightedImpact": "Gewichtete Auswirkung"
+        }
+      },
+      "constraintTypes": {
+        "ik": "IK-Constraints",
+        "transform": "Transform-Constraints",
+        "path": "Pfad-Constraints",
+        "physics": "Physik-Constraints"
+      },
+      "constraintDetails": {
+        "ikConstraints": {
+          "title": "IK-Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "target": "Ziel",
+            "bones": "Knochen",
+            "mix": "Mix",
+            "status": "Status"
+          }
+        },
+        "transformConstraints": {
+          "title": "Transform-Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "target": "Ziel",
+            "bones": "Knochen",
+            "properties": "Eigenschaften",
+            "status": "Status"
+          }
+        },
+        "pathConstraints": {
+          "title": "Pfad-Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "target": "Ziel",
+            "bones": "Knochen",
+            "modes": "Modi",
+            "status": "Status"
+          }
+        },
+        "physicsConstraints": {
+          "title": "Physik-Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "bone": "Knochen",
+            "properties": "Eigenschaften",
+            "parameters": "Parameter",
+            "status": "Status"
+          }
+        }
+      },
+      "status": {
+        "active": "Aktiv",
+        "inactive": "Inaktiv"
+      },
+      "properties": {
+        "x": "X",
+        "y": "Y",
+        "rotation": "Rotation",
+        "scale": "Skalierung",
+        "shear": "Scherung",
+        "rotate": "Rotation",
+        "scaleX": "SkalierungX",
+        "scaleY": "SkalierungY",
+        "shearY": "ScherungY"
+      },
+      "modes": {
+        "rotate": {
+          "tangent": "Tangente",
+          "chain": "Kette",
+          "chainScale": "KettenSkalierung"
+        },
+        "spacing": {
+          "length": "Länge",
+          "fixed": "Fest",
+          "percent": "Prozent",
+          "proportional": "Proportional"
+        }
+      },
+      "parameters": {
+        "inertia": "Trägheit",
+        "strength": "Stärke",
+        "damping": "Dämpfung",
+        "wind": "Wind",
+        "gravity": "Schwerkraft"
+      },
+      "noConstraints": "Keine Constraints in diesem Skelett gefunden.",
+      "notes": {
+        "title": "Hinweise zu Constraints:",
+        "ikConstraints": "IK-Constraints: Kosten steigen mit Knochenkettenlänge und Iterationsanzahl",
+        "physicsConstraints": "Physik-Constraints: Höchste Leistungsauswirkung, besonders bei mehreren betroffenen Eigenschaften",
+        "pathConstraints": "Pfad-Constraints: Komplexe Pfadkurven und ChainScale-Rotationsmodus sind teurer",
+        "transformConstraints": "Transform-Constraints: Jede betroffene Eigenschaft (Position, Rotation, Skalierung) fügt Berechnungsoverhead hinzu",
+        "recommendation": "Empfehlung: Verwenden Sie Constraints sparsam und mit minimalen Knochenketten wenn möglich"
+      }
+    }
   }
 }

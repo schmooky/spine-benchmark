@@ -96,12 +96,14 @@
   },
   "infoPanel": {
     "title": "Spine 基準測試分析",
+    "close": "關閉",
     "tabs": {
       "summary": "摘要",
       "meshAnalysis": "網格分析",
       "clipping": "裁剪",
       "blendModes": "混合模式",
-      "skeletonTree": "骨架樹"
+      "skeletonTree": "骨架樹",
+      "physicsAnalysis": "物理/約束"
     },
     "content": {
       "summaryTitle": "基準測試摘要",
@@ -124,5 +126,332 @@
     },
     "changeLanguage": "變更語言",
     "changeLanguageDescription": "開啟語言選擇模態視窗"
+  },
+  "analysis": {
+    "summary": {
+      "title": "Spine 效能分析",
+      "skeletonLabel": "骨架：{{name}}",
+      "performanceLabel": "{{rating}} 效能",
+      "componentScoresTitle": "組件評分",
+      "skeletonStatsTitle": "骨架統計",
+      "optimizationTitle": "最佳化建議",
+      "performanceExplanationTitle": "效能評分解釋",
+      "components": {
+        "boneStructure": "骨骼結構",
+        "meshComplexity": "網格複雜度",
+        "clippingMasks": "裁剪遮罩",
+        "blendModes": "混合模式",
+        "constraints": "約束"
+      },
+      "tableHeaders": {
+        "component": "組件",
+        "score": "評分",
+        "weight": "權重",
+        "meter": "指標",
+        "scoreRange": "評分範圍",
+        "rating": "評級",
+        "interpretation": "解釋"
+      },
+      "statistics": {
+        "totalBones": "總骨骼數",
+        "maxBoneDepth": "最大骨骼深度",
+        "totalMeshes": "總網格數",
+        "totalVertices": "總頂點數",
+        "clippingMasks": "裁剪遮罩",
+        "nonNormalBlendModes": "非正常混合模式",
+        "totalConstraints": "總約束數",
+        "animations": "動畫",
+        "skins": "外觀"
+      },
+      "recommendations": {
+        "reduceBoneDepth": "盡可能簡化結構以減少骨骼階層深度。",
+        "reduceTotalBones": "考慮透過簡化骨架來減少骨骼總數。",
+        "reduceVertices": "減少所有網格的頂點總數。",
+        "minimizeDeformedMeshes": "最小化變形網格的數量，特別是高頂點數的網格。",
+        "reduceWeightedMeshes": "減少具有骨骼權重的網格數量，因為它們需要更多計算。",
+        "limitClippingMasks": "限制裁剪遮罩的數量，因為它們會顯著影響效能。",
+        "simplifyComplexMasks": "簡化複雜的裁剪遮罩，使用更少的頂點（4個或更少是最佳的）。",
+        "reduceNonNormalBlendModes": "減少非正常混合模式的數量以最小化渲染狀態變更。",
+        "minimizeAdditiveBlendModes": "最小化加法混合模式的使用，因為它們特別昂貴。",
+        "reducePhysicsConstraints": "物理約束特別昂貴 - 考慮減少它們的數量或複雜度。",
+        "simplifyIkConstraints": "透過減少鏈長度或受影響的骨骼數量來簡化 IK 約束。",
+        "optimizePathConstraints": "透過簡化路徑或減少受約束的骨骼數量來最佳化路徑約束。"
+      },
+      "performanceRanges": {
+        "excellent": {
+          "range": "85-100",
+          "rating": "優秀",
+          "description": "適用於所有平台和連續動畫"
+        },
+        "good": {
+          "range": "70-84",
+          "rating": "良好",
+          "description": "在大多數平台上運作良好，但在低階設備上可能有問題"
+        },
+        "moderate": {
+          "range": "55-69",
+          "rating": "中等",
+          "description": "可能造成效能下降，特別是多個實例時"
+        },
+        "poor": {
+          "range": "40-54",
+          "rating": "差",
+          "description": "在大多數設備上可能出現效能問題"
+        }
+      }
+    },
+    "scores": {
+      "ratings": {
+        "excellent": "優秀",
+        "good": "良好",
+        "moderate": "中等",
+        "poor": "差",
+        "veryPoor": "很差"
+      },
+      "interpretations": {
+        "excellent": "適用於所有平台和連續動畫",
+        "good": "在大多數平台上運作良好，但在低階設備上可能有問題",
+        "moderate": "可能造成效能下降，特別是多個實例時",
+        "poor": "在大多數設備上可能出現效能問題",
+        "veryPoor": "在所有設備上都有顯著的效能問題"
+      }
+    },
+    "mesh": {
+      "title": "網格統計",
+      "statistics": {
+        "totalMeshes": "總網格數：{{count}}",
+        "totalVertices": "總頂點數：{{count}}",
+        "meshesWithDeformation": "具有變形的網格：{{count}}",
+        "meshesWithBoneWeights": "具有骨骼權重的網格：{{count}}",
+        "meshesWithParentMesh": "具有父網格的網格：{{count}}"
+      },
+      "performanceScore": {
+        "title": "網格效能評分：{{score}}/100"
+      },
+      "formula": {
+        "title": "效能影響公式：",
+        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+      },
+      "tableHeaders": {
+        "slot": "插槽",
+        "vertices": "頂點",
+        "deformed": "變形",
+        "boneWeights": "骨骼權重",
+        "hasParentMesh": "有父網格"
+      },
+      "values": {
+        "yes": "是",
+        "no": "否"
+      },
+      "notes": {
+        "title": "網格效能影響：",
+        "vertexCount": "頂點數量：每個頂點都需要記憶體和處理時間。高頂點數（>50）有顯著影響。",
+        "deformation": "變形：變形網格每幀需要額外計算 - 比靜態網格昂貴 {{factor}} 倍。",
+        "boneWeights": "骨骼權重：每個骨骼權重增加矩陣乘法運算 - 每個加權頂點的影響增加 {{factor}} 倍。",
+        "optimizationTip": "最佳化提示：對於變形或具有骨骼權重的網格使用較少的頂點。考慮對簡單形狀使用 Region attachments。"
+      }
+    },
+    "clipping": {
+      "title": "裁剪遮罩",
+      "statistics": {
+        "totalMasks": "總遮罩數：{{count}}",
+        "totalVerticesInMasks": "遮罩中的總頂點數：{{count}}",
+        "complexMasks": "複雜遮罩（>4 頂點）：{{count}}"
+      },
+      "performanceScore": {
+        "title": "裁剪效能評分：{{score}}/100"
+      },
+      "formula": {
+        "title": "效能影響公式：",
+        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+      },
+      "tableHeaders": {
+        "slotName": "插槽名稱",
+        "vertexCount": "頂點數量",
+        "status": "狀態"
+      },
+      "status": {
+        "optimal": "最佳",
+        "acceptable": "可接受",
+        "highVertexCount": "高頂點數"
+      },
+      "noMasks": "此骨架中未找到裁剪遮罩。",
+      "notes": {
+        "title": "裁剪遮罩注意事項：",
+        "highImpact": "高影響：裁剪遮罩是 Spine 渲染中最昂貴的操作之一",
+        "vertexCount": "頂點數量：遮罩中的每個頂點都會增加計算成本",
+        "optimalConfiguration": "最佳配置：盡可能使用三角形或四邊形遮罩（3-4 個頂點）",
+        "gpuCost": "GPU 成本：每個裁剪遮罩需要額外的 GPU 渲染通道（模板緩衝區操作）",
+        "recommendation": "建議：每個骨架限制 2-3 個遮罩，每個遮罩少於 6 個頂點"
+      }
+    },
+    "blendMode": {
+      "title": "混合模式",
+      "statistics": {
+        "nonNormalBlendModes": "非正常混合模式：{{count}}",
+        "additiveBlendModes": "加法混合模式：{{count}}",
+        "multiplyBlendModes": "乘法混合模式：{{count}}"
+      },
+      "performanceScore": {
+        "title": "混合模式效能評分：{{score}}/100"
+      },
+      "formula": {
+        "title": "效能影響公式：",
+        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+      },
+      "tableHeaders": {
+        "blendMode": "混合模式",
+        "count": "數量",
+        "slotName": "插槽名稱"
+      },
+      "slotsWithNonNormalTitle": "具有非正常混合模式的插槽：",
+      "notes": {
+        "title": "混合模式注意事項：",
+        "normalBlendMode": "正常混合模式：最有效率，需要單一渲染通道",
+        "nonNormalBlendModes": "非正常混合模式：每個都需要單獨的渲染通道或著色器切換",
+        "renderingCost": "渲染成本：每次混合模式變更都會強制渲染器「刷新」操作",
+        "additiveBlend": "加法混合：由於混合計算，成本比正常混合高",
+        "multiplyBlend": "乘法混合：類似於加法，需要額外的 GPU 操作",
+        "recommendation": "建議：每個骨架限制 2 個非正常混合模式"
+      }
+    },
+    "skeleton": {
+      "title": "骨架結構",
+      "statistics": {
+        "totalBones": "總骨骼數：{{count}}",
+        "rootBones": "根骨骼：{{count}}",
+        "maxDepth": "最大深度：{{depth}}"
+      },
+      "performanceScore": {
+        "title": "骨骼結構效能評分：{{score}}/100"
+      },
+      "formula": {
+        "title": "效能影響公式：",
+        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+      },
+      "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
+      "notes": {
+        "title": "骨骼結構注意事項：",
+        "boneCount": "骨骼數量：每個骨骼每幀都需要矩陣計算",
+        "hierarchyDepth": "階層深度：深層階層會指數級增加變換複雜度",
+        "recommendation": "建議：盡可能將骨骼階層保持在 5 層以下",
+        "optimalStructure": "最佳結構：具有少量父子關係的扁平階層效能更好"
+      }
+    },
+    "physics": {
+      "title": "約束分析",
+      "statistics": {
+        "totalConstraints": "總約束數：{{count}}"
+      },
+      "performanceScore": {
+        "title": "約束效能評分：{{score}}/100"
+      },
+      "formula": {
+        "title": "效能影響公式：",
+        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
+        "explanation": "其中 constraintImpact 是 IK、變換、路徑和物理約束影響的加權總和"
+      },
+      "impactBreakdown": {
+        "title": "影響分解：",
+        "tableHeaders": {
+          "constraintType": "約束類型",
+          "count": "數量",
+          "impactLevel": "影響等級",
+          "weightedImpact": "加權影響"
+        }
+      },
+      "constraintTypes": {
+        "ik": "IK 約束",
+        "transform": "變換約束",
+        "path": "路徑約束",
+        "physics": "物理約束"
+      },
+      "constraintDetails": {
+        "ikConstraints": {
+          "title": "IK 約束",
+          "tableHeaders": {
+            "name": "名稱",
+            "target": "目標",
+            "bones": "骨骼",
+            "mix": "混合",
+            "status": "狀態"
+          }
+        },
+        "transformConstraints": {
+          "title": "變換約束",
+          "tableHeaders": {
+            "name": "名稱",
+            "target": "目標",
+            "bones": "骨骼",
+            "properties": "屬性",
+            "status": "狀態"
+          }
+        },
+        "pathConstraints": {
+          "title": "路徑約束",
+          "tableHeaders": {
+            "name": "名稱",
+            "target": "目標",
+            "bones": "骨骼",
+            "modes": "模式",
+            "status": "狀態"
+          }
+        },
+        "physicsConstraints": {
+          "title": "物理約束",
+          "tableHeaders": {
+            "name": "名稱",
+            "bone": "骨骼",
+            "properties": "屬性",
+            "parameters": "參數",
+            "status": "狀態"
+          }
+        }
+      },
+      "status": {
+        "active": "啟用",
+        "inactive": "停用"
+      },
+      "properties": {
+        "x": "X",
+        "y": "Y",
+        "rotation": "旋轉",
+        "scale": "縮放",
+        "shear": "剪切",
+        "rotate": "旋轉",
+        "scaleX": "縮放X",
+        "scaleY": "縮放Y",
+        "shearY": "剪切Y"
+      },
+      "modes": {
+        "rotate": {
+          "tangent": "切線",
+          "chain": "鏈",
+          "chainScale": "鏈縮放"
+        },
+        "spacing": {
+          "length": "長度",
+          "fixed": "固定",
+          "percent": "百分比",
+          "proportional": "比例"
+        }
+      },
+      "parameters": {
+        "inertia": "慣性",
+        "strength": "強度",
+        "damping": "阻尼",
+        "wind": "風",
+        "gravity": "重力"
+      },
+      "noConstraints": "此骨架中未找到約束。",
+      "notes": {
+        "title": "約束注意事項：",
+        "ikConstraints": "IK 約束：成本隨骨骼鏈長度和迭代次數增加",
+        "physicsConstraints": "物理約束：最高效能影響，特別是具有多個受影響屬性時",
+        "pathConstraints": "路徑約束：複雜的路徑曲線和 ChainScale 旋轉模式更昂貴",
+        "transformConstraints": "變換約束：每個受影響的屬性（位置、旋轉、縮放）都會增加計算開銷",
+        "recommendation": "建議：盡可能謹慎使用約束，並在可能時使用最小的骨骼鏈"
+      }
+    }
   }
 }

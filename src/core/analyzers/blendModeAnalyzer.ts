@@ -1,6 +1,7 @@
 import { BlendMode, Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
 import { calculateBlendModeScore, getScoreColor } from "../utils/scoreCalculator";
+import i18n from "../../i18n";
 
 /**
  * Analyzes blend modes in a Spine instance
@@ -44,34 +45,33 @@ export function analyzeBlendModes(spineInstance: Spine): { html: string, metrics
     multiplyCount,
     score: blendModeScore
   };
-  
   let html = `
     <div class="blend-mode-analysis">
-      <h3>Blend Modes</h3>
-      <p>Non-normal blend modes: ${slotsWithNonNormalBlendMode.size}</p>
-      <p>Additive blend modes: ${additiveCount}</p>
-      <p>Multiply blend modes: ${multiplyCount}</p>
+      <h3>${i18n.t('analysis.blendMode.title')}</h3>
+      <p>${i18n.t('analysis.blendMode.statistics.nonNormalBlendModes', { count: slotsWithNonNormalBlendMode.size })}</p>
+      <p>${i18n.t('analysis.blendMode.statistics.additiveBlendModes', { count: additiveCount })}</p>
+      <p>${i18n.t('analysis.blendMode.statistics.multiplyBlendModes', { count: multiplyCount })}</p>
       
       <div class="performance-score">
-        <h4>Blend Mode Performance Score: ${blendModeScore.toFixed(1)}/100</h4>
+        <h4>${i18n.t('analysis.blendMode.performanceScore.title', { score: blendModeScore.toFixed(1) })}</h4>
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${blendModeScore}%; background-color: ${getScoreColor(blendModeScore)};"></div>
         </div>
       </div>
       
       <div class="analysis-metrics">
-        <p><strong>Performance Impact Formula:</strong></p>
-        <code>blendModeScore = 100 - log₂(nonNormalCount/${PERFORMANCE_FACTORS.IDEAL_BLEND_MODE_COUNT} + 1) × 20 
-          - (additiveCount × 2)</code>
+        <p><strong>${i18n.t('analysis.blendMode.formula.title')}</strong></p>
+        <code>${i18n.t('analysis.blendMode.formula.description', { idealBlendModeCount: PERFORMANCE_FACTORS.IDEAL_BLEND_MODE_COUNT })}</code>
       </div>
       
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Blend Mode</th>
-            <th>Count</th>
+            <th>${i18n.t('analysis.blendMode.tableHeaders.blendMode')}</th>
+            <th>${i18n.t('analysis.blendMode.tableHeaders.count')}</th>
           </tr>
         </thead>
+        <tbody>
         <tbody>
   `;
   
@@ -102,12 +102,12 @@ export function analyzeBlendModes(spineInstance: Spine): { html: string, metrics
   
   if (slotsWithNonNormalBlendMode.size > 0) {
     html += `
-      <h4>Slots with Non-Normal Blend Modes:</h4>
+      <h4>${i18n.t('analysis.blendMode.slotsWithNonNormalTitle')}</h4>
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Slot Name</th>
-            <th>Blend Mode</th>
+            <th>${i18n.t('analysis.blendMode.tableHeaders.slotName')}</th>
+            <th>${i18n.t('analysis.blendMode.tableHeaders.blendMode')}</th>
           </tr>
         </thead>
         <tbody>
@@ -127,14 +127,14 @@ export function analyzeBlendModes(spineInstance: Spine): { html: string, metrics
       </table>
       
       <div class="analysis-notes">
-        <h4>Notes on Blend Modes:</h4>
+        <h4>${i18n.t('analysis.blendMode.notes.title')}</h4>
         <ul>
-          <li><strong>Normal Blend Mode:</strong> Most efficient, requires a single rendering pass</li>
-          <li><strong>Non-Normal Blend Modes:</strong> Each requires a separate render pass or shader switch</li>
-          <li><strong>Rendering Cost:</strong> Each blend mode change forces a renderer "flush" operation</li>
-          <li><strong>Additive Blend:</strong> Higher cost than normal blend due to blending calculations</li>
-          <li><strong>Multiply Blend:</strong> Similar to additive, requires additional GPU operations</li>
-          <li><strong>Recommendation:</strong> Limit to 2 non-normal blend modes per skeleton</li>
+          <li><strong>${i18n.t('analysis.blendMode.notes.normalBlendMode')}</strong></li>
+          <li><strong>${i18n.t('analysis.blendMode.notes.nonNormalBlendModes')}</strong></li>
+          <li><strong>${i18n.t('analysis.blendMode.notes.renderingCost')}</strong></li>
+          <li><strong>${i18n.t('analysis.blendMode.notes.additiveBlend')}</strong></li>
+          <li><strong>${i18n.t('analysis.blendMode.notes.multiplyBlend')}</strong></li>
+          <li><strong>${i18n.t('analysis.blendMode.notes.recommendation')}</strong></li>
         </ul>
       </div>
     `;

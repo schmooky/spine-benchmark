@@ -95,13 +95,15 @@
     }
   },
   "infoPanel": {
-    "title": "Análisis de benchmark de Spine",
+    "title": "Análisis de Benchmark Spine",
+    "close": "Cerrar",
     "tabs": {
       "summary": "Resumen",
       "meshAnalysis": "Análisis de malla",
       "clipping": "Recorte",
       "blendModes": "Modos de mezcla",
-      "skeletonTree": "Árbol del esqueleto"
+      "skeletonTree": "Árbol del esqueleto",
+      "physicsAnalysis": "Física/Restricciones"
     },
     "content": {
       "summaryTitle": "Resumen del benchmark",
@@ -124,5 +126,332 @@
     },
     "changeLanguage": "Cambiar idioma",
     "changeLanguageDescription": "Abrir modal de selección de idioma"
+  },
+  "analysis": {
+    "summary": {
+      "title": "Análisis de Rendimiento de Spine",
+      "skeletonLabel": "Esqueleto: {{name}}",
+      "performanceLabel": "Rendimiento {{rating}}",
+      "componentScoresTitle": "Puntuaciones de Componentes",
+      "skeletonStatsTitle": "Estadísticas del Esqueleto",
+      "optimizationTitle": "Recomendaciones de Optimización",
+      "performanceExplanationTitle": "Interpretación de la Puntuación de Rendimiento",
+      "components": {
+        "boneStructure": "Estructura Ósea",
+        "meshComplexity": "Complejidad de Malla",
+        "clippingMasks": "Máscaras de Recorte",
+        "blendModes": "Modos de Mezcla",
+        "constraints": "Restricciones"
+      },
+      "tableHeaders": {
+        "component": "Componente",
+        "score": "Puntuación",
+        "weight": "Peso",
+        "meter": "Medidor",
+        "scoreRange": "Rango de Puntuación",
+        "rating": "Calificación",
+        "interpretation": "Interpretación"
+      },
+      "statistics": {
+        "totalBones": "Total de Huesos",
+        "maxBoneDepth": "Profundidad Máx. de Huesos",
+        "totalMeshes": "Total de Mallas",
+        "totalVertices": "Total de Vértices",
+        "clippingMasks": "Máscaras de Recorte",
+        "nonNormalBlendModes": "Modos de Mezcla No-Normales",
+        "totalConstraints": "Total de Restricciones",
+        "animations": "Animaciones",
+        "skins": "Skins"
+      },
+      "recommendations": {
+        "reduceBoneDepth": "Reduzca la profundidad de la jerarquía ósea aplanando la estructura donde sea posible.",
+        "reduceTotalBones": "Considere reducir el número total de huesos simplificando el esqueleto.",
+        "reduceVertices": "Reduzca el número total de vértices en todas las mallas.",
+        "minimizeDeformedMeshes": "Minimice el número de mallas deformadas, especialmente aquellas con alto número de vértices.",
+        "reduceWeightedMeshes": "Reduzca el número de mallas con pesos óseos, ya que requieren más cálculos.",
+        "limitClippingMasks": "Limite el número de máscaras de recorte ya que impactan significativamente el rendimiento.",
+        "simplifyComplexMasks": "Simplifique las máscaras de recorte complejas para usar menos vértices (4 o menos es óptimo).",
+        "reduceNonNormalBlendModes": "Reduzca el número de modos de mezcla no-normales para minimizar cambios de estado de renderizado.",
+        "minimizeAdditiveBlendModes": "Minimice el uso de modos de mezcla aditivos ya que son particularmente costosos.",
+        "reducePhysicsConstraints": "Las restricciones físicas son particularmente costosas - considere reducir su número o complejidad.",
+        "simplifyIkConstraints": "Simplifique las restricciones IK reduciendo la longitud de la cadena o el número de huesos afectados.",
+        "optimizePathConstraints": "Optimice las restricciones de ruta simplificando rutas o reduciendo el número de huesos restringidos."
+      },
+      "performanceRanges": {
+        "excellent": {
+          "range": "85-100",
+          "rating": "Excelente",
+          "description": "Adecuado para todas las plataformas y animaciones continuas"
+        },
+        "good": {
+          "range": "70-84",
+          "rating": "Bueno",
+          "description": "Funciona bien en la mayoría de plataformas pero puede tener problemas en dispositivos de gama baja"
+        },
+        "moderate": {
+          "range": "55-69",
+          "rating": "Moderado",
+          "description": "Puede causar caídas de rendimiento, especialmente con múltiples instancias"
+        },
+        "poor": {
+          "range": "40-54",
+          "rating": "Malo",
+          "description": "Problemas de rendimiento probables en la mayoría de dispositivos"
+        }
+      }
+    },
+    "scores": {
+      "ratings": {
+        "excellent": "Excelente",
+        "good": "Bueno",
+        "moderate": "Moderado",
+        "poor": "Malo",
+        "veryPoor": "Muy Malo"
+      },
+      "interpretations": {
+        "excellent": "Adecuado para todas las plataformas y animaciones continuas",
+        "good": "Funciona bien en la mayoría de plataformas pero puede tener problemas en dispositivos de gama baja",
+        "moderate": "Puede causar caídas de rendimiento, especialmente con múltiples instancias",
+        "poor": "Problemas de rendimiento probables en la mayoría de dispositivos",
+        "veryPoor": "Problemas significativos de rendimiento en todos los dispositivos"
+      }
+    },
+    "mesh": {
+      "title": "Estadísticas de Malla",
+      "statistics": {
+        "totalMeshes": "Total de mallas: {{count}}",
+        "totalVertices": "Total de vértices: {{count}}",
+        "meshesWithDeformation": "Mallas con deformación: {{count}}",
+        "meshesWithBoneWeights": "Mallas con pesos óseos: {{count}}",
+        "meshesWithParentMesh": "Mallas con malla padre: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Puntuación de Rendimiento de Malla: {{score}}/100"
+      },
+      "formula": {
+        "title": "Fórmula de Impacto en el Rendimiento:",
+        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+      },
+      "tableHeaders": {
+        "slot": "Slot",
+        "vertices": "Vértices",
+        "deformed": "Deformada",
+        "boneWeights": "Pesos Óseos",
+        "hasParentMesh": "Tiene Malla Padre"
+      },
+      "values": {
+        "yes": "Sí",
+        "no": "No"
+      },
+      "notes": {
+        "title": "Impacto de la Malla en el Rendimiento:",
+        "vertexCount": "Número de Vértices: Cada vértice requiere memoria y tiempo de procesamiento. Altos números de vértices (>50) tienen impacto significativo.",
+        "deformation": "Deformación: Las mallas deformantes requieren cálculos extra por frame - {{factor}}× más costosas que las mallas estáticas.",
+        "boneWeights": "Pesos Óseos: Cada peso óseo añade operaciones de multiplicación de matrices - {{factor}}× más impacto por vértice ponderado.",
+        "optimizationTip": "Consejo de Optimización: Use menos vértices para mallas que se deforman o tienen pesos óseos. Considere usar adjuntos Region para formas simples."
+      }
+    },
+    "clipping": {
+      "title": "Máscaras de Recorte",
+      "statistics": {
+        "totalMasks": "Total de máscaras: {{count}}",
+        "totalVerticesInMasks": "Total de vértices en máscaras: {{count}}",
+        "complexMasks": "Máscaras complejas (>4 vértices): {{count}}"
+      },
+      "performanceScore": {
+        "title": "Puntuación de Rendimiento de Recorte: {{score}}/100"
+      },
+      "formula": {
+        "title": "Fórmula de Impacto en el Rendimiento:",
+        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+      },
+      "tableHeaders": {
+        "slotName": "Nombre del Slot",
+        "vertexCount": "Número de Vértices",
+        "status": "Estado"
+      },
+      "status": {
+        "optimal": "Óptimo",
+        "acceptable": "Aceptable",
+        "highVertexCount": "Alto Número de Vértices"
+      },
+      "noMasks": "No se encontraron máscaras de recorte en este esqueleto.",
+      "notes": {
+        "title": "Notas sobre Máscaras de Recorte:",
+        "highImpact": "Alto Impacto: Las máscaras de recorte son una de las operaciones más costosas en el renderizado de Spine",
+        "vertexCount": "Número de Vértices: Cada vértice en una máscara aumenta el costo computacional",
+        "optimalConfiguration": "Configuración Óptima: Use máscaras triangulares o cuadrilaterales (3-4 vértices) cuando sea posible",
+        "gpuCost": "Costo de GPU: Cada máscara de recorte requiere pasadas adicionales de renderizado de GPU (operaciones de stencil buffer)",
+        "recommendation": "Recomendación: Limite a 2-3 máscaras por esqueleto, con menos de 6 vértices cada una"
+      }
+    },
+    "blendMode": {
+      "title": "Modos de Mezcla",
+      "statistics": {
+        "nonNormalBlendModes": "Modos de mezcla no-normales: {{count}}",
+        "additiveBlendModes": "Modos de mezcla aditivos: {{count}}",
+        "multiplyBlendModes": "Modos de mezcla multiplicativos: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Puntuación de Rendimiento de Modos de Mezcla: {{score}}/100"
+      },
+      "formula": {
+        "title": "Fórmula de Impacto en el Rendimiento:",
+        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+      },
+      "tableHeaders": {
+        "blendMode": "Modo de Mezcla",
+        "count": "Número",
+        "slotName": "Nombre del Slot"
+      },
+      "slotsWithNonNormalTitle": "Slots con Modos de Mezcla No-Normales:",
+      "notes": {
+        "title": "Notas sobre Modos de Mezcla:",
+        "normalBlendMode": "Modo de Mezcla Normal: Más eficiente, requiere una sola pasada de renderizado",
+        "nonNormalBlendModes": "Modos de Mezcla No-Normales: Cada uno requiere una pasada de renderizado separada o cambio de shader",
+        "renderingCost": "Costo de Renderizado: Cada cambio de modo de mezcla fuerza una operación \"flush\" del renderizador",
+        "additiveBlend": "Mezcla Aditiva: Mayor costo que la mezcla normal debido a cálculos de mezcla",
+        "multiplyBlend": "Mezcla Multiplicativa: Similar al aditivo, requiere operaciones adicionales de GPU",
+        "recommendation": "Recomendación: Limite a 2 modos de mezcla no-normales por esqueleto"
+      }
+    },
+    "skeleton": {
+      "title": "Estructura del Esqueleto",
+      "statistics": {
+        "totalBones": "Total de huesos: {{count}}",
+        "rootBones": "Huesos raíz: {{count}}",
+        "maxDepth": "Profundidad máx.: {{depth}}"
+      },
+      "performanceScore": {
+        "title": "Puntuación de Rendimiento de Estructura Ósea: {{score}}/100"
+      },
+      "formula": {
+        "title": "Fórmula de Impacto en el Rendimiento:",
+        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+      },
+      "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
+      "notes": {
+        "title": "Notas sobre Estructura Ósea:",
+        "boneCount": "Número de Huesos: Cada hueso requiere cálculos de matriz cada frame",
+        "hierarchyDepth": "Profundidad de Jerarquía: Las jerarquías profundas aumentan la complejidad de transformación exponencialmente",
+        "recommendation": "Recomendación: Mantenga las jerarquías óseas bajo 5 niveles de profundidad cuando sea posible",
+        "optimalStructure": "Estructura Óptima: Las jerarquías planas con pocas relaciones padre-hijo funcionan mejor"
+      }
+    },
+    "physics": {
+      "title": "Análisis de Restricciones",
+      "statistics": {
+        "totalConstraints": "Total de restricciones: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Puntuación de Rendimiento de Restricciones: {{score}}/100"
+      },
+      "formula": {
+        "title": "Fórmula de Impacto en el Rendimiento:",
+        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
+        "explanation": "Donde constraintImpact es una suma ponderada de los impactos de restricciones IK, transformación, ruta y física"
+      },
+      "impactBreakdown": {
+        "title": "Desglose del Impacto:",
+        "tableHeaders": {
+          "constraintType": "Tipo de Restricción",
+          "count": "Número",
+          "impactLevel": "Nivel de Impacto",
+          "weightedImpact": "Impacto Ponderado"
+        }
+      },
+      "constraintTypes": {
+        "ik": "Restricciones IK",
+        "transform": "Restricciones de Transformación",
+        "path": "Restricciones de Ruta",
+        "physics": "Restricciones Físicas"
+      },
+      "constraintDetails": {
+        "ikConstraints": {
+          "title": "Restricciones IK",
+          "tableHeaders": {
+            "name": "Nombre",
+            "target": "Objetivo",
+            "bones": "Huesos",
+            "mix": "Mezcla",
+            "status": "Estado"
+          }
+        },
+        "transformConstraints": {
+          "title": "Restricciones de Transformación",
+          "tableHeaders": {
+            "name": "Nombre",
+            "target": "Objetivo",
+            "bones": "Huesos",
+            "properties": "Propiedades",
+            "status": "Estado"
+          }
+        },
+        "pathConstraints": {
+          "title": "Restricciones de Ruta",
+          "tableHeaders": {
+            "name": "Nombre",
+            "target": "Objetivo",
+            "bones": "Huesos",
+            "modes": "Modos",
+            "status": "Estado"
+          }
+        },
+        "physicsConstraints": {
+          "title": "Restricciones Físicas",
+          "tableHeaders": {
+            "name": "Nombre",
+            "bone": "Hueso",
+            "properties": "Propiedades",
+            "parameters": "Parámetros",
+            "status": "Estado"
+          }
+        }
+      },
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo"
+      },
+      "properties": {
+        "x": "X",
+        "y": "Y",
+        "rotation": "Rotación",
+        "scale": "Escala",
+        "shear": "Cizallamiento",
+        "rotate": "Rotación",
+        "scaleX": "EscalaX",
+        "scaleY": "EscalaY",
+        "shearY": "CizallamientoY"
+      },
+      "modes": {
+        "rotate": {
+          "tangent": "Tangente",
+          "chain": "Cadena",
+          "chainScale": "EscalaCadena"
+        },
+        "spacing": {
+          "length": "Longitud",
+          "fixed": "Fijo",
+          "percent": "Porcentaje",
+          "proportional": "Proporcional"
+        }
+      },
+      "parameters": {
+        "inertia": "Inercia",
+        "strength": "Fuerza",
+        "damping": "Amortiguación",
+        "wind": "Viento",
+        "gravity": "Gravedad"
+      },
+      "noConstraints": "No se encontraron restricciones en este esqueleto.",
+      "notes": {
+        "title": "Notas sobre Restricciones:",
+        "ikConstraints": "Restricciones IK: El costo aumenta con la longitud de la cadena ósea y el número de iteraciones",
+        "physicsConstraints": "Restricciones Físicas: Mayor impacto en el rendimiento, especialmente con múltiples propiedades afectadas",
+        "pathConstraints": "Restricciones de Ruta: Las curvas de ruta complejas y el modo de rotación ChainScale son más costosos",
+        "transformConstraints": "Restricciones de Transformación: Cada propiedad afectada (posición, rotación, escala) añade sobrecarga de cálculo",
+        "recommendation": "Recomendación: Use restricciones con moderación y con cadenas óseas mínimas cuando sea posible"
+      }
+    }
   }
 }

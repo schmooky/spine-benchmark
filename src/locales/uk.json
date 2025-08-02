@@ -96,12 +96,14 @@
   },
   "infoPanel": {
     "title": "Аналіз бенчмарку Spine",
+    "close": "Закрити",
     "tabs": {
       "summary": "Зведення",
       "meshAnalysis": "Аналіз сітки",
       "clipping": "Обрізання",
       "blendModes": "Режими змішування",
-      "skeletonTree": "Дерево скелета"
+      "skeletonTree": "Дерево скелета",
+      "physicsAnalysis": "Фізика/Обмеження"
     },
     "content": {
       "summaryTitle": "Зведення бенчмарку",
@@ -124,5 +126,332 @@
     },
     "changeLanguage": "Змінити мову",
     "changeLanguageDescription": "Відкрити модальне вікно вибору мови"
+  },
+  "analysis": {
+    "summary": {
+      "title": "Аналіз продуктивності Spine",
+      "skeletonLabel": "Скелет: {{name}}",
+      "performanceLabel": "{{rating}} продуктивність",
+      "componentScoresTitle": "Оцінки компонентів",
+      "skeletonStatsTitle": "Статистика скелета",
+      "optimizationTitle": "Рекомендації з оптимізації",
+      "performanceExplanationTitle": "Інтерпретація оцінки продуктивності",
+      "components": {
+        "boneStructure": "Структура кісток",
+        "meshComplexity": "Складність сітки",
+        "clippingMasks": "Маски обрізання",
+        "blendModes": "Режими змішування",
+        "constraints": "Обмеження"
+      },
+      "tableHeaders": {
+        "component": "Компонент",
+        "score": "Оцінка",
+        "weight": "Вага",
+        "meter": "Індикатор",
+        "scoreRange": "Діапазон оцінок",
+        "rating": "Рейтинг",
+        "interpretation": "Інтерпретація"
+      },
+      "statistics": {
+        "totalBones": "Загалом кісток",
+        "maxBoneDepth": "Макс. глибина кісток",
+        "totalMeshes": "Загалом сіток",
+        "totalVertices": "Загалом вершин",
+        "clippingMasks": "Маски обрізання",
+        "nonNormalBlendModes": "Не-нормальні режими змішування",
+        "totalConstraints": "Загалом обмежень",
+        "animations": "Анімації",
+        "skins": "Скіни"
+      },
+      "recommendations": {
+        "reduceBoneDepth": "Зменшіть глибину ієрархії кісток, спростивши структуру де можливо.",
+        "reduceTotalBones": "Розгляньте зменшення загальної кількості кісток шляхом спрощення скелета.",
+        "reduceVertices": "Зменшіть загальну кількість вершин у всіх сітках.",
+        "minimizeDeformedMeshes": "Мінімізуйте кількість деформованих сіток, особливо з великою кількістю вершин.",
+        "reduceWeightedMeshes": "Зменшіть кількість сіток з вагами кісток, оскільки вони потребують більше обчислень.",
+        "limitClippingMasks": "Обмежте кількість масок обрізання, оскільки вони значно впливають на продуктивність.",
+        "simplifyComplexMasks": "Спростіть складні маски обрізання, використовуючи менше вершин (4 або менше оптимально).",
+        "reduceNonNormalBlendModes": "Зменшіть кількість не-нормальних режимів змішування для мінімізації змін стану рендера.",
+        "minimizeAdditiveBlendModes": "Мінімізуйте використання адитивних режимів змішування, оскільки вони особливо витратні.",
+        "reducePhysicsConstraints": "Фізичні обмеження особливо витратні - розгляньте зменшення їх кількості або складності.",
+        "simplifyIkConstraints": "Спростіть IK обмеження, зменшивши довжину ланцюга або кількість залучених кісток.",
+        "optimizePathConstraints": "Оптимізуйте обмеження шляху, спростивши шляхи або зменшивши кількість обмежених кісток."
+      },
+      "performanceRanges": {
+        "excellent": {
+          "range": "85-100",
+          "rating": "Відмінно",
+          "description": "Підходить для всіх платформ і безперервних анімацій"
+        },
+        "good": {
+          "range": "70-84",
+          "rating": "Добре",
+          "description": "Добре працює на більшості платформ, але можуть бути проблеми на слабких пристроях"
+        },
+        "moderate": {
+          "range": "55-69",
+          "rating": "Помірно",
+          "description": "Може викликати падіння продуктивності, особливо з кількома екземплярами"
+        },
+        "poor": {
+          "range": "40-54",
+          "rating": "Погано",
+          "description": "Проблеми з продуктивністю ймовірні на більшості пристроїв"
+        }
+      }
+    },
+    "scores": {
+      "ratings": {
+        "excellent": "Відмінно",
+        "good": "Добре",
+        "moderate": "Помірно",
+        "poor": "Погано",
+        "veryPoor": "Дуже погано"
+      },
+      "interpretations": {
+        "excellent": "Підходить для всіх платформ і безперервних анімацій",
+        "good": "Добре працює на більшості платформ, але можуть бути проблеми на слабких пристроях",
+        "moderate": "Може викликати падіння продуктивності, особливо з кількома екземплярами",
+        "poor": "Проблеми з продуктивністю ймовірні на більшості пристроїв",
+        "veryPoor": "Значні проблеми з продуктивністю на всіх пристроях"
+      }
+    },
+    "mesh": {
+      "title": "Статистика сіток",
+      "statistics": {
+        "totalMeshes": "Загалом сіток: {{count}}",
+        "totalVertices": "Загалом вершин: {{count}}",
+        "meshesWithDeformation": "Сітки з деформацією: {{count}}",
+        "meshesWithBoneWeights": "Сітки з вагами кісток: {{count}}",
+        "meshesWithParentMesh": "Сітки з батьківською сіткою: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Оцінка продуктивності сіток: {{score}}/100"
+      },
+      "formula": {
+        "title": "Формула впливу на продуктивність:",
+        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+      },
+      "tableHeaders": {
+        "slot": "Слот",
+        "vertices": "Вершини",
+        "deformed": "Деформована",
+        "boneWeights": "Ваги кісток",
+        "hasParentMesh": "Має батьківську сітку"
+      },
+      "values": {
+        "yes": "Так",
+        "no": "Ні"
+      },
+      "notes": {
+        "title": "Вплив сіток на продуктивність:",
+        "vertexCount": "Кількість вершин: Кожна вершина потребує пам'яті та часу обробки. Велика кількість вершин (>50) має значний вплив.",
+        "deformation": "Деформація: Деформуючі сітки потребують додаткових обчислень кожен кадр - у {{factor}}× разів дорожче статичних сіток.",
+        "boneWeights": "Ваги кісток: Кожна вага кістки додає операції множення матриць - у {{factor}}× разів більше впливу на зважену вершину.",
+        "optimizationTip": "Порада з оптимізації: Використовуйте менше вершин для сіток, які деформуються або мають ваги кісток. Розгляньте використання Region attachments для простих форм."
+      }
+    },
+    "clipping": {
+      "title": "Маски обрізання",
+      "statistics": {
+        "totalMasks": "Загалом масок: {{count}}",
+        "totalVerticesInMasks": "Загалом вершин у масках: {{count}}",
+        "complexMasks": "Складні маски (>4 вершин): {{count}}"
+      },
+      "performanceScore": {
+        "title": "Оцінка продуктивності обрізання: {{score}}/100"
+      },
+      "formula": {
+        "title": "Формула впливу на продуктивність:",
+        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+      },
+      "tableHeaders": {
+        "slotName": "Ім'я слота",
+        "vertexCount": "Кількість вершин",
+        "status": "Статус"
+      },
+      "status": {
+        "optimal": "Оптимально",
+        "acceptable": "Прийнятно",
+        "highVertexCount": "Велика кількість вершин"
+      },
+      "noMasks": "У цьому скелеті не знайдено масок обрізання.",
+      "notes": {
+        "title": "Примітки про маски обрізання:",
+        "highImpact": "Високий вплив: Маски обрізання - одна з найдорожчих операцій у рендерингу Spine",
+        "vertexCount": "Кількість вершин: Кожна вершина в масці збільшує обчислювальну вартість",
+        "optimalConfiguration": "Оптимальна конфігурація: Використовуйте трикутні або чотирикутні маски (3-4 вершини) коли можливо",
+        "gpuCost": "Вартість GPU: Кожна маска обрізання потребує додаткових проходів рендерингу GPU (операції stencil buffer)",
+        "recommendation": "Рекомендація: Обмежтеся 2-3 масками на скелет, з менш ніж 6 вершинами кожна"
+      }
+    },
+    "blendMode": {
+      "title": "Режими змішування",
+      "statistics": {
+        "nonNormalBlendModes": "Не-нормальні режими змішування: {{count}}",
+        "additiveBlendModes": "Адитивні режими змішування: {{count}}",
+        "multiplyBlendModes": "Мультиплікативні режими змішування: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Оцінка продуктивності режимів змішування: {{score}}/100"
+      },
+      "formula": {
+        "title": "Формула впливу на продуктивність:",
+        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+      },
+      "tableHeaders": {
+        "blendMode": "Режим змішування",
+        "count": "Кількість",
+        "slotName": "Ім'я слота"
+      },
+      "slotsWithNonNormalTitle": "Слоти з не-нормальними режимами змішування:",
+      "notes": {
+        "title": "Примітки про режими змішування:",
+        "normalBlendMode": "Нормальний режим змішування: Найефективніший, потребує одного проходу рендерингу",
+        "nonNormalBlendModes": "Не-нормальні режими змішування: Кожен потребує окремого проходу рендерингу або переключення шейдера",
+        "renderingCost": "Вартість рендерингу: Кожна зміна режиму змішування викликає операцію \"flush\" рендерера",
+        "additiveBlend": "Адитивне змішування: Вища вартість ніж нормальне змішування через обчислення змішування",
+        "multiplyBlend": "Мультиплікативне змішування: Схоже на адитивне, потребує додаткових операцій GPU",
+        "recommendation": "Рекомендація: Обмежтеся 2 не-нормальними режимами змішування на скелет"
+      }
+    },
+    "skeleton": {
+      "title": "Структура скелета",
+      "statistics": {
+        "totalBones": "Загалом кісток: {{count}}",
+        "rootBones": "Кореневі кістки: {{count}}",
+        "maxDepth": "Макс. глибина: {{depth}}"
+      },
+      "performanceScore": {
+        "title": "Оцінка продуктивності структури кісток: {{score}}/100"
+      },
+      "formula": {
+        "title": "Формула впливу на продуктивність:",
+        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+      },
+      "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
+      "notes": {
+        "title": "Примітки про структуру кісток:",
+        "boneCount": "Кількість кісток: Кожна кістка потребує обчислень матриць кожен кадр",
+        "hierarchyDepth": "Глибина ієрархії: Глибокі ієрархії експоненційно збільшують складність трансформацій",
+        "recommendation": "Рекомендація: Тримайте ієрархії кісток під 5 рівнями глибини коли можливо",
+        "optimalStructure": "Оптимальна структура: Плоскі ієрархії з невеликою кількістю відносин батько-дитина працюють краще"
+      }
+    },
+    "physics": {
+      "title": "Аналіз обмежень",
+      "statistics": {
+        "totalConstraints": "Загалом обмежень: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Оцінка продуктивності обмежень: {{score}}/100"
+      },
+      "formula": {
+        "title": "Формула впливу на продуктивність:",
+        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
+        "explanation": "Де constraintImpact - це зважена сума впливів IK, трансформації, шляху та фізичних обмежень"
+      },
+      "impactBreakdown": {
+        "title": "Розбивка впливу:",
+        "tableHeaders": {
+          "constraintType": "Тип обмеження",
+          "count": "Кількість",
+          "impactLevel": "Рівень впливу",
+          "weightedImpact": "Зважений вплив"
+        }
+      },
+      "constraintTypes": {
+        "ik": "IK обмеження",
+        "transform": "Обмеження трансформації",
+        "path": "Обмеження шляху",
+        "physics": "Фізичні обмеження"
+      },
+      "constraintDetails": {
+        "ikConstraints": {
+          "title": "IK обмеження",
+          "tableHeaders": {
+            "name": "Ім'я",
+            "target": "Ціль",
+            "bones": "Кістки",
+            "mix": "Змішування",
+            "status": "Статус"
+          }
+        },
+        "transformConstraints": {
+          "title": "Обмеження трансформації",
+          "tableHeaders": {
+            "name": "Ім'я",
+            "target": "Ціль",
+            "bones": "Кістки",
+            "properties": "Властивості",
+            "status": "Статус"
+          }
+        },
+        "pathConstraints": {
+          "title": "Обмеження шляху",
+          "tableHeaders": {
+            "name": "Ім'я",
+            "target": "Ціль",
+            "bones": "Кістки",
+            "modes": "Режими",
+            "status": "Статус"
+          }
+        },
+        "physicsConstraints": {
+          "title": "Фізичні обмеження",
+          "tableHeaders": {
+            "name": "Ім'я",
+            "bone": "Кістка",
+            "properties": "Властивості",
+            "parameters": "Параметри",
+            "status": "Статус"
+          }
+        }
+      },
+      "status": {
+        "active": "Активно",
+        "inactive": "Неактивно"
+      },
+      "properties": {
+        "x": "X",
+        "y": "Y",
+        "rotation": "Поворот",
+        "scale": "Масштаб",
+        "shear": "Зсув",
+        "rotate": "Поворот",
+        "scaleX": "МасштабX",
+        "scaleY": "МасштабY",
+        "shearY": "ЗсувY"
+      },
+      "modes": {
+        "rotate": {
+          "tangent": "Дотична",
+          "chain": "Ланцюг",
+          "chainScale": "МасштабЛанцюга"
+        },
+        "spacing": {
+          "length": "Довжина",
+          "fixed": "Фіксований",
+          "percent": "Відсоток",
+          "proportional": "Пропорційний"
+        }
+      },
+      "parameters": {
+        "inertia": "Інерція",
+        "strength": "Сила",
+        "damping": "Затухання",
+        "wind": "Вітер",
+        "gravity": "Гравітація"
+      },
+      "noConstraints": "У цьому скелеті не знайдено обмежень.",
+      "notes": {
+        "title": "Примітки про обмеження:",
+        "ikConstraints": "IK обмеження: Вартість збільшується з довжиною ланцюга кісток і кількістю ітерацій",
+        "physicsConstraints": "Фізичні обмеження: Найвищий вплив на продуктивність, особливо з кількома залученими властивостями",
+        "pathConstraints": "Обмеження шляху: Складні криві шляху та режим повороту ChainScale більш витратні",
+        "transformConstraints": "Обмеження трансформації: Кожна залучена властивість (позиція, поворот, масштаб) додає накладні витрати обчислень",
+        "recommendation": "Рекомендація: Використовуйте обмеження економно і з мінімальними ланцюгами кісток коли можливо"
+      }
+    }
   }
 }

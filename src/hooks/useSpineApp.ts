@@ -1,6 +1,7 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Application } from 'pixi.js';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BackgroundManager } from '../core/BackgroundManager';
 import { CameraContainer } from '../core/CameraContainer';
 import { SpineAnalyzer } from '../core/SpineAnalyzer';
@@ -31,6 +32,7 @@ export interface DebugFlags {
 }
 
 export function useSpineApp(app: Application | null) {
+  const { i18n } = useTranslation();
   const [spineInstance, setSpineInstance] = useState<Spine | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkData | null>(null);
@@ -74,6 +76,14 @@ export function useSpineApp(app: Application | null) {
       backgroundManagerRef.current = null;
     };
   }, [app]);
+
+  // Effect to regenerate benchmark data when language changes
+  useEffect(() => {
+    if (spineInstance) {
+      const analysisData = SpineAnalyzer.analyze(spineInstance);
+      setBenchmarkData(analysisData);
+    }
+  }, [i18n.language, spineInstance]);
 
   // Function to load spine files
   const loadSpineFiles = async (files: FileList) => {

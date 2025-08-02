@@ -41,6 +41,7 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
     { id: 'meshAnalysis', label: t('infoPanel.tabs.meshAnalysis') },
     { id: 'clippingAnalysis', label: t('infoPanel.tabs.clipping') },
     { id: 'blendModeAnalysis', label: t('infoPanel.tabs.blendModes') },
+    { id: 'physicsAnalysis', label: t('infoPanel.tabs.physicsAnalysis') },
     { id: 'skeletonTree', label: t('infoPanel.tabs.skeletonTree') },
   ];
   
@@ -70,6 +71,12 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
             <div dangerouslySetInnerHTML={{ __html: data.blendModeAnalysis || `<p>${t('infoPanel.content.noData', { 0: 'blend mode analysis' })}</p>` }} />
           </div>
         );
+      case 'physicsAnalysis':
+        return (
+          <div className="tab-content">
+            <div dangerouslySetInnerHTML={{ __html: data.physicsAnalysis || `<p>${t('infoPanel.content.noData', { 0: 'physics analysis' })}</p>` }} />
+          </div>
+        );
       case 'skeletonTree':
         return (
           <div className="tab-content">
@@ -85,11 +92,11 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
     <div className="info-panel-backdrop">
       <div className="info-panel">
         <div className="info-panel-header">
-          <h2>Spine Benchmark Analysis</h2>
-          <IconButton 
-            icon={<XMarkIcon />} 
+          <h2>{t('infoPanel.title')}</h2>
+          <IconButton
+            icon={<XMarkIcon />}
             onClick={onClose}
-            tooltip="Close"
+            tooltip={t('infoPanel.close')}
           />
         </div>
         

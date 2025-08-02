@@ -1,6 +1,7 @@
 import { DeformTimeline, MeshAttachment, Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
 import { calculateMeshScore, getScoreColor } from "../utils/scoreCalculator";
+import i18n from "../../i18n";
 
 /**
  * Analyzes mesh attachments in a Spine instance
@@ -93,36 +94,38 @@ export function analyzeMeshes(spineInstance: Spine): { html: string, metrics: an
   // Generate HTML for table
   let html = `
     <div class="mesh-analysis">
-      <h3>Mesh Statistics</h3>
-      <p>Total meshes: ${totalMeshCount}</p>
-      <p>Total vertices: ${totalVertices}</p>
-      <p>Meshes with deformation: ${deformedMeshCount}</p>
-      <p>Meshes with bone weights: ${weightedMeshCount}</p>
-      <p>Meshes with parent mesh: ${Array.from(meshesWithParents.values()).filter(Boolean).length}</p>
+      <h3>${i18n.t('analysis.mesh.title')}</h3>
+      <p>${i18n.t('analysis.mesh.statistics.totalMeshes', { count: totalMeshCount })}</p>
+      <p>${i18n.t('analysis.mesh.statistics.totalVertices', { count: totalVertices })}</p>
+      <p>${i18n.t('analysis.mesh.statistics.meshesWithDeformation', { count: deformedMeshCount })}</p>
+      <p>${i18n.t('analysis.mesh.statistics.meshesWithBoneWeights', { count: weightedMeshCount })}</p>
+      <p>${i18n.t('analysis.mesh.statistics.meshesWithParentMesh', { count: Array.from(meshesWithParents.values()).filter(Boolean).length })}</p>
       
       <div class="performance-score">
-        <h4>Mesh Performance Score: ${meshScore.toFixed(1)}/100</h4>
+        <h4>${i18n.t('analysis.mesh.performanceScore.title', { score: meshScore.toFixed(1) })}</h4>
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${meshScore}%; background-color: ${getScoreColor(meshScore)};"></div>
         </div>
       </div>
       
       <div class="analysis-metrics">
-        <p><strong>Performance Impact Formula:</strong></p>
-        <code>meshScore = 100 - log₂(totalMeshes/${PERFORMANCE_FACTORS.IDEAL_MESH_COUNT} + 1) × 15 
-          - log₂(totalVertices/${PERFORMANCE_FACTORS.IDEAL_VERTEX_COUNT} + 1) × 10 
-          - (deformedMeshes × ${PERFORMANCE_FACTORS.MESH_DEFORMED_FACTOR}) 
-          - (weightedMeshes × ${PERFORMANCE_FACTORS.MESH_WEIGHTED_FACTOR})</code>
+        <p><strong>${i18n.t('analysis.mesh.formula.title')}</strong></p>
+        <code>${i18n.t('analysis.mesh.formula.description', { 
+          idealMeshCount: PERFORMANCE_FACTORS.IDEAL_MESH_COUNT,
+          idealVertexCount: PERFORMANCE_FACTORS.IDEAL_VERTEX_COUNT,
+          deformedFactor: PERFORMANCE_FACTORS.MESH_DEFORMED_FACTOR,
+          weightedFactor: PERFORMANCE_FACTORS.MESH_WEIGHTED_FACTOR
+        })}</code>
       </div>
       
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Slot</th>
-            <th>Vertices</th>
-            <th>Deformed</th>
-            <th>Bone Weights</th>
-            <th>Has Parent Mesh</th>
+            <th>${i18n.t('analysis.mesh.tableHeaders.slot')}</th>
+            <th>${i18n.t('analysis.mesh.tableHeaders.vertices')}</th>
+            <th>${i18n.t('analysis.mesh.tableHeaders.deformed')}</th>
+            <th>${i18n.t('analysis.mesh.tableHeaders.boneWeights')}</th>
+            <th>${i18n.t('analysis.mesh.tableHeaders.hasParentMesh')}</th>
           </tr>
         </thead>
         <tbody>
@@ -141,9 +144,9 @@ export function analyzeMeshes(spineInstance: Spine): { html: string, metrics: an
       <tr class="${rowClass}">
         <td>${item.slotName}</td>
         <td>${item.vertices}</td>
-        <td>${item.isDeformed ? 'Yes' : 'No'}</td>
+        <td>${item.isDeformed ? i18n.t('analysis.mesh.values.yes') : i18n.t('analysis.mesh.values.no')}</td>
         <td>${item.boneWeights}</td>
-        <td>${item.hasParentMesh ? 'Yes' : 'No'}</td>
+        <td>${item.hasParentMesh ? i18n.t('analysis.mesh.values.yes') : i18n.t('analysis.mesh.values.no')}</td>
       </tr>
     `;
   });
@@ -153,12 +156,12 @@ export function analyzeMeshes(spineInstance: Spine): { html: string, metrics: an
       </table>
       
       <div class="analysis-notes">
-        <h4>Mesh Performance Impact:</h4>
+        <h4>${i18n.t('analysis.mesh.notes.title')}</h4>
         <ul>
-          <li><strong>Vertex Count:</strong> Each vertex requires memory and processing time. High vertex counts (>50) have significant impact.</li>
-          <li><strong>Deformation:</strong> Deforming meshes requires extra calculations per frame - ${PERFORMANCE_FACTORS.MESH_DEFORMED_FACTOR}× more costly than static meshes.</li>
-          <li><strong>Bone Weights:</strong> Each bone weight adds matrix multiplication operations - ${PERFORMANCE_FACTORS.MESH_WEIGHTED_FACTOR}× more impact per weighted vertex.</li>
-          <li><strong>Optimization Tip:</strong> Use fewer vertices for meshes that deform or have bone weights. Consider using Region attachments for simple shapes.</li>
+          <li><strong>${i18n.t('analysis.mesh.notes.vertexCount')}</strong></li>
+          <li><strong>${i18n.t('analysis.mesh.notes.deformation', { factor: PERFORMANCE_FACTORS.MESH_DEFORMED_FACTOR })}</strong></li>
+          <li><strong>${i18n.t('analysis.mesh.notes.boneWeights', { factor: PERFORMANCE_FACTORS.MESH_WEIGHTED_FACTOR })}</strong></li>
+          <li><strong>${i18n.t('analysis.mesh.notes.optimizationTip')}</strong></li>
         </ul>
       </div>
     </div>

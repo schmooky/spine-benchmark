@@ -96,12 +96,14 @@
   },
   "infoPanel": {
     "title": "Analyse de benchmark Spine",
+    "close": "Fermer",
     "tabs": {
       "summary": "Résumé",
       "meshAnalysis": "Analyse de maillage",
       "clipping": "Découpage",
       "blendModes": "Modes de fusion",
-      "skeletonTree": "Arbre du squelette"
+      "skeletonTree": "Arbre du squelette",
+      "physicsAnalysis": "Physique/Contraintes"
     },
     "content": {
       "summaryTitle": "Résumé du benchmark",
@@ -124,5 +126,332 @@
     },
     "changeLanguage": "Changer de langue",
     "changeLanguageDescription": "Ouvrir la fenêtre de sélection de langue"
+  },
+  "analysis": {
+    "summary": {
+      "title": "Analyse de performance Spine",
+      "skeletonLabel": "Squelette : {{name}}",
+      "performanceLabel": "Performance {{rating}}",
+      "componentScoresTitle": "Scores des composants",
+      "skeletonStatsTitle": "Statistiques du squelette",
+      "optimizationTitle": "Recommandations d'optimisation",
+      "performanceExplanationTitle": "Interprétation du score de performance",
+      "components": {
+        "boneStructure": "Structure osseuse",
+        "meshComplexity": "Complexité du maillage",
+        "clippingMasks": "Masques de découpage",
+        "blendModes": "Modes de fusion",
+        "constraints": "Contraintes"
+      },
+      "tableHeaders": {
+        "component": "Composant",
+        "score": "Score",
+        "weight": "Poids",
+        "meter": "Indicateur",
+        "scoreRange": "Plage de scores",
+        "rating": "Évaluation",
+        "interpretation": "Interprétation"
+      },
+      "statistics": {
+        "totalBones": "Total des os",
+        "maxBoneDepth": "Profondeur max des os",
+        "totalMeshes": "Total des maillages",
+        "totalVertices": "Total des sommets",
+        "clippingMasks": "Masques de découpage",
+        "nonNormalBlendModes": "Modes de fusion non-normaux",
+        "totalConstraints": "Total des contraintes",
+        "animations": "Animations",
+        "skins": "Skins"
+      },
+      "recommendations": {
+        "reduceBoneDepth": "Réduisez la profondeur de la hiérarchie osseuse en aplatissant la structure où possible.",
+        "reduceTotalBones": "Considérez réduire le nombre total d'os en simplifiant le squelette.",
+        "reduceVertices": "Réduisez le nombre total de sommets dans tous les maillages.",
+        "minimizeDeformedMeshes": "Minimisez le nombre de maillages déformés, surtout ceux avec un nombre élevé de sommets.",
+        "reduceWeightedMeshes": "Réduisez le nombre de maillages avec des poids d'os, car ils nécessitent plus de calculs.",
+        "limitClippingMasks": "Limitez le nombre de masques de découpage car ils impactent significativement les performances.",
+        "simplifyComplexMasks": "Simplifiez les masques de découpage complexes pour utiliser moins de sommets (4 ou moins est optimal).",
+        "reduceNonNormalBlendModes": "Réduisez le nombre de modes de fusion non-normaux pour minimiser les changements d'état de rendu.",
+        "minimizeAdditiveBlendModes": "Minimisez l'utilisation des modes de fusion additifs car ils sont particulièrement coûteux.",
+        "reducePhysicsConstraints": "Les contraintes physiques sont particulièrement coûteuses - considérez réduire leur nombre ou complexité.",
+        "simplifyIkConstraints": "Simplifiez les contraintes IK en réduisant la longueur de chaîne ou le nombre d'os affectés.",
+        "optimizePathConstraints": "Optimisez les contraintes de chemin en simplifiant les chemins ou en réduisant le nombre d'os contraints."
+      },
+      "performanceRanges": {
+        "excellent": {
+          "range": "85-100",
+          "rating": "Excellent",
+          "description": "Convient à toutes les plateformes et animations continues"
+        },
+        "good": {
+          "range": "70-84",
+          "rating": "Bon",
+          "description": "Fonctionne bien sur la plupart des plateformes mais peut avoir des problèmes sur les appareils bas de gamme"
+        },
+        "moderate": {
+          "range": "55-69",
+          "rating": "Modéré",
+          "description": "Peut causer des chutes de performance, surtout avec plusieurs instances"
+        },
+        "poor": {
+          "range": "40-54",
+          "rating": "Mauvais",
+          "description": "Problèmes de performance probables sur la plupart des appareils"
+        }
+      }
+    },
+    "scores": {
+      "ratings": {
+        "excellent": "Excellent",
+        "good": "Bon",
+        "moderate": "Modéré",
+        "poor": "Mauvais",
+        "veryPoor": "Très mauvais"
+      },
+      "interpretations": {
+        "excellent": "Convient à toutes les plateformes et animations continues",
+        "good": "Fonctionne bien sur la plupart des plateformes mais peut avoir des problèmes sur les appareils bas de gamme",
+        "moderate": "Peut causer des chutes de performance, surtout avec plusieurs instances",
+        "poor": "Problèmes de performance probables sur la plupart des appareils",
+        "veryPoor": "Problèmes de performance significatifs sur tous les appareils"
+      }
+    },
+    "mesh": {
+      "title": "Statistiques de maillage",
+      "statistics": {
+        "totalMeshes": "Total des maillages : {{count}}",
+        "totalVertices": "Total des sommets : {{count}}",
+        "meshesWithDeformation": "Maillages avec déformation : {{count}}",
+        "meshesWithBoneWeights": "Maillages avec poids d'os : {{count}}",
+        "meshesWithParentMesh": "Maillages avec maillage parent : {{count}}"
+      },
+      "performanceScore": {
+        "title": "Score de performance du maillage : {{score}}/100"
+      },
+      "formula": {
+        "title": "Formule d'impact sur les performances :",
+        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+      },
+      "tableHeaders": {
+        "slot": "Slot",
+        "vertices": "Sommets",
+        "deformed": "Déformé",
+        "boneWeights": "Poids d'os",
+        "hasParentMesh": "A un maillage parent"
+      },
+      "values": {
+        "yes": "Oui",
+        "no": "Non"
+      },
+      "notes": {
+        "title": "Impact du maillage sur les performances :",
+        "vertexCount": "Nombre de sommets : Chaque sommet nécessite de la mémoire et du temps de traitement. Un nombre élevé de sommets (>50) a un impact significatif.",
+        "deformation": "Déformation : Les maillages déformants nécessitent des calculs supplémentaires par image - {{factor}}× plus coûteux que les maillages statiques.",
+        "boneWeights": "Poids d'os : Chaque poids d'os ajoute des opérations de multiplication matricielle - {{factor}}× plus d'impact par sommet pondéré.",
+        "optimizationTip": "Conseil d'optimisation : Utilisez moins de sommets pour les maillages qui se déforment ou ont des poids d'os. Considérez utiliser des attachements Region pour les formes simples."
+      }
+    },
+    "clipping": {
+      "title": "Masques de découpage",
+      "statistics": {
+        "totalMasks": "Total des masques : {{count}}",
+        "totalVerticesInMasks": "Total des sommets dans les masques : {{count}}",
+        "complexMasks": "Masques complexes (>4 sommets) : {{count}}"
+      },
+      "performanceScore": {
+        "title": "Score de performance du découpage : {{score}}/100"
+      },
+      "formula": {
+        "title": "Formule d'impact sur les performances :",
+        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+      },
+      "tableHeaders": {
+        "slotName": "Nom du slot",
+        "vertexCount": "Nombre de sommets",
+        "status": "Statut"
+      },
+      "status": {
+        "optimal": "Optimal",
+        "acceptable": "Acceptable",
+        "highVertexCount": "Nombre élevé de sommets"
+      },
+      "noMasks": "Aucun masque de découpage trouvé dans ce squelette.",
+      "notes": {
+        "title": "Notes sur les masques de découpage :",
+        "highImpact": "Impact élevé : Les masques de découpage sont l'une des opérations les plus coûteuses dans le rendu Spine",
+        "vertexCount": "Nombre de sommets : Chaque sommet dans un masque augmente le coût computationnel",
+        "optimalConfiguration": "Configuration optimale : Utilisez des masques triangulaires ou quadrilatéraux (3-4 sommets) quand possible",
+        "gpuCost": "Coût GPU : Chaque masque de découpage nécessite des passes de rendu GPU supplémentaires (opérations stencil buffer)",
+        "recommendation": "Recommandation : Limitez à 2-3 masques par squelette, avec moins de 6 sommets chacun"
+      }
+    },
+    "blendMode": {
+      "title": "Modes de fusion",
+      "statistics": {
+        "nonNormalBlendModes": "Modes de fusion non-normaux : {{count}}",
+        "additiveBlendModes": "Modes de fusion additifs : {{count}}",
+        "multiplyBlendModes": "Modes de fusion multiplicatifs : {{count}}"
+      },
+      "performanceScore": {
+        "title": "Score de performance des modes de fusion : {{score}}/100"
+      },
+      "formula": {
+        "title": "Formule d'impact sur les performances :",
+        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+      },
+      "tableHeaders": {
+        "blendMode": "Mode de fusion",
+        "count": "Nombre",
+        "slotName": "Nom du slot"
+      },
+      "slotsWithNonNormalTitle": "Slots avec modes de fusion non-normaux :",
+      "notes": {
+        "title": "Notes sur les modes de fusion :",
+        "normalBlendMode": "Mode de fusion normal : Le plus efficace, nécessite une seule passe de rendu",
+        "nonNormalBlendModes": "Modes de fusion non-normaux : Chacun nécessite une passe de rendu séparée ou un changement de shader",
+        "renderingCost": "Coût de rendu : Chaque changement de mode de fusion force une opération \"flush\" du moteur de rendu",
+        "additiveBlend": "Fusion additive : Coût plus élevé que la fusion normale en raison des calculs de fusion",
+        "multiplyBlend": "Fusion multiplicative : Similaire à l'additif, nécessite des opérations GPU supplémentaires",
+        "recommendation": "Recommandation : Limitez à 2 modes de fusion non-normaux par squelette"
+      }
+    },
+    "skeleton": {
+      "title": "Structure du squelette",
+      "statistics": {
+        "totalBones": "Total des os : {{count}}",
+        "rootBones": "Os racines : {{count}}",
+        "maxDepth": "Profondeur max : {{depth}}"
+      },
+      "performanceScore": {
+        "title": "Score de performance de la structure osseuse : {{score}}/100"
+      },
+      "formula": {
+        "title": "Formule d'impact sur les performances :",
+        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+      },
+      "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
+      "notes": {
+        "title": "Notes sur la structure osseuse :",
+        "boneCount": "Nombre d'os : Chaque os nécessite des calculs matriciels à chaque image",
+        "hierarchyDepth": "Profondeur de hiérarchie : Les hiérarchies profondes augmentent exponentiellement la complexité des transformations",
+        "recommendation": "Recommandation : Gardez les hiérarchies osseuses sous 5 niveaux de profondeur quand possible",
+        "optimalStructure": "Structure optimale : Les hiérarchies plates avec peu de relations parent-enfant performent mieux"
+      }
+    },
+    "physics": {
+      "title": "Analyse des contraintes",
+      "statistics": {
+        "totalConstraints": "Total des contraintes : {{count}}"
+      },
+      "performanceScore": {
+        "title": "Score de performance des contraintes : {{score}}/100"
+      },
+      "formula": {
+        "title": "Formule d'impact sur les performances :",
+        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
+        "explanation": "Où constraintImpact est une somme pondérée des impacts des contraintes IK, de transformation, de chemin et physiques"
+      },
+      "impactBreakdown": {
+        "title": "Répartition de l'impact :",
+        "tableHeaders": {
+          "constraintType": "Type de contrainte",
+          "count": "Nombre",
+          "impactLevel": "Niveau d'impact",
+          "weightedImpact": "Impact pondéré"
+        }
+      },
+      "constraintTypes": {
+        "ik": "Contraintes IK",
+        "transform": "Contraintes de transformation",
+        "path": "Contraintes de chemin",
+        "physics": "Contraintes physiques"
+      },
+      "constraintDetails": {
+        "ikConstraints": {
+          "title": "Contraintes IK",
+          "tableHeaders": {
+            "name": "Nom",
+            "target": "Cible",
+            "bones": "Os",
+            "mix": "Mélange",
+            "status": "Statut"
+          }
+        },
+        "transformConstraints": {
+          "title": "Contraintes de transformation",
+          "tableHeaders": {
+            "name": "Nom",
+            "target": "Cible",
+            "bones": "Os",
+            "properties": "Propriétés",
+            "status": "Statut"
+          }
+        },
+        "pathConstraints": {
+          "title": "Contraintes de chemin",
+          "tableHeaders": {
+            "name": "Nom",
+            "target": "Cible",
+            "bones": "Os",
+            "modes": "Modes",
+            "status": "Statut"
+          }
+        },
+        "physicsConstraints": {
+          "title": "Contraintes physiques",
+          "tableHeaders": {
+            "name": "Nom",
+            "bone": "Os",
+            "properties": "Propriétés",
+            "parameters": "Paramètres",
+            "status": "Statut"
+          }
+        }
+      },
+      "status": {
+        "active": "Actif",
+        "inactive": "Inactif"
+      },
+      "properties": {
+        "x": "X",
+        "y": "Y",
+        "rotation": "Rotation",
+        "scale": "Échelle",
+        "shear": "Cisaillement",
+        "rotate": "Rotation",
+        "scaleX": "ÉchelleX",
+        "scaleY": "ÉchelleY",
+        "shearY": "CisaillementY"
+      },
+      "modes": {
+        "rotate": {
+          "tangent": "Tangente",
+          "chain": "Chaîne",
+          "chainScale": "ÉchelleChaîne"
+        },
+        "spacing": {
+          "length": "Longueur",
+          "fixed": "Fixe",
+          "percent": "Pourcentage",
+          "proportional": "Proportionnel"
+        }
+      },
+      "parameters": {
+        "inertia": "Inertie",
+        "strength": "Force",
+        "damping": "Amortissement",
+        "wind": "Vent",
+        "gravity": "Gravité"
+      },
+      "noConstraints": "Aucune contrainte trouvée dans ce squelette.",
+      "notes": {
+        "title": "Notes sur les contraintes :",
+        "ikConstraints": "Contraintes IK : Le coût augmente avec la longueur de chaîne d'os et le nombre d'itérations",
+        "physicsConstraints": "Contraintes physiques : Impact le plus élevé sur les performances, surtout avec plusieurs propriétés affectées",
+        "pathConstraints": "Contraintes de chemin : Les courbes de chemin complexes et le mode de rotation ChainScale sont plus coûteux",
+        "transformConstraints": "Contraintes de transformation : Chaque propriété affectée (position, rotation, échelle) ajoute une surcharge de calcul",
+        "recommendation": "Recommandation : Utilisez les contraintes avec parcimonie et avec des chaînes d'os minimales quand possible"
+      }
+    }
   }
 }

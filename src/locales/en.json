@@ -96,12 +96,14 @@
   },
   "infoPanel": {
     "title": "Spine Benchmark Analysis",
+    "close": "Close",
     "tabs": {
       "summary": "Summary",
       "meshAnalysis": "Mesh Analysis",
       "clipping": "Clipping",
       "blendModes": "Blend Modes",
-      "skeletonTree": "Skeleton Tree"
+      "skeletonTree": "Skeleton Tree",
+      "physicsAnalysis": "Physics/Constraints"
     },
     "content": {
       "summaryTitle": "Benchmark Summary",
@@ -124,5 +126,332 @@
     },
     "changeLanguage": "Change Language",
     "changeLanguageDescription": "Open language selection modal"
+  },
+  "analysis": {
+    "summary": {
+      "title": "Spine Performance Analysis",
+      "skeletonLabel": "Skeleton: {{name}}",
+      "performanceLabel": "{{rating}} Performance",
+      "componentScoresTitle": "Component Scores",
+      "skeletonStatsTitle": "Skeleton Statistics",
+      "optimizationTitle": "Optimization Recommendations",
+      "performanceExplanationTitle": "Performance Score Interpretation",
+      "components": {
+        "boneStructure": "Bone Structure",
+        "meshComplexity": "Mesh Complexity",
+        "clippingMasks": "Clipping Masks",
+        "blendModes": "Blend Modes",
+        "constraints": "Constraints"
+      },
+      "tableHeaders": {
+        "component": "Component",
+        "score": "Score",
+        "weight": "Weight",
+        "meter": "Meter",
+        "scoreRange": "Score Range",
+        "rating": "Rating",
+        "interpretation": "Interpretation"
+      },
+      "statistics": {
+        "totalBones": "Total Bones",
+        "maxBoneDepth": "Max Bone Depth",
+        "totalMeshes": "Total Meshes",
+        "totalVertices": "Total Vertices",
+        "clippingMasks": "Clipping Masks",
+        "nonNormalBlendModes": "Non-Normal Blend Modes",
+        "totalConstraints": "Total Constraints",
+        "animations": "Animations",
+        "skins": "Skins"
+      },
+      "recommendations": {
+        "reduceBoneDepth": "Reduce bone hierarchy depth by flattening the structure where possible.",
+        "reduceTotalBones": "Consider reducing the total number of bones by simplifying the skeleton.",
+        "reduceVertices": "Reduce the total number of vertices across all meshes.",
+        "minimizeDeformedMeshes": "Minimize the number of deformed meshes, especially those with high vertex counts.",
+        "reduceWeightedMeshes": "Reduce the number of meshes with bone weights, as they require more calculations.",
+        "limitClippingMasks": "Limit the number of clipping masks as they significantly impact performance.",
+        "simplifyComplexMasks": "Simplify complex clipping masks to use fewer vertices (4 or less is optimal).",
+        "reduceNonNormalBlendModes": "Reduce the number of non-normal blend modes to minimize render state changes.",
+        "minimizeAdditiveBlendModes": "Minimize the use of additive blend modes as they are particularly expensive.",
+        "reducePhysicsConstraints": "Physics constraints are particularly expensive - consider reducing their number or complexity.",
+        "simplifyIkConstraints": "Simplify IK constraints by reducing chain length or number of affected bones.",
+        "optimizePathConstraints": "Optimize path constraints by simplifying paths or reducing the number of constrained bones."
+      },
+      "performanceRanges": {
+        "excellent": {
+          "range": "85-100",
+          "rating": "Excellent",
+          "description": "Suitable for all platforms and continuous animations"
+        },
+        "good": {
+          "range": "70-84",
+          "rating": "Good",
+          "description": "Works well on most platforms but may have issues on low-end devices"
+        },
+        "moderate": {
+          "range": "55-69",
+          "rating": "Moderate",
+          "description": "May cause performance dips, especially with multiple instances"
+        },
+        "poor": {
+          "range": "40-54",
+          "rating": "Poor",
+          "description": "Performance issues likely on most devices"
+        }
+      }
+    },
+    "scores": {
+      "ratings": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "moderate": "Moderate",
+        "poor": "Poor",
+        "veryPoor": "Very Poor"
+      },
+      "interpretations": {
+        "excellent": "Suitable for all platforms and continuous animations",
+        "good": "Works well on most platforms but may have issues on low-end devices",
+        "moderate": "May cause performance dips, especially with multiple instances",
+        "poor": "Performance issues likely on most devices",
+        "veryPoor": "Significant performance issues on all devices"
+      }
+    },
+    "mesh": {
+      "title": "Mesh Statistics",
+      "statistics": {
+        "totalMeshes": "Total meshes: {{count}}",
+        "totalVertices": "Total vertices: {{count}}",
+        "meshesWithDeformation": "Meshes with deformation: {{count}}",
+        "meshesWithBoneWeights": "Meshes with bone weights: {{count}}",
+        "meshesWithParentMesh": "Meshes with parent mesh: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Mesh Performance Score: {{score}}/100"
+      },
+      "formula": {
+        "title": "Performance Impact Formula:",
+        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+      },
+      "tableHeaders": {
+        "slot": "Slot",
+        "vertices": "Vertices",
+        "deformed": "Deformed",
+        "boneWeights": "Bone Weights",
+        "hasParentMesh": "Has Parent Mesh"
+      },
+      "values": {
+        "yes": "Yes",
+        "no": "No"
+      },
+      "notes": {
+        "title": "Mesh Performance Impact:",
+        "vertexCount": "Vertex Count: Each vertex requires memory and processing time. High vertex counts (>50) have significant impact.",
+        "deformation": "Deformation: Deforming meshes requires extra calculations per frame - {{factor}}× more costly than static meshes.",
+        "boneWeights": "Bone Weights: Each bone weight adds matrix multiplication operations - {{factor}}× more impact per weighted vertex.",
+        "optimizationTip": "Optimization Tip: Use fewer vertices for meshes that deform or have bone weights. Consider using Region attachments for simple shapes."
+      }
+    },
+    "clipping": {
+      "title": "Clipping Masks",
+      "statistics": {
+        "totalMasks": "Total masks: {{count}}",
+        "totalVerticesInMasks": "Total vertices in masks: {{count}}",
+        "complexMasks": "Complex masks (>4 vertices): {{count}}"
+      },
+      "performanceScore": {
+        "title": "Clipping Performance Score: {{score}}/100"
+      },
+      "formula": {
+        "title": "Performance Impact Formula:",
+        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+      },
+      "tableHeaders": {
+        "slotName": "Slot Name",
+        "vertexCount": "Vertex Count",
+        "status": "Status"
+      },
+      "status": {
+        "optimal": "Optimal",
+        "acceptable": "Acceptable",
+        "highVertexCount": "High Vertex Count"
+      },
+      "noMasks": "No clipping masks found in this skeleton.",
+      "notes": {
+        "title": "Notes on Clipping Masks:",
+        "highImpact": "High Impact: Clipping masks are one of the most expensive operations in Spine rendering",
+        "vertexCount": "Vertex Count: Each vertex in a mask increases the computational cost",
+        "optimalConfiguration": "Optimal Configuration: Use triangular or quadrilateral masks (3-4 vertices) whenever possible",
+        "gpuCost": "GPU Cost: Each clipping mask requires additional GPU rendering passes (stencil buffer operations)",
+        "recommendation": "Recommendation: Limit to 2-3 masks per skeleton, with fewer than 6 vertices each"
+      }
+    },
+    "blendMode": {
+      "title": "Blend Modes",
+      "statistics": {
+        "nonNormalBlendModes": "Non-normal blend modes: {{count}}",
+        "additiveBlendModes": "Additive blend modes: {{count}}",
+        "multiplyBlendModes": "Multiply blend modes: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Blend Mode Performance Score: {{score}}/100"
+      },
+      "formula": {
+        "title": "Performance Impact Formula:",
+        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+      },
+      "tableHeaders": {
+        "blendMode": "Blend Mode",
+        "count": "Count",
+        "slotName": "Slot Name"
+      },
+      "slotsWithNonNormalTitle": "Slots with Non-Normal Blend Modes:",
+      "notes": {
+        "title": "Notes on Blend Modes:",
+        "normalBlendMode": "Normal Blend Mode: Most efficient, requires a single rendering pass",
+        "nonNormalBlendModes": "Non-Normal Blend Modes: Each requires a separate render pass or shader switch",
+        "renderingCost": "Rendering Cost: Each blend mode change forces a renderer \"flush\" operation",
+        "additiveBlend": "Additive Blend: Higher cost than normal blend due to blending calculations",
+        "multiplyBlend": "Multiply Blend: Similar to additive, requires additional GPU operations",
+        "recommendation": "Recommendation: Limit to 2 non-normal blend modes per skeleton"
+      }
+    },
+    "skeleton": {
+      "title": "Skeleton Structure",
+      "statistics": {
+        "totalBones": "Total bones: {{count}}",
+        "rootBones": "Root bones: {{count}}",
+        "maxDepth": "Max depth: {{depth}}"
+      },
+      "performanceScore": {
+        "title": "Bone Structure Performance Score: {{score}}/100"
+      },
+      "formula": {
+        "title": "Performance Impact Formula:",
+        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+      },
+      "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
+      "notes": {
+        "title": "Notes on Bone Structure:",
+        "boneCount": "Bone Count: Each bone requires matrix computations every frame",
+        "hierarchyDepth": "Hierarchy Depth: Deep hierarchies increase transformation complexity exponentially",
+        "recommendation": "Recommendation: Keep bone hierarchies under 5 levels deep when possible",
+        "optimalStructure": "Optimal Structure: Flat hierarchies with few parent-child relationships perform better"
+      }
+    },
+    "physics": {
+      "title": "Constraints Analysis",
+      "statistics": {
+        "totalConstraints": "Total constraints: {{count}}"
+      },
+      "performanceScore": {
+        "title": "Constraint Performance Score: {{score}}/100"
+      },
+      "formula": {
+        "title": "Performance Impact Formula:",
+        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
+        "explanation": "Where constraintImpact is a weighted sum of IK, transform, path, and physics constraint impacts"
+      },
+      "impactBreakdown": {
+        "title": "Impact Breakdown:",
+        "tableHeaders": {
+          "constraintType": "Constraint Type",
+          "count": "Count",
+          "impactLevel": "Impact Level",
+          "weightedImpact": "Weighted Impact"
+        }
+      },
+      "constraintTypes": {
+        "ik": "IK Constraints",
+        "transform": "Transform Constraints",
+        "path": "Path Constraints",
+        "physics": "Physics Constraints"
+      },
+      "constraintDetails": {
+        "ikConstraints": {
+          "title": "IK Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "target": "Target",
+            "bones": "Bones",
+            "mix": "Mix",
+            "status": "Status"
+          }
+        },
+        "transformConstraints": {
+          "title": "Transform Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "target": "Target",
+            "bones": "Bones",
+            "properties": "Properties",
+            "status": "Status"
+          }
+        },
+        "pathConstraints": {
+          "title": "Path Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "target": "Target",
+            "bones": "Bones",
+            "modes": "Modes",
+            "status": "Status"
+          }
+        },
+        "physicsConstraints": {
+          "title": "Physics Constraints",
+          "tableHeaders": {
+            "name": "Name",
+            "bone": "Bone",
+            "properties": "Properties",
+            "parameters": "Parameters",
+            "status": "Status"
+          }
+        }
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "properties": {
+        "x": "X",
+        "y": "Y",
+        "rotation": "Rotation",
+        "scale": "Scale",
+        "shear": "Shear",
+        "rotate": "Rotate",
+        "scaleX": "ScaleX",
+        "scaleY": "ScaleY",
+        "shearY": "ShearY"
+      },
+      "modes": {
+        "rotate": {
+          "tangent": "Tangent",
+          "chain": "Chain",
+          "chainScale": "ChainScale"
+        },
+        "spacing": {
+          "length": "Length",
+          "fixed": "Fixed",
+          "percent": "Percent",
+          "proportional": "Proportional"
+        }
+      },
+      "parameters": {
+        "inertia": "Inertia",
+        "strength": "Strength",
+        "damping": "Damping",
+        "wind": "Wind",
+        "gravity": "Gravity"
+      },
+      "noConstraints": "No constraints found in this skeleton.",
+      "notes": {
+        "title": "Notes on Constraints:",
+        "ikConstraints": "IK Constraints: Cost increases with bone chain length and iteration count",
+        "physicsConstraints": "Physics Constraints: Highest performance impact, especially with multiple affected properties",
+        "pathConstraints": "Path Constraints: Complex path curves and ChainScale rotate mode are more expensive",
+        "transformConstraints": "Transform Constraints: Each affected property (position, rotation, scale) adds calculation overhead",
+        "recommendation": "Recommendation: Use constraints sparingly and with minimal bone chains when possible"
+      }
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { getScoreColor, getScoreRating, getScoreInterpretation } from "../utils/scoreCalculator";
+import i18n from "../../i18n";
 
 /**
  * Generates a comprehensive HTML summary of the skeleton analysis
@@ -28,27 +29,26 @@ export function generateSummary(
   // Get performance rating and interpretation
   const performanceRating = getScoreRating(overallScore);
   const interpretation = getScoreInterpretation(overallScore);
-  
   // Generate component score table
   const componentScores = [
-    { name: 'Bone Structure', score: boneMetrics.score, weight: '15%' },
-    { name: 'Mesh Complexity', score: meshMetrics.score, weight: '25%' },
-    { name: 'Clipping Masks', score: clippingMetrics.score, weight: '20%' },
-    { name: 'Blend Modes', score: blendModeMetrics.score, weight: '15%' },
-    { name: 'Constraints', score: constraintMetrics.score, weight: '25%' },
+    { name: i18n.t('analysis.summary.components.boneStructure'), score: boneMetrics.score, weight: '15%' },
+    { name: i18n.t('analysis.summary.components.meshComplexity'), score: meshMetrics.score, weight: '25%' },
+    { name: i18n.t('analysis.summary.components.clippingMasks'), score: clippingMetrics.score, weight: '20%' },
+    { name: i18n.t('analysis.summary.components.blendModes'), score: blendModeMetrics.score, weight: '15%' },
+    { name: i18n.t('analysis.summary.components.constraints'), score: constraintMetrics.score, weight: '25%' },
   ];
   
   // Generate skeleton statistics
   const stats = [
-    { name: 'Total Bones', value: boneMetrics.totalBones },
-    { name: 'Max Bone Depth', value: boneMetrics.maxDepth },
-    { name: 'Total Meshes', value: meshMetrics.totalMeshCount },
-    { name: 'Total Vertices', value: meshMetrics.totalVertices },
-    { name: 'Clipping Masks', value: clippingMetrics.maskCount },
-    { name: 'Non-Normal Blend Modes', value: blendModeMetrics.nonNormalBlendModeCount },
-    { name: 'Total Constraints', value: constraintMetrics.totalConstraints },
-    { name: 'Animations', value: skeletonData.animations.length },
-    { name: 'Skins', value: skeletonData.skins.length },
+    { name: i18n.t('analysis.summary.statistics.totalBones'), value: boneMetrics.totalBones },
+    { name: i18n.t('analysis.summary.statistics.maxBoneDepth'), value: boneMetrics.maxDepth },
+    { name: i18n.t('analysis.summary.statistics.totalMeshes'), value: meshMetrics.totalMeshCount },
+    { name: i18n.t('analysis.summary.statistics.totalVertices'), value: meshMetrics.totalVertices },
+    { name: i18n.t('analysis.summary.statistics.clippingMasks'), value: clippingMetrics.maskCount },
+    { name: i18n.t('analysis.summary.statistics.nonNormalBlendModes'), value: blendModeMetrics.nonNormalBlendModeCount },
+    { name: i18n.t('analysis.summary.statistics.totalConstraints'), value: constraintMetrics.totalConstraints },
+    { name: i18n.t('analysis.summary.statistics.animations'), value: skeletonData.animations.length },
+    { name: i18n.t('analysis.summary.statistics.skins'), value: skeletonData.skins.length },
   ];
   
   // Generate optimization recommendations
@@ -56,48 +56,48 @@ export function generateSummary(
   
   // Bone recommendations
   if (boneMetrics.maxDepth > 5) {
-    recommendations.push('Reduce bone hierarchy depth by flattening the structure where possible.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.reduceBoneDepth'));
   }
   if (boneMetrics.totalBones > 50) {
-    recommendations.push('Consider reducing the total number of bones by simplifying the skeleton.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.reduceTotalBones'));
   }
   
   // Mesh recommendations
   if (meshMetrics.totalVertices > 500) {
-    recommendations.push('Reduce the total number of vertices across all meshes.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.reduceVertices'));
   }
   if (meshMetrics.deformedMeshCount > 5) {
-    recommendations.push('Minimize the number of deformed meshes, especially those with high vertex counts.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.minimizeDeformedMeshes'));
   }
   if (meshMetrics.weightedMeshCount > 5) {
-    recommendations.push('Reduce the number of meshes with bone weights, as they require more calculations.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.reduceWeightedMeshes'));
   }
   
   // Clipping recommendations
   if (clippingMetrics.maskCount > 2) {
-    recommendations.push('Limit the number of clipping masks as they significantly impact performance.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.limitClippingMasks'));
   }
   if (clippingMetrics.complexMasks > 0) {
-    recommendations.push('Simplify complex clipping masks to use fewer vertices (4 or less is optimal).');
+    recommendations.push(i18n.t('analysis.summary.recommendations.simplifyComplexMasks'));
   }
   
   // Blend mode recommendations
   if (blendModeMetrics.nonNormalBlendModeCount > 2) {
-    recommendations.push('Reduce the number of non-normal blend modes to minimize render state changes.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.reduceNonNormalBlendModes'));
   }
   if (blendModeMetrics.additiveCount > 5) {
-    recommendations.push('Minimize the use of additive blend modes as they are particularly expensive.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.minimizeAdditiveBlendModes'));
   }
   
   // Constraint recommendations
   if (constraintMetrics.physicsCount > 1) {
-    recommendations.push('Physics constraints are particularly expensive - consider reducing their number or complexity.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.reducePhysicsConstraints'));
   }
   if (constraintMetrics.ikImpact > 50) {
-    recommendations.push('Simplify IK constraints by reducing chain length or number of affected bones.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.simplifyIkConstraints'));
   }
   if (constraintMetrics.pathImpact > 50) {
-    recommendations.push('Optimize path constraints by simplifying paths or reducing the number of constrained bones.');
+    recommendations.push(i18n.t('analysis.summary.recommendations.optimizePathConstraints'));
   }
   
   // Generate HTML summary
@@ -105,23 +105,23 @@ export function generateSummary(
   
   return `
     <div class="benchmark-summary">
-      <h2>Spine Performance Analysis</h2>
-      <p>Skeleton: ${skeletonData.name || 'Unnamed'}</p>
+      <h2>${i18n.t('analysis.summary.title')}</h2>
+      <p>${i18n.t('analysis.summary.skeletonLabel', { name: skeletonData.name || 'Unnamed' })}</p>
       
       <div class="score-container">
         <div class="performance-score" style="color: ${scoreColor}">${Math.round(overallScore)}</div>
-        <div class="score-label">${performanceRating} Performance</div>
+        <div class="score-label">${i18n.t('analysis.summary.performanceLabel', { rating: performanceRating })}</div>
         <p class="score-interpretation">${interpretation}</p>
       </div>
       
-      <h3>Component Scores</h3>
+      <h3>${i18n.t('analysis.summary.componentScoresTitle')}</h3>
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Component</th>
-            <th>Score</th>
-            <th>Weight</th>
-            <th>Meter</th>
+            <th>${i18n.t('analysis.summary.tableHeaders.component')}</th>
+            <th>${i18n.t('analysis.summary.tableHeaders.score')}</th>
+            <th>${i18n.t('analysis.summary.tableHeaders.weight')}</th>
+            <th>${i18n.t('analysis.summary.tableHeaders.meter')}</th>
           </tr>
         </thead>
         <tbody>
@@ -140,7 +140,7 @@ export function generateSummary(
         </tbody>
       </table>
       
-      <h3>Skeleton Statistics</h3>
+      <h3>${i18n.t('analysis.summary.skeletonStatsTitle')}</h3>
       <div class="stats-container">
         <table class="stats-table">
           <tbody>
@@ -156,7 +156,7 @@ export function generateSummary(
       
       ${recommendations.length > 0 ? `
         <div class="optimization-tips">
-          <h3>Optimization Recommendations</h3>
+          <h3>${i18n.t('analysis.summary.optimizationTitle')}</h3>
           <ul>
             ${recommendations.map(tip => `<li>${tip}</li>`).join('')}
           </ul>
@@ -164,35 +164,35 @@ export function generateSummary(
       ` : ''}
       
       <div class="performance-explanation">
-        <h3>Performance Score Interpretation</h3>
+        <h3>${i18n.t('analysis.summary.performanceExplanationTitle')}</h3>
         <table class="benchmark-table">
           <thead>
             <tr>
-              <th>Score Range</th>
-              <th>Rating</th>
-              <th>Interpretation</th>
+              <th>${i18n.t('analysis.summary.tableHeaders.scoreRange')}</th>
+              <th>${i18n.t('analysis.summary.tableHeaders.rating')}</th>
+              <th>${i18n.t('analysis.summary.tableHeaders.interpretation')}</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>85-100</td>
-              <td>Excellent</td>
-              <td>Suitable for all platforms and continuous animations</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.excellent.range')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.excellent.rating')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.excellent.description')}</td>
             </tr>
             <tr>
-              <td>70-84</td>
-              <td>Good</td>
-              <td>Works well on most platforms but may have issues on low-end devices</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.good.range')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.good.rating')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.good.description')}</td>
             </tr>
             <tr>
-              <td>55-69</td>
-              <td>Moderate</td>
-              <td>May cause performance dips, especially with multiple instances</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.moderate.range')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.moderate.rating')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.moderate.description')}</td>
             </tr>
             <tr>
-              <td>40-54</td>
-              <td>Poor</td>
-              <td>Performance issues likely on most devices</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.poor.range')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.poor.rating')}</td>
+              <td>${i18n.t('analysis.summary.performanceRanges.poor.description')}</td>
             </tr>
           </tbody>
         </table>

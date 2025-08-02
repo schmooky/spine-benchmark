@@ -1,4 +1,5 @@
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
+import i18n from "../../i18n";
 
 /**
  * Calculates the mesh performance score
@@ -219,11 +220,11 @@ export function getScoreColor(score: number): string {
  * @returns Text rating
  */
 export function getScoreRating(score: number): string {
-  if (score >= 85) return 'Excellent';
-  if (score >= 70) return 'Good';
-  if (score >= 55) return 'Moderate';
-  if (score >= 40) return 'Poor';
-  return 'Very Poor';
+  if (score >= 85) return i18n.t('analysis.scores.ratings.excellent');
+  if (score >= 70) return i18n.t('analysis.scores.ratings.good');
+  if (score >= 55) return i18n.t('analysis.scores.ratings.moderate');
+  if (score >= 40) return i18n.t('analysis.scores.ratings.poor');
+  return i18n.t('analysis.scores.ratings.veryPoor');
 }
 
 /**
@@ -232,9 +233,9 @@ export function getScoreRating(score: number): string {
  * @returns Score interpretation text
  */
 export function getScoreInterpretation(score: number): string {
-  if (score >= 85) return 'Suitable for all platforms and continuous animations';
-  if (score >= 70) return 'Works well on most platforms but may have issues on low-end devices';
-  if (score >= 55) return 'May cause performance dips, especially with multiple instances';
-  if (score >= 40) return 'Performance issues likely on most devices';
-  return 'Significant performance issues on all devices';
+  if (score >= 85) return i18n.t('analysis.scores.interpretations.excellent');
+  if (score >= 70) return i18n.t('analysis.scores.interpretations.good');
+  if (score >= 55) return i18n.t('analysis.scores.interpretations.moderate');
+  if (score >= 40) return i18n.t('analysis.scores.interpretations.poor');
+  return i18n.t('analysis.scores.interpretations.veryPoor');
 }

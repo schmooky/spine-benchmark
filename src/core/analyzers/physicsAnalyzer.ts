@@ -1,6 +1,7 @@
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
 import { getScoreColor } from "../utils/scoreCalculator";
+import i18n from "../../i18n";
 
 /**
  * Analyzes physics and other constraints in a Spine instance
@@ -117,54 +118,54 @@ export function analyzePhysics(spineInstance: Spine): { html: string, metrics: a
   // Generate HTML output
   let html = `
     <div class="physics-analysis">
-      <h3>Constraints Analysis</h3>
-      <p>Total constraints: ${totalConstraints}</p>
+      <h3>${i18n.t('analysis.physics.title')}</h3>
+      <p>${i18n.t('analysis.physics.statistics.totalConstraints', { count: totalConstraints })}</p>
       
       <div class="performance-score">
-        <h4>Constraint Performance Score: ${constraintScore.toFixed(1)}/100</h4>
+        <h4>${i18n.t('analysis.physics.performanceScore.title', { score: constraintScore.toFixed(1) })}</h4>
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${constraintScore}%; background-color: ${getScoreColor(constraintScore)};"></div>
         </div>
       </div>
       
       <div class="analysis-metrics">
-        <p><strong>Performance Impact Formula:</strong></p>
-        <code>constraintScore = 100 - (constraintImpact * 0.5)</code>
-        <p>Where constraintImpact is a weighted sum of IK, transform, path, and physics constraint impacts</p>
+        <p><strong>${i18n.t('analysis.physics.formula.title')}</strong></p>
+        <code>${i18n.t('analysis.physics.formula.description')}</code>
+        <p>${i18n.t('analysis.physics.formula.explanation')}</p>
       </div>
       
       <div class="constraint-summary">
-        <h4>Impact Breakdown:</h4>
+        <h4>${i18n.t('analysis.physics.impactBreakdown.title')}</h4>
         <table class="benchmark-table">
           <thead>
             <tr>
-              <th>Constraint Type</th>
-              <th>Count</th>
-              <th>Impact Level</th>
-              <th>Weighted Impact</th>
+              <th>${i18n.t('analysis.physics.impactBreakdown.tableHeaders.constraintType')}</th>
+              <th>${i18n.t('analysis.physics.impactBreakdown.tableHeaders.count')}</th>
+              <th>${i18n.t('analysis.physics.impactBreakdown.tableHeaders.impactLevel')}</th>
+              <th>${i18n.t('analysis.physics.impactBreakdown.tableHeaders.weightedImpact')}</th>
             </tr>
           </thead>
           <tbody>
             <tr class="${ikImpact > 50 ? 'row-warning' : ''}">
-              <td>IK Constraints</td>
+              <td>${i18n.t('analysis.physics.constraintTypes.ik')}</td>
               <td>${ikConstraints.length}</td>
               <td>${ikImpact.toFixed(1)}%</td>
               <td>${(ikImpact * PERFORMANCE_FACTORS.IK_WEIGHT).toFixed(1)}%</td>
             </tr>
             <tr class="${transformImpact > 50 ? 'row-warning' : ''}">
-              <td>Transform Constraints</td>
+              <td>${i18n.t('analysis.physics.constraintTypes.transform')}</td>
               <td>${transformConstraints.length}</td>
               <td>${transformImpact.toFixed(1)}%</td>
               <td>${(transformImpact * PERFORMANCE_FACTORS.TRANSFORM_WEIGHT).toFixed(1)}%</td>
             </tr>
             <tr class="${pathImpact > 50 ? 'row-warning' : ''}">
-              <td>Path Constraints</td>
+              <td>${i18n.t('analysis.physics.constraintTypes.path')}</td>
               <td>${pathConstraints.length}</td>
               <td>${pathImpact.toFixed(1)}%</td>
               <td>${(pathImpact * PERFORMANCE_FACTORS.PATH_WEIGHT).toFixed(1)}%</td>
             </tr>
             <tr class="${physicsImpact > 50 ? 'row-warning' : ''}">
-              <td>Physics Constraints</td>
+              <td>${i18n.t('analysis.physics.constraintTypes.physics')}</td>
               <td>${physicsConstraints.length}</td>
               <td>${physicsImpact.toFixed(1)}%</td>
               <td>${(physicsImpact * PERFORMANCE_FACTORS.PHYSICS_WEIGHT).toFixed(1)}%</td>
@@ -199,18 +200,18 @@ export function analyzePhysics(spineInstance: Spine): { html: string, metrics: a
     // Add general notes about constraints
     html += `
       <div class="analysis-notes">
-        <h4>Notes on Constraints:</h4>
+        <h4>${i18n.t('analysis.physics.notes.title')}</h4>
         <ul>
-          <li><strong>IK Constraints:</strong> Cost increases with bone chain length and iteration count</li>
-          <li><strong>Physics Constraints:</strong> Highest performance impact, especially with multiple affected properties</li>
-          <li><strong>Path Constraints:</strong> Complex path curves and ChainScale rotate mode are more expensive</li>
-          <li><strong>Transform Constraints:</strong> Each affected property (position, rotation, scale) adds calculation overhead</li>
-          <li><strong>Recommendation:</strong> Use constraints sparingly and with minimal bone chains when possible</li>
+          <li><strong>${i18n.t('analysis.physics.constraintTypes.ik')}:</strong> ${i18n.t('analysis.physics.notes.ikConstraints')}</li>
+          <li><strong>${i18n.t('analysis.physics.constraintTypes.physics')}:</strong> ${i18n.t('analysis.physics.notes.physicsConstraints')}</li>
+          <li><strong>${i18n.t('analysis.physics.constraintTypes.path')}:</strong> ${i18n.t('analysis.physics.notes.pathConstraints')}</li>
+          <li><strong>${i18n.t('analysis.physics.constraintTypes.transform')}:</strong> ${i18n.t('analysis.physics.notes.transformConstraints')}</li>
+          <li><strong>${i18n.t('analysis.physics.notes.recommendation').split(':')[0]}:</strong> ${i18n.t('analysis.physics.notes.recommendation').split(':')[1]}</li>
         </ul>
       </div>
     `;
   } else {
-    html += `<p>No constraints found in this skeleton.</p>`;
+    html += `<p>${i18n.t('analysis.physics.noConstraints')}</p>`;
   }
   
   html += `</div>`;
@@ -389,15 +390,15 @@ function calculatePhysicsImpact(physicsData: any[]): number {
 function createIkTable(ikData: any[]): string {
   return `
     <div class="constraint-details">
-      <h4>IK Constraints</h4>
+      <h4>${i18n.t('analysis.physics.constraintDetails.ikConstraints.title')}</h4>
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Target</th>
-            <th>Bones</th>
-            <th>Mix</th>
-            <th>Status</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.ikConstraints.tableHeaders.name')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.ikConstraints.tableHeaders.target')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.ikConstraints.tableHeaders.bones')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.ikConstraints.tableHeaders.mix')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.ikConstraints.tableHeaders.status')}</th>
           </tr>
         </thead>
         <tbody>
@@ -410,7 +411,7 @@ function createIkTable(ikData: any[]): string {
                 <td>${ik.target}</td>
                 <td>${ik.bones.join(', ')}</td>
                 <td>${ik.mix.toFixed(2)}</td>
-                <td>${ik.isActive ? 'Active' : 'Inactive'}</td>
+                <td>${ik.isActive ? i18n.t('analysis.physics.status.active') : i18n.t('analysis.physics.status.inactive')}</td>
               </tr>
             `;
           }).join('')}
@@ -426,27 +427,27 @@ function createIkTable(ikData: any[]): string {
 function createTransformTable(transformData: any[]): string {
   return `
     <div class="constraint-details">
-      <h4>Transform Constraints</h4>
+      <h4>${i18n.t('analysis.physics.constraintDetails.transformConstraints.title')}</h4>
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Target</th>
-            <th>Bones</th>
-            <th>Properties</th>
-            <th>Status</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.transformConstraints.tableHeaders.name')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.transformConstraints.tableHeaders.target')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.transformConstraints.tableHeaders.bones')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.transformConstraints.tableHeaders.properties')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.transformConstraints.tableHeaders.status')}</th>
           </tr>
         </thead>
         <tbody>
           ${transformData.map(t => {
             // List affected properties
             const props = [];
-            if (t.mixRotate > 0) props.push(`Rotate: ${t.mixRotate.toFixed(2)}`);
-            if (t.mixX > 0) props.push(`X: ${t.mixX.toFixed(2)}`);
-            if (t.mixY > 0) props.push(`Y: ${t.mixY.toFixed(2)}`);
-            if (t.mixScaleX > 0) props.push(`ScaleX: ${t.mixScaleX.toFixed(2)}`);
-            if (t.mixScaleY > 0) props.push(`ScaleY: ${t.mixScaleY.toFixed(2)}`);
-            if (t.mixShearY > 0) props.push(`ShearY: ${t.mixShearY.toFixed(2)}`);
+            if (t.mixRotate > 0) props.push(`${i18n.t('analysis.physics.properties.rotate')}: ${t.mixRotate.toFixed(2)}`);
+            if (t.mixX > 0) props.push(`${i18n.t('analysis.physics.properties.x')}: ${t.mixX.toFixed(2)}`);
+            if (t.mixY > 0) props.push(`${i18n.t('analysis.physics.properties.y')}: ${t.mixY.toFixed(2)}`);
+            if (t.mixScaleX > 0) props.push(`${i18n.t('analysis.physics.properties.scaleX')}: ${t.mixScaleX.toFixed(2)}`);
+            if (t.mixScaleY > 0) props.push(`${i18n.t('analysis.physics.properties.scaleY')}: ${t.mixScaleY.toFixed(2)}`);
+            if (t.mixShearY > 0) props.push(`${i18n.t('analysis.physics.properties.shearY')}: ${t.mixShearY.toFixed(2)}`);
             
             const complexityClass = props.length > 3 ? 'row-warning' : '';
             
@@ -456,7 +457,7 @@ function createTransformTable(transformData: any[]): string {
                 <td>${t.target}</td>
                 <td>${t.bones.join(', ')}</td>
                 <td>${props.join(', ')}</td>
-                <td>${t.isActive ? 'Active' : 'Inactive'}</td>
+                <td>${t.isActive ? i18n.t('analysis.physics.status.active') : i18n.t('analysis.physics.status.inactive')}</td>
               </tr>
             `;
           }).join('')}
@@ -473,34 +474,34 @@ function createPathTable(pathData: any[]): string {
   // Helper function to get readable mode names
   const getRotateModeName = (mode: number): string => {
     switch(mode) {
-      case 0: return 'Tangent';
-      case 1: return 'Chain';
-      case 2: return 'ChainScale';
+      case 0: return i18n.t('analysis.physics.modes.rotate.tangent');
+      case 1: return i18n.t('analysis.physics.modes.rotate.chain');
+      case 2: return i18n.t('analysis.physics.modes.rotate.chainScale');
       default: return `Unknown (${mode})`;
     }
   };
   
   const getSpacingModeName = (mode: number): string => {
     switch(mode) {
-      case 0: return 'Length';
-      case 1: return 'Fixed';
-      case 2: return 'Percent';
-      case 3: return 'Proportional';
+      case 0: return i18n.t('analysis.physics.modes.spacing.length');
+      case 1: return i18n.t('analysis.physics.modes.spacing.fixed');
+      case 2: return i18n.t('analysis.physics.modes.spacing.percent');
+      case 3: return i18n.t('analysis.physics.modes.spacing.proportional');
       default: return `Unknown (${mode})`;
     }
   };
   
   return `
     <div class="constraint-details">
-      <h4>Path Constraints</h4>
+      <h4>${i18n.t('analysis.physics.constraintDetails.pathConstraints.title')}</h4>
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Target</th>
-            <th>Bones</th>
-            <th>Modes</th>
-            <th>Status</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.pathConstraints.tableHeaders.name')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.pathConstraints.tableHeaders.target')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.pathConstraints.tableHeaders.bones')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.pathConstraints.tableHeaders.modes')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.pathConstraints.tableHeaders.status')}</th>
           </tr>
         </thead>
         <tbody>
@@ -512,8 +513,8 @@ function createPathTable(pathData: any[]): string {
                 <td>${p.name}</td>
                 <td>${p.target}</td>
                 <td>${p.bones.join(', ')}</td>
-                <td>Rotate: ${getRotateModeName(p.rotateMode)}, Spacing: ${getSpacingModeName(p.spacingMode)}</td>
-                <td>${p.isActive ? 'Active' : 'Inactive'}</td>
+                <td>${i18n.t('analysis.physics.properties.rotate')}: ${getRotateModeName(p.rotateMode)}, Spacing: ${getSpacingModeName(p.spacingMode)}</td>
+                <td>${p.isActive ? i18n.t('analysis.physics.status.active') : i18n.t('analysis.physics.status.inactive')}</td>
               </tr>
             `;
           }).join('')}
@@ -529,36 +530,36 @@ function createPathTable(pathData: any[]): string {
 function createPhysicsTable(physicsData: any[]): string {
   return `
     <div class="constraint-details">
-      <h4>Physics Constraints</h4>
+      <h4>${i18n.t('analysis.physics.constraintDetails.physicsConstraints.title')}</h4>
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Bone</th>
-            <th>Properties</th>
-            <th>Parameters</th>
-            <th>Status</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.physicsConstraints.tableHeaders.name')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.physicsConstraints.tableHeaders.bone')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.physicsConstraints.tableHeaders.properties')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.physicsConstraints.tableHeaders.parameters')}</th>
+            <th>${i18n.t('analysis.physics.constraintDetails.physicsConstraints.tableHeaders.status')}</th>
           </tr>
         </thead>
         <tbody>
           ${physicsData.map(p => {
             // List affected properties
             const props = [];
-            if (p.affectsX) props.push('X');
-            if (p.affectsY) props.push('Y');
-            if (p.affectsRotation) props.push('Rotation');
-            if (p.affectsScale) props.push('Scale');
-            if (p.affectsShear) props.push('Shear');
+            if (p.affectsX) props.push(i18n.t('analysis.physics.properties.x'));
+            if (p.affectsY) props.push(i18n.t('analysis.physics.properties.y'));
+            if (p.affectsRotation) props.push(i18n.t('analysis.physics.properties.rotation'));
+            if (p.affectsScale) props.push(i18n.t('analysis.physics.properties.scale'));
+            if (p.affectsShear) props.push(i18n.t('analysis.physics.properties.shear'));
             
             // Properties that affect simulation
             const params = [
-              `Inertia: ${p.inertia.toFixed(2)}`,
-              `Strength: ${p.strength.toFixed(2)}`,
-              `Damping: ${p.damping.toFixed(2)}`
+              `${i18n.t('analysis.physics.parameters.inertia')}: ${p.inertia.toFixed(2)}`,
+              `${i18n.t('analysis.physics.parameters.strength')}: ${p.strength.toFixed(2)}`,
+              `${i18n.t('analysis.physics.parameters.damping')}: ${p.damping.toFixed(2)}`
             ];
             
-            if (p.wind !== 0) params.push(`Wind: ${p.wind.toFixed(2)}`);
-            if (p.gravity !== 0) params.push(`Gravity: ${p.gravity.toFixed(2)}`);
+            if (p.wind !== 0) params.push(`${i18n.t('analysis.physics.parameters.wind')}: ${p.wind.toFixed(2)}`);
+            if (p.gravity !== 0) params.push(`${i18n.t('analysis.physics.parameters.gravity')}: ${p.gravity.toFixed(2)}`);
             
             const complexityClass = props.length > 2 ? 'row-warning' : '';
             
@@ -568,7 +569,7 @@ function createPhysicsTable(physicsData: any[]): string {
                 <td>${p.bone}</td>
                 <td>${props.join(', ')}</td>
                 <td>${params.join(', ')}</td>
-                <td>${p.isActive ? 'Active' : 'Inactive'}</td>
+                <td>${p.isActive ? i18n.t('analysis.physics.status.active') : i18n.t('analysis.physics.status.inactive')}</td>
               </tr>
             `;
           }).join('')}

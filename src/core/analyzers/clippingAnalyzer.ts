@@ -1,6 +1,7 @@
 import { ClippingAttachment, Spine } from '@esotericsoftware/spine-pixi-v8';
 import { PERFORMANCE_FACTORS } from '../constants/performanceFactors';
 import { calculateClippingScore, getScoreColor } from '../utils/scoreCalculator';
+import i18n from '../../i18n';
 
 /**
  * Analyzes clipping masks in a Spine instance
@@ -35,23 +36,21 @@ export function analyzeClipping(spineInstance: Spine): { html: string, metrics: 
   
   let html = `
     <div class="clipping-analysis">
-      <h3>Clipping Masks</h3>
-      <p>Total masks: ${masks.length}</p>
-      <p>Total vertices in masks: ${totalVertices}</p>
-      <p>Complex masks (>4 vertices): ${complexMasks}</p>
+      <h3>${i18n.t('analysis.clipping.title')}</h3>
+      <p>${i18n.t('analysis.clipping.statistics.totalMasks', { count: masks.length })}</p>
+      <p>${i18n.t('analysis.clipping.statistics.totalVerticesInMasks', { count: totalVertices })}</p>
+      <p>${i18n.t('analysis.clipping.statistics.complexMasks', { count: complexMasks })}</p>
       
       <div class="performance-score">
-        <h4>Clipping Performance Score: ${clippingScore.toFixed(1)}/100</h4>
+        <h4>${i18n.t('analysis.clipping.performanceScore.title', { score: clippingScore.toFixed(1) })}</h4>
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${clippingScore}%; background-color: ${getScoreColor(clippingScore)};"></div>
         </div>
       </div>
       
       <div class="analysis-metrics">
-        <p><strong>Performance Impact Formula:</strong></p>
-        <code>clippingScore = 100 - log₂(maskCount/${PERFORMANCE_FACTORS.IDEAL_CLIPPING_COUNT} + 1) × 20 
-          - log₂(vertexCount + 1) × 5 
-          - (complexMasks × 10)</code>
+        <p><strong>${i18n.t('analysis.clipping.formula.title')}</strong></p>
+        <code>${i18n.t('analysis.clipping.formula.description', { idealClippingCount: PERFORMANCE_FACTORS.IDEAL_CLIPPING_COUNT })}</code>
       </div>
   `;
   
@@ -60,9 +59,9 @@ export function analyzeClipping(spineInstance: Spine): { html: string, metrics: 
       <table class="benchmark-table">
         <thead>
           <tr>
-            <th>Slot Name</th>
-            <th>Vertex Count</th>
-            <th>Status</th>
+            <th>${i18n.t('analysis.clipping.tableHeaders.slotName')}</th>
+            <th>${i18n.t('analysis.clipping.tableHeaders.vertexCount')}</th>
+            <th>${i18n.t('analysis.clipping.tableHeaders.status')}</th>
           </tr>
         </thead>
         <tbody>
@@ -70,10 +69,10 @@ export function analyzeClipping(spineInstance: Spine): { html: string, metrics: 
     
     masks.forEach(([slotName, vertexCount]) => {
       const status = vertexCount <= 4 
-        ? 'Optimal' 
+        ? i18n.t('analysis.clipping.status.optimal')
         : vertexCount <= 8 
-          ? 'Acceptable' 
-          : 'High Vertex Count';
+          ? i18n.t('analysis.clipping.status.acceptable')
+          : i18n.t('analysis.clipping.status.highVertexCount');
       
       const rowClass = vertexCount <= 4 
         ? '' 
@@ -95,18 +94,18 @@ export function analyzeClipping(spineInstance: Spine): { html: string, metrics: 
       </table>
       
       <div class="analysis-notes">
-        <h4>Notes on Clipping Masks:</h4>
+        <h4>${i18n.t('analysis.clipping.notes.title')}</h4>
         <ul>
-          <li><strong>High Impact:</strong> Clipping masks are one of the most expensive operations in Spine rendering</li>
-          <li><strong>Vertex Count:</strong> Each vertex in a mask increases the computational cost</li>
-          <li><strong>Optimal Configuration:</strong> Use triangular or quadrilateral masks (3-4 vertices) whenever possible</li>
-          <li><strong>GPU Cost:</strong> Each clipping mask requires additional GPU rendering passes (stencil buffer operations)</li>
-          <li><strong>Recommendation:</strong> Limit to 2-3 masks per skeleton, with fewer than 6 vertices each</li>
+          <li><strong>${i18n.t('analysis.clipping.notes.highImpact')}</strong></li>
+          <li><strong>${i18n.t('analysis.clipping.notes.vertexCount')}</strong></li>
+          <li><strong>${i18n.t('analysis.clipping.notes.optimalConfiguration')}</strong></li>
+          <li><strong>${i18n.t('analysis.clipping.notes.gpuCost')}</strong></li>
+          <li><strong>${i18n.t('analysis.clipping.notes.recommendation')}</strong></li>
         </ul>
       </div>
     `;
   } else {
-    html += `<p>No clipping masks found in this skeleton.</p>`;
+    html += `<p>${i18n.t('analysis.clipping.noMasks')}</p>`;
   }
   
   html += `</div>`;

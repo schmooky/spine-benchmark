@@ -1,6 +1,7 @@
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
 import { calculateBoneScore, calculateMaxDepth, getScoreColor } from "../utils/scoreCalculator";
+import i18n from "../../i18n";
 
 /**
  * Analyzes the skeleton structure of a Spine instance
@@ -46,7 +47,7 @@ export function createSkeletonTree(spineInstance: Spine): { html: string, metric
     
     nodes.forEach(node => {
       html += `<li class="tree-node">
-        <span class="node-label">${node.name} (x: ${node.x}, y: ${node.y})</span>`;
+        <span class="node-label">${i18n.t('analysis.skeleton.nodeLabel', { name: node.name, x: node.x, y: node.y })}</span>`;
       
       if (node.children && node.children.length > 0) {
         html += generateTreeHTML(node.children);
@@ -61,22 +62,24 @@ export function createSkeletonTree(spineInstance: Spine): { html: string, metric
   
   let html = `
     <div class="skeleton-tree-container">
-      <h3>Skeleton Structure</h3>
-      <p>Total bones: ${totalBones}</p>
-      <p>Root bones: ${rootBones.length}</p>
-      <p>Max depth: ${maxDepth}</p>
+      <h3>${i18n.t('analysis.skeleton.title')}</h3>
+      <p>${i18n.t('analysis.skeleton.statistics.totalBones', { count: totalBones })}</p>
+      <p>${i18n.t('analysis.skeleton.statistics.rootBones', { count: rootBones.length })}</p>
+      <p>${i18n.t('analysis.skeleton.statistics.maxDepth', { depth: maxDepth })}</p>
       
       <div class="performance-score">
-        <h4>Bone Structure Performance Score: ${boneScore.toFixed(1)}/100</h4>
+        <h4>${i18n.t('analysis.skeleton.performanceScore.title', { score: boneScore.toFixed(1) })}</h4>
         <div class="progress-bar">
           <div class="progress-fill" style="width: ${boneScore}%; background-color: ${getScoreColor(boneScore)};"></div>
         </div>
       </div>
       
       <div class="analysis-metrics">
-        <p><strong>Performance Impact Formula:</strong></p>
-        <code>boneScore = 100 - log₂(totalBones/${PERFORMANCE_FACTORS.IDEAL_BONE_COUNT} + 1) × 15 
-          - (maxDepth × ${PERFORMANCE_FACTORS.BONE_DEPTH_FACTOR})</code>
+        <p><strong>${i18n.t('analysis.skeleton.formula.title')}</strong></p>
+        <code>${i18n.t('analysis.skeleton.formula.description', { 
+          idealBoneCount: PERFORMANCE_FACTORS.IDEAL_BONE_COUNT,
+          depthFactor: PERFORMANCE_FACTORS.BONE_DEPTH_FACTOR
+        })}</code>
       </div>
       
       <div class="tree-view">
@@ -84,12 +87,12 @@ export function createSkeletonTree(spineInstance: Spine): { html: string, metric
       </div>
       
       <div class="analysis-notes">
-        <h4>Notes on Bone Structure:</h4>
+        <h4>${i18n.t('analysis.skeleton.notes.title')}</h4>
         <ul>
-          <li><strong>Bone Count:</strong> Each bone requires matrix computations every frame</li>
-          <li><strong>Hierarchy Depth:</strong> Deep hierarchies increase transformation complexity exponentially</li>
-          <li><strong>Recommendation:</strong> Keep bone hierarchies under 5 levels deep when possible</li>
-          <li><strong>Optimal Structure:</strong> Flat hierarchies with few parent-child relationships perform better</li>
+          <li><strong>${i18n.t('analysis.skeleton.notes.boneCount')}</strong></li>
+          <li><strong>${i18n.t('analysis.skeleton.notes.hierarchyDepth')}</strong></li>
+          <li><strong>${i18n.t('analysis.skeleton.notes.recommendation')}</strong></li>
+          <li><strong>${i18n.t('analysis.skeleton.notes.optimalStructure')}</strong></li>
         </ul>
       </div>
     </div>
