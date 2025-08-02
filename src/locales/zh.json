@@ -38,6 +38,24 @@
       "performance": "效能指令",
       "language": "語言指令"
     },
+    "debug": {
+      "showAttachmentDebug": "顯示附件除錯",
+      "showAttachmentDebugDescription": "顯示附件除錯視覺化，顯示附件邊界和屬性",
+      "hideAttachmentDebug": "隱藏附件除錯",
+      "hideAttachmentDebugDescription": "隱藏附件除錯視覺化",
+      "showMeshDebug": "顯示網格除錯",
+      "showMeshDebugDescription": "顯示網格除錯視覺化，顯示頂點、三角形和網格結構",
+      "hideMeshDebug": "隱藏網格除錯",
+      "hideMeshDebugDescription": "隱藏網格除錯視覺化",
+      "showIkDebug": "顯示 IK 控制除錯",
+      "showIkDebugDescription": "顯示 IK 控制除錯視覺化，顯示約束目標和骨骼鏈",
+      "hideIkDebug": "隱藏 IK 控制除錯",
+      "hideIkDebugDescription": "隱藏 IK 控制除錯視覺化",
+      "showPhysicsDebug": "顯示物理除錯",
+      "showPhysicsDebugDescription": "顯示物理除錯視覺化，顯示物理約束和模擬資料",
+      "hidePhysicsDebug": "隱藏物理除錯",
+      "hidePhysicsDebugDescription": "隱藏物理除錯視覺化"
+    },
     "animation": {
       "playPause": "播放/暫停動畫",
       "playPauseDescription": "切換動畫播放",

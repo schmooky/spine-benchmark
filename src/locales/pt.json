@@ -38,6 +38,24 @@
       "performance": "Comandos de performance",
       "language": "Comandos de idioma"
     },
+    "debug": {
+      "showAttachmentDebug": "Mostrar debug de anexos",
+      "showAttachmentDebugDescription": "Exibir visualização de debug de anexos mostrando limites e propriedades dos anexos",
+      "hideAttachmentDebug": "Ocultar debug de anexos",
+      "hideAttachmentDebugDescription": "Ocultar visualização de debug de anexos",
+      "showMeshDebug": "Mostrar debug de malha",
+      "showMeshDebugDescription": "Exibir visualização de debug de malha mostrando vértices, triângulos e estrutura da malha",
+      "hideMeshDebug": "Ocultar debug de malha",
+      "hideMeshDebugDescription": "Ocultar visualização de debug de malha",
+      "showIkDebug": "Mostrar debug de controles IK",
+      "showIkDebugDescription": "Exibir visualização de debug de controles IK mostrando alvos de restrições e cadeias ósseas",
+      "hideIkDebug": "Ocultar debug de controles IK",
+      "hideIkDebugDescription": "Ocultar visualização de debug de controles IK",
+      "showPhysicsDebug": "Mostrar debug de física",
+      "showPhysicsDebugDescription": "Exibir visualização de debug de física mostrando restrições físicas e dados de simulação",
+      "hidePhysicsDebug": "Ocultar debug de física",
+      "hidePhysicsDebugDescription": "Ocultar visualização de debug de física"
+    },
     "animation": {
       "playPause": "Reproduzir/Pausar animação",
       "playPauseDescription": "Alternar reprodução da animação",

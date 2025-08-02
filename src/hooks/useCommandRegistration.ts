@@ -9,6 +9,12 @@ interface UseCommandRegistrationProps {
   setShowBenchmark: (show: boolean) => void;
   openGitHubReadme: () => void;
   setShowLanguageModal: (show: boolean) => void;
+  meshesVisible: boolean;
+  physicsVisible: boolean;
+  ikVisible: boolean;
+  toggleMeshes: () => void;
+  togglePhysics: () => void;
+  toggleIk: () => void;
 }
 
 export function useCommandRegistration({
@@ -16,7 +22,13 @@ export function useCommandRegistration({
   showBenchmark,
   setShowBenchmark,
   openGitHubReadme,
-  setShowLanguageModal
+  setShowLanguageModal,
+  meshesVisible,
+  physicsVisible,
+  ikVisible,
+  toggleMeshes,
+  togglePhysics,
+  toggleIk
 }: UseCommandRegistrationProps) {
   const { t } = useTranslation();
   
@@ -77,6 +89,72 @@ export function useCommandRegistration({
       });
     }
 
+    // Debug Commands - only register if spine instance exists
+    if (spineInstance) {
+      // Show/Hide Mesh Debug (includes attachment visualization)
+      if (!meshesVisible) {
+        commandRegistry.register({
+          id: 'debug.show-mesh',
+          title: t('commands.debug.showMeshDebug'),
+          category: 'debug',
+          description: t('commands.debug.showMeshDebugDescription'),
+          keywords: [t('commands.keywords.show'), 'mesh', 'attachment', 'debug', 'vertices', 'triangles', 'visualization'],
+          execute: toggleMeshes
+        });
+      } else {
+        commandRegistry.register({
+          id: 'debug.hide-mesh',
+          title: t('commands.debug.hideMeshDebug'),
+          category: 'debug',
+          description: t('commands.debug.hideMeshDebugDescription'),
+          keywords: ['hide', 'mesh', 'attachment', 'debug', 'vertices', 'triangles', 'visualization'],
+          execute: toggleMeshes
+        });
+      }
+
+      // Show/Hide IK Controls Debug (using ikVisible state and toggleIk function)
+      if (!ikVisible) {
+        commandRegistry.register({
+          id: 'debug.show-ik',
+          title: t('commands.debug.showIkDebug'),
+          category: 'debug',
+          description: t('commands.debug.showIkDebugDescription'),
+          keywords: [t('commands.keywords.show'), 'ik', 'debug', 'constraints', 'controls'],
+          execute: toggleIk
+        });
+      } else {
+        commandRegistry.register({
+          id: 'debug.hide-ik',
+          title: t('commands.debug.hideIkDebug'),
+          category: 'debug',
+          description: t('commands.debug.hideIkDebugDescription'),
+          keywords: ['hide', 'ik', 'debug', 'constraints', 'controls'],
+          execute: toggleIk
+        });
+      }
+
+      // Show/Hide Physics Debug (using physicsVisible state and togglePhysics function)
+      if (!physicsVisible) {
+        commandRegistry.register({
+          id: 'debug.show-physics',
+          title: t('commands.debug.showPhysicsDebug'),
+          category: 'debug',
+          description: t('commands.debug.showPhysicsDebugDescription'),
+          keywords: [t('commands.keywords.show'), 'physics', 'debug', 'constraints', 'simulation'],
+          execute: togglePhysics
+        });
+      } else {
+        commandRegistry.register({
+          id: 'debug.hide-physics',
+          title: t('commands.debug.hidePhysicsDebug'),
+          category: 'debug',
+          description: t('commands.debug.hidePhysicsDebugDescription'),
+          keywords: ['hide', 'physics', 'debug', 'constraints', 'simulation'],
+          execute: togglePhysics
+        });
+      }
+    }
+
     // Performance Commands - only register if spine instance exists
     if (spineInstance) {
       commandRegistry.register({
@@ -131,18 +209,24 @@ export function useCommandRegistration({
     console.log('✅ Language command registered successfully');
 
     // Cleanup function to unregister commands
+    // Cleanup function to unregister commands
     return () => {
       const commandIds = [
         'animation.play-pause',
         'animation.stop',
         'animation.restart',
+        'debug.show-mesh',
+        'debug.hide-mesh',
+        'debug.show-ik',
+        'debug.hide-ik',
+        'debug.show-physics',
+        'debug.hide-physics',
         'performance.show-benchmark',
         'help.documentation',
         'language.change'
       ];
 
       commandIds.forEach(id => commandRegistry.unregister(id));
-
       // Unregister skin commands
       if (spineInstance) {
         const skins = spineInstance.skeleton.data.skins;
@@ -157,6 +241,12 @@ export function useCommandRegistration({
     setShowBenchmark,
     openGitHubReadme,
     setShowLanguageModal,
+    meshesVisible,
+    physicsVisible,
+    ikVisible,
+    toggleMeshes,
+    togglePhysics,
+    toggleIk,
     t
   ]);
 }

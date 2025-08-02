@@ -38,6 +38,24 @@
       "performance": "Leistungs-Befehle",
       "language": "Sprach-Befehle"
     },
+    "debug": {
+      "showAttachmentDebug": "Attachment-Debug anzeigen",
+      "showAttachmentDebugDescription": "Attachment-Debug-Visualisierung anzeigen, die Attachment-Grenzen und -Eigenschaften zeigt",
+      "hideAttachmentDebug": "Attachment-Debug ausblenden",
+      "hideAttachmentDebugDescription": "Attachment-Debug-Visualisierung ausblenden",
+      "showMeshDebug": "Mesh-Debug anzeigen",
+      "showMeshDebugDescription": "Mesh-Debug-Visualisierung anzeigen, die Vertices, Dreiecke und Mesh-Struktur zeigt",
+      "hideMeshDebug": "Mesh-Debug ausblenden",
+      "hideMeshDebugDescription": "Mesh-Debug-Visualisierung ausblenden",
+      "showIkDebug": "IK-Controls-Debug anzeigen",
+      "showIkDebugDescription": "IK-Controls-Debug-Visualisierung anzeigen, die Constraint-Ziele und Knochenketten zeigt",
+      "hideIkDebug": "IK-Controls-Debug ausblenden",
+      "hideIkDebugDescription": "IK-Controls-Debug-Visualisierung ausblenden",
+      "showPhysicsDebug": "Physik-Debug anzeigen",
+      "showPhysicsDebugDescription": "Physik-Debug-Visualisierung anzeigen, die Physik-Constraints und Simulationsdaten zeigt",
+      "hidePhysicsDebug": "Physik-Debug ausblenden",
+      "hidePhysicsDebugDescription": "Physik-Debug-Visualisierung ausblenden"
+    },
     "animation": {
       "playPause": "Animation abspielen/pausieren",
       "playPauseDescription": "Animations-Wiedergabe umschalten",

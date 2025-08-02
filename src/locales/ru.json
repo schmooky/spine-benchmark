@@ -38,6 +38,24 @@
       "performance": "Команды производительности",
       "language": "Команды языка"
     },
+    "debug": {
+      "showAttachmentDebug": "Показать отладку вложений",
+      "showAttachmentDebugDescription": "Отобразить визуализацию отладки вложений, показывающую границы и свойства вложений",
+      "hideAttachmentDebug": "Скрыть отладку вложений",
+      "hideAttachmentDebugDescription": "Скрыть визуализацию отладки вложений",
+      "showMeshDebug": "Показать отладку сетки",
+      "showMeshDebugDescription": "Отобразить визуализацию отладки сетки, показывающую вершины, треугольники и структуру сетки",
+      "hideMeshDebug": "Скрыть отладку сетки",
+      "hideMeshDebugDescription": "Скрыть визуализацию отладки сетки",
+      "showIkDebug": "Показать отладку IK контролов",
+      "showIkDebugDescription": "Отобразить визуализацию отладки IK контролов, показывающую цели ограничений и цепи костей",
+      "hideIkDebug": "Скрыть отладку IK контролов",
+      "hideIkDebugDescription": "Скрыть визуализацию отладки IK контролов",
+      "showPhysicsDebug": "Показать отладку физики",
+      "showPhysicsDebugDescription": "Отобразить визуализацию отладки физики, показывающую физические ограничения и данные симуляции",
+      "hidePhysicsDebug": "Скрыть отладку физики",
+      "hidePhysicsDebugDescription": "Скрыть визуализацию отладки физики"
+    },
     "animation": {
       "playPause": "Воспроизвести/Пауза",
       "playPauseDescription": "Переключить воспроизведение анимации",

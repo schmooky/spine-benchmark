@@ -38,6 +38,24 @@
       "performance": "Performance Commands",
       "language": "Language Commands"
     },
+    "debug": {
+      "showAttachmentDebug": "Show Attachment Debug",
+      "showAttachmentDebugDescription": "Display attachment debug visualization showing attachment boundaries and properties",
+      "hideAttachmentDebug": "Hide Attachment Debug",
+      "hideAttachmentDebugDescription": "Hide attachment debug visualization",
+      "showMeshDebug": "Show Mesh Debug",
+      "showMeshDebugDescription": "Display mesh debug visualization showing vertices, triangles, and mesh structure",
+      "hideMeshDebug": "Hide Mesh Debug",
+      "hideMeshDebugDescription": "Hide mesh debug visualization",
+      "showIkDebug": "Show IK Controls Debug",
+      "showIkDebugDescription": "Display IK controls debug visualization showing constraint targets and bone chains",
+      "hideIkDebug": "Hide IK Controls Debug",
+      "hideIkDebugDescription": "Hide IK controls debug visualization",
+      "showPhysicsDebug": "Show Physics Debug",
+      "showPhysicsDebugDescription": "Display physics debug visualization showing physics constraints and simulation data",
+      "hidePhysicsDebug": "Hide Physics Debug",
+      "hidePhysicsDebugDescription": "Hide physics debug visualization"
+    },
     "animation": {
       "playPause": "Play/Pause Animation",
       "playPauseDescription": "Toggle animation playback",

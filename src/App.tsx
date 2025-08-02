@@ -42,6 +42,12 @@ import { useUrlHash } from './hooks/useUrlHash';
     loadSpineFiles,
     isLoading: spineLoading,
     benchmarkData,
+    meshesVisible,
+    physicsVisible,
+    ikVisible,
+    toggleMeshes,
+    togglePhysics,
+    toggleIk
   } = useSpineApp(app);
 
 
@@ -299,7 +305,13 @@ import { useUrlHash } from './hooks/useUrlHash';
     showBenchmark,
     setShowBenchmark: setShowBenchmarkWithHash,
     openGitHubReadme,
-    setShowLanguageModal: setShowLanguageModalWithLogging
+    setShowLanguageModal: setShowLanguageModalWithLogging,
+    meshesVisible,
+    physicsVisible,
+    ikVisible,
+    toggleMeshes,
+    togglePhysics,
+    toggleIk
   });
 
   return (

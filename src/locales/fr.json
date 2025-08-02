@@ -38,6 +38,24 @@
       "performance": "Commandes de performance",
       "language": "Commandes de langue"
     },
+    "debug": {
+      "showAttachmentDebug": "Afficher le débogage des attachements",
+      "showAttachmentDebugDescription": "Afficher la visualisation de débogage des attachements montrant les limites et propriétés des attachements",
+      "hideAttachmentDebug": "Masquer le débogage des attachements",
+      "hideAttachmentDebugDescription": "Masquer la visualisation de débogage des attachements",
+      "showMeshDebug": "Afficher le débogage du maillage",
+      "showMeshDebugDescription": "Afficher la visualisation de débogage du maillage montrant les sommets, triangles et structure du maillage",
+      "hideMeshDebug": "Masquer le débogage du maillage",
+      "hideMeshDebugDescription": "Masquer la visualisation de débogage du maillage",
+      "showIkDebug": "Afficher le débogage des contrôles IK",
+      "showIkDebugDescription": "Afficher la visualisation de débogage des contrôles IK montrant les cibles de contraintes et chaînes d'os",
+      "hideIkDebug": "Masquer le débogage des contrôles IK",
+      "hideIkDebugDescription": "Masquer la visualisation de débogage des contrôles IK",
+      "showPhysicsDebug": "Afficher le débogage de la physique",
+      "showPhysicsDebugDescription": "Afficher la visualisation de débogage de la physique montrant les contraintes physiques et données de simulation",
+      "hidePhysicsDebug": "Masquer le débogage de la physique",
+      "hidePhysicsDebugDescription": "Masquer la visualisation de débogage de la physique"
+    },
     "animation": {
       "playPause": "Lecture/Pause de l'animation",
       "playPauseDescription": "Basculer la lecture de l'animation",
