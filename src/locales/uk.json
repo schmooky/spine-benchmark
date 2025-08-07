@@ -145,22 +145,8 @@
     "changeLanguage": "Змінити мову",
     "changeLanguageDescription": "Відкрити модальне вікно вибору мови"
   },
-  "analysis": {
-    "summary": {
-      "title": "Аналіз продуктивності Spine",
-      "skeletonLabel": "Скелет: {{name}}",
-      "performanceLabel": "{{rating}} продуктивність",
-      "componentScoresTitle": "Оцінки компонентів",
-      "skeletonStatsTitle": "Статистика скелета",
-      "optimizationTitle": "Рекомендації з оптимізації",
-      "performanceExplanationTitle": "Інтерпретація оцінки продуктивності",
-      "components": {
-        "boneStructure": "Структура кісток",
-        "meshComplexity": "Складність сітки",
-        "clippingMasks": "Маски обрізання",
-        "blendModes": "Режими змішування",
-        "constraints": "Обмеження"
-      },
+
+  
       "tableHeaders": {
         "component": "Компонент",
         "score": "Оцінка",

@@ -8,35 +8,40 @@ import { InfoPanel } from './components/InfoPanel';
 import { CommandPalette } from './components/CommandPalette';
 import { VersionDisplay } from './components/VersionDisplay';
 import { LanguageModal } from './components/LanguageModal';
+import { NodePlayer } from './components/NodePlayer/SimpleNodePlayer';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { useSpineApp } from './hooks/useSpineApp';
 import { useCommandRegistration } from './hooks/useCommandRegistration';
 import { useUrlHash } from './hooks/useUrlHash';
-    const App: React.FC = () => {
-      const { t } = useTranslation();
-      const [app, setApp] = useState<Application | null>(null);
-      const canvasRef = useRef<HTMLCanvasElement>(null);
-      const [showBenchmark, setShowBenchmark] = useState(false);
-      const [showLanguageModal, setShowLanguageModal] = useState(false);
-    
-      // Debug log for language modal state changes
-      useEffect(() => {
-        console.log('🏠 App: Language modal state changed:', showLanguageModal);
-      }, [showLanguageModal]);
-    
-      // Enhanced setShowLanguageModal with additional logging
-      const setShowLanguageModalWithLogging = (show: boolean) => {
-        console.log('🏠 App: setShowLanguageModal called with:', show);
-        console.log('🏠 App: Current modal state before change:', showLanguageModal);
-        setShowLanguageModal(show);
-        console.log('🏠 App: setShowLanguageModal completed');
-      };
-      const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
-      const [isLoading, setIsLoading] = useState(false);
-      const [currentAnimation, setCurrentAnimation] = useState('');
-      const { addToast } = useToast();
-      const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
+
+const App: React.FC = () => {
+  const { t } = useTranslation();
+  const [app, setApp] = useState<Application | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showBenchmark, setShowBenchmark] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showNodePlayer, setShowNodePlayer] = useState(false);
+
+  // Debug log for language modal state changes
+  useEffect(() => {
+    console.log('🏠 App: Language modal state changed:', showLanguageModal);
+  }, [showLanguageModal]);
+
+  // Enhanced setShowLanguageModal with additional logging
+  const setShowLanguageModalWithLogging = (show: boolean) => {
+    console.log('🏠 App: setShowLanguageModal called with:', show);
+    console.log('🏠 App: Current modal state before change:', showLanguageModal);
+    setShowLanguageModal(show);
+    console.log('🏠 App: setShowLanguageModal completed');
+  };
+  
+  const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentAnimation, setCurrentAnimation] = useState('');
+  const { addToast } = useToast();
+  const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
+  
   const {
     spineInstance,
     loadSpineFiles,
@@ -49,7 +54,6 @@ import { useUrlHash } from './hooks/useUrlHash';
     togglePhysics,
     toggleIk
   } = useSpineApp(app);
-
 
   // Check initial hash state for benchmark panel
   useEffect(() => {
@@ -287,7 +291,6 @@ import { useUrlHash } from './hooks/useUrlHash';
     window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank');
   };
 
-
   useEffect(() => {
     if (app) {
       app.renderer.background.color = parseInt(backgroundColor.replace('#', '0x'));
@@ -299,6 +302,7 @@ import { useUrlHash } from './hooks/useUrlHash';
     setShowBenchmark(show);
     updateHash({ benchmarkInfo: show });
   }, [updateHash]);
+
   // Register commands for the command palette
   useCommandRegistration({
     spineInstance,
@@ -306,6 +310,7 @@ import { useUrlHash } from './hooks/useUrlHash';
     setShowBenchmark: setShowBenchmarkWithHash,
     openGitHubReadme,
     setShowLanguageModal: setShowLanguageModalWithLogging,
+    setShowNodePlayer,
     meshesVisible,
     physicsVisible,
     ikVisible,
@@ -406,6 +411,14 @@ import { useUrlHash } from './hooks/useUrlHash';
           setShowLanguageModalWithLogging(false);
         }}
       />
+      
+      {/* Node Player */}
+      {showNodePlayer && spineInstance && (
+        <NodePlayer
+          spineInstance={spineInstance}
+          onClose={() => setShowNodePlayer(false)}
+        />
+      )}
     </div>
   );
 };

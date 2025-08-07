@@ -1,0 +1,490 @@
+.node-player-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid #333;
+}
+
+.node-player-container {
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: none;
+}
+
+.node-player-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #333;
+  background: #252525;
+  border-radius: 8px 8px 0 0;
+}
+
+.node-player-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.node-player-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.node-player-controls button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.execute-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.execute-btn:hover {
+  background: #45a049;
+}
+
+.stop-btn {
+  background: #f44336;
+  color: white;
+}
+
+.stop-btn:hover {
+  background: #da190b;
+}
+
+.clear-logs-btn {
+  background: #ff9800;
+  color: white;
+}
+
+.clear-logs-btn:hover {
+  background: #e68900;
+}
+
+.close-btn {
+  background: #666;
+  color: white;
+}
+
+.close-btn:hover {
+  background: #555;
+}
+
+.node-player-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.node-editor-container {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #333;
+}
+
+.node-editor {
+  flex: 1;
+  background: #2a2a2a;
+  position: relative;
+}
+
+.node-editor-help {
+  padding: 12px 16px;
+  background: #1a1a1a;
+  border-top: 1px solid #333;
+  color: #ccc;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.node-editor-help p {
+  margin: 0;
+}
+
+.node-editor-help p:not(:last-child) {
+  margin-bottom: 4px;
+}
+
+.log-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  min-height: 200px;
+  max-height: 300px;
+}
+.log-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #333;
+  background: #252525;
+}
+
+.log-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.log-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.log-entry {
+  padding: 6px 8px;
+  margin-bottom: 2px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  color: #e0e0e0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+.log-entry:last-child {
+  margin-bottom: 0;
+}
+
+.log-empty {
+  color: #888;
+  font-style: italic;
+}
+/* Rete.js node styling overrides */
+.node-editor .rete-node {
+  background: #333 !important;
+  border: 1px solid #555 !important;
+  border-radius: 6px !important;
+  color: #fff !important;
+  position: relative !important;
+}
+
+.node-editor .rete-node.selected {
+  border-color: #4CAF50 !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3) !important;
+}
+
+.node-editor .rete-node .title {
+  background: #444 !important;
+  color: #fff !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  border-radius: 6px 6px 0 0 !important;
+  position: relative !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+/* Delete button styling */
+.node-delete-btn {
+  position: absolute !important;
+  top: 4px !important;
+  right: 4px !important;
+  width: 20px !important;
+  height: 20px !important;
+  background: #f44336 !important;
+  border: none !important;
+  border-radius: 50% !important;
+  color: white !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10 !important;
+  transition: all 0.2s ease !important;
+  opacity: 0.8 !important;
+}
+
+.node-delete-btn:hover {
+  background: #da190b !important;
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+}
+
+.node-delete-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Ensure exec pins are positioned at the top */
+.node-editor .rete-node .rete-input[data-key="exec"],
+.node-editor .rete-node .rete-output[data-key="exec"] {
+  order: -1 !important;
+  margin-top: 0 !important;
+}
+
+/* Improved spacing for node content */
+.node-editor .rete-node .content {
+  padding: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+/* Ensure proper spacing between exec pins and controls */
+.node-editor .rete-node .rete-input,
+.node-editor .rete-node .rete-output {
+  margin: 4px 8px !important;
+}
+
+.node-editor .rete-node .rete-input[data-key="exec"],
+.node-editor .rete-node .rete-output[data-key="exec"] {
+  margin-top: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.node-editor .rete-input,
+.node-editor .rete-output {
+  background: #555 !important;
+  border: 1px solid #666 !important;
+}
+
+.node-editor .rete-input.connected,
+.node-editor .rete-output.connected {
+  background: #4CAF50 !important;
+  border-color: #4CAF50 !important;
+}
+
+.node-editor .rete-connection .connection {
+  stroke: #4CAF50 !important;
+  stroke-width: 2px !important;
+}
+
+.node-editor .rete-control input,
+.node-editor .rete-control {
+  margin: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.node-editor .rete-control input,
+.node-editor .rete-control select {
+  background: #2a2a2a !important;
+  border: 1px solid #555 !important;
+  color: #fff !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.node-editor .rete-control input:focus,
+.node-editor .rete-control select:focus {
+  border-color: #4CAF50 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+
+.node-editor .rete-control::before {
+  content: attr(data-label) !important;
+  color: #ccc !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Specific control labels */
+.node-editor .rete-control[data-testid="track"]::before {
+  content: "TRACK" !important;
+}
+
+.node-editor .rete-control[data-testid="animation"]::before {
+  content: "ANIMATION" !important;
+}
+
+.node-editor .rete-control[data-testid="loop"]::before {
+  content: "LOOP" !important;
+}
+
+.node-editor .rete-control[data-testid="delay"]::before {
+  content: "DELAY (SEC)" !important;
+}
+
+.node-editor .rete-control[data-testid="value"]::before {
+  content: "SECONDS" !important;
+}
+
+.node-editor .rete-control[data-testid="message"]::before {
+  content: "MESSAGE" !important;
+}
+/* Context menu styling */
+.rete-context-menu {
+  background: #333 !important;
+  border: 1px solid #555 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.rete-context-menu .item {
+  color: #fff !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease !important;
+}
+
+.rete-context-menu .item:hover {
+  background: #4CAF50 !important;
+}
+
+/* Scrollbar styling for log panel */
+.log-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.log-content::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.log-content::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.log-content::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Custom select control styling */
+.custom-select-control {
+  margin: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.custom-select-control label {
+  color: #ccc !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.custom-select-control select {
+  background: #2a2a2a !important;
+  border: 1px solid #555 !important;
+  color: #fff !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+}
+
+.custom-select-control select:focus {
+  border-color: #4CAF50 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+.custom-select-control select option {
+  background: #2a2a2a !important;
+  color: #fff !important;
+  padding: 4px 8px !important;
+}
+
+/* Custom checkbox control styling */
+.custom-checkbox-control {
+  margin: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.custom-checkbox-control label {
+  color: #ccc !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  display: flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+}
+
+.custom-checkbox-control input[type="checkbox"] {
+  margin-right: 8px !important;
+  width: 16px !important;
+  height: 16px !important;
+  accent-color: #4CAF50 !important;
+  cursor: pointer !important;
+}
+
+.custom-checkbox-control input[type="checkbox"]:focus {
+  outline: 2px solid rgba(76, 175, 80, 0.3) !important;
+  outline-offset: 2px !important;
+}
+
+/* Enhanced animation dropdown styling */
+.animation-dropdown-control {
+  margin: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.animation-dropdown-control label {
+  color: #ccc !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.animation-dropdown-control select {
+  background: #2a2a2a !important;
+  border: 1px solid #555 !important;
+  color: #fff !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+}
+
+.animation-dropdown-control select:focus {
+  border-color: #4CAF50 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+
+.animation-dropdown-control select option {
+  background: #2a2a2a !important;
+  color: #fff !important;
+  padding: 4px 8px !important;
+}
+
+/* Hide default text inputs for animation and loop controls */
+.node-editor .rete-control[data-testid="animation"] input[type="text"],
+.node-editor .rete-control[data-testid="loop"] input[type="text"] {
+  display: none !important;
+}

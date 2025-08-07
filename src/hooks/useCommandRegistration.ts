@@ -9,6 +9,7 @@ interface UseCommandRegistrationProps {
   setShowBenchmark: (show: boolean) => void;
   openGitHubReadme: () => void;
   setShowLanguageModal: (show: boolean) => void;
+  setShowNodePlayer: (show: boolean) => void;
   meshesVisible: boolean;
   physicsVisible: boolean;
   ikVisible: boolean;
@@ -16,13 +17,13 @@ interface UseCommandRegistrationProps {
   togglePhysics: () => void;
   toggleIk: () => void;
 }
-
 export function useCommandRegistration({
   spineInstance,
   showBenchmark,
   setShowBenchmark,
   openGitHubReadme,
   setShowLanguageModal,
+  setShowNodePlayer,
   meshesVisible,
   physicsVisible,
   ikVisible,
@@ -208,6 +209,18 @@ export function useCommandRegistration({
     
     console.log('✅ Language command registered successfully');
 
+    // Node Player Command - only register if spine instance exists
+    if (spineInstance) {
+      commandRegistry.register({
+        id: 'animation.node-player',
+        title: 'Open Node Player',
+        category: 'animation',
+        description: 'Open the visual node-based animation player',
+        keywords: ['node', 'player', 'visual', 'animation', 'flow', 'graph'],
+        execute: () => setShowNodePlayer(true)
+      });
+    }
+
     // Cleanup function to unregister commands
     // Cleanup function to unregister commands
     return () => {
@@ -215,6 +228,7 @@ export function useCommandRegistration({
         'animation.play-pause',
         'animation.stop',
         'animation.restart',
+        'animation.node-player',
         'debug.show-mesh',
         'debug.hide-mesh',
         'debug.show-ik',
@@ -241,6 +255,7 @@ export function useCommandRegistration({
     setShowBenchmark,
     openGitHubReadme,
     setShowLanguageModal,
+    setShowNodePlayer,
     meshesVisible,
     physicsVisible,
     ikVisible,
