@@ -315,7 +315,7 @@ interface NodePlayerProps {
 export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<NodeEditor<Schemes> | null>(null);
-  const engineRef = useRef<ControlFlowEngine<Schemes> | null>(null);
+  const engineRef = useRef<ControlFlowEngine<any> | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [availableAnimations, setAvailableAnimations] = useState<string[]>([]);
 
@@ -348,14 +348,14 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
     const initEditor = async () => {
       const editor = new NodeEditor<Schemes>();
       const area = new AreaPlugin<Schemes, AreaExtra>(containerRef.current!);
-      const connection = new ConnectionPlugin<Schemes, AreaExtra>();
-      const render = new ReactPlugin<Schemes, AreaExtra>({ createRoot });
-      const arrange = new AutoArrangePlugin<Schemes>();
-      const engine = new ControlFlowEngine<Schemes>();
+      const connection = new ConnectionPlugin<any, any>();
+      const render = new ReactPlugin<any, any>({ createRoot });
+      const arrange = new AutoArrangePlugin<any>();
+      const engine = new ControlFlowEngine<any>();
       
       // Delete functionality
       const deleteSelectedNodes = async () => {
-        const selectedNodes = area.selector?.entities || [];
+        const selectedNodes = (area as any).selector?.entities || [];
         for (const nodeId of selectedNodes) {
           try {
             const node = editor.getNode(nodeId);
@@ -377,7 +377,7 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
         }
       };
       
-      const contextMenu = new ContextMenuPlugin<Schemes>({
+      const contextMenu = new ContextMenuPlugin<any>({
         items: ContextMenuPresets.classic.setup([
           ["Start", () => new Start()],
           ["Set Animation", () => new SetAnimation(spineInstance, addLog, 0, "", true, availableAnimations)],
@@ -387,7 +387,7 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
           ["Log", () => new Log(addLog)],
           ["Delete Selected", () => {
             deleteSelectedNodes();
-            return null;
+            return null as any;
           }]
         ])
       });
@@ -404,41 +404,230 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
         customize: {
           control(data) {
             if (data.payload instanceof AnimationDropdownControl) {
+              const control = data.payload as AnimationDropdownControl;
               return () => React.createElement('div', {
-                className: 'custom-select-control'
+                className: 'custom-select-control',
+                style: { pointerEvents: 'auto', zIndex: 1000 },
+                // Comprehensive event prevention for all phases
+                onPointerDown: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onPointerUp: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onClick: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onMouseDown: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onMouseUp: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                // Capture phase event handling
+                onClickCapture: (e: any) => {
+                  e.stopPropagation();
+                },
+                onMouseDownCapture: (e: any) => {
+                  e.stopPropagation();
+                },
+                onPointerDownCapture: (e: any) => {
+                  e.stopPropagation();
+                }
               }, [
                 React.createElement('label', { key: 'label' }, 'ANIMATION'),
                 React.createElement('select', {
                   key: 'select',
-                  value: data.payload.value,
+                  value: control.value,
+                  style: { pointerEvents: 'auto', zIndex: 1001 },
+                  // Comprehensive event prevention for select element
+                  onPointerDown: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  onPointerUp: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  onClick: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  onMouseDown: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  onMouseUp: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  // Capture phase event handling
+                  onClickCapture: (e: any) => {
+                    e.stopPropagation();
+                  },
+                  onMouseDownCapture: (e: any) => {
+                    e.stopPropagation();
+                  },
+                  onPointerDownCapture: (e: any) => {
+                    e.stopPropagation();
+                  },
                   onChange: (e: any) => {
-                    data.payload.value = e.target.value;
-                    if (data.payload.onChange) {
-                      data.payload.onChange(e.target.value);
+                    e.stopPropagation();
+                    e.preventDefault();
+                    control.value = e.target.value;
+                    if (control.onChange) {
+                      control.onChange(e.target.value);
                     }
+                  },
+                  onFocus: (e: any) => {
+                    e.stopPropagation();
+                  },
+                  onBlur: (e: any) => {
+                    e.stopPropagation();
                   }
-                }, data.payload.options.length === 0 ? [
+                }, control.options.length === 0 ? [
                   React.createElement('option', { key: 'empty', value: '' }, 'No animations available')
-                ] : data.payload.options.map((option: string) => 
+                ] : control.options.map((option: string) =>
                   React.createElement('option', { key: option, value: option }, option)
                 ))
               ]);
             }
             
             if (data.payload instanceof LoopCheckboxControl) {
+              const control = data.payload as LoopCheckboxControl;
               return () => React.createElement('div', {
-                className: 'custom-checkbox-control'
+                className: 'custom-checkbox-control',
+                style: { pointerEvents: 'auto', zIndex: 1000 },
+                // Comprehensive event prevention for all phases
+                onPointerDown: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onPointerUp: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onClick: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onMouseDown: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                onMouseUp: (e: any) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                },
+                // Capture phase event handling
+                onClickCapture: (e: any) => {
+                  e.stopPropagation();
+                },
+                onMouseDownCapture: (e: any) => {
+                  e.stopPropagation();
+                },
+                onPointerDownCapture: (e: any) => {
+                  e.stopPropagation();
+                }
               }, [
-                React.createElement('label', { key: 'label' }, [
+                React.createElement('label', {
+                  key: 'label',
+                  style: { pointerEvents: 'auto', zIndex: 1001 },
+                  // Comprehensive event prevention for label
+                  onPointerDown: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  onPointerUp: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  onClick: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    // Manually toggle the checkbox
+                    const newValue = !control.value;
+                    control.value = newValue;
+                    if (control.onChange) {
+                      control.onChange(newValue);
+                    }
+                  },
+                  onMouseDown: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  onMouseUp: (e: any) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  },
+                  // Capture phase event handling
+                  onClickCapture: (e: any) => {
+                    e.stopPropagation();
+                  },
+                  onMouseDownCapture: (e: any) => {
+                    e.stopPropagation();
+                  },
+                  onPointerDownCapture: (e: any) => {
+                    e.stopPropagation();
+                  }
+                }, [
                   React.createElement('input', {
                     key: 'checkbox',
                     type: 'checkbox',
-                    checked: data.payload.value,
-                    onChange: (e: any) => {
-                      data.payload.value = e.target.checked;
-                      if (data.payload.onChange) {
-                        data.payload.onChange(e.target.checked);
+                    checked: control.value,
+                    style: { pointerEvents: 'auto', zIndex: 1002 },
+                    // Comprehensive event prevention for checkbox
+                    onPointerDown: (e: any) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    },
+                    onPointerUp: (e: any) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    },
+                    onClick: (e: any) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      // Manually toggle the checkbox
+                      const newValue = !control.value;
+                      control.value = newValue;
+                      if (control.onChange) {
+                        control.onChange(newValue);
                       }
+                    },
+                    onMouseDown: (e: any) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    },
+                    onMouseUp: (e: any) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    },
+                    // Capture phase event handling
+                    onClickCapture: (e: any) => {
+                      e.stopPropagation();
+                    },
+                    onMouseDownCapture: (e: any) => {
+                      e.stopPropagation();
+                    },
+                    onPointerDownCapture: (e: any) => {
+                      e.stopPropagation();
+                    },
+                    onChange: (e: any) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      // This should not be called due to manual handling above
+                    },
+                    onFocus: (e: any) => {
+                      e.stopPropagation();
+                    },
+                    onBlur: (e: any) => {
+                      e.stopPropagation();
                     }
                   }),
                   ' LOOP'
@@ -498,11 +687,10 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
       await editor.addNode(addAnim);
       await editor.addNode(log);
 
-      await editor.addConnection(con1);
-      await editor.addConnection(con2);
-      await editor.addConnection(con3);
-      await editor.addConnection(con4);
-
+      await editor.addConnection(con1 as any);
+      await editor.addConnection(con2 as any);
+      await editor.addConnection(con3 as any);
+      await editor.addConnection(con4 as any);
       await arrange.layout();
       AreaExtensions.zoomAt(area, editor.getNodes());
 

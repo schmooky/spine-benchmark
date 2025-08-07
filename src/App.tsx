@@ -8,7 +8,7 @@ import { InfoPanel } from './components/InfoPanel';
 import { CommandPalette } from './components/CommandPalette';
 import { VersionDisplay } from './components/VersionDisplay';
 import { LanguageModal } from './components/LanguageModal';
-import { NodePlayer } from './components/NodePlayer/SimpleNodePlayer';
+import { NodePlayer } from './components/NodePlayer/NodePlayer';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { useSpineApp } from './hooks/useSpineApp';

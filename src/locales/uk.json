@@ -145,9 +145,7 @@
     "changeLanguage": "Змінити мову",
     "changeLanguageDescription": "Відкрити модальне вікно вибору мови"
   },
-
-  
-      "tableHeaders": {
+  "tableHeaders": {
         "component": "Компонент",
         "score": "Оцінка",
         "weight": "Вага",
@@ -156,7 +154,7 @@
         "rating": "Рейтинг",
         "interpretation": "Інтерпретація"
       },
-      "statistics": {
+  "statistics": {
         "totalBones": "Загалом кісток",
         "maxBoneDepth": "Макс. глибина кісток",
         "totalMeshes": "Загалом сіток",
@@ -202,8 +200,7 @@
           "rating": "Погано",
           "description": "Проблеми з продуктивністю ймовірні на більшості пристроїв"
         }
-      }
-    },
+      },
     "scores": {
       "ratings": {
         "excellent": "Відмінно",
@@ -457,5 +454,4 @@
         "recommendation": "Рекомендація: Використовуйте обмеження економно і з мінімальними ланцюгами кісток коли можливо"
       }
     }
-  }
 }
