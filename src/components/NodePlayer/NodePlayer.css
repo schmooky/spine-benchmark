@@ -231,31 +231,43 @@
   transform: scale(0.95) !important;
 }
 
-/* Ensure exec pins are positioned at the top */
-.node-editor .rete-node .rete-input[data-key="exec"],
-.node-editor .rete-node .rete-output[data-key="exec"] {
-  order: -1 !important;
-  margin-top: 0 !important;
+/* Position exec pins right under the title */
+.node-editor .rete-node {
+  position: relative !important;
 }
 
-/* Improved spacing for node content */
+.node-editor .rete-node .rete-input[data-key="exec"] {
+  position: absolute !important;
+  top: 32px !important; /* Right under the title */
+  left: 8px !important;
+  margin: 0 !important;
+  z-index: 10 !important;
+  order: -1000 !important;
+}
+
+.node-editor .rete-node .rete-output[data-key="exec"] {
+  position: absolute !important;
+  top: 32px !important; /* Right under the title */
+  right: 8px !important;
+  margin: 0 !important;
+  z-index: 10 !important;
+  order: -1000 !important;
+}
+
+/* Add padding to node content to avoid overlap with exec pins */
 .node-editor .rete-node .content {
   padding: 8px !important;
+  padding-top: 40px !important; /* Make room for exec pins */
   display: flex !important;
   flex-direction: column !important;
   gap: 8px !important;
 }
 
-/* Ensure proper spacing between exec pins and controls */
-.node-editor .rete-node .rete-input,
-.node-editor .rete-node .rete-output {
+/* Regular input/output pins */
+.node-editor .rete-node .rete-input:not([data-key="exec"]),
+.node-editor .rete-node .rete-output:not([data-key="exec"]) {
   margin: 4px 8px !important;
-}
-
-.node-editor .rete-node .rete-input[data-key="exec"],
-.node-editor .rete-node .rete-output[data-key="exec"] {
-  margin-top: 8px !important;
-  margin-bottom: 12px !important;
+  position: relative !important;
 }
 
 .node-editor .rete-input,
