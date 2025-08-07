@@ -75,7 +75,7 @@ class SetAnimation extends ClassicPreset.Node<
   }
 > {
   width = 240;
-  height = 220;
+  height = 360;
 
   constructor(
     private spineInstance: Spine | null,
@@ -146,7 +146,7 @@ class AddAnimation extends ClassicPreset.Node<
   }
 > {
   width = 240;
-  height = 240;
+  height = 360;
 
   constructor(
     private spineInstance: Spine | null,
@@ -334,6 +334,8 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
   const isInitializedRef = useRef(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [availableAnimations, setAvailableAnimations] = useState<string[]>([]);
+  const [showNodePalette, setShowNodePalette] = useState(true);
+  const [nodeSearchFilter, setNodeSearchFilter] = useState('');
 
   // Log function that adds messages to the log panel
   const addLog = (message: string) => {
@@ -345,6 +347,75 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
   const clearLogs = () => {
     setLogs([]);
   };
+
+  // Node creation functions
+  const createNodeAtPosition = async (nodeType: string, x: number = 100, y: number = 100) => {
+    if (!editorRef.current || !areaRef.current) return;
+
+    // Get current animations from spine instance or fallback to stored animations
+    const currentAnimations = spineInstance?.skeleton?.data?.animations?.map(anim => anim.name) || availableAnimations;
+
+    let node: NodeProps;
+    
+    switch (nodeType) {
+      case 'Start':
+        node = new Start();
+        break;
+      case 'SetAnimation':
+        node = new SetAnimation(spineInstance, addLog, 0, "", true, currentAnimations);
+        break;
+      case 'AddAnimation':
+        node = new AddAnimation(spineInstance, addLog, 0, "", false, 0, currentAnimations);
+        break;
+      case 'Wait':
+        node = new Wait(addLog);
+        break;
+      case 'ClearTrack':
+        node = new ClearTrack(spineInstance, addLog);
+        break;
+      case 'Log':
+        node = new Log(addLog);
+        break;
+      default:
+        addLog(`Unknown node type: ${nodeType}`);
+        return;
+    }
+
+    try {
+      await editorRef.current.addNode(node);
+      await areaRef.current.translate(node.id, { x, y });
+      addLog(`Created ${nodeType} node with ${currentAnimations.length} available animations`);
+    } catch (error) {
+      addLog(`Error creating node: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Create node at center of viewport
+  const createNodeAtCenter = (nodeType: string) => {
+    if (!areaRef.current) return;
+    
+    const area = areaRef.current.area;
+    const centerX = -area.transform.x + (containerRef.current?.clientWidth || 800) / 2 / area.transform.k;
+    const centerY = -area.transform.y + (containerRef.current?.clientHeight || 600) / 2 / area.transform.k;
+    
+    createNodeAtPosition(nodeType, centerX, centerY);
+  };
+
+  // Node types for the palette
+  const nodeTypes = [
+    { type: 'Start', icon: '▶', description: 'Start execution flow' },
+    { type: 'SetAnimation', icon: '🎬', description: 'Set animation on track' },
+    { type: 'AddAnimation', icon: '➕', description: 'Add animation to queue' },
+    { type: 'Wait', icon: '⏱', description: 'Wait for duration' },
+    { type: 'ClearTrack', icon: '🗑', description: 'Clear animation track' },
+    { type: 'Log', icon: '📝', description: 'Log message' }
+  ];
+
+  // Filter nodes based on search
+  const filteredNodeTypes = nodeTypes.filter(node =>
+    node.type.toLowerCase().includes(nodeSearchFilter.toLowerCase()) ||
+    node.description.toLowerCase().includes(nodeSearchFilter.toLowerCase())
+  );
 
   // Get available animations from spine instance
   useEffect(() => {
@@ -456,23 +527,27 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
         const contextMenu = new ContextMenuPlugin<Schemes>({
           items: ContextMenuPresets.classic.setup([
             ["Start", () => new Start()],
-            ["Set Animation", () => new SetAnimation(spineInstance, addLog, 0, "", true, availableAnimations)],
-            ["Add Animation", () => new AddAnimation(spineInstance, addLog, 0, "", false, 0, availableAnimations)],
+            ["Set Animation", () => {
+              const currentAnimations = spineInstance?.skeleton?.data?.animations?.map(anim => anim.name) || availableAnimations;
+              return new SetAnimation(spineInstance, addLog, 0, "", true, currentAnimations);
+            }],
+            ["Add Animation", () => {
+              const currentAnimations = spineInstance?.skeleton?.data?.animations?.map(anim => anim.name) || availableAnimations;
+              return new AddAnimation(spineInstance, addLog, 0, "", false, 0, currentAnimations);
+            }],
             ["Wait", () => new Wait(addLog)],
             ["Clear Track", () => new ClearTrack(spineInstance, addLog)],
             ["Log", () => new Log(addLog)]
           ])
         });
+// Setup selectable nodes and store selector reference
+selectorPlugin = AreaExtensions.selector();
+AreaExtensions.selectableNodes(area, selectorPlugin, {
+  accumulating: AreaExtensions.accumulateOnCtrl()
+});
 
-        area.use(contextMenu);
-
-        // Setup selectable nodes and store selector reference
-        selectorPlugin = AreaExtensions.selector();
-        AreaExtensions.selectableNodes(area, selectorPlugin, {
-          accumulating: AreaExtensions.accumulateOnCtrl()
-        });
-
-        // Custom control rendering
+// Custom control rendering
+render.addPreset(Presets.contextMenu.setup());
         render.addPreset(Presets.contextMenu.setup());
         render.addPreset(Presets.classic.setup({
           customize: {
@@ -553,9 +628,20 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
                     onChange: (e: any) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      control.value = e.target.value;
+                      const newValue = e.target.value;
+                      control.value = newValue;
                       if (control.onChange) {
-                        control.onChange(e.target.value);
+                        control.onChange(newValue);
+                      }
+                      // Force re-render by updating the entire node
+                      if (areaRef.current && editorRef.current) {
+                        const nodeId = Object.keys(editorRef.current.getNodes()).find(id => {
+                          const node = editorRef.current!.getNode(id);
+                          return node && Object.values(node.controls || {}).includes(control);
+                        });
+                        if (nodeId) {
+                          areaRef.current.update('node', nodeId);
+                        }
                       }
                     },
                     onFocus: (e: any) => {
@@ -654,6 +740,16 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
                       if (control.onChange) {
                         control.onChange(newValue);
                       }
+                      // Force re-render by updating the entire node
+                      if (areaRef.current && editorRef.current) {
+                        const nodeId = Object.keys(editorRef.current.getNodes()).find(id => {
+                          const node = editorRef.current!.getNode(id);
+                          return node && Object.values(node.controls || {}).includes(control);
+                        });
+                        if (nodeId) {
+                          areaRef.current.update('node', nodeId);
+                        }
+                      }
                     },
                     onFocus: (e: any) => {
                       e.stopPropagation();
@@ -725,6 +821,16 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
                       if (control.onChange) {
                         control.onChange(newValue);
                       }
+                      // Force re-render by updating the entire node
+                      if (areaRef.current && editorRef.current) {
+                        const nodeId = Object.keys(editorRef.current.getNodes()).find(id => {
+                          const node = editorRef.current!.getNode(id);
+                          return node && Object.values(node.controls || {}).includes(control);
+                        });
+                        if (nodeId) {
+                          areaRef.current.update('node', nodeId);
+                        }
+                      }
                     },
                     onMouseDown: (e: any) => {
                       e.stopPropagation();
@@ -767,6 +873,16 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
                         control.value = newValue;
                         if (control.onChange) {
                           control.onChange(newValue);
+                        }
+                        // Force re-render by updating the entire node
+                        if (areaRef.current && editorRef.current) {
+                          const nodeId = Object.keys(editorRef.current.getNodes()).find(id => {
+                            const node = editorRef.current!.getNode(id);
+                            return node && Object.values(node.controls || {}).includes(control);
+                          });
+                          if (nodeId) {
+                            areaRef.current.update('node', nodeId);
+                          }
                         }
                       },
                       onMouseDown: (e: any) => {
@@ -817,18 +933,64 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
         area.use(connection);
         area.use(render);
         area.use(arrange);
+        
+        // Add context menu after render plugin
+        area.use(contextMenu);
 
         AreaExtensions.simpleNodesOrder(area);
         AreaExtensions.showInputControl(area);
-        // Add keyboard event listener for delete functionality
+        
+        // Ensure context menu is properly enabled
+        addLog("Context menu enabled - right-click on empty space to add nodes");
+        // Add keyboard event listener for delete functionality and node creation shortcuts
         const handleKeyDown = (event: KeyboardEvent) => {
-          // Only handle delete/backspace when not typing in inputs
-          if ((event.key === 'Delete' || event.key === 'Backspace') &&
-              event.target &&
-              !['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement).tagName)) {
+          // Only handle shortcuts when not typing in inputs
+          if (event.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement).tagName)) {
+            return;
+          }
+
+          // Delete/backspace for node deletion
+          if (event.key === 'Delete' || event.key === 'Backspace') {
             event.preventDefault();
             event.stopPropagation();
             deleteSelectedNodes();
+            return;
+          }
+
+          // Node creation shortcuts (Ctrl + key)
+          if (event.ctrlKey && !event.shiftKey && !event.altKey) {
+            switch (event.key.toLowerCase()) {
+              case '1':
+                event.preventDefault();
+                createNodeAtCenter('Start');
+                break;
+              case '2':
+                event.preventDefault();
+                createNodeAtCenter('SetAnimation');
+                break;
+              case '3':
+                event.preventDefault();
+                createNodeAtCenter('AddAnimation');
+                break;
+              case '4':
+                event.preventDefault();
+                createNodeAtCenter('Wait');
+                break;
+              case '5':
+                event.preventDefault();
+                createNodeAtCenter('ClearTrack');
+                break;
+              case '6':
+                event.preventDefault();
+                createNodeAtCenter('Log');
+                break;
+            }
+          }
+
+          // Toggle node palette with 'P' key
+          if (event.key.toLowerCase() === 'p' && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+            event.preventDefault();
+            setShowNodePalette(prev => !prev);
           }
         };
         
@@ -942,6 +1104,13 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
         <div className="node-player-header">
           <h2>Spine Animation Node Player</h2>
           <div className="node-player-controls">
+            <button
+              onClick={() => setShowNodePalette(!showNodePalette)}
+              className={`palette-toggle-btn ${showNodePalette ? 'active' : ''}`}
+              title="Toggle Node Palette (P)"
+            >
+              🎛 Palette
+            </button>
             <button onClick={executeFlow} className="execute-btn">
               ▶ Execute Flow
             </button>
@@ -959,12 +1128,49 @@ export const NodePlayer: React.FC<NodePlayerProps> = ({ spineInstance, onClose }
         
         <div className="node-player-content">
           <div className="node-editor-container">
-            <div ref={containerRef} className="node-editor" />
-            <div className="node-editor-help">
-              <p><strong>Controls:</strong> Right-click on empty space to add nodes • Drag between pins to connect • Click to select nodes (Ctrl+click for multiple) • Press Delete/Backspace to remove selected nodes</p>
-              <p><strong>Available animations:</strong> {availableAnimations.join(', ')}</p>
-              <p><strong>Layout:</strong> Exec pins are positioned at the top • Animation nodes have increased height for better visibility</p>
-              <p><strong>Features:</strong> Animation dropdown shows available animations • Loop checkbox for easy toggling</p>
+            {showNodePalette && (
+              <div className="node-palette">
+                <div className="node-palette-header">
+                  <h4>Node Palette</h4>
+                  <input
+                    type="text"
+                    placeholder="Search nodes..."
+                    value={nodeSearchFilter}
+                    onChange={(e) => setNodeSearchFilter(e.target.value)}
+                    className="node-search-input"
+                  />
+                </div>
+                <div className="node-palette-content">
+                  {filteredNodeTypes.map((nodeType) => (
+                    <button
+                      key={nodeType.type}
+                      className="node-palette-item"
+                      onClick={() => createNodeAtCenter(nodeType.type)}
+                      title={`${nodeType.description} (Ctrl+${nodeTypes.indexOf(nodeType) + 1})`}
+                    >
+                      <span className="node-icon">{nodeType.icon}</span>
+                      <div className="node-info">
+                        <div className="node-name">{nodeType.type}</div>
+                        <div className="node-description">{nodeType.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                  {filteredNodeTypes.length === 0 && (
+                    <div className="node-palette-empty">
+                      No nodes match your search
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="node-editor-wrapper">
+              <div ref={containerRef} className="node-editor" />
+              <div className="node-editor-help">
+                <p><strong>Controls:</strong> Right-click on empty space to add nodes • Drag between pins to connect • Click to select nodes (Ctrl+click for multiple) • Press Delete/Backspace to remove selected nodes</p>
+                <p><strong>Shortcuts:</strong> Ctrl+1-6 to create nodes • P to toggle palette • Available animations: {availableAnimations.join(', ')}</p>
+                <p><strong>Layout:</strong> Exec pins are positioned at the top • Animation nodes have increased height for better visibility</p>
+                <p><strong>Features:</strong> Animation dropdown shows available animations • Loop checkbox for easy toggling</p>
+              </div>
             </div>
           </div>
           
