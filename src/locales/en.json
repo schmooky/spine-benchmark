@@ -157,6 +157,15 @@
     "changeLanguageDescription": "Open language selection modal"
   },
   "analysis": {
+    "performance": {
+      "title": "Performance Analysis",
+      "skeletonLabel": "Skeleton: {{name}}",
+      "medianScoreLabel": "Median Performance Score ({{rating}})",
+      "globalMetrics": "Global Metrics",
+      "animationScores": "Per-Animation Performance",
+      "impactBreakdown": "Impact Breakdown",
+      "optimizationTitle": "Optimization Recommendations"
+    },
     "summary": {
       "title": "Spine Performance Analysis",
       "skeletonLabel": "Skeleton: {{name}}",

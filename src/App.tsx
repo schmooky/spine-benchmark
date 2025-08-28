@@ -119,7 +119,8 @@ const App: React.FC = () => {
     toggleMeshes,
     togglePhysics,
     toggleIk,
-    cameraContainer  // Add this
+    cameraContainer,
+    performanceData
   } = useSpineApp(app);
 
   // Check for URL parameters on mount - Enhanced version
@@ -472,12 +473,13 @@ const App: React.FC = () => {
         setShowBenchmark={setShowBenchmarkWithHash}
       />
       
-      {showBenchmark && benchmarkData && (
-        <InfoPanel
-          data={benchmarkData}
-          onClose={() => setShowBenchmarkWithHash(false)}
-        />
-      )}
+{showBenchmark && benchmarkData && (
+  <InfoPanel
+    data={benchmarkData}
+    performanceData={performanceData}
+    onClose={() => setShowBenchmarkWithHash(false)}
+  />
+)}
       
       {/* React Toastify Container with dark theme */}
       <ToastContainer

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CameraContainer } from '../core/CameraContainer';
 import { SpineAnalyzer, SpineAnalysisResult } from '../core/SpineAnalyzer';
+import { SpinePerformanceAnalyzer, SpinePerformanceAnalysisResult } from '../core/SpinePerformanceAnalyzer';
 import { useToast } from './ToastContext';
 import { useSpineLoader } from './useSpineLoader';
 import { useDebugVisualizer } from './useDebugVisualizer';
@@ -24,6 +25,7 @@ export interface DebugFlags {
 export function useSpineApp(app: Application | null) {
   const { i18n } = useTranslation();
   const [benchmarkData, setBenchmarkData] = useState<SpineAnalysisResult | null>(null);
+  const [performanceData, setPerformanceData] = useState<SpinePerformanceAnalysisResult | null>(null);
   
   const cameraContainerRef = useRef<CameraContainer | null>(null);
   const previousSpineInstanceRef = useRef<Spine | null>(null);
@@ -39,9 +41,11 @@ export function useSpineApp(app: Application | null) {
   } = useSpineLoader(app);
   
   const { 
-    meshesVisible, 
+    meshesVisible,
+    physicsVisible,
     ikVisible, 
-    toggleMeshes, 
+    toggleMeshes,
+    togglePhysics,
     toggleIk
   } = useDebugVisualizer();
   
@@ -78,6 +82,10 @@ export function useSpineApp(app: Application | null) {
     if (spineInstance) {
       const analysisResult = SpineAnalyzer.analyze(spineInstance);
       setBenchmarkData(analysisResult);
+      
+      // Also generate performance data
+      const perfResult = SpinePerformanceAnalyzer.analyze(spineInstance);
+      setPerformanceData(perfResult);
     }
   }, [i18n.language, spineInstance]);
 
@@ -95,6 +103,7 @@ export function useSpineApp(app: Application | null) {
       // Clear benchmark data when no spine instance
       if (!spineInstance) {
         setBenchmarkData(null);
+        setPerformanceData(null);
       }
       previousSpineInstanceRef.current = null;
       return;
@@ -107,9 +116,12 @@ export function useSpineApp(app: Application | null) {
     cameraContainerRef.current.addChild(spineInstance);
     cameraContainerRef.current.lookAtChild(spineInstance);
     
-    // Analyze spine data with new analyzer
+    // Analyze spine data with both analyzers
     const analysisResult = SpineAnalyzer.analyze(spineInstance);
     setBenchmarkData(analysisResult);
+    
+    const perfResult = SpinePerformanceAnalyzer.analyze(spineInstance);
+    setPerformanceData(perfResult);
     
     // Reset all debug flags
     // Ensure debug visualization is turned off by default
@@ -135,12 +147,13 @@ export function useSpineApp(app: Application | null) {
       showMeshTriangles: meshesVisible,
       showMeshHull: meshesVisible,
       showRegionAttachments: meshesVisible,
-      showIkConstraints: ikVisible
+      showIkConstraints: ikVisible,
+      showPhysics: physicsVisible
     });
     
     // Force update debug graphics
     cameraContainerRef.current.forceResetDebugGraphics();
-  }, [meshesVisible, ikVisible]);
+  }, [meshesVisible, physicsVisible, ikVisible]);
 
   return {
     spineInstance,
@@ -148,11 +161,14 @@ export function useSpineApp(app: Application | null) {
     loadSpineFromUrls,
     isLoading,
     benchmarkData,
+    performanceData, // Add this
     setBackgroundImage,
     clearBackgroundImage,
     toggleMeshes,
+    togglePhysics,
     toggleIk,
     meshesVisible,
+    physicsVisible,
     ikVisible,
     cameraContainer: cameraContainerRef.current
   };

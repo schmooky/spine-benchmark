@@ -13,13 +13,15 @@ import { ClippingAnalysis } from './analysis/ClippingAnalysis';
 import { BlendModeAnalysis } from './analysis/BlendModeAnalysis';
 import { PhysicsAnalysis } from './analysis/PhysicsAnalysis';
 import { SkeletonTree } from './analysis/SkeletonTree';
+import { PerformanceSummary } from './analysis/PerformanceSummary';
 
 interface InfoPanelProps {
   data: SpineAnalysisResult;
+  performanceData?: any; // Optional performance data
   onClose: () => void;
 }
 
-export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
+export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onClose }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('summary');
   const { updateHash, getStateFromHash } = useUrlHash();
@@ -52,6 +54,7 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
     { id: 'blendModeAnalysis', label: t('infoPanel.tabs.blendModes') },
     { id: 'physicsAnalysis', label: t('infoPanel.tabs.physicsAnalysis') },
     { id: 'skeletonTree', label: t('infoPanel.tabs.skeletonTree') },
+    ...(performanceData ? [{ id: 'performance', label: t('infoPanel.tabs.performance', 'Performance') }] : [])
   ];
   
   const renderTabContent = () => {
@@ -68,6 +71,8 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
         return <PhysicsAnalysis data={data} />;
       case 'skeletonTree':
         return <SkeletonTree data={data} />;
+      case 'performance':
+        return performanceData ? <PerformanceSummary data={performanceData} /> : null;
       default:
         return <div>{t('infoPanel.content.selectTab')}</div>;
     }
