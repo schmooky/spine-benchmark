@@ -1,23 +1,30 @@
 import { useEffect, useState, useCallback } from 'react';
 import { SpineAnalysisResult } from '../core/SpineAnalyzer';
+import { SpinePerformanceAnalysisResult } from '../core/SpinePerformanceAnalyzer';
+import { PERFORMANCE_CONFIG } from '../core/config/performanceConfig';
 
 export interface UseBenchmarkPanelResult {
   isVisible: boolean;
   shouldPulsate: boolean;
-  score: number | null;
-  scoreClass: string;
+  computationImpact: number | null;
+  renderingImpact: number | null;
+  ciClass: string;
+  riClass: string;
   handleClick: () => void;
 }
 
 export const useBenchmarkPanel = (
   benchmarkData: SpineAnalysisResult | null,
+  performanceData: SpinePerformanceAnalysisResult | null,
   showBenchmark: boolean,
   setShowBenchmark: (show: boolean) => void
 ): UseBenchmarkPanelResult => {
   const [isVisible, setIsVisible] = useState(false);
   const [pulsateCount, setPulsateCount] = useState(0);
-  const [score, setScore] = useState<number | null>(null);
-  const [scoreClass, setScoreClass] = useState('');
+  const [computationImpact, setComputationImpact] = useState<number | null>(null);
+  const [renderingImpact, setRenderingImpact] = useState<number | null>(null);
+  const [ciClass, setCiClass] = useState('');
+  const [riClass, setRiClass] = useState('');
 
   // Determine if panel should be visible
   useEffect(() => {
@@ -43,29 +50,41 @@ export const useBenchmarkPanel = (
     return () => clearTimeout(timer);
   }, [isVisible, pulsateCount]);
 
-  // Calculate score and class when benchmarkData changes
+  // Calculate CI and RI separately when performanceData changes
   useEffect(() => {
-    if (benchmarkData) {
-      const calculatedScore = benchmarkData.medianScore;
-      setScore(calculatedScore);
+    if (performanceData) {
+      const ci = performanceData.globalMetrics.computationImpact;
+      const ri = performanceData.globalMetrics.renderingImpact;
       
-      // Determine score class based on performance
-      if (calculatedScore !== null) {
-        if (calculatedScore <= 30) {
-          setScoreClass('poor');
-        } else if (calculatedScore <= 70) {
-          setScoreClass('fair');
-        } else {
-          setScoreClass('good');
-        }
+      setComputationImpact(ci);
+      setRenderingImpact(ri);
+      
+      // Determine CI class (CPU impact - lower is better)
+      // Uses centralized thresholds from PERFORMANCE_CONFIG
+      if (ci <= PERFORMANCE_CONFIG.ciThresholds.low) {
+        setCiClass('good'); // Green - low CPU impact
+      } else if (ci <= PERFORMANCE_CONFIG.ciThresholds.moderate) {
+        setCiClass('fair'); // Yellow - moderate CPU impact
       } else {
-        setScoreClass('');
+        setCiClass('poor'); // Red - high CPU impact
+      }
+      
+      // Determine RI class (GPU impact - lower is better)
+      // Uses centralized thresholds from PERFORMANCE_CONFIG
+      if (ri <= PERFORMANCE_CONFIG.riThresholds.low) {
+        setRiClass('good'); // Green - low GPU impact
+      } else if (ri <= PERFORMANCE_CONFIG.riThresholds.moderate) {
+        setRiClass('fair'); // Yellow - moderate GPU impact
+      } else {
+        setRiClass('poor'); // Red - high GPU impact
       }
     } else {
-      setScore(null);
-      setScoreClass('');
+      setComputationImpact(null);
+      setRenderingImpact(null);
+      setCiClass('');
+      setRiClass('');
     }
-  }, [benchmarkData]);
+  }, [performanceData]);
 
   const handleClick = useCallback(() => {
     setShowBenchmark(true);
@@ -74,8 +93,10 @@ export const useBenchmarkPanel = (
   return {
     isVisible,
     shouldPulsate: isVisible && pulsateCount < 2,
-    score,
-    scoreClass,
+    computationImpact,
+    renderingImpact,
+    ciClass,
+    riClass,
     handleClick
   };
 };

@@ -23,7 +23,7 @@ interface InfoPanelProps {
 
 export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onClose }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('summary');
+  const [activeTab, setActiveTab] = useState(performanceData ? 'performance' : 'summary');
   const { updateHash, getStateFromHash } = useUrlHash();
   
   // Check initial hash state for active tab
@@ -48,13 +48,13 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onC
   })();
   
   const tabs = [
+    ...(performanceData ? [{ id: 'performance', label: t('infoPanel.tabs.performance', 'Performance Impact') }] : []),
     { id: 'summary', label: t('infoPanel.tabs.summary') },
     { id: 'meshAnalysis', label: t('infoPanel.tabs.meshAnalysis') },
     { id: 'clippingAnalysis', label: t('infoPanel.tabs.clipping') },
     { id: 'blendModeAnalysis', label: t('infoPanel.tabs.blendModes') },
     { id: 'physicsAnalysis', label: t('infoPanel.tabs.physicsAnalysis') },
-    { id: 'skeletonTree', label: t('infoPanel.tabs.skeletonTree') },
-    ...(performanceData ? [{ id: 'performance', label: t('infoPanel.tabs.performance', 'Performance') }] : [])
+    { id: 'skeletonTree', label: t('infoPanel.tabs.skeletonTree') }
   ];
   
   const renderTabContent = () => {

@@ -127,6 +127,7 @@
     "title": "Spine Benchmark Analysis",
     "close": "Close",
     "tabs": {
+      "performance": "Performance Impact",
       "summary": "Summary",
       "meshAnalysis": "Mesh Analysis",
       "clipping": "Clipping",

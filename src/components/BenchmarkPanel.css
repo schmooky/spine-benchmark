@@ -2,8 +2,9 @@
   position: fixed;
   top: 20px;
   left: 20px;
-  width: 60px;
+  min-width: 80px;
   height: 60px;
+  padding: 0 12px;
   background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(10px);
   border-radius: 8px;
@@ -23,24 +24,49 @@
   outline-offset: 2px;
 }
 
-.benchmark-score {
-  font-size: 20px;
-  font-weight: bold;
-  text-align: center;
+.benchmark-impact-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: 'Inter', sans-serif;
   user-select: none;
 }
 
-.benchmark-score.poor {
-  color: #f04747;
+.impact-value {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  min-width: 24px;
 }
 
-.benchmark-score.fair {
-  color: #faa61a;
+.impact-value.ci.poor {
+  color: #ff6b6b; /* Red for high CPU impact */
 }
 
-.benchmark-score.good {
-  color: #43b581;
+.impact-value.ci.fair {
+  color: #ffd93d; /* Yellow for moderate CPU impact */
+}
+
+.impact-value.ci.good {
+  color: #6bcf7f; /* Green for low CPU impact */
+}
+
+.impact-value.ri.poor {
+  color: #ff8787; /* Light red for high GPU impact */
+}
+
+.impact-value.ri.fair {
+  color: #ffe66d; /* Light yellow for moderate GPU impact */
+}
+
+.impact-value.ri.good {
+  color: #95e1a3; /* Light green for low GPU impact */
+}
+
+.impact-separator {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 16px;
+  font-weight: normal;
 }
 
 @keyframes pulse-attention {

@@ -469,6 +469,7 @@ const App: React.FC = () => {
       {/* Benchmark Panel - shows when analysis is complete and benchmark info is not visible */}
       <BenchmarkPanel
         benchmarkData={benchmarkData}
+        performanceData={performanceData}
         showBenchmark={showBenchmark}
         setShowBenchmark={setShowBenchmarkWithHash}
       />
