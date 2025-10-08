@@ -9,27 +9,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ark-ui/react": "^5.18.3",
-    "@esotericsoftware/spine-core": "^4.2.88",
-    "@esotericsoftware/spine-pixi-v8": "^4.2.74",
+    "@ark-ui/react": "^5.25.1",
+    "@esotericsoftware/spine-core": "^4.2.93",
+    "@esotericsoftware/spine-pixi-v8": "^4.2.93",
     "@esotericsoftware/spine-ts": "^4.2.13",
-    "@vitejs/plugin-react": "^4.3.4",
-    "gsap": "^3.12.7",
-    "i18next": "^25.3.2",
+    "@vitejs/plugin-react": "^5.0.4",
+    "gsap": "^3.13.0",
+    "i18next": "^25.5.3",
     "i18next-browser-languagedetector": "^8.2.0",
-    "pixi.js": "^8.11.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "pixi.js": "^8.14.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "react-hotkeys-hook": "^5.1.0",
-    "react-i18next": "^15.6.1",
+    "react-i18next": "^16.0.0",
     "react-toastify": "^11.0.5",
-    "vite-plugin-static-copy": "^3.1.1"
+    "vite-plugin-static-copy": "^3.1.3"
   },
   "devDependencies": {
-    "@types/node": "^22.13.5",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "typescript": "^5.7.3",
-    "vite": "^6.2.0"
+    "@types/node": "^24.7.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
   }
 }
