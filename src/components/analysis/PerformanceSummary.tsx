@@ -76,16 +76,28 @@ const GlobalMetricsOverview: React.FC<{ metrics: any }> = ({ metrics }) => {
 const AnimationPerformanceTable: React.FC<{ animations: any[] }> = ({ animations }) => {
   const { t } = useTranslation();
   
+  const getCIColor = (ci: number) => {
+    if (ci <= 30) return '#6bcf7f';
+    if (ci <= 100) return '#ffd93d';
+    return '#ff6b6b';
+  };
+  
+  const getRIColor = (ri: number) => {
+    if (ri <= 20) return '#95e1a3';
+    if (ri <= 50) return '#ffe66d';
+    return '#ff8787';
+  };
+  
   return (
     <>
       <h3>{t('analysis.performance.animationScores')}</h3>
-      <table className="benchmark-table">
+      <table className="benchmark-table performance-table">
         <thead>
           <tr>
             <th>Animation</th>
             <th>Duration</th>
-            <th>CI</th>
-            <th>RI</th>
+            <th style={{ color: '#6bcf7f' }}>CI (CPU)</th>
+            <th style={{ color: '#95e1a3' }}>RI (GPU)</th>
             <th>Total Impact</th>
             <th>Score</th>
             <th>Rating</th>
@@ -95,25 +107,45 @@ const AnimationPerformanceTable: React.FC<{ animations: any[] }> = ({ animations
           {animations.map((animation) => {
             const { metrics } = animation;
             const rating = getScoreRating(metrics.performanceScore);
-            const rowClass = metrics.performanceScore < 50 ? 'row-danger' : 
+            const rowClass = metrics.performanceScore < 50 ? 'row-danger' :
                            metrics.performanceScore < 70 ? 'row-warning' : '';
             
             return (
               <tr key={animation.name} className={rowClass}>
-                <td>{animation.name}</td>
+                <td className="animation-name">{animation.name}</td>
                 <td>{animation.duration.toFixed(2)}s</td>
-                <td>{metrics.computationImpact.toFixed(1)}</td>
-                <td>{metrics.renderingImpact.toFixed(1)}</td>
-                <td>{metrics.totalImpact.toFixed(1)}</td>
+                <td>
+                  <span
+                    className="impact-badge ci"
+                    style={{
+                      color: getCIColor(metrics.computationImpact),
+                      fontWeight: 700
+                    }}
+                  >
+                    {metrics.computationImpact.toFixed(1)}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    className="impact-badge ri"
+                    style={{
+                      color: getRIColor(metrics.renderingImpact),
+                      fontWeight: 700
+                    }}
+                  >
+                    {metrics.renderingImpact.toFixed(1)}
+                  </span>
+                </td>
+                <td className="total-impact">{metrics.totalImpact.toFixed(1)}</td>
                 <td>
                   <div className="inline-score">
                     <span>{metrics.performanceScore.toFixed(1)}</span>
                     <div className="mini-progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ 
-                          width: `${metrics.performanceScore}%`, 
-                          backgroundColor: getScoreColor(metrics.performanceScore) 
+                      <div
+                        className="progress-fill"
+                        style={{
+                          width: `${metrics.performanceScore}%`,
+                          backgroundColor: getScoreColor(metrics.performanceScore)
                         }}
                       />
                     </div>

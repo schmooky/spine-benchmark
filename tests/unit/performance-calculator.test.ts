@@ -354,15 +354,20 @@ describe('Performance Calculator', () => {
 
     test('should match expected score ranges', () => {
       // Low impact should give excellent score
-      expect(calculatePerformanceScore(10)).toBeGreaterThan(80);
+      expect(calculatePerformanceScore(10)).toBeGreaterThan(90);
       
-      // Medium impact should give moderate score
+      // Medium impact should give good score
       const mediumScore = calculatePerformanceScore(50);
-      expect(mediumScore).toBeGreaterThan(30);
-      expect(mediumScore).toBeLessThan(70);
+      expect(mediumScore).toBeGreaterThan(70);
+      expect(mediumScore).toBeLessThan(85);
       
-      // High impact should give poor score
-      expect(calculatePerformanceScore(200)).toBeLessThan(20);
+      // High impact should give moderate score
+      const highScore = calculatePerformanceScore(200);
+      expect(highScore).toBeGreaterThan(30);
+      expect(highScore).toBeLessThan(45);
+      
+      // Very high impact should give poor score
+      expect(calculatePerformanceScore(400)).toBeLessThan(20);
     });
   });
 

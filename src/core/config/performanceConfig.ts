@@ -21,84 +21,87 @@ export const PERFORMANCE_CONFIG = {
   
   /**
    * Bone weight - Base cost per bone in the skeleton
-   * Default: 1.0
-   * Range: 0.5 - 2.0
+   * Default: 0.5 (reduced for better score distribution)
+   * Range: 0.3 - 2.0
    * Impact: Linear with bone count
    */
-  boneWeight: 1.0,
+  boneWeight: 0.5,
   
   /**
    * IK Constraint weight - Cost per bone in IK chain
-   * Default: 1.2
-   * Range: 0.8 - 2.0
+   * Default: 0.8 (reduced from 1.2)
+   * Range: 0.5 - 2.0
    * Impact: Highest CPU weight due to iterative solving
    * Note: IK constraints are the most CPU-intensive operation
    */
-  ikConstraintWeight: 1.2,
+  ikConstraintWeight: 0.8,
   
   /**
    * Transform Constraint weight - Cost per active transform constraint
-   * Default: 0.4
-   * Range: 0.2 - 1.0
+   * Default: 0.2 (reduced from 0.4)
+   * Range: 0.1 - 1.0
    * Impact: Moderate CPU cost for matrix transformations
    */
-  transformConstraintWeight: 0.4,
+  transformConstraintWeight: 0.2,
   
   /**
    * Path Constraint weight - Cost per bone affected by path
-   * Default: 0.8
-   * Range: 0.4 - 1.5
+   * Default: 0.5 (reduced from 0.8)
+   * Range: 0.3 - 1.5
    * Impact: Multiplied by sample steps for path following
    */
-  pathConstraintWeight: 0.8,
+  pathConstraintWeight: 0.5,
   
   /**
    * Physics Constraint weight - Cost per active physics constraint
-   * Default: 1.0
-   * Range: 0.5 - 2.0
+   * Default: 0.6 (reduced from 1.0)
+   * Range: 0.3 - 2.0
    * Impact: High CPU cost for soft-body simulation
    */
-  physicsConstraintWeight: 1.0,
+  physicsConstraintWeight: 0.6,
   
   /**
    * Mesh Vertex weight - Cost per vertex in all meshes
-   * Default: 0.015
-   * Range: 0.005 - 0.05
+   * Default: 0.03 (increased to punish high vertex counts)
+   * Range: 0.01 - 0.08
    * Impact: Scales with total vertex count
+   * Note: High vertex counts significantly impact performance
    */
-  meshVertexWeight: 0.015,
+  meshVertexWeight: 0.03,
   
   /**
    * Skinned Mesh weight - Cost per skinned vertex weight
-   * Default: 0.01
-   * Range: 0.005 - 0.03
+   * Default: 0.02 (increased to punish skinning)
+   * Range: 0.01 - 0.05
    * Impact: Weighted vertices require matrix multiplications
+   * Note: Skinning is expensive, especially with many weights
    */
-  skinnedMeshWeight: 0.01,
+  skinnedMeshWeight: 0.02,
   
   /**
    * Deform Timeline weight - Cost per mesh deformation timeline
-   * Default: 0.2
-   * Range: 0.1 - 0.5
-   * Impact: Mesh animations require vertex updates
+   * Default: 0.5 (increased to punish mesh animations)
+   * Range: 0.2 - 1.0
+   * Impact: Mesh animations require vertex updates every frame
+   * Note: Deforming meshes are very expensive
    */
-  deformTimelineWeight: 0.2,
+  deformTimelineWeight: 0.5,
   
   /**
    * Clipping weight - Multiplicative cost for clipping operations
-   * Default: 0.004
+   * Default: 0.002 (reduced from 0.004)
    * Range: 0.001 - 0.01
    * Impact: attachment_tris × poly_tris (multiplicative!)
    */
-  clippingWeight: 0.004,
+  clippingWeight: 0.002,
   
   /**
    * Animation Mixing weight - Cost for blending multiple animations
-   * Default: 0.25
+   * Default: 0.15 (reduced from 0.25)
    * Range: 0.1 - 0.5
    * Impact: active_tracks × applied_timelines
    */
-  animationMixingWeight: 0.25,
+  animationMixingWeight: 0.15,
   
   // ============================================================================
   // BONE HIERARCHY DEPTH PENALTY WEIGHTS
@@ -150,28 +153,28 @@ export const PERFORMANCE_CONFIG = {
   
   /**
    * Draw Call weight - Cost per draw call
-   * Default: 2.5
+   * Default: 1.5 (reduced from 2.5)
    * Range: 1.0 - 5.0
    * Impact: HIGHEST GPU weight - draw calls are very expensive
    * Note: Each draw call requires GPU state changes
    */
-  drawCallWeight: 2.5,
+  drawCallWeight: 1.5,
   
   /**
    * Triangle weight - Cost per rendered triangle
-   * Default: 0.002
-   * Range: 0.001 - 0.005
+   * Default: 0.001 (reduced from 0.002)
+   * Range: 0.0005 - 0.005
    * Impact: Scales with total triangle count
    */
-  triangleWeight: 0.002,
+  triangleWeight: 0.001,
   
   /**
    * Blend Mode weight - Cost per non-normal blend mode
-   * Default: 0.6
-   * Range: 0.3 - 1.2
+   * Default: 0.4 (reduced from 0.6)
+   * Range: 0.2 - 1.2
    * Impact: Non-normal blends require additional GPU passes
    */
-  blendModeWeight: 0.6,
+  blendModeWeight: 0.4,
   
   // ============================================================================
   // PERFORMANCE SCORE CALCULATION PARAMETERS
@@ -179,12 +182,19 @@ export const PERFORMANCE_CONFIG = {
   
   /**
    * Normalization scalar (S) - Scales total impact for score calculation
-   * Default: 50
-   * Range: 30 - 100
+   * Default: 200 (adjusted for realistic score distribution)
+   * Range: 30 - 300
    * Impact: Higher values make scores more lenient
    * Formula: Score = 100 × e^(-k × (TotalImpact / S))
+   *
+   * Examples with S=200:
+   * - Impact 11: Score 94.6 (Excellent) ← Your best symbol
+   * - Impact 50: Score 77.9 (Good)
+   * - Impact 100: Score 60.7 (Moderate)
+   * - Impact 200: Score 36.8 (Poor)
+   * - Impact 400: Score 13.5 (Very Poor)
    */
-  normalizationScalar: 50,
+  normalizationScalar: 200,
   
   /**
    * Exponential decay factor (k) - Controls score degradation rate
