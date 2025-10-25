@@ -18,10 +18,13 @@ import { useUrlHash } from './hooks/useUrlHash';
 import { useFileProcessor } from './hooks/useFileProcessor';
 import { useAppEventHandlers } from './hooks/useAppEventHandlers';
 import { useAssetHistory } from './hooks/useAssetHistory';
+import { useTimeScale } from './hooks/useTimeScale';
 import { commandRegistry } from './utils/commandRegistry';
 import { FileProcessor } from './core/utils/fileProcessor';
 import { AssetHistoryButton } from './components/AssetHistoryButton';
 import { AssetHistoryDrawer } from './components/AssetHistoryDrawer';
+import { TimeScaleButton } from './components/TimeScaleButton';
+import { TimeScalePanel } from './components/TimeScalePanel';
 
 // URL Input Modal Component
 const UrlInputModal: React.FC<{
@@ -137,6 +140,15 @@ const App: React.FC = () => {
     cameraContainer,
     performanceData
   } = useSpineApp(app);
+  
+  const {
+    currentTimeScale,
+    isTimeScalePanelOpen,
+    setTimeScale,
+    toggleTimeScalePanel,
+    closeTimeScalePanel,
+    resetTimeScale
+  } = useTimeScale(spineInstance);
 
   // Check for URL parameters on mount - Enhanced version
   useEffect(() => {
@@ -569,6 +581,7 @@ const App: React.FC = () => {
             return <AnimationControls
               spineInstance={spineInstance}
               onAnimationChange={setCurrentAnimation}
+              timeScale={currentTimeScale}
             />;
           })()}
       </div>
@@ -626,6 +639,22 @@ const App: React.FC = () => {
         isOpen={showUrlModal}
         onClose={() => setShowUrlModal(false)}
         onLoad={handleUrlLoad}
+      />
+
+      {/* Time Scale Button - only show when spine instance is loaded */}
+      {spineInstance && (
+        <TimeScaleButton
+          onClick={toggleTimeScalePanel}
+          currentTimeScale={currentTimeScale}
+        />
+      )}
+
+      {/* Time Scale Panel */}
+      <TimeScalePanel
+        isOpen={isTimeScalePanelOpen}
+        currentTimeScale={currentTimeScale}
+        onTimeScaleChange={setTimeScale}
+        onClose={closeTimeScalePanel}
       />
 
       {/* Asset History Button */}

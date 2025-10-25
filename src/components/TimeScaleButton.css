@@ -1,0 +1,163 @@
+.time-scale-button {
+  position: fixed;
+  top: 40%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: none;
+  border-radius: 24px 0 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 95;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+  user-select: none;
+}
+
+.time-scale-button:hover {
+  width: 120px;
+  background: linear-gradient(135deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95));
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.time-scale-button.non-standard {
+  animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+.time-scale-button.non-standard:hover {
+  animation: none;
+}
+
+.time-scale-button:focus {
+  outline: 2px solid rgba(255, 193, 7, 0.6);
+  outline-offset: 2px;
+}
+
+.button-icon {
+  font-size: 20px;
+  transition: all 0.3s ease;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+.time-scale-button:hover .button-icon {
+  transform: scale(1.1);
+  margin-right: 8px;
+}
+
+.button-slider {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+.time-scale-button:hover .button-slider {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.button-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+
+/* Pulsating animation for non-standard time scales */
+@keyframes gentle-pulse {
+  0% {
+    transform: translateY(-50%) scale(1);
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 193, 7, 0);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 193, 7, 0.2);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 193, 7, 0);
+  }
+}
+
+/* Hover state adjustments for non-standard scales */
+.time-scale-button.non-standard:hover {
+  background: linear-gradient(135deg, rgba(50, 50, 50, 0.95), rgba(40, 40, 40, 0.95));
+  border-color: rgba(255, 193, 7, 0.4);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 193, 7, 0.3);
+}
+
+/* Active state */
+.time-scale-button:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .time-scale-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px 0 0 22px;
+  }
+  
+  .time-scale-button:hover {
+    width: 100px;
+  }
+  
+  .button-icon {
+    font-size: 18px;
+  }
+  
+  .button-text {
+    font-size: 12px;
+  }
+  
+  .button-slider {
+    width: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .time-scale-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px 0 0 20px;
+  }
+  
+  .time-scale-button:hover {
+    width: 90px;
+  }
+  
+  .button-icon {
+    font-size: 16px;
+  }
+  
+  .button-text {
+    font-size: 11px;
+  }
+  
+  .button-slider {
+    width: 50px;
+  }
+}

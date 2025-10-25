@@ -15,11 +15,13 @@ import { ModernSelect } from './ModernSelect';
 interface AnimationControlsProps {
   spineInstance: Spine;
   onAnimationChange?: (animationName: string) => void;
+  timeScale?: number;
 }
 
-export const AnimationControls: React.FC<AnimationControlsProps> = ({ 
-  spineInstance, 
-  onAnimationChange 
+export const AnimationControls: React.FC<AnimationControlsProps> = ({
+  spineInstance,
+  onAnimationChange,
+  timeScale = 1.0
 }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLooping, setIsLooping] = useState(false);
@@ -44,16 +46,16 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     };
   }, [spineInstance]);
   
-  // Handle play/pause
+  // Handle play/pause and time scale
   useEffect(() => {
     if (!spineInstance) return;
     
     if (isPlaying) {
-      spineInstance.state.timeScale = 1;
+      spineInstance.state.timeScale = timeScale;
     } else {
       spineInstance.state.timeScale = 0;
     }
-  }, [isPlaying, spineInstance]);
+  }, [isPlaying, spineInstance, timeScale]);
   
   const playAnimation = (name: string, loop: boolean = isLooping) => {
     if (!spineInstance) return;
