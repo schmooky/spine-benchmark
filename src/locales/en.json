@@ -22,7 +22,8 @@
     "noValidFiles": "No valid files found in the dropped items",
     "processingError": "Error processing dropped files: {0}",
     "loadingError": "Error loading Spine files: {0}",
-    "failedToLoadFromUrls": "Failed to load from URLs: {{error}}"
+    "failedToLoadFromUrls": "Failed to load from URLs: {{error}}",
+    "failedToLoadFromHistory": "Failed to load asset from history"
   },
   "ui": {
     "dropArea": "Drop Spine files or folders here (JSON, Atlas, and Images)",
@@ -494,6 +495,20 @@
     }
   },
   "success": {
-    "loadedFromUrl": "Successfully loaded Spine from URL"
+    "loadedFromUrl": "Successfully loaded Spine from URL",
+    "filesLoaded": "Files loaded successfully"
+  },
+  "history": {
+    "title": "Asset History",
+    "buttonText": "History",
+    "openHistory": "Open asset history",
+    "close": "Close",
+    "clearAll": "Clear all history",
+    "remove": "Remove from history",
+    "empty": "No assets loaded yet",
+    "emptyDescription": "Load a Spine asset to see it appear here",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}} days ago",
+    "cannotReloadFiles": "Cannot reload files from history. Please drag and drop the files again."
   }
 }

@@ -17,8 +17,11 @@ import { useCommandRegistration } from './hooks/useCommandRegistration';
 import { useUrlHash } from './hooks/useUrlHash';
 import { useFileProcessor } from './hooks/useFileProcessor';
 import { useAppEventHandlers } from './hooks/useAppEventHandlers';
+import { useAssetHistory } from './hooks/useAssetHistory';
 import { commandRegistry } from './utils/commandRegistry';
 import { FileProcessor } from './core/utils/fileProcessor';
+import { AssetHistoryButton } from './components/AssetHistoryButton';
+import { AssetHistoryDrawer } from './components/AssetHistoryDrawer';
 
 // URL Input Modal Component
 const UrlInputModal: React.FC<{
@@ -106,6 +109,18 @@ const App: React.FC = () => {
   const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
   const { collectFilesFromDataTransfer } = useFileProcessor();
   const { handleKeyDown, handleContextMenu, handleWheel } = useAppEventHandlers();
+  const {
+    historyEntries,
+    isHistoryDrawerOpen,
+    addHistoryEntry,
+    removeHistoryEntry,
+    clearHistory,
+    updateEntryAnalysis,
+    toggleHistoryDrawer,
+    closeHistoryDrawer,
+    convertFilesToStoredFiles,
+    convertStoredFilesToFileList
+  } = useAssetHistory();
   
   const {
     spineInstance,
@@ -152,12 +167,38 @@ const App: React.FC = () => {
     checkAndLoadFromUrl();
   }, [app, loadSpineFromUrls, urlLoadAttempted, addToast, t]);
 
+  // Effect to update history with analysis data when benchmark data changes
+  useEffect(() => {
+    if (benchmarkData && performanceData && historyEntries.length > 0) {
+      const latestEntry = historyEntries[0];
+      if (latestEntry && (latestEntry.ciValue === undefined || latestEntry.riValue === undefined)) {
+        const ciValue = performanceData.globalMetrics.computationImpact;
+        const riValue = performanceData.globalMetrics.renderingImpact;
+        
+        updateEntryAnalysis(latestEntry.id, ciValue, riValue, {
+          benchmark: benchmarkData,
+          performance: performanceData
+        });
+      }
+    }
+  }, [benchmarkData, performanceData, historyEntries, updateEntryAnalysis]);
+
   // Handle URL loading from modal
   const handleUrlLoad = useCallback(async (jsonUrl: string, atlasUrl: string) => {
     try {
       setUrlLoadStatus('loading');
       await loadSpineFromUrls(jsonUrl, atlasUrl);
       setUrlLoadStatus('success');
+      
+      // Add to history
+      const assetName = jsonUrl.split('/').pop()?.replace('.json', '') || 'Spine Asset';
+      addHistoryEntry({
+        name: assetName,
+        jsonUrl,
+        atlasUrl,
+        isReloadable: true,
+        source: 'url'
+      });
       
       // Update URL parameters to persist the loaded URLs
       const newUrl = new URL(window.location.href);
@@ -171,7 +212,7 @@ const App: React.FC = () => {
       console.error('Failed to load from URLs:', error);
       addToast(t('error.failedToLoadFromUrls', { error: (error as any).message }), 'error');
     }
-  }, [loadSpineFromUrls, addToast, t]);
+  }, [loadSpineFromUrls, addToast, t, addHistoryEntry]);
 
   // Check initial hash state for benchmark panel
   useEffect(() => {
@@ -223,10 +264,32 @@ const App: React.FC = () => {
   }, [handleWheel]);
 
   // Handle file drop
+  // Handle file drop
   const handleFilesDrop = useCallback(async (files: FileList) => {
     try {
       setIsLoading(true);
       await loadSpineFiles(files);
+      
+      // Add to history with stored file data
+      const fileArray = Array.from(files);
+      const jsonFile = fileArray.find(f => f.name.endsWith('.json'));
+      const assetName = jsonFile?.name.replace('.json', '') || 'Spine Asset';
+      
+      // Convert files to stored format for reloading
+      const storedFiles = await convertFilesToStoredFiles(files);
+      
+      addHistoryEntry({
+        name: assetName,
+        files: fileArray.map(f => ({
+          name: f.name,
+          type: f.type,
+          size: f.size
+        })),
+        storedFiles,
+        isReloadable: storedFiles.length > 0,
+        source: 'files'
+      });
+      
       addToast(t('success.filesLoaded', 'Files loaded successfully'), 'success');
     } catch (error) {
       console.error('Error handling Spine files:', error);
@@ -234,8 +297,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [loadSpineFiles, addToast, t]);
-
+  }, [loadSpineFiles, addToast, t, addHistoryEntry, convertFilesToStoredFiles]);
   useEffect(() => {
     if (!canvasRef.current) return;
     
@@ -365,6 +427,26 @@ const App: React.FC = () => {
       fileProcessorRef.current.validateFiles(processedFiles);
       
       await loadSpineFiles(processedFiles);
+      
+      // Add to history with stored file data
+      const fileArray = Array.from(files);
+      const jsonFile = fileArray.find(f => f.name.endsWith('.json'));
+      const assetName = jsonFile?.name.replace('.json', '') || 'Spine Asset';
+      
+      // Convert files to stored format for reloading
+      const storedFiles = await convertFilesToStoredFiles(files);
+      
+      addHistoryEntry({
+        name: assetName,
+        files: fileArray.map(f => ({
+          name: f.name,
+          type: f.type,
+          size: f.size
+        })),
+        storedFiles,
+        isReloadable: storedFiles.length > 0,
+        source: 'files'
+      });
     } catch (error) {
       console.error("Error handling Spine files:", error);
       addToast(t('error.loadingError', error instanceof Error ? error.message : 'Unknown error'), 'error');
@@ -374,6 +456,31 @@ const App: React.FC = () => {
   const openGitHubReadme = () => {
     window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank');
   };
+
+  // Handle loading from history entry
+  const handleLoadFromHistory = useCallback(async (entry: any) => {
+    try {
+      if (entry.jsonUrl && entry.atlasUrl) {
+        // Load from URLs
+        await handleUrlLoad(entry.jsonUrl, entry.atlasUrl);
+      } else if (entry.storedFiles && entry.storedFiles.length > 0) {
+        // Load from stored file data
+        setIsLoading(true);
+        const fileList = await convertStoredFilesToFileList(entry.storedFiles);
+        await loadSpineFiles(fileList);
+        addToast(t('success.filesLoaded', 'Files loaded successfully from history'), 'success');
+      } else if (entry.files) {
+        // For file-based entries without stored data, we can't re-load the files
+        addToast(t('history.cannotReloadFiles', 'Cannot reload files from history. Please drag and drop the files again.'), 'warning');
+      }
+      closeHistoryDrawer();
+    } catch (error) {
+      console.error('Error loading from history:', error);
+      addToast(t('error.failedToLoadFromHistory', 'Failed to load asset from history'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleUrlLoad, addToast, t, closeHistoryDrawer, convertStoredFilesToFileList, loadSpineFiles]);
 
 
   useEffect(() => {
@@ -519,6 +626,22 @@ const App: React.FC = () => {
         isOpen={showUrlModal}
         onClose={() => setShowUrlModal(false)}
         onLoad={handleUrlLoad}
+      />
+
+      {/* Asset History Button */}
+      <AssetHistoryButton
+        onClick={toggleHistoryDrawer}
+        hasHistory={historyEntries.length > 0}
+      />
+
+      {/* Asset History Drawer */}
+      <AssetHistoryDrawer
+        isOpen={isHistoryDrawerOpen}
+        entries={historyEntries}
+        onClose={closeHistoryDrawer}
+        onLoadEntry={handleLoadFromHistory}
+        onRemoveEntry={removeHistoryEntry}
+        onClearHistory={clearHistory}
       />
     </div>
   );
