@@ -13,31 +13,31 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@ark-ui/react": "^5.25.1",
-    "@esotericsoftware/spine-core": "^4.2.93",
-    "@esotericsoftware/spine-pixi-v8": "^4.2.93",
+    "@ark-ui/react": "^5.26.2",
+    "@esotericsoftware/spine-core": "^4.2.94",
+    "@esotericsoftware/spine-pixi-v8": "^4.2.94",
     "@esotericsoftware/spine-ts": "^4.2.13",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "^5.1.0",
     "gsap": "^3.13.0",
-    "i18next": "^25.5.3",
+    "i18next": "^25.6.0",
     "i18next-browser-languagedetector": "^8.2.0",
     "pixi.js": "^8.14.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-hotkeys-hook": "^5.1.0",
-    "react-i18next": "^16.0.0",
+    "react-hotkeys-hook": "^5.2.1",
+    "react-i18next": "^16.2.0",
     "react-toastify": "^11.0.5",
-    "vite-plugin-static-copy": "^3.1.3"
+    "vite-plugin-static-copy": "^3.1.4"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/node": "^24.7.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.9.1",
     "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.1",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "ts-jest": "^29.1.2",
+    "@types/react-dom": "^19.2.2",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "ts-jest": "^29.4.5",
     "typescript": "^5.9.3",
-    "vite": "^7.1.9"
+    "vite": "^7.1.12"
   }
 }
