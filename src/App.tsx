@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
+import packageJson from '../package.json';
 import { AnimationControls } from './components/AnimationControls';
 import { InfoPanel } from './components/InfoPanel';
 import { CommandPalette } from './components/CommandPalette';
@@ -580,8 +581,8 @@ const App: React.FC = () => {
       
       {/* Version Display */}
       <VersionDisplay
-        appVersion="1.2.0"
-        spineVersion="4.2.*"
+        appVersion={packageJson.version}
+        spineVersion={packageJson.dependencies['@esotericsoftware/spine-pixi-v8'].replace('^', '')}
       />
       
       {/* Language Modal */}
