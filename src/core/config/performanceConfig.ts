@@ -15,9 +15,6 @@
  */
 export const PERFORMANCE_CONFIG = {
   
-  // ============================================================================
-  // COMPUTATION IMPACT (CI) WEIGHTS - CPU-side costs
-  // ============================================================================
   
   /**
    * Bone weight - Base cost per bone in the skeleton
@@ -28,14 +25,14 @@ export const PERFORMANCE_CONFIG = {
   boneWeight: 0.5,
   
   /**
-   * IK Constraint weight - Cost per bone in IK chain
-   * Default: 0.8 (reduced from 1.2)
-   * Range: 0.5 - 2.0
-   * Impact: Highest CPU weight due to iterative solving
-   * Note: IK constraints are the most CPU-intensive operation
-   */
-  ikConstraintWeight: 0.8,
-  
+   /**
+    * IK Constraint weight - Cost per bone in IK chain
+    * Default: 4.0 (CORRECTED from 0.8 based on runtime analysis)
+    * Range: 3.0 - 6.0
+    * Impact: Highest CPU weight due to complex trigonometric calculations
+    * Note: IK constraints involve quadratic equations, matrix operations, and multiple sqrt/atan2 calls
+    */
+   ikConstraintWeight: 4.0,
   /**
    * Transform Constraint weight - Cost per active transform constraint
    * Default: 0.2 (reduced from 0.4)
@@ -61,22 +58,22 @@ export const PERFORMANCE_CONFIG = {
   physicsConstraintWeight: 0.6,
   
   /**
-   * Mesh Vertex weight - Cost per vertex in all meshes
-   * Default: 0.03 (increased to punish high vertex counts)
-   * Range: 0.01 - 0.08
-   * Impact: Scales with total vertex count
-   * Note: High vertex counts significantly impact performance
-   */
-  meshVertexWeight: 0.03,
-  
+   /**
+    * Mesh Vertex weight - Cost per vertex in all meshes
+    * Default: 0.08 (CORRECTED from 0.03 based on runtime analysis)
+    * Range: 0.05 - 0.10
+    * Impact: Each vertex requires 6 multiplications + 4 additions = ~10 operations
+    * Note: Non-skinned vertex processing cost was underestimated
+    */
+   meshVertexWeight: 0.08,
   /**
    * Skinned Mesh weight - Cost per skinned vertex weight
-   * Default: 0.02 (increased to punish skinning)
-   * Range: 0.01 - 0.05
-   * Impact: Weighted vertices require matrix multiplications
-   * Note: Skinning is expensive, especially with many weights
+   * Default: 0.15 (CORRECTED from 0.02 based on runtime analysis)
+   * Range: 0.10 - 0.20
+   * Impact: Each bone influence involves 8 multiplications + 4 additions + bone lookup
+   * Note: Skinning cost was severely underestimated - actual cost ~15 operations per influence
    */
-  skinnedMeshWeight: 0.02,
+  skinnedMeshWeight: 0.15,
   
   /**
    * Deform Timeline weight - Cost per mesh deformation timeline
@@ -103,9 +100,6 @@ export const PERFORMANCE_CONFIG = {
    */
   animationMixingWeight: 0.15,
   
-  // ============================================================================
-  // BONE HIERARCHY DEPTH PENALTY WEIGHTS
-  // ============================================================================
   
   /**
    * Linear depth penalty weight
@@ -147,19 +141,16 @@ export const PERFORMANCE_CONFIG = {
    */
   depthPower: 2.0,
   
-  // ============================================================================
-  // RENDERING IMPACT (RI) WEIGHTS - GPU-side costs
-  // ============================================================================
   
   /**
-   * Draw Call weight - Cost per draw call
-   * Default: 1.5 (reduced from 2.5)
-   * Range: 1.0 - 5.0
-   * Impact: HIGHEST GPU weight - draw calls are very expensive
-   * Note: Each draw call requires GPU state changes
-   */
-  drawCallWeight: 1.5,
-  
+   /**
+    * Draw Call weight - Cost per draw call
+    * Default: 2.5 (CORRECTED from 1.5 for realistic mobile impact)
+    * Range: 2.0 - 6.0
+    * Impact: HIGHEST GPU weight - draw calls are very expensive on mobile
+    * Note: Each draw call requires shader/texture/buffer binding and GPU state changes
+    */
+   drawCallWeight: 2.5,
   /**
    * Triangle weight - Cost per rendered triangle
    * Default: 0.001 (reduced from 0.002)
@@ -176,9 +167,6 @@ export const PERFORMANCE_CONFIG = {
    */
   blendModeWeight: 0.4,
   
-  // ============================================================================
-  // PERFORMANCE SCORE CALCULATION PARAMETERS
-  // ============================================================================
   
   /**
    * Normalization scalar (S) - Scales total impact for score calculation
@@ -205,9 +193,6 @@ export const PERFORMANCE_CONFIG = {
    */
   decayFactor: 1.0,
   
-  // ============================================================================
-  // UI DISPLAY THRESHOLDS
-  // ============================================================================
   
   /**
    * Computation Impact (CI) thresholds for color coding
@@ -217,7 +202,6 @@ export const PERFORMANCE_CONFIG = {
     low: 30,
     /** Yellow threshold - CI below this is considered moderate impact */
     moderate: 100
-    // Above moderate is considered high impact (red)
   },
   
   /**
@@ -228,7 +212,6 @@ export const PERFORMANCE_CONFIG = {
     low: 20,
     /** Light yellow threshold - RI below this is considered moderate impact */
     moderate: 50
-    // Above moderate is considered high impact (light red)
   },
   
   /**
@@ -239,12 +222,8 @@ export const PERFORMANCE_CONFIG = {
     low: 50,
     /** Total impact below this is considered moderate (acceptable performance) */
     moderate: 150
-    // Above moderate is considered high (poor performance)
   },
   
-  // ============================================================================
-  // PRESET CONFIGURATIONS
-  // ============================================================================
   
   /**
    * Preset configurations for different use cases
@@ -253,23 +232,25 @@ export const PERFORMANCE_CONFIG = {
   presets: {
     /**
      * Mobile preset - Stricter thresholds for mobile devices
-     */
-    mobile: {
-      drawCallWeight: 3.5,        // Draw calls are more expensive on mobile
-      ikConstraintWeight: 1.5,    // IK is more expensive on mobile CPUs
-      normalizationScalar: 40,    // Stricter scoring
-      ciThresholds: { low: 20, moderate: 60 },
-      riThresholds: { low: 15, moderate: 35 },
-      totalImpactThresholds: { low: 35, moderate: 100 }
+     mobile: {
+       drawCallWeight: 6.0,        // Draw calls are much more expensive on mobile
+       ikConstraintWeight: 6.0,    // IK is more expensive on mobile CPUs (corrected baseline * 1.5)
+       skinnedMeshWeight: 0.20,    // Mobile memory bandwidth limited
+       meshVertexWeight: 0.10,     // Higher vertex processing cost on mobile
+       normalizationScalar: 150,   // Adjusted for new coefficient baseline
+       ciThresholds: { low: 40, moderate: 120 },
+       riThresholds: { low: 30, moderate: 70 },
+       totalImpactThresholds: { low: 70, moderate: 200 }
+     },
     },
     
     /**
      * Desktop preset - More lenient thresholds for desktop devices
      */
     desktop: {
-      drawCallWeight: 2.0,        // Draw calls less expensive on desktop
-      ikConstraintWeight: 1.0,    // IK less expensive on desktop CPUs
-      normalizationScalar: 60,    // More lenient scoring
+      drawCallWeight: 2.0,
+      ikConstraintWeight: 1.0,
+      normalizationScalar: 60,
       ciThresholds: { low: 40, moderate: 120 },
       riThresholds: { low: 25, moderate: 60 },
       totalImpactThresholds: { low: 65, moderate: 180 }
@@ -320,7 +301,6 @@ export const PERFORMANCE_CONFIG = {
 export function applyPreset(presetName: keyof typeof PERFORMANCE_CONFIG.presets): typeof PERFORMANCE_CONFIG {
   const preset = PERFORMANCE_CONFIG.presets[presetName];
   
-  // Apply preset values to main config
   Object.assign(PERFORMANCE_CONFIG, preset);
   
   return PERFORMANCE_CONFIG;
@@ -409,7 +389,6 @@ export function getCurrentConfig() {
  */
 export function getPerformanceWeights() {
   return {
-    // Computation Impact weights
     wb: PERFORMANCE_CONFIG.boneWeight,
     wIK: PERFORMANCE_CONFIG.ikConstraintWeight,
     wTC: PERFORMANCE_CONFIG.transformConstraintWeight,
@@ -421,27 +400,21 @@ export function getPerformanceWeights() {
     wclip: PERFORMANCE_CONFIG.clippingWeight,
     wmix: PERFORMANCE_CONFIG.animationMixingWeight,
     
-    // Depth penalty weights
     w_depth_lin: PERFORMANCE_CONFIG.depthPenaltyLinear,
     w_depth_poly: PERFORMANCE_CONFIG.depthPenaltyPolynomial,
     gamma: PERFORMANCE_CONFIG.depthPenaltyExponent,
     w_depth_mean: PERFORMANCE_CONFIG.depthPenaltyMean,
     depth_power: PERFORMANCE_CONFIG.depthPower,
     
-    // Rendering Impact weights
     wdc: PERFORMANCE_CONFIG.drawCallWeight,
     wtri: PERFORMANCE_CONFIG.triangleWeight,
     wblend: PERFORMANCE_CONFIG.blendModeWeight,
     
-    // Performance Score parameters
     S: PERFORMANCE_CONFIG.normalizationScalar,
     k: PERFORMANCE_CONFIG.decayFactor
   };
 }
 
-// ============================================================================
-// USAGE EXAMPLES
-// ============================================================================
 
 /**
  * Example 1: Adjust for mobile devices

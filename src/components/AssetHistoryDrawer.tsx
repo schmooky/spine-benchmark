@@ -55,12 +55,12 @@ export const AssetHistoryDrawer: React.FC<AssetHistoryDrawerProps> = ({
 
   const getFileTypeIcon = (entry: AssetHistoryEntry) => {
     if (entry.jsonUrl && entry.atlasUrl) {
-      return '🌐'; // URL loading
+      return '🌐';
     }
     if (entry.isReloadable) {
-      return '📁'; // File loading with stored data
+      return '📁';
     }
-    return '📄'; // File loading without stored data (not reloadable)
+    return '📄';
   };
 
   const getReloadabilityStatus = (entry: AssetHistoryEntry) => {

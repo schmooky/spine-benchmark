@@ -19,7 +19,6 @@ export class DebugFlagsManager {
   private flags: DebugFlags;
 
   constructor() {
-    // Initialize default flags - all debug visualizations disabled by default
     this.flags = {
       showBones: false,
       showRegionAttachments: false,
@@ -45,7 +44,6 @@ export class DebugFlagsManager {
   }
 
   public isLayerVisible(layerType: string): boolean {
-    // Map debug flags to layer visibility
     switch(layerType) {
       case 'bones':
         return this.flags.showBones;
@@ -64,7 +62,6 @@ export class DebugFlagsManager {
     }
   }
 
-  // Convenience methods for toggling specific debug features
   public togglePathConstraints(visible?: boolean): void {
     const newValue = visible ?? !this.flags.showPathConstraints;
     this.setDebugFlags({ showPathConstraints: newValue });

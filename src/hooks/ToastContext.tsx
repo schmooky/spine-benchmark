@@ -10,7 +10,6 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-// Configure default toast options
 const toastOptions: ToastOptions = {
   position: "top-center",
   autoClose: 1000,
@@ -55,7 +54,6 @@ export const useToast = () => {
   return context;
 };
 
-// Custom ToastContainer component with dark theme
 export const ToastContainer: React.FC = () => {
   return (
     <ToastifyContainer

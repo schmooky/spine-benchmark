@@ -15,7 +15,6 @@ export const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data }) 
   const interpretation = getScoreInterpretation(medianScore);
   const scoreColor = getScoreColor(medianScore);
   
-  // Sort animations by score for the table
   const sortedAnimations = [...data.animations].sort((a, b) => 
     b.metrics.performanceScore - a.metrics.performanceScore
   );
@@ -164,7 +163,6 @@ const AnimationPerformanceTable: React.FC<{ animations: any[] }> = ({ animations
 const ImpactBreakdown: React.FC<{ animations: any[] }> = ({ animations }) => {
   const { t } = useTranslation();
   
-  // Find animation with highest impacts
   let maxCIAnimation = animations[0];
   let maxRIAnimation = animations[0];
   
@@ -206,7 +204,6 @@ const OptimizationRecommendations: React.FC<{ data: SpinePerformanceAnalysisResu
   const { t } = useTranslation();
   const recommendations: string[] = [];
   
-  // Analyze worst performing animation
   if (data.worstAnimation && data.worstAnimation.metrics.performanceScore < 50) {
     const worst = data.worstAnimation;
     
@@ -219,7 +216,6 @@ const OptimizationRecommendations: React.FC<{ data: SpinePerformanceAnalysisResu
     }
   }
   
-  // Check for depth issues
   data.animations.forEach(anim => {
     const maxDepth = Math.max(...anim.frameMetrics.bones.depths);
     const balancedDepth = Math.ceil(Math.log2(anim.frameMetrics.bones.count + 1));
@@ -228,7 +224,6 @@ const OptimizationRecommendations: React.FC<{ data: SpinePerformanceAnalysisResu
     }
   });
   
-  // Check for high vertex counts
   const highVertexAnimations = data.animations.filter(a => 
     a.frameMetrics.meshes.vertexCount > 1000
   );
@@ -236,7 +231,6 @@ const OptimizationRecommendations: React.FC<{ data: SpinePerformanceAnalysisResu
     recommendations.push(`${highVertexAnimations.length} animations have over 1000 mesh vertices. Consider simplifying meshes or using LODs.`);
   }
   
-  // Check for excessive draw calls
   const highDrawCallAnimations = data.animations.filter(a => 
     a.frameMetrics.rendering.estimatedDrawCalls > 10
   );

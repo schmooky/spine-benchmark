@@ -33,10 +33,10 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
 
   constructor(options: PhysicsConstraintDebugOptions) {
     super(options);
-    this.boundsColor = options.boundsColor ?? 0x800080; // Purple
-    this.gravityColor = options.gravityColor ?? 0x4B0082; // Dark purple
-    this.windColor = options.windColor ?? 0x9370DB; // Light purple
-    this.motionColor = options.motionColor ?? 0x800080; // Purple
+    this.boundsColor = options.boundsColor ?? 0x800080;
+    this.gravityColor = options.gravityColor ?? 0x4B0082;
+    this.windColor = options.windColor ?? 0x9370DB;
+    this.motionColor = options.motionColor ?? 0x800080;
     this.showBounds = options.showBounds ?? true;
     this.showGravity = options.showGravity ?? true;
     this.showWind = options.showWind ?? true;
@@ -55,25 +55,20 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     const physicsConstraints = skeleton.physicsConstraints || [];
 
     for (const constraint of physicsConstraints) {
-      // Check if constraint is active
       if (typeof constraint?.isActive === 'function' && !constraint.isActive()) continue;
 
-      // Visualize physics bounds
       if (this.showBounds && constraint.bone) {
         this.drawBounds(constraint);
       }
 
-      // Visualize gravity
       if (this.showGravity && constraint.gravity !== 0) {
         this.drawGravity(constraint);
       }
 
-      // Visualize wind
       if (this.showWind && constraint.wind !== 0) {
         this.drawWind(constraint);
       }
 
-      // Visualize motion
       if (this.showMotion) {
         this.drawMotion(constraint);
       }
@@ -86,7 +81,6 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     const x = bone.worldX;
     const y = bone.worldY;
     
-    // Draw a rectangle around the bone to represent bounds
     const width = 40;
     const height = 20;
     
@@ -108,8 +102,7 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     const x = bone.worldX;
     const y = bone.worldY;
     
-    // Draw an arrow pointing down to represent gravity
-    const arrowLength = 20 * Math.abs(constraint.gravity) / 100; // Scale by gravity strength
+    const arrowLength = 20 * Math.abs(constraint.gravity) / 100;
     const arrowX = x;
     const arrowY = y;
     const endX = arrowX;
@@ -123,10 +116,8 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
         pixelLine: true 
       });
       
-      // Draw arrow line
       g.moveTo(arrowX, arrowY).lineTo(endX, endY);
       
-      // Draw arrowhead
       const arrowheadSize = 5;
       g.moveTo(endX, endY)
        .lineTo(endX - arrowheadSize, endY - arrowheadSize)
@@ -141,8 +132,7 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     const x = bone.worldX;
     const y = bone.worldY;
     
-    // Draw wavy lines to represent wind
-    const windStrength = Math.abs(constraint.wind) / 100; // Scale by wind strength
+    const windStrength = Math.abs(constraint.wind) / 100;
     const waveLength = 15;
     const amplitude = 3 * windStrength;
     
@@ -154,7 +144,6 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
         pixelLine: true 
       });
       
-      // Draw wavy line
       g.moveTo(x - 20, y);
       for (let i = -20; i <= 20; i += 2) {
         const waveY = y + Math.sin(i / waveLength * Math.PI * 2) * amplitude;
@@ -169,7 +158,6 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     const x = bone.worldX;
     const y = bone.worldY;
     
-    // Draw a small circle to indicate motion
     const radius = 3;
     
     if (this.isCircleVisible(x, y, radius)) {
@@ -178,7 +166,6 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  // Configuration methods
   public setShowBounds(show: boolean): void { this.showBounds = show; }
   public setShowGravity(show: boolean): void { this.showGravity = show; }
   public setShowWind(show: boolean): void { this.showWind = show; }

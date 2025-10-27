@@ -7,7 +7,6 @@ export const useFileProcessor = () => {
   const processDroppedFiles = useCallback(async (items: DataTransferItemList): Promise<File[]> => {
     const fileList: File[] = [];
     
-    // Helper function to read entries recursively
     const readEntries = async (dirReader: FileSystemDirectoryReader): Promise<File[]> => {
       return new Promise((resolve, reject) => {
         dirReader.readEntries(async (entries) => {
@@ -21,7 +20,6 @@ export const useFileProcessor = () => {
                   const file = await new Promise<File>((res, rej) => {
                     (entry as FileSystemFileEntry).file(res, rej);
                   });
-                  // Add the full path to the file for identification
                   Object.defineProperty(file, 'fullPath', {
                     value: entry.fullPath,
                     writable: false
@@ -42,7 +40,6 @@ export const useFileProcessor = () => {
       });
     };
 
-    // Process each item
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (item.kind === 'file') {
@@ -51,7 +48,6 @@ export const useFileProcessor = () => {
           fileList.push(file);
         }
       } else if (item.kind === 'directory') {
-        // Handle directory (Chrome only)
         const entry = item.webkitGetAsEntry();
         if (entry && entry.isDirectory) {
           try {
@@ -73,7 +69,6 @@ export const useFileProcessor = () => {
     if (items && items.length > 0) {
       return processDroppedFiles(items);
     } else {
-      // Fallback for browsers that don't support items
       const files: File[] = [];
       for (let i = 0; i < dataTransfer.files.length; i++) {
         files.push(dataTransfer.files[i]);

@@ -35,8 +35,8 @@ export class BoneDebugLayer extends DebugLayer {
   constructor(options: BoneDebugOptions) {
     super(options);
 
-    this.boneColor = options.boneColor ?? 0xFFFFFF; // WHITE for bones
-    this.jointColor = options.jointColor ?? 0xFFFFFF; // White for joints
+    this.boneColor = options.boneColor ?? 0xFFFFFF;
+    this.jointColor = options.jointColor ?? 0xFFFFFF;
     this.jointRadius = options.jointRadius ?? 3;
     this.showBones = options.showBones ?? true;
     this.showJoints = options.showJoints ?? true;
@@ -58,7 +58,6 @@ export class BoneDebugLayer extends DebugLayer {
 
     const g = this.graphics;
 
-    // Draw bones FIRST (so joints appear on top)
     if (this.showBones) {
       let drawn = 0;
 
@@ -66,22 +65,18 @@ export class BoneDebugLayer extends DebugLayer {
         const sx = bone.worldX;
         const sy = bone.worldY;
 
-        // Draw connection line to parent's end FIRST (so it appears under the bone)
-        // This won't execute for root bones since they have no parent
         if (bone.parent) {
           const parentData = bone.parent.data;
           const parentLen = parentData?.length ?? 0;
           
-          // Calculate parent's end position
           const parentEndX = bone.parent.worldX + bone.parent.a * parentLen;
           const parentEndY = bone.parent.worldY + bone.parent.c * parentLen;
           
-          // Draw slim white line from this bone's start to parent's end
           if (this.isSegmentVisible(sx, sy, parentEndX, parentEndY)) {
             g.stroke({ 
-              color: 0xFFFFFF, // White
-              width: 1, // Slim line
-              alpha: this.alpha * 0.5, // Semi-transparent
+              color: 0xFFFFFF,
+              width: 1,
+              alpha: this.alpha * 0.5,
               pixelLine: true 
             })
               .moveTo(sx, sy)
@@ -89,12 +84,9 @@ export class BoneDebugLayer extends DebugLayer {
           }
         }
 
-        // Compute ideal tip from bone length along local X axis transformed to world
         const len = bone.data?.length ?? 0;
         
-        // Check if bone has effectively zero length
         if (len < 1e-4) {
-          // Draw only a circle for zero-length bones
           if (this.isCircleVisible(sx, sy, this.boneEndCircleRadius)) {
             g.stroke({ 
               color: this.boneColor, 
@@ -113,37 +105,29 @@ export class BoneDebugLayer extends DebugLayer {
           continue;
         }
 
-        // For bones with length, compute the tip position
         let tx = sx + bone.a * len;
         let ty = sy + bone.c * len;
 
-        // Calculate bone direction
         const dx = tx - sx;
         const dy = ty - sy;
         const mag = Math.hypot(dx, dy);
         if (mag < 1e-4) continue;
 
-        // Unit vectors
-        const ux = dx / mag; // Unit vector along bone
+        const ux = dx / mag;
         const uy = dy / mag;
-        const nx = -uy; // Perpendicular unit normal
+        const nx = -uy;
         const ny = ux;
 
-        // Calculate triangle base width
         const baseWidth = this.clamp(mag * this.triangleBaseScale, this.triangleMinBase, this.triangleMaxBase);
 
-        // Calculate triangle points
-        // Base points perpendicular to bone at start
         const base1X = sx + nx * (baseWidth / 2);
         const base1Y = sy + ny * (baseWidth / 2);
         const base2X = sx - nx * (baseWidth / 2);
         const base2Y = sy - ny * (baseWidth / 2);
         
-        // Tip point EXACTLY at bone end
         const tipX = tx;
         const tipY = ty;
 
-        // Visibility check
         const visible =
           this.isSegmentVisible(sx, sy, tx, ty) ||
           this.isSegmentVisible(base1X, base1Y, tipX, tipY) ||
@@ -152,9 +136,8 @@ export class BoneDebugLayer extends DebugLayer {
         
         if (!visible) continue;
 
-        // Draw bone triangle with white color
         g.stroke({ 
-          color: this.boneColor, // White
+          color: this.boneColor,
           width: this.strokeWidth, 
           alpha: this.alpha * 0.8, 
           pixelLine: true, 
@@ -163,7 +146,7 @@ export class BoneDebugLayer extends DebugLayer {
           .poly([base1X, base1Y, tipX, tipY, base2X, base2Y])
           .closePath();
 
-        g.fill({ color: this.boneColor, alpha: this.alpha * 0.2 }) // Light fill
+        g.fill({ color: this.boneColor, alpha: this.alpha * 0.2 })
           .poly([base1X, base1Y, tipX, tipY, base2X, base2Y])
           .fill();
 
@@ -173,7 +156,6 @@ export class BoneDebugLayer extends DebugLayer {
       console.log(`BoneDebugLayer: Drew ${drawn} bones`);
     }
 
-    // Draw joints AFTER bones (so they appear on top)
     if (this.showJoints) {
       g.stroke({ width: 1 });
       let drawnJoints = 0;
@@ -183,16 +165,15 @@ export class BoneDebugLayer extends DebugLayer {
         const y = bone.worldY;
 
         if (this.isCircleVisible(x, y, this.jointRadius)) {
-          // Draw joint circle with stronger presence
           g.stroke({ 
             color: this.jointColor, 
-            width: 2, // Thicker stroke
+            width: 2,
             alpha: this.alpha, 
             pixelLine: true 
           })
             .circle(x, y, this.jointRadius);
           
-          g.fill({ color: this.jointColor, alpha: this.alpha * 0.6 }) // More opaque fill
+          g.fill({ color: this.jointColor, alpha: this.alpha * 0.6 })
             .circle(x, y, this.jointRadius)
             .fill();
           
@@ -204,7 +185,6 @@ export class BoneDebugLayer extends DebugLayer {
     }
   }
 
-  // Configuration methods
   public setShowBones(show: boolean): void { this.showBones = show; }
   public setShowJoints(show: boolean): void { this.showJoints = show; }
   public setShowHierarchy(show: boolean): void { this.showHierarchy = show; }
@@ -224,7 +204,6 @@ export class BoneDebugLayer extends DebugLayer {
     if (opts.maxBase !== undefined) this.triangleMaxBase = opts.maxBase;
   }
 
-  // Helpers
   private clamp(v: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, v));
   }

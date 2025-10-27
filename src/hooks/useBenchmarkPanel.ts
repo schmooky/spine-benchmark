@@ -26,18 +26,15 @@ export const useBenchmarkPanel = (
   const [ciClass, setCiClass] = useState('');
   const [riClass, setRiClass] = useState('');
 
-  // Determine if panel should be visible
   useEffect(() => {
     const shouldShowPanel = benchmarkData !== null && !showBenchmark;
     setIsVisible(shouldShowPanel);
     
-    // Reset pulsation when visibility changes
     if (shouldShowPanel) {
       setPulsateCount(0);
     }
   }, [benchmarkData, showBenchmark]);
 
-  // Handle pulsation animation - exactly twice
   useEffect(() => {
     if (!isVisible || pulsateCount >= 2) {
       return;
@@ -45,12 +42,11 @@ export const useBenchmarkPanel = (
 
     const timer = setTimeout(() => {
       setPulsateCount(prev => prev + 1);
-    }, 500); // Match animation duration
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [isVisible, pulsateCount]);
 
-  // Calculate CI and RI separately when performanceData changes
   useEffect(() => {
     if (performanceData) {
       const ci = performanceData.globalMetrics.computationImpact;
@@ -59,24 +55,20 @@ export const useBenchmarkPanel = (
       setComputationImpact(ci);
       setRenderingImpact(ri);
       
-      // Determine CI class (CPU impact - lower is better)
-      // Uses centralized thresholds from PERFORMANCE_CONFIG
       if (ci <= PERFORMANCE_CONFIG.ciThresholds.low) {
-        setCiClass('good'); // Green - low CPU impact
+        setCiClass('good');
       } else if (ci <= PERFORMANCE_CONFIG.ciThresholds.moderate) {
-        setCiClass('fair'); // Yellow - moderate CPU impact
+        setCiClass('fair');
       } else {
-        setCiClass('poor'); // Red - high CPU impact
+        setCiClass('poor');
       }
       
-      // Determine RI class (GPU impact - lower is better)
-      // Uses centralized thresholds from PERFORMANCE_CONFIG
       if (ri <= PERFORMANCE_CONFIG.riThresholds.low) {
-        setRiClass('good'); // Green - low GPU impact
+        setRiClass('good');
       } else if (ri <= PERFORMANCE_CONFIG.riThresholds.moderate) {
-        setRiClass('fair'); // Yellow - moderate GPU impact
+        setRiClass('fair');
       } else {
-        setRiClass('poor'); // Red - high GPU impact
+        setRiClass('poor');
       }
     } else {
       setComputationImpact(null);

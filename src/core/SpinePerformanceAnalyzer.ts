@@ -9,10 +9,10 @@ import {
 } from "./analysis/performanceAnalysis";
 
 export interface PerformanceMetrics {
-  computationImpact: number; // CI ∈ [0, ∞)
-  renderingImpact: number;   // RI ∈ [0, ∞)
-  totalImpact: number;       // CI + RI
-  performanceScore: number;  // ∈ [0, 100]
+  computationImpact: number;
+  renderingImpact: number;
+  totalImpact: number;
+  performanceScore: number;
 }
 
 export interface AnimationPerformanceAnalysis {
@@ -59,9 +59,9 @@ export interface SpinePerformanceAnalysisResult {
   bestAnimation: AnimationPerformanceAnalysis | null;
   worstAnimation: AnimationPerformanceAnalysis | null;
   stats: {
-    animationsWithHighCI: number; // CI > 100
-    animationsWithHighRI: number; // RI > 50
-    animationsWithPoorScore: number; // score < 50
+    animationsWithHighCI: number;
+    animationsWithHighRI: number;
+    animationsWithPoorScore: number;
   };
 }
 
@@ -75,22 +75,16 @@ export class SpinePerformanceAnalyzer {
    * @returns Complete performance analysis data
    */
   static analyze(spineInstance: Spine): SpinePerformanceAnalysisResult {
-    // Analyze skeleton structure
     const skeletonData = analyzeSkeletonStructure(spineInstance);
 
-    // Analyze global data
     const globalData = analyzeGlobalData(spineInstance);
 
-    // Analyze each animation individually with per-frame metrics
     const animationData = analyzeAnimations(spineInstance);
 
-    // Calculate statistics
     const statistics = calculateStatistics(animationData);
 
-    // Sort animations and calculate median score
     const sortedData = sortAnalyses(animationData);
 
-    // Aggregate all results
     return aggregateResults(
       spineInstance,
       skeletonData,

@@ -129,6 +129,7 @@
     "close": "Close",
     "tabs": {
       "performance": "Performance Impact",
+      "batchingAnalysis": "Draw Call Batching",
       "summary": "Summary",
       "meshAnalysis": "Mesh Analysis",
       "clipping": "Clipping",
@@ -492,6 +493,34 @@
         "transformConstraints": "Transform Constraints: Each affected property (position, rotation, scale) adds calculation overhead",
         "recommendation": "Recommendation: Use constraints sparingly and with minimal bone chains when possible"
       }
+    },
+    "batching": {
+      "title": "Draw Call Batching Analysis",
+      "description": "Analysis of draw order and batch breaking patterns based on the most complex animation",
+      "totalDrawCalls": "Total Draw Calls",
+      "batchBreaks": "Batch Breaks",
+      "efficiency": "Batching Efficiency",
+      "drawCallSegments": "Draw Call Segments",
+      "segment": "Segment",
+      "slots": "Slots",
+      "geometry": "Geometry",
+      "state": "State",
+      "batchBreaksTitle": "Batch Break Analysis",
+      "noBreaks": "Excellent! No significant batch breaks detected.",
+      "location": "Location",
+      "recommendations": "Optimization Recommendations",
+      "highPriority": "High Priority",
+      "mediumPriority": "Medium Priority",
+      "lowPriority": "Low Priority",
+      "improveBatching": "Improve Batching",
+      "reduceHighImpactBreaks": "Reduce high-impact batch breaks by grouping similar blend modes and minimizing clipping state changes.",
+      "tooManyDrawCalls": "Consider reducing total draw calls by consolidating attachments with similar rendering states.",
+      "reorderSlots": "Reorder slots to group similar rendering states together and improve batching efficiency.",
+      "minimizeBlendModeChanges": "Minimize blend mode changes by using normal blend mode where possible.",
+      "additionalMetrics": "Additional Metrics",
+      "averageTrianglesPerBatch": "Average Triangles per Batch",
+      "averageVerticesPerBatch": "Average Vertices per Batch",
+      "totalRenderingCost": "Total Rendering Cost"
     }
   },
   "success": {

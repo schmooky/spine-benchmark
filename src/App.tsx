@@ -26,7 +26,6 @@ import { AssetHistoryDrawer } from './components/AssetHistoryDrawer';
 import { TimeScaleButton } from './components/TimeScaleButton';
 import { TimeScalePanel } from './components/TimeScalePanel';
 
-// URL Input Modal Component
 const UrlInputModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -93,12 +92,10 @@ const App: React.FC = () => {
   const [urlLoadAttempted, setUrlLoadAttempted] = useState(false);
   const [urlLoadStatus, setUrlLoadStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  // Debug log for language modal state changes
   useEffect(() => {
     console.log('🏠 App: Language modal state changed:', showLanguageModal);
   }, [showLanguageModal]);
 
-  // Enhanced setShowLanguageModal with additional logging
   const setShowLanguageModalWithLogging = (show: boolean) => {
     console.log('🏠 App: setShowLanguageModal called with:', show);
     console.log('🏠 App: Current modal state before change:', showLanguageModal);
@@ -150,7 +147,6 @@ const App: React.FC = () => {
     resetTimeScale
   } = useTimeScale(spineInstance);
 
-  // Check for URL parameters on mount - Enhanced version
   useEffect(() => {
     if (!app || urlLoadAttempted) return;
 
@@ -179,7 +175,6 @@ const App: React.FC = () => {
     checkAndLoadFromUrl();
   }, [app, loadSpineFromUrls, urlLoadAttempted, addToast, t]);
 
-  // Effect to update history with analysis data when benchmark data changes
   useEffect(() => {
     if (benchmarkData && performanceData && historyEntries.length > 0) {
       const latestEntry = historyEntries[0];
@@ -195,14 +190,12 @@ const App: React.FC = () => {
     }
   }, [benchmarkData, performanceData, historyEntries, updateEntryAnalysis]);
 
-  // Handle URL loading from modal
   const handleUrlLoad = useCallback(async (jsonUrl: string, atlasUrl: string) => {
     try {
       setUrlLoadStatus('loading');
       await loadSpineFromUrls(jsonUrl, atlasUrl);
       setUrlLoadStatus('success');
       
-      // Add to history
       const assetName = jsonUrl.split('/').pop()?.replace('.json', '') || 'Spine Asset';
       addHistoryEntry({
         name: assetName,
@@ -212,7 +205,6 @@ const App: React.FC = () => {
         source: 'url'
       });
       
-      // Update URL parameters to persist the loaded URLs
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('json', jsonUrl);
       newUrl.searchParams.set('atlas', atlasUrl);
@@ -226,7 +218,6 @@ const App: React.FC = () => {
     }
   }, [loadSpineFromUrls, addToast, t, addHistoryEntry]);
 
-  // Check initial hash state for benchmark panel
   useEffect(() => {
     const hashState = getStateFromHash();
     if (hashState.benchmarkInfo) {
@@ -234,7 +225,6 @@ const App: React.FC = () => {
     }
   }, [getStateFromHash]);
 
-  // Listen for browser navigation changes
   useEffect(() => {
     const cleanup = onHashChange((hashState) => {
       setShowBenchmark(hashState.benchmarkInfo);
@@ -243,7 +233,6 @@ const App: React.FC = () => {
     return cleanup;
   }, [onHashChange]);
 
-  // Update hash when showBenchmark changes (but avoid infinite loops)
   useEffect(() => {
     const currentHashState = getStateFromHash();
     if (currentHashState.benchmarkInfo !== showBenchmark) {
@@ -251,7 +240,6 @@ const App: React.FC = () => {
     }
   }, [showBenchmark, updateHash, getStateFromHash]);
 
-  // Handle global keyboard events
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -259,7 +247,6 @@ const App: React.FC = () => {
     };
   }, [handleKeyDown]);
 
-  // Handle context menu
   useEffect(() => {
     window.addEventListener('contextmenu', handleContextMenu);
     return () => {
@@ -267,7 +254,6 @@ const App: React.FC = () => {
     };
   }, [handleContextMenu]);
 
-  // Handle wheel events
   useEffect(() => {
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => {
@@ -275,19 +261,15 @@ const App: React.FC = () => {
     };
   }, [handleWheel]);
 
-  // Handle file drop
-  // Handle file drop
   const handleFilesDrop = useCallback(async (files: FileList) => {
     try {
       setIsLoading(true);
       await loadSpineFiles(files);
       
-      // Add to history with stored file data
       const fileArray = Array.from(files);
       const jsonFile = fileArray.find(f => f.name.endsWith('.json'));
       const assetName = jsonFile?.name.replace('.json', '') || 'Spine Asset';
       
-      // Convert files to stored format for reloading
       const storedFiles = await convertFilesToStoredFiles(files);
       
       addHistoryEntry({
@@ -315,7 +297,6 @@ const App: React.FC = () => {
     
     let cleanupFunction: (() => void) | undefined;
     
-    // Initialize PIXI Application (async)
     const initApp = async () => {
       try {
         const pixiApp = new Application();
@@ -328,11 +309,9 @@ const App: React.FC = () => {
           autoDensity: true,
         });
         
-        // Store app in state for other components to use
-        app?.destroy(); // Clean up old app if exists
+        app?.destroy();
         setApp(pixiApp);
         
-        // Setup cleanup function
         cleanupFunction = () => {
           pixiApp.destroy();
         };
@@ -344,13 +323,11 @@ const App: React.FC = () => {
     
     initApp();
     
-    // Return a cleanup function
     return () => {
       if (cleanupFunction) cleanupFunction();
     };
   }, []);
 
-  // File processor instance
   const fileProcessorRef = useRef<FileProcessor | null>(new FileProcessor(app));
   
   useEffect(() => {
@@ -361,7 +338,6 @@ const App: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Clear highlighting
     e.currentTarget.classList.remove('highlight');
     
     if (!fileProcessorRef.current) {
@@ -372,22 +348,18 @@ const App: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Process dropped items using the working approach from your other project
       const items = e.dataTransfer?.items;
       if (!items || items.length === 0) {
         if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) {
           addToast(t('error.noFilesDropped'), 'error');
           return;
         }
-        // If we only have files (not items), use the simple approach
         await handleSpineFiles(e.dataTransfer.files);
         return;
       }
       
-      // Convert DataTransferItemList to array
       const itemsArray = Array.from(items);
       
-      // Process all dropped items (files and directories)
       const fileList = await fileProcessorRef.current.processItems(itemsArray);
       
       console.log(`Traversal complete, found ${fileList.length} files`);
@@ -399,10 +371,8 @@ const App: React.FC = () => {
       
       console.log('Files collected:', fileList.map(f => (f as any).fullPath || f.name));
       
-      // Convert to FileList-like object
       const files = fileProcessorRef.current.convertToFileList(fileList);
       
-      // Load files into SpineBenchmark
       await handleSpineFiles(files);
       
     } catch (error) {
@@ -432,20 +402,16 @@ const App: React.FC = () => {
     }
     
     try {
-      // Handle Spine files with version checking
       const processedFiles = await fileProcessorRef.current.handleSpineFiles(files);
       
-      // Validate files before loading
       fileProcessorRef.current.validateFiles(processedFiles);
       
       await loadSpineFiles(processedFiles);
       
-      // Add to history with stored file data
       const fileArray = Array.from(files);
       const jsonFile = fileArray.find(f => f.name.endsWith('.json'));
       const assetName = jsonFile?.name.replace('.json', '') || 'Spine Asset';
       
-      // Convert files to stored format for reloading
       const storedFiles = await convertFilesToStoredFiles(files);
       
       addHistoryEntry({
@@ -469,20 +435,16 @@ const App: React.FC = () => {
     window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank');
   };
 
-  // Handle loading from history entry
   const handleLoadFromHistory = useCallback(async (entry: any) => {
     try {
       if (entry.jsonUrl && entry.atlasUrl) {
-        // Load from URLs
         await handleUrlLoad(entry.jsonUrl, entry.atlasUrl);
       } else if (entry.storedFiles && entry.storedFiles.length > 0) {
-        // Load from stored file data
         setIsLoading(true);
         const fileList = await convertStoredFilesToFileList(entry.storedFiles);
         await loadSpineFiles(fileList);
         addToast(t('success.filesLoaded', 'Files loaded successfully from history'), 'success');
       } else if (entry.files) {
-        // For file-based entries without stored data, we can't re-load the files
         addToast(t('history.cannotReloadFiles', 'Cannot reload files from history. Please drag and drop the files again.'), 'warning');
       }
       closeHistoryDrawer();
@@ -501,12 +463,10 @@ const App: React.FC = () => {
     }
   }, [backgroundColor, app]);
   
-  // Enhanced setShowBenchmark function that updates hash
   const setShowBenchmarkWithHash = useCallback((show: boolean) => {
     setShowBenchmark(show);
     updateHash({ benchmarkInfo: show });
   }, [updateHash]);
-  // Register commands for the command palette
   useCommandRegistration({
     spineInstance,
     showBenchmark,
@@ -519,10 +479,9 @@ const App: React.FC = () => {
     toggleMeshes,
     togglePhysics,
     toggleIk,
-    cameraContainer  // Add this
+    cameraContainer
   });
 
-  // Add this to register URL load command
   useEffect(() => {
     if (app) {
       commandRegistry.register({

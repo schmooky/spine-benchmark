@@ -7,12 +7,10 @@ export function useTimeScale(spineInstance: Spine | null) {
   const [isTimeScalePanelOpen, setIsTimeScalePanelOpen] = useState(false);
 
   const setTimeScale = useCallback((scale: number) => {
-    // Clamp the scale to reasonable bounds
     const clampedScale = Math.max(0.1, Math.min(3.0, scale));
     
     setCurrentTimeScaleState(clampedScale);
     
-    // Apply to spine instance if available and not paused
     if (spineInstance && spineInstance.state.timeScale !== 0) {
       spineInstance.state.timeScale = clampedScale;
     }

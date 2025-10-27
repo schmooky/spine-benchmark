@@ -11,7 +11,6 @@ interface PhysicsAnalysisProps {
 export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
   
-  // Calculate median score for constraints
   const scores = data.animations.map(a => a.constraintMetrics.score);
   const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
 

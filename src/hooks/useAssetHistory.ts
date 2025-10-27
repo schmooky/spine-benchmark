@@ -4,26 +4,26 @@ export interface StoredFile {
   name: string;
   type: string;
   size: number;
-  data: string; // base64 encoded file data
+  data: string;
 }
 
 export interface AssetHistoryEntry {
   id: string;
   name: string;
-  loadedAt: string; // ISO string
+  loadedAt: string;
   jsonUrl?: string;
   atlasUrl?: string;
-  files?: Array<{ name: string; type: string; size: number }>; // For display only
-  storedFiles?: StoredFile[]; // Actual file data for reloading
+  files?: Array<{ name: string; type: string; size: number }>;
+  storedFiles?: StoredFile[];
   ciValue?: number;
   riValue?: number;
   analysisData?: any;
-  isReloadable: boolean; // Whether this entry can be reloaded
-  source: 'url' | 'files'; // Source type for better UX
+  isReloadable: boolean;
+  source: 'url' | 'files';
 }
 
 const MAX_HISTORY_ENTRIES = 20;
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit per file
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const convertFilesToStoredFiles = async (files: FileList): Promise<StoredFile[]> => {
   const storedFiles: StoredFile[] = [];
@@ -31,7 +31,6 @@ const convertFilesToStoredFiles = async (files: FileList): Promise<StoredFile[]>
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     
-    // Skip files that are too large
     if (file.size > MAX_FILE_SIZE) {
       console.warn(`File ${file.name} is too large (${file.size} bytes) to store in history`);
       continue;
@@ -64,11 +63,9 @@ const convertStoredFilesToFileList = async (storedFiles: StoredFile[]): Promise<
   
   for (const storedFile of storedFiles) {
     try {
-      // Convert base64 data URL back to blob
       const response = await fetch(storedFile.data);
       const blob = await response.blob();
       
-      // Create File from blob
       const file = new File([blob], storedFile.name, { type: storedFile.type });
       files.push(file);
     } catch (error) {
@@ -76,7 +73,6 @@ const convertStoredFilesToFileList = async (storedFiles: StoredFile[]): Promise<
     }
   }
   
-  // Create a FileList-like object
   const fileList = {
     length: files.length,
     item: (index: number) => files[index] || null,
@@ -87,7 +83,6 @@ const convertStoredFilesToFileList = async (storedFiles: StoredFile[]): Promise<
     }
   };
   
-  // Add array-like access
   files.forEach((file, index) => {
     (fileList as any)[index] = file;
   });
@@ -107,13 +102,10 @@ export function useAssetHistory() {
     };
 
     setHistoryEntries(prev => {
-      // Remove any existing entry with the same name to avoid duplicates
       const filtered = prev.filter(e => e.name !== entry.name);
       
-      // Add new entry at the beginning
       const updated = [newEntry, ...filtered];
       
-      // Keep only the most recent entries
       return updated.slice(0, MAX_HISTORY_ENTRIES);
     });
   }, [setHistoryEntries]);

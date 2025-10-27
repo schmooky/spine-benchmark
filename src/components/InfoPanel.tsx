@@ -6,16 +6,16 @@ import { IconButton } from './IconButton';
 import { SpineAnalysisResult } from '../core/SpineAnalyzer';
 import { useUrlHash } from '../hooks/useUrlHash';
 
-// Import performance-related analysis components only
 import { MeshAnalysis } from './analysis/MeshAnalysis';
 import { ClippingAnalysis } from './analysis/ClippingAnalysis';
 import { BlendModeAnalysis } from './analysis/BlendModeAnalysis';
 import { PhysicsAnalysis } from './analysis/PhysicsAnalysis';
 import { PerformanceSummary } from './analysis/PerformanceSummary';
+import { BatchingAnalysis } from './analysis/BatchingAnalysis';
 
 interface InfoPanelProps {
   data: SpineAnalysisResult;
-  performanceData?: any; // Optional performance data
+  performanceData?: any;
   onClose: () => void;
 }
 
@@ -24,7 +24,6 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onC
   const [activeTab, setActiveTab] = useState(performanceData ? 'performance' : 'summary');
   const { updateHash, getStateFromHash } = useUrlHash();
   
-  // Check initial hash state for active tab
   useEffect(() => {
     const hashState = getStateFromHash();
     if (hashState.benchmarkTab) {
@@ -32,12 +31,10 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onC
     }
   }, [getStateFromHash]);
 
-  // Update hash when active tab changes
   useEffect(() => {
     updateHash({ benchmarkInfo: true, benchmarkTab: activeTab });
   }, [activeTab, updateHash]);
 
-  // Create a container for the portal if it doesn't exist
   const container = document.getElementById('info-panel-container') || (() => {
     const div = document.createElement('div');
     div.id = 'info-panel-container';
@@ -47,6 +44,7 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onC
   
   const tabs = [
     ...(performanceData ? [{ id: 'performance', label: t('infoPanel.tabs.performance', 'Performance Impact') }] : []),
+    ...(performanceData ? [{ id: 'batchingAnalysis', label: t('infoPanel.tabs.batchingAnalysis', 'Draw Call Batching') }] : []),
     { id: 'meshAnalysis', label: t('infoPanel.tabs.meshAnalysis') },
     { id: 'clippingAnalysis', label: t('infoPanel.tabs.clipping') },
     { id: 'blendModeAnalysis', label: t('infoPanel.tabs.blendModes') },
@@ -57,6 +55,8 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onC
     switch (activeTab) {
       case 'performance':
         return performanceData ? <PerformanceSummary data={performanceData} /> : null;
+      case 'batchingAnalysis':
+        return performanceData ? <BatchingAnalysis data={performanceData} /> : null;
       case 'meshAnalysis':
         return <MeshAnalysis data={data} />;
       case 'clippingAnalysis':

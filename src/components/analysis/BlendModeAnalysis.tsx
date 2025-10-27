@@ -12,7 +12,6 @@ interface BlendModeAnalysisProps {
 export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
   
-  // Calculate median score for blend modes
   const scores = data.animations.map(a => a.blendModeMetrics.score);
   const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
 

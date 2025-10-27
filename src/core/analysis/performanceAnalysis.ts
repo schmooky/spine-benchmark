@@ -84,7 +84,6 @@ export function analyzeSkeletonStructure(spineInstance: Spine) {
  * Analyzes global data across all animations
  */
 export function analyzeGlobalData(spineInstance: Spine) {
-  // This can be expanded to include global metrics if needed
   return {};
 }
 
@@ -105,7 +104,7 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
       physicsCount: 0
     },
     animation: {
-      activeTracksMinusBase: 0, // Will be set by caller
+      activeTracksMinusBase: 0,
       appliedTimelines: animation.timelines.length
     },
     meshes: {
@@ -125,7 +124,6 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
     }
   };
 
-  // Extract bone depths
   skeleton.bones.forEach((bone: any) => {
     let depth = 0;
     let parent = bone.parent;
@@ -136,7 +134,6 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
     frameData.bones.depths.push(depth);
   });
 
-  // Extract active constraint data
   skeleton.ikConstraints.forEach((constraint: any) => {
     if (constraint.isActive() && constraint.mix > 0) {
       frameData.constraints.ikChains.push(constraint.bones.length);
@@ -157,9 +154,8 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
   skeleton.pathConstraints.forEach((constraint: any) => {
     if (constraint.isActive()) {
       frameData.constraints.pathBonesAffected.push(constraint.bones.length);
-      // Estimate sample steps based on path length
       const pathLength = constraint.lengths ? constraint.lengths.reduce((a: number, b: number) => a + b, 0) : 100;
-      const sampleSteps = Math.ceil(pathLength / 10); // Sample every 10 units
+      const sampleSteps = Math.ceil(pathLength / 10);
       frameData.constraints.pathSampleSteps.push(sampleSteps);
     }
   });
@@ -172,14 +168,12 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
     });
   }
 
-  // Count deform timelines in the animation
   animation.timelines.forEach(timeline => {
     if (timeline instanceof DeformTimeline) {
       frameData.meshes.deformTimelines++;
     }
   });
 
-  // Analyze visible attachments and rendering data
   const visibleAttachments: any[] = [];
   let currentClipDepth = 0;
   let lastClipDepth = 0;
@@ -192,32 +186,26 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
     
     visibleAttachments.push({ slot, attachment });
     
-    // Count blend modes
     if (slot.data.blendMode !== BlendMode.Normal) {
       frameData.rendering.nonNormalBlendSlots++;
     }
     
-    // Process attachment types
     if (attachment instanceof MeshAttachment) {
       const vertexCount = attachment.worldVerticesLength / 2;
       frameData.meshes.vertexCount += vertexCount;
       
-      // Count skinned weights
       if (attachment.bones && attachment.bones.length > 0) {
         const bonesPerVertex = attachment.bones.length / vertexCount;
         frameData.meshes.skinnedWeights += (bonesPerVertex - 1) * vertexCount;
       }
       
-      // Count triangles
       const triangleCount = attachment.triangles ? attachment.triangles.length / 3 : 0;
       frameData.rendering.renderedTriangles += triangleCount;
       
-      // Track for clipping
       if (currentClipDepth > 0) {
         frameData.clipping.attachmentTris += triangleCount;
       }
     } else if (attachment instanceof RegionAttachment) {
-      // Regions are rendered as 2 triangles
       frameData.rendering.renderedTriangles += 2;
       
       if (currentClipDepth > 0) {
@@ -230,7 +218,6 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
         lastClipDepth = currentClipDepth;
       }
       
-      // Count clipping polygon triangles
       const clipVertices = attachment.worldVerticesLength / 2;
       if (clipVertices >= 3) {
         frameData.clipping.polyTris += clipVertices - 2;
@@ -238,12 +225,10 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
     }
   });
   
-  // Reset clip depth if changed
   if (currentClipDepth !== lastClipDepth) {
     frameData.clipping.transitions++;
   }
   
-  // Estimate draw calls based on state changes
   frameData.rendering.estimatedDrawCalls = estimateDrawCalls(visibleAttachments);
   
   return frameData;
@@ -251,6 +236,7 @@ function extractFrameData(skeleton: any, animation: Animation): FrameData {
 
 /**
  * Estimate draw calls based on attachment state changes
+ * Enhanced to provide more accurate batching analysis
  */
 function estimateDrawCalls(visibleAttachments: any[]): number {
   if (visibleAttachments.length === 0) return 0;
@@ -259,32 +245,98 @@ function estimateDrawCalls(visibleAttachments: any[]): number {
   let lastBlendMode = visibleAttachments[0].slot.data.blendMode;
   let lastIsClipping = false;
   let lastIsMesh = visibleAttachments[0].attachment instanceof MeshAttachment;
+  let lastTextureAtlas = getTextureAtlasId(visibleAttachments[0].attachment);
+  let lastShaderProgram = getShaderProgramId(visibleAttachments[0].slot, visibleAttachments[0].attachment);
   
   for (let i = 1; i < visibleAttachments.length; i++) {
     const { slot, attachment } = visibleAttachments[i];
     const blendMode = slot.data.blendMode;
     const isClipping = attachment instanceof ClippingAttachment;
     const isMesh = attachment instanceof MeshAttachment;
+    const textureAtlas = getTextureAtlasId(attachment);
+    const shaderProgram = getShaderProgramId(slot, attachment);
     
-    // Count state changes that trigger new draw calls
+    let batchBreak = false;
+    
     if (blendMode !== lastBlendMode) {
       drawCalls++;
+      batchBreak = true;
       lastBlendMode = blendMode;
     }
     
     if (isClipping !== lastIsClipping) {
       drawCalls++;
+      batchBreak = true;
       lastIsClipping = isClipping;
     }
     
-    // Mesh/Region splits (simplified - in reality depends on batching)
-    if (isMesh !== lastIsMesh) {
+    if (!batchBreak && textureAtlas !== lastTextureAtlas) {
+      drawCalls++;
+      batchBreak = true;
+      lastTextureAtlas = textureAtlas;
+    }
+    
+    if (!batchBreak && shaderProgram !== lastShaderProgram) {
+      drawCalls++;
+      batchBreak = true;
+      lastShaderProgram = shaderProgram;
+    }
+    
+    if (!batchBreak && isMesh !== lastIsMesh) {
       drawCalls++;
       lastIsMesh = isMesh;
     }
   }
   
   return drawCalls;
+}
+
+/**
+ * Get texture atlas identifier for batching analysis
+ */
+function getTextureAtlasId(attachment: any): string {
+  if (!attachment) return 'none';
+  
+  if (attachment.region) {
+    return attachment.region.texture?.baseTexture?.resource?.src || 'default';
+  }
+  
+  if (attachment.textureRegion) {
+    return attachment.textureRegion.texture?.baseTexture?.resource?.src || 'default';
+  }
+  
+  return 'default';
+}
+
+/**
+ * Get shader program identifier for batching analysis
+ */
+function getShaderProgramId(slot: any, attachment: any): string {
+  const parts = [];
+  
+  if (attachment instanceof MeshAttachment) {
+    parts.push('mesh');
+  } else if (attachment instanceof RegionAttachment) {
+    parts.push('region');
+  } else if (attachment instanceof ClippingAttachment) {
+    parts.push('clip');
+  } else {
+    parts.push('other');
+  }
+  
+  if (slot.data.blendMode !== BlendMode.Normal) {
+    parts.push(slot.data.blendMode.toString());
+  }
+  
+  if (slot.darkColor && (slot.darkColor.r !== 0 || slot.darkColor.g !== 0 || slot.darkColor.b !== 0)) {
+    parts.push('dark-tint');
+  }
+  
+  if (attachment instanceof MeshAttachment && attachment.bones && attachment.bones.length > 0) {
+    parts.push('skinned');
+  }
+  
+  return parts.join('-');
 }
 
 /**
@@ -297,7 +349,6 @@ export function analyzeSingleAnimation(
   const skeleton = spineInstance.skeleton;
   const state = spineInstance.state;
   
-  // Sample animation at multiple points and collect max values
   const maxFrameData: FrameData = {
     bones: { count: skeleton.bones.length, depths: [] },
     constraints: { ikChains: [], transformCount: 0, pathBonesAffected: [], pathSampleSteps: [], physicsCount: 0 },
@@ -307,17 +358,14 @@ export function analyzeSingleAnimation(
     rendering: { estimatedDrawCalls: 0, renderedTriangles: 0, nonNormalBlendSlots: 0 }
   };
 
-  // Sample animation
   AnimationSampler.sampleAnimation(
     spineInstance,
     animation,
     (time, sampledSkeleton) => {
       const frameData = extractFrameData(sampledSkeleton, animation);
       
-      // Keep maximum values across all frames
-      maxFrameData.bones.depths = frameData.bones.depths; // Same for all frames
+      maxFrameData.bones.depths = frameData.bones.depths;
       
-      // Constraints - keep all unique chains/counts
       frameData.constraints.ikChains.forEach(chain => {
         if (!maxFrameData.constraints.ikChains.includes(chain)) {
           maxFrameData.constraints.ikChains.push(chain);
@@ -340,7 +388,6 @@ export function analyzeSingleAnimation(
         frameData.constraints.physicsCount
       );
       
-      // Meshes
       maxFrameData.meshes.vertexCount = Math.max(
         maxFrameData.meshes.vertexCount,
         frameData.meshes.vertexCount
@@ -349,9 +396,8 @@ export function analyzeSingleAnimation(
         maxFrameData.meshes.skinnedWeights,
         frameData.meshes.skinnedWeights
       );
-      maxFrameData.meshes.deformTimelines = frameData.meshes.deformTimelines; // Same for all frames
+      maxFrameData.meshes.deformTimelines = frameData.meshes.deformTimelines;
       
-      // Clipping
       maxFrameData.clipping.attachmentTris = Math.max(
         maxFrameData.clipping.attachmentTris,
         frameData.clipping.attachmentTris
@@ -365,7 +411,6 @@ export function analyzeSingleAnimation(
         frameData.clipping.transitions
       );
       
-      // Rendering
       maxFrameData.rendering.estimatedDrawCalls = Math.max(
         maxFrameData.rendering.estimatedDrawCalls,
         frameData.rendering.estimatedDrawCalls
@@ -379,13 +424,11 @@ export function analyzeSingleAnimation(
         frameData.rendering.nonNormalBlendSlots
       );
     },
-    { sampleRate: 60 } // 60 FPS sampling
+    { sampleRate: 60 }
   );
   
-  // Set active tracks
   maxFrameData.animation.activeTracksMinusBase = Math.max(0, state.tracks.filter(t => t != null).length - 1);
   
-  // Calculate metrics
   const computationImpact = calculateComputationImpact(maxFrameData);
   const renderingImpact = calculateRenderingImpact(maxFrameData);
   const totalImpact = computationImpact + renderingImpact;
@@ -454,7 +497,6 @@ export function aggregateResults(
   statistics: any,
   sortedData: any
 ): SpinePerformanceAnalysisResult {
-  // Calculate global metrics as worst-case across all animations
   let maxCI = 0, maxRI = 0;
   animationData.forEach(a => {
     maxCI = Math.max(maxCI, a.metrics.computationImpact);

@@ -7,7 +7,6 @@ import { useState, useCallback } from 'react';
  * and improve separation of concerns.
  */
 export function useDebugVisualizer() {
-  // Separate flags for each debug visualization type
   const [meshesVisible, setMeshesVisible] = useState(false);
   const [physicsVisible, setPhysicsVisible] = useState(false);
   const [ikVisible, setIkVisible] = useState(false);

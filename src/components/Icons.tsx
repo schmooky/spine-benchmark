@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Common SVG props that all icons share
 interface IconProps {
   className?: string;
   size?: number;
@@ -11,7 +10,6 @@ const defaultProps = {
   size: 24,
 };
 
-// Helper function to create icon components
 const createIcon = (path: React.ReactNode, viewBox = '0 0 24 24') => {
   return ({ className = '', size = 24 }: IconProps) => (
     <svg
@@ -32,7 +30,6 @@ const createIcon = (path: React.ReactNode, viewBox = '0 0 24 24') => {
   );
 };
 
-// Document Icon
 export const DocumentTextIcon = createIcon(
   <>
     <path d="M8 14H16M8 10H16M13 18H8C6.89543 18 6 17.1046 6 16V8C6 6.89543 6.89543 6 8 6H16C17.1046 6 18 6.89543 18 8V13" />
@@ -40,7 +37,6 @@ export const DocumentTextIcon = createIcon(
   </>
 );
 
-// Question Mark Circle Icon
 export const QuestionMarkCircleIcon = createIcon(
   <>
     <circle cx="12" cy="12" r="10" />
@@ -48,12 +44,10 @@ export const QuestionMarkCircleIcon = createIcon(
   </>
 );
 
-// Play Icon
 export const PlayIcon = createIcon(
   <path d="M5 3L19 12L5 21V3Z" />
 );
 
-// Pause Icon
 export const PauseIcon = createIcon(
   <>
     <rect x="6" y="4" width="4" height="16" />
@@ -61,12 +55,10 @@ export const PauseIcon = createIcon(
   </>
 );
 
-// Stop Icon
 export const StopIcon = createIcon(
   <rect x="5" y="5" width="14" height="14" />
 );
 
-// Rewind Icon
 export const RewindIcon = createIcon(
   <>
     <path d="M4 16V8L10 12L4 16Z" />
@@ -74,7 +66,6 @@ export const RewindIcon = createIcon(
   </>
 );
 
-// Forward Icon
 export const ForwardIcon = createIcon(
   <>
     <path d="M6 16V8L12 12L6 16Z" />
@@ -82,17 +73,14 @@ export const ForwardIcon = createIcon(
   </>
 );
 
-// Arrow Path (Refresh) Icon
 export const ArrowPathIcon = createIcon(
   <path d="M16.023 9h4.977v-4M7.977 15h-4.977v4M16.5 7.5c-1.333-1.333-3.5-3-6.5-3-4.142 0-7.5 3.358-7.5 7.5 0 1.487.433 2.873 1.179 4.038M7.5 16.5c1.333 1.333 3.5 3 6.5 3 4.142 0 7.5-3.358 7.5-7.5 0-1.487-.433-2.873-1.179-4.038" />
 );
 
-// X Mark (Close) Icon
 export const XMarkIcon = createIcon(
   <path d="M6 18L18 6M6 6L18 18" />
 );
 
-// Swatch (Color Palette) Icon
 export const SwatchIcon = createIcon(
   <>
     <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
@@ -100,7 +88,6 @@ export const SwatchIcon = createIcon(
   </>
 );
 
-// Image Icon
 export const ImageIcon = createIcon(
   <>
     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -109,7 +96,6 @@ export const ImageIcon = createIcon(
   </>
 );
 
-// Cog (Settings) Icon 
 export const CogIcon = createIcon(
   <>
     <circle cx="12" cy="12" r="3" />

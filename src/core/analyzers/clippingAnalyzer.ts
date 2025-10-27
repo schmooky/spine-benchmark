@@ -5,7 +5,7 @@ import { ActiveComponents } from '../utils/animationUtils';
 
 export interface ClippingMetrics {
   activeMaskCount: number;
-  maskCount: number; // For compatibility
+  maskCount: number;
   totalVertices: number;
   complexMasks: number;
   score: number;
@@ -41,7 +41,6 @@ export function analyzeClippingForAnimation(
   
   console.log(`Analyzing clipping for ${animation.name}, active slots: ${activeComponents.slots.size}`);
   
-  // Only analyze clipping masks in active slots
   activeComponents.slots.forEach(slotName => {
     const slot = skeleton.slots.find((s: any) => s.data.name === slotName);
     
@@ -62,12 +61,11 @@ export function analyzeClippingForAnimation(
     }
   });
   
-  // Calculate clipping score
   const clippingScore = calculateClippingScore(activeMaskCount, totalVertices, complexMasks);
   
   return {
     activeMaskCount,
-    maskCount: activeMaskCount, // For compatibility
+    maskCount: activeMaskCount,
     totalVertices,
     complexMasks,
     score: clippingScore
@@ -95,10 +93,8 @@ export function analyzeGlobalClipping(spineInstance: Spine): GlobalClippingAnaly
     }
   });
   
-  // Calculate complexity metrics
   const complexMasks = masks.filter(mask => mask.vertexCount > 4).length;
   
-  // Calculate clipping score
   const clippingScore = calculateClippingScore(masks.length, totalVertices, complexMasks);
   
   const metrics: ClippingMetrics = {

@@ -8,7 +8,6 @@ import {
   aggregateResults
 } from "../analysis/animationAnalysis";
 
-// Export all functions for backward compatibility
 export {
   analyzeSkeleton,
   analyzeGlobalData,
@@ -63,24 +62,18 @@ export function analyzeSingleAnimation(
   spineInstance: Spine, 
   animation: any
 ): AnimationAnalysis {
-  // Get active components for this animation (frame-by-frame analysis)
   const activeComponents = getActiveComponentsForAnimation(spineInstance, animation);
 
-  // Analyze meshes for this animation
   const meshMetrics = analyzeMeshesForAnimation(spineInstance, animation, activeComponents);
 
-  // Analyze clipping for this animation
   const clippingMetrics = analyzeClippingForAnimation(spineInstance, animation, activeComponents);
 
-  // Analyze blend modes for this animation
   const blendModeMetrics = analyzeBlendModesForAnimation(spineInstance, animation, activeComponents);
 
-  // Analyze constraints for this animation
   const constraintMetrics = analyzePhysicsForAnimation(spineInstance, animation, activeComponents);
 
-  // Calculate overall performance score for this animation
   const componentScores = {
-    boneScore: analyzeSkeleton(spineInstance).metrics.score, // Bone score is same for all animations
+    boneScore: analyzeSkeleton(spineInstance).metrics.score,
     meshScore: meshMetrics.score,
     clippingScore: clippingMetrics.score,
     blendModeScore: blendModeMetrics.score,
@@ -149,14 +142,12 @@ export function sortAnalyses(animationAnalyses: AnimationAnalysis[]): {
   worst: AnimationAnalysis | null;
   medianScore: number;
 } {
-  // Calculate median score
   const scores = animationAnalyses.map(a => a.overallScore);
   scores.sort((a, b) => a - b);
   const medianScore = scores.length > 0 
     ? scores[Math.floor(scores.length / 2)]
     : 100;
 
-  // Find best and worst performing animations
   const sortedAnalyses = [...animationAnalyses].sort((a, b) => b.overallScore - a.overallScore);
   const bestAnimation = sortedAnalyses.length > 0 ? sortedAnalyses[0] : null;
   const worstAnimation = sortedAnalyses.length > 0 ? sortedAnalyses[sortedAnalyses.length - 1] : null;

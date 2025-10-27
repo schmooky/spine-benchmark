@@ -4,10 +4,8 @@ export function useSafeLocalStorage<T>(
   key: string, 
   initialValue: T
 ): [T, Dispatch<SetStateAction<T>>] {
-  // State to store our value
   const [storedValue, setStoredValue] = useState<T>(initialValue);
 
-  // Function to safely access localStorage
   const isLocalStorageAvailable = (): boolean => {
     try {
       const testKey = '__test__';
@@ -19,7 +17,6 @@ export function useSafeLocalStorage<T>(
     }
   };
 
-  // Initialize stored value from localStorage if available
   useEffect(() => {
     try {
       if (!isLocalStorageAvailable()) return;
@@ -33,18 +30,13 @@ export function useSafeLocalStorage<T>(
     }
   }, [key]);
 
-  // Return a wrapped version of useState's setter function that
-  // persists the new value to localStorage.
   const setValue: Dispatch<SetStateAction<T>> = (value) => {
     try {
-      // Allow value to be a function so we have same API as useState
       const valueToStore =
         value instanceof Function ? value(storedValue) : value;
       
-      // Save state
       setStoredValue(valueToStore);
       
-      // Save to localStorage if available
       if (isLocalStorageAvailable()) {
         localStorage.setItem(key, JSON.stringify(valueToStore));
       }

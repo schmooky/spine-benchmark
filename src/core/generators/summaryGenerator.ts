@@ -17,27 +17,22 @@ export function generateAnimationSummary(
   animationAnalyses: AnimationAnalysis[],
   medianScore: number
 ): string {
-  // Get the skeleton data
   const skeleton = spineInstance.skeleton;
   const skeletonData = skeleton.data;
   
-  // Get performance rating and interpretation for median score
   const performanceRating = getScoreRating(medianScore);
   const interpretation = getScoreInterpretation(medianScore);
   
-  // Find best and worst performing animations
   const sortedAnalyses = [...animationAnalyses].sort((a, b) => b.overallScore - a.overallScore);
   const bestAnimation = sortedAnalyses[0];
   const worstAnimation = sortedAnalyses[sortedAnalyses.length - 1];
   
-  // Calculate aggregate statistics
   const totalMeshesAcrossAnimations = animationAnalyses.reduce((sum, a) => sum + a.meshMetrics.activeMeshCount, 0);
   const totalVerticesAcrossAnimations = animationAnalyses.reduce((sum, a) => sum + a.meshMetrics.totalVertices, 0);
   const animationsWithPhysics = animationAnalyses.filter(a => a.activeComponents.hasPhysics).length;
   const animationsWithClipping = animationAnalyses.filter(a => a.activeComponents.hasClipping).length;
   const animationsWithBlendModes = animationAnalyses.filter(a => a.activeComponents.hasBlendModes).length;
   
-  // Generate HTML summary
   const scoreColor = getScoreColor(medianScore);
   
   return `
@@ -201,13 +196,11 @@ function generateOptimizationRecommendations(
 ): string {
   const recommendations: string[] = [];
   
-  // Find common issues across animations
   const physicsAnimations = animationAnalyses.filter(a => a.activeComponents.hasPhysics);
   const clippingAnimations = animationAnalyses.filter(a => a.activeComponents.hasClipping);
   const highVertexAnimations = animationAnalyses.filter(a => a.meshMetrics.totalVertices > 500);
   const poorPerformingAnimations = animationAnalyses.filter(a => a.overallScore < 55);
   
-  // Bone recommendations
   if (boneMetrics.maxDepth > 5) {
     recommendations.push(i18n.t('analysis.summary.recommendations.reduceBoneDepth'));
   }
@@ -215,7 +208,6 @@ function generateOptimizationRecommendations(
     recommendations.push(i18n.t('analysis.summary.recommendations.reduceTotalBones'));
   }
   
-  // Animation-specific recommendations
   if (physicsAnimations.length > animationAnalyses.length * 0.5) {
     recommendations.push(`Physics constraints are used in ${physicsAnimations.length} out of ${animationAnalyses.length} animations. Consider baking physics simulation for static animations.`);
   }
@@ -234,7 +226,6 @@ function generateOptimizationRecommendations(
     recommendations.push(`Focus optimization on these poor-performing animations: ${poorPerformingAnimations.slice(0, 3).map(a => `${a.name} (${a.overallScore.toFixed(0)}%)`).join(', ')}`);
   }
   
-  // Find animations with multiple expensive features
   const multiIssueAnimations = animationAnalyses.filter(a => {
     let issueCount = 0;
     if (a.activeComponents.hasPhysics) issueCount++;

@@ -21,16 +21,13 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
     e.stopPropagation();
     
     if (e.dataTransfer.items) {
-      // Use DataTransferItemList interface to access the file(s)
       const items = e.dataTransfer.items;
       const fileItems: DataTransferItem[] = [];
       
-      // Collect all items first
       for (let i = 0; i < items.length; i++) {
         fileItems.push(items[i]);
       }
       
-      // Process items
       const fileList: (File | FileSystemDirectoryEntry)[] = [];
       for (const item of fileItems) {
         if (item.kind === 'file') {
@@ -39,7 +36,6 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
             fileList.push(file);
           }
         } else if (item.kind === 'directory') {
-          // Handle directory (Chrome only)
           const entry = item.webkitGetAsEntry();
           if (entry && entry.isDirectory) {
             fileList.push(entry as FileSystemDirectoryEntry);
@@ -48,7 +44,6 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
       }
       
       if (fileList.length > 0) {
-        // Convert to FileList-like object
         const dataTransfer = new DataTransfer();
         fileList.forEach(file => {
           if (file instanceof File) {
@@ -58,7 +53,6 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
         onFilesDrop(dataTransfer.files);
       }
     } else {
-      // Use DataTransfer interface to access the file(s)
       const files = e.dataTransfer.files;
       if (files.length > 0) {
         onFilesDrop(files);

@@ -44,29 +44,22 @@ function calculateDepthPenalty(depths: number[], boneCount: number): number {
     depth_power
   } = PERFORMANCE_WEIGHTS;
   
-  // Calculate balanced depth
   const D_bal = Math.ceil(Math.log2(boneCount + 1));
   
-  // Calculate maximum depth
   const D_max = Math.max(...depths, 0);
   
-  // Calculate excess depth
   const ExcessDepth = Math.max(0, D_max - D_bal);
   
-  // Calculate weighted depth mean
   let depthSum = 0;
   depths.forEach(depth => {
     depthSum += Math.pow(depth, depth_power);
   });
   const WeightedDepthMean = depthSum / boneCount;
   
-  // Calculate balanced depth mean
   const BalancedDepthMean = Math.pow(D_bal, depth_power);
   
-  // Calculate depth degeneracy
   const DepthDegeneracy = Math.max(0, WeightedDepthMean - BalancedDepthMean);
   
-  // Calculate total penalty
   const DepthPenalty = 
     w_depth_lin * ExcessDepth +
     w_depth_poly * Math.pow(ExcessDepth, gamma) +
@@ -92,17 +85,13 @@ export function calculateComputationImpact(frameData: FrameData): number {
     wmix
   } = PERFORMANCE_WEIGHTS;
   
-  // Base bone cost
   let CI = wb * frameData.bones.count;
   
-  // IK constraint cost
   const ikCost = frameData.constraints.ikChains.reduce((sum, chain) => sum + chain, 0);
   CI += wIK * ikCost;
   
-  // Transform constraint cost
   CI += wTC * frameData.constraints.transformCount;
   
-  // Path constraint cost
   let pathCost = 0;
   for (let i = 0; i < frameData.constraints.pathBonesAffected.length; i++) {
     pathCost += frameData.constraints.pathBonesAffected[i] * 
@@ -110,25 +99,18 @@ export function calculateComputationImpact(frameData: FrameData): number {
   }
   CI += wPC * pathCost;
   
-  // Physics constraint cost
   CI += wPH * frameData.constraints.physicsCount;
   
-  // Mesh vertex cost
   CI += wmesh * frameData.meshes.vertexCount;
   
-  // Skinning cost
   CI += wskin * frameData.meshes.skinnedWeights;
   
-  // Deformation cost
   CI += wdef * frameData.meshes.deformTimelines;
   
-  // Clipping cost (multiplicative)
   CI += wclip * (frameData.clipping.attachmentTris * frameData.clipping.polyTris);
   
-  // Animation mixing cost
   CI += wmix * (frameData.animation.activeTracksMinusBase * frameData.animation.appliedTimelines);
   
-  // Add depth penalty
   CI += calculateDepthPenalty(frameData.bones.depths, frameData.bones.count);
   
   return CI;
@@ -161,7 +143,6 @@ export function calculatePerformanceScore(totalImpact: number): number {
   const totalImpactNorm = totalImpact / S;
   const performanceScore = 100 * Math.exp(-k * totalImpactNorm);
   
-  // Ensure score is in [0, 100] range
   return Math.max(0, Math.min(100, performanceScore));
 }
 
@@ -169,11 +150,11 @@ export function calculatePerformanceScore(totalImpact: number): number {
  * Get a color for a performance score
  */
 export function getScoreColor(score: number): string {
-  if (score >= 85) return '#4caf50'; // Green for excellent
-  if (score >= 70) return '#8bc34a'; // Light green for good
-  if (score >= 55) return '#ffb300'; // Amber for moderate
-  if (score >= 40) return '#f57c00'; // Orange for poor
-  return '#e53935'; // Red for very poor
+  if (score >= 85) return '#4caf50';
+  if (score >= 70) return '#8bc34a';
+  if (score >= 55) return '#ffb300';
+  if (score >= 40) return '#f57c00';
+  return '#e53935';
 }
 
 /**

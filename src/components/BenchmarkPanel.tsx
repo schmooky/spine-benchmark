@@ -30,13 +30,12 @@ export const BenchmarkPanel: React.FC<BenchmarkPanelProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Handle pulsation animation trigger
   useEffect(() => {
     if (shouldPulsate) {
       setIsAnimating(true);
       const timer = setTimeout(() => {
         setIsAnimating(false);
-      }, 500); // Match animation duration
+      }, 500);
       
       return () => clearTimeout(timer);
     }

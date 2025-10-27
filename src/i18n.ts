@@ -2,7 +2,6 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import translation files
 import en from './locales/en.json';
 import ru from './locales/ru.json';
 import zh from './locales/zh.json';
@@ -32,7 +31,7 @@ i18n
     debug: false,
     
     interpolation: {
-      escapeValue: false, // React already escapes values
+      escapeValue: false,
     },
     
     detection: {

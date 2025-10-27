@@ -15,7 +15,6 @@ export const Summary: React.FC<SummaryProps> = ({ data }) => {
   const interpretation = getScoreInterpretation(medianScore);
   const scoreColor = getScoreColor(medianScore);
   
-  // Sort animations by score for the table
   const sortedAnimations = [...data.animations].sort((a, b) => b.overallScore - a.overallScore);
   
   return (
@@ -184,7 +183,6 @@ const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ 
   const recommendations: string[] = [];
   const { skeleton, stats, animations } = data;
   
-  // Bone recommendations
   if (skeleton.metrics.maxDepth > 5) {
     recommendations.push(t('analysis.summary.recommendations.reduceBoneDepth'));
   }
@@ -192,7 +190,6 @@ const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ 
     recommendations.push(t('analysis.summary.recommendations.reduceTotalBones'));
   }
   
-  // Animation-specific recommendations
   if (stats.animationsWithPhysics > data.totalAnimations * 0.5) {
     recommendations.push(
       `Physics constraints are used in ${stats.animationsWithPhysics} out of ${data.totalAnimations} animations. Consider baking physics simulation for static animations.`
@@ -222,7 +219,6 @@ const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ 
     );
   }
   
-  // Find animations with multiple expensive features
   const multiIssueAnimations = animations.filter(a => {
     let issueCount = 0;
     if (a.activeComponents.hasPhysics) issueCount++;

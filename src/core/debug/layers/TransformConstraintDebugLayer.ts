@@ -27,9 +27,9 @@ export class TransformConstraintDebugLayer extends DebugLayer {
 
   constructor(options: TransformConstraintDebugOptions) {
     super(options);
-    this.constraintBoneColor = options.constraintBoneColor ?? 0x00FFFF; // Cyan
-    this.targetBoneColor = options.targetBoneColor ?? 0xADD8E6; // Light blue
-    this.limitColor = options.limitColor ?? 0x00FFFF; // Cyan
+    this.constraintBoneColor = options.constraintBoneColor ?? 0x00FFFF;
+    this.targetBoneColor = options.targetBoneColor ?? 0xADD8E6;
+    this.limitColor = options.limitColor ?? 0x00FFFF;
     this.showConstraints = options.showConstraints ?? true;
     this.showTargets = options.showTargets ?? true;
     this.showLimits = options.showLimits ?? false;
@@ -46,20 +46,16 @@ export class TransformConstraintDebugLayer extends DebugLayer {
     const transformConstraints = skeleton.transformConstraints || [];
 
     for (const constraint of transformConstraints) {
-      // Check if constraint is active
       if (typeof constraint?.isActive === 'function' && !constraint.isActive()) continue;
 
-      // Visualize constraint bones
       if (this.showConstraints && constraint.bones) {
         this.drawConstraintBones(constraint.bones);
       }
 
-      // Visualize target bone
       if (this.showTargets && constraint.target) {
         this.drawTargetBone(constraint.target);
       }
 
-      // Visualize limits if enabled
       if (this.showLimits) {
         this.drawLimits(constraint);
       }
@@ -81,7 +77,6 @@ export class TransformConstraintDebugLayer extends DebugLayer {
       const y = bone.worldY;
       
       if (this.isCircleVisible(x, y, 5)) {
-        // Draw a diamond shape to indicate constraint bones
         const size = 6;
         g.moveTo(x - size, y)
          .lineTo(x, y - size)
@@ -98,7 +93,6 @@ export class TransformConstraintDebugLayer extends DebugLayer {
     const y = target.worldY;
     
     if (this.isCircleVisible(x, y, 8)) {
-      // Draw a target circle with crosshair
       const radius = 8;
       
       g.stroke({ 
@@ -110,22 +104,19 @@ export class TransformConstraintDebugLayer extends DebugLayer {
       
       g.circle(x, y, radius);
       
-      // Draw crosshair
       g.moveTo(x - radius, y).lineTo(x + radius, y);
       g.moveTo(x, y - radius).lineTo(x, y + radius);
     }
   }
 
   private drawLimits(constraint: any): void {
-    // For transform constraints, we'll draw a simple visualization of the affected area
     if (!constraint.bones || constraint.bones.length === 0) return;
     
     const g = this.graphics;
-    const bone = constraint.bones[0]; // Use the first bone as reference
+    const bone = constraint.bones[0];
     const x = bone.worldX;
     const y = bone.worldY;
     
-    // Draw a dashed circle to represent limits
     g.stroke({ 
       color: this.limitColor, 
       width: 1, 
@@ -150,7 +141,6 @@ export class TransformConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  // Configuration methods
   public setShowConstraints(show: boolean): void { this.showConstraints = show; }
   public setShowTargets(show: boolean): void { this.showTargets = show; }
   public setShowLimits(show: boolean): void { this.showLimits = show; }

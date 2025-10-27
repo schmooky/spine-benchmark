@@ -29,7 +29,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const [animations, setAnimations] = useState<string[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   
-  // Initialize animations list and set default animation
   useEffect(() => {
     if (!spineInstance) return;
     
@@ -42,11 +41,9 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     }
     
     return () => {
-      // Cleanup if needed
     };
   }, [spineInstance]);
   
-  // Handle play/pause and time scale
   useEffect(() => {
     if (!spineInstance) return;
     
@@ -64,7 +61,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     setCurrentAnimation(name);
     setIsPlaying(true);
     
-    // Notify parent component about animation change
     if (onAnimationChange) {
       onAnimationChange(name);
     }
@@ -77,7 +73,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const toggleLoop = () => {
     setIsLooping(!isLooping);
     
-    // Reapply the current animation with new loop setting
     if (currentAnimation) {
       playAnimation(currentAnimation, !isLooping);
     }
@@ -93,7 +88,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const rewindAnimation = () => {
     if (!spineInstance || !currentAnimation) return;
     
-    // Restart the current animation
     playAnimation(currentAnimation);
   };
   
@@ -113,7 +107,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     playAnimation(animations[newIndex]);
   };
   
-  // Debug logging to validate assumptions
   console.log('AnimationControls rendering:', {
     spineInstance: !!spineInstance,
     currentAnimation,
