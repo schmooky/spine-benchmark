@@ -2,7 +2,7 @@ import { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
 import { calculateBoneScore, calculateMaxDepth } from "../utils/scoreCalculator";
 
-export interface BoneNode {
+interface BoneNode {
   name: string;
   type: string;
   x: string;

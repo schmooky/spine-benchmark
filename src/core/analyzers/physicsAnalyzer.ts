@@ -15,7 +15,7 @@ export interface ConstraintMetrics {
   score: number;
 }
 
-export interface IkConstraintInfo {
+interface IkConstraintInfo {
   name: string;
   target: string;
   bones: string[];
@@ -27,7 +27,7 @@ export interface IkConstraintInfo {
   isActive: boolean;
 }
 
-export interface TransformConstraintInfo {
+interface TransformConstraintInfo {
   name: string;
   target: string;
   bones: string[];
@@ -42,7 +42,7 @@ export interface TransformConstraintInfo {
   isRelative: boolean;
 }
 
-export interface PathConstraintInfo {
+interface PathConstraintInfo {
   name: string;
   target: string;
   bones: string[];
@@ -61,7 +61,7 @@ export interface PathConstraintInfo {
   hasLengths: boolean;
 }
 
-export interface PhysicsConstraintInfo {
+interface PhysicsConstraintInfo {
   name: string;
   bone: string;
   inertia: number;

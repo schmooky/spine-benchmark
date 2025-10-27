@@ -14,7 +14,7 @@ export interface MeshMetrics {
   score: number;
 }
 
-export interface MeshInfo {
+interface MeshInfo {
   slotName: string;
   vertices: number;
   isDeformed: boolean;

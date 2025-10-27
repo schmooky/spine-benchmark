@@ -1,7 +1,7 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface IkConstraintDebugOptions extends DebugLayerOptions {
+interface IkConstraintDebugOptions extends DebugLayerOptions {
   boneColor?: number;
   targetColor?: number;
   startCircleColor?: number;

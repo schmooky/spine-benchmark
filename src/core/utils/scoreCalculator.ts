@@ -104,23 +104,23 @@ export function calculateBoneScore(totalBones: number, maxDepth: number): number
  * @param physicsImpact Physics constraints impact
  * @returns Score from 0-100
  */
-export function calculateConstraintScore(
-  ikImpact: number, 
-  transformImpact: number, 
-  pathImpact: number, 
+function calculateConstraintScore(
+  ikImpact: number,
+  transformImpact: number,
+  pathImpact: number,
   physicsImpact: number
 ): number {
-  const { 
-    IK_WEIGHT, 
-    TRANSFORM_WEIGHT, 
-    PATH_WEIGHT, 
-    PHYSICS_WEIGHT 
+  const {
+    IK_WEIGHT,
+    TRANSFORM_WEIGHT,
+    PATH_WEIGHT,
+    PHYSICS_WEIGHT
   } = PERFORMANCE_FACTORS;
   
-  const totalImpact = 
-    (ikImpact * IK_WEIGHT) + 
-    (transformImpact * TRANSFORM_WEIGHT) + 
-    (pathImpact * PATH_WEIGHT) + 
+  const totalImpact =
+    (ikImpact * IK_WEIGHT) +
+    (transformImpact * TRANSFORM_WEIGHT) +
+    (pathImpact * PATH_WEIGHT) +
     (physicsImpact * PHYSICS_WEIGHT);
   
   const score = 100 - (totalImpact * 0.5);
@@ -183,7 +183,7 @@ export function getScoreColor(score: number): string {
  * @param score Performance score
  * @returns Text rating
  */
-export function getScoreRating(score: number): string {
+function getScoreRating(score: number): string {
   if (score >= 85) return i18n.t('analysis.scores.ratings.excellent');
   if (score >= 70) return i18n.t('analysis.scores.ratings.good');
   if (score >= 55) return i18n.t('analysis.scores.ratings.moderate');
@@ -196,7 +196,7 @@ export function getScoreRating(score: number): string {
  * @param score Performance score
  * @returns Score interpretation text
  */
-export function getScoreInterpretation(score: number): string {
+function getScoreInterpretation(score: number): string {
   if (score >= 85) return i18n.t('analysis.scores.interpretations.excellent');
   if (score >= 70) return i18n.t('analysis.scores.interpretations.good');
   if (score >= 55) return i18n.t('analysis.scores.interpretations.moderate');

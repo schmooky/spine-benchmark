@@ -3,7 +3,7 @@ import { SpineAnalysisResult } from '../core/SpineAnalyzer';
 import { SpinePerformanceAnalysisResult } from '../core/SpinePerformanceAnalyzer';
 import { PERFORMANCE_CONFIG } from '../core/config/performanceConfig';
 
-export interface UseBenchmarkPanelResult {
+interface UseBenchmarkPanelResult {
   isVisible: boolean;
   shouldPulsate: boolean;
   computationImpact: number | null;

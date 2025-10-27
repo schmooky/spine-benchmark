@@ -298,7 +298,7 @@ export const PERFORMANCE_CONFIG = {
  * applyPreset('desktop');
  * ```
  */
-export function applyPreset(presetName: keyof typeof PERFORMANCE_CONFIG.presets): typeof PERFORMANCE_CONFIG {
+function applyPreset(presetName: keyof typeof PERFORMANCE_CONFIG.presets): typeof PERFORMANCE_CONFIG {
   const preset = PERFORMANCE_CONFIG.presets[presetName];
   
   Object.assign(PERFORMANCE_CONFIG, preset);
@@ -308,10 +308,10 @@ export function applyPreset(presetName: keyof typeof PERFORMANCE_CONFIG.presets)
 
 /**
  * Reset configuration to defaults
- * 
+ *
  * @returns The default configuration
  */
-export function resetToDefaults(): typeof PERFORMANCE_CONFIG {
+function resetToDefaults(): typeof PERFORMANCE_CONFIG {
   PERFORMANCE_CONFIG.boneWeight = 1.0;
   PERFORMANCE_CONFIG.ikConstraintWeight = 1.2;
   PERFORMANCE_CONFIG.transformConstraintWeight = 0.4;
@@ -343,7 +343,7 @@ export function resetToDefaults(): typeof PERFORMANCE_CONFIG {
  * Get current configuration as a plain object
  * Useful for debugging or exporting configuration
  */
-export function getCurrentConfig() {
+function getCurrentConfig() {
   return {
     weights: {
       computation: {

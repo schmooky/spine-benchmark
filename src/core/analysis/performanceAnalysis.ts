@@ -342,7 +342,7 @@ function getShaderProgramId(slot: any, attachment: any): string {
 /**
  * Analyze a single animation
  */
-export function analyzeSingleAnimation(
+function analyzeSingleAnimation(
   spineInstance: Spine, 
   animation: Animation
 ): AnimationPerformanceAnalysis {

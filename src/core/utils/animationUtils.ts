@@ -35,7 +35,7 @@ export interface ActiveComponents {
 /**
  * Determines which components are active/used in a specific animation by sampling frames
  */
-export function getActiveComponentsForAnimation(
+function getActiveComponentsForAnimation(
   spineInstance: Spine, 
   animation: Animation
 ): ActiveComponents {

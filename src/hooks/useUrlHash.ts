@@ -1,12 +1,12 @@
 import { useEffect, useCallback, useRef } from 'react';
 
-export interface WindowState {
+interface WindowState {
   commandPalette: boolean;
   benchmarkInfo: boolean;
   benchmarkTab?: string;
 }
 
-export interface UseUrlHashReturn {
+interface UseUrlHashReturn {
   updateHash: (state: Partial<WindowState>) => void;
   clearHash: () => void;
   getStateFromHash: () => WindowState;

@@ -11,12 +11,12 @@ import {
  * and reduce complexity in animation analysis.
  */
 
-export interface SamplingOptions {
+interface SamplingOptions {
   sampleRate?: number;
   preserveState?: boolean;
 }
 
-export interface AnimationState {
+interface AnimationState {
   trackTime: number;
   animationName: string | null;
   loop: boolean;

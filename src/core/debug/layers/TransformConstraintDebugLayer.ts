@@ -2,7 +2,7 @@ import { Graphics } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface TransformConstraintDebugOptions extends DebugLayerOptions {
+interface TransformConstraintDebugOptions extends DebugLayerOptions {
   constraintBoneColor?: number;
   targetBoneColor?: number;
   limitColor?: number;

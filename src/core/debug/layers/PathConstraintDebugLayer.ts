@@ -2,7 +2,7 @@ import { Graphics } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface PathConstraintDebugOptions extends DebugLayerOptions {
+interface PathConstraintDebugOptions extends DebugLayerOptions {
   /** Main path color */
   pathColor?: number;
   /** Start/End node color */

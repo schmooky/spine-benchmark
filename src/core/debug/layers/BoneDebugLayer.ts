@@ -1,7 +1,7 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface BoneDebugOptions extends DebugLayerOptions {
+interface BoneDebugOptions extends DebugLayerOptions {
   boneColor?: number;
   jointColor?: number;
   jointRadius?: number;

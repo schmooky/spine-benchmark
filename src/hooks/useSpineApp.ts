@@ -10,7 +10,7 @@ import { useSpineLoader } from './useSpineLoader';
 import { useDebugVisualizer } from './useDebugVisualizer';
 import { useBackgroundManager } from './useBackgroundManager';
 
-export interface DebugFlags {
+interface DebugFlags {
   showBones: boolean;
   showRegionAttachments: boolean;
   showMeshTriangles: boolean;

@@ -2,7 +2,7 @@ import React, { createContext, useContext } from 'react';
 import { toast, ToastContainer as ToastifyContainer, ToastOptions } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export type ToastType = 'info' | 'success' | 'warning' | 'error';
+type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 interface ToastContextType {
   addToast: (message: string, type?: ToastType) => void;
@@ -52,21 +52,4 @@ export const useToast = () => {
     throw new Error('useToast must be used within a ToastProvider');
   }
   return context;
-};
-
-export const ToastContainer: React.FC = () => {
-  return (
-    <ToastifyContainer
-      position="top-center"
-      autoClose={1000}
-      hideProgressBar={false}
-      newestOnTop
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="dark"
-    />
-  );
 };

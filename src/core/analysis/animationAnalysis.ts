@@ -44,7 +44,7 @@ import {
 import { calculateOverallScore } from "../utils/scoreCalculator";
 import { AnimationAnalysis, SpineAnalysisResult } from "../SpineAnalyzer";
 
-export interface ActiveComponents {
+interface ActiveComponents {
   slots: Set<string>;
   meshes: Set<string>;
   bones: Set<string>;
@@ -62,12 +62,12 @@ export interface ActiveComponents {
   };
 }
 
-export interface SamplingOptions {
+interface SamplingOptions {
   sampleRate?: number;
   preserveState?: boolean;
 }
 
-export interface AnimationState {
+interface AnimationState {
   trackTime: number;
   animationName: string | null;
   loop: boolean;
@@ -77,7 +77,7 @@ export interface AnimationState {
  * AnimationSampler class
  * Provides utilities for sampling Spine animations at different time points
  */
-export class AnimationSampler {
+class AnimationSampler {
   /**
    * Sample an animation at multiple time points
    * @param spineInstance - The Spine instance
@@ -208,7 +208,7 @@ export class AnimationSampler {
 /**
  * Determines which components are active/used in a specific animation by sampling frames
  */
-export function getActiveComponentsForAnimation(
+function getActiveComponentsForAnimation(
   spineInstance: Spine, 
   animation: Animation
 ): ActiveComponents {
@@ -421,7 +421,7 @@ export function analyzeGlobalData(spineInstance: Spine): {
  * @param animation - The animation to analyze
  * @returns AnimationAnalysis - Analysis of the single animation
  */
-export function analyzeSingleAnimation(
+function analyzeSingleAnimation(
   spineInstance: Spine, 
   animation: any
 ): AnimationAnalysis {

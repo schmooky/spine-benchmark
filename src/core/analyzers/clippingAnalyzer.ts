@@ -11,7 +11,7 @@ export interface ClippingMetrics {
   score: number;
 }
 
-export interface ClippingMaskInfo {
+interface ClippingMaskInfo {
   slotName: string;
   vertexCount: number;
 }

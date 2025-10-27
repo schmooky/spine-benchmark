@@ -2,7 +2,7 @@ import { Graphics } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface PhysicsConstraintDebugOptions extends DebugLayerOptions {
+interface PhysicsConstraintDebugOptions extends DebugLayerOptions {
   boundsColor?: number;
   gravityColor?: number;
   windColor?: number;

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { commandRegistry, Command, CommandCategory } from '../utils/commandRegistry';
 import { useUrlHash } from './useUrlHash';
 
-export interface UseCommandPaletteReturn {
+interface UseCommandPaletteReturn {
   isOpen: boolean;
   query: string;
   selectedIndex: number;

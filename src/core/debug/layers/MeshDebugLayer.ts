@@ -2,7 +2,7 @@ import { Graphics } from 'pixi.js';
 import { Spine, MeshAttachment } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface MeshDebugOptions extends DebugLayerOptions {
+interface MeshDebugOptions extends DebugLayerOptions {
   triangleColor?: number;
   hullColor?: number;
   vertexColor?: number;

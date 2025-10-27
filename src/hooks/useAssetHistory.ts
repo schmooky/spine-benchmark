@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSafeLocalStorage } from './useSafeLocalStorage';
-export interface StoredFile {
+interface StoredFile {
   name: string;
   type: string;
   size: number;
