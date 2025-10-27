@@ -94,8 +94,9 @@ export class CameraContainer extends Container {
   public lookAtChild(spine: Spine): void {
     this.currentSpine = spine;
     
-    if (this.debugRenderer.getContainer().parent) {
-      this.debugRenderer.getContainer().parent.removeChild(this.debugRenderer.getContainer());
+    const debugContainer = this.debugRenderer.getContainer();
+    if (debugContainer.parent) {
+      debugContainer.parent.removeChild(debugContainer);
     }
     
     if (this.currentSpine) {
@@ -174,8 +175,9 @@ export class CameraContainer extends Container {
 
   public override destroy(): void {
     window.removeEventListener("resize", this.onResize);
-    if (this.debugRenderer.getContainer().parent) {
-      this.debugRenderer.getContainer().parent.removeChild(this.debugRenderer.getContainer());
+    const debugContainer = this.debugRenderer.getContainer();
+    if (debugContainer.parent) {
+      debugContainer.parent.removeChild(debugContainer);
     }
     this.debugRenderer.destroy();
     super.destroy();

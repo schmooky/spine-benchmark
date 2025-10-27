@@ -4,6 +4,11 @@ import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
 import { getScoreColor } from '../../core/utils/scoreCalculator';
 import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
 
+interface ClippingMaskInfo {
+  slotName: string;
+  vertexCount: number;
+}
+
 interface ClippingAnalysisProps {
   data: SpineAnalysisResult;
 }
@@ -109,7 +114,7 @@ const GlobalClippingDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }
           </tr>
         </thead>
         <tbody>
-          {masks.map((mask) => {
+          {masks.map((mask: ClippingMaskInfo) => {
             const status = mask.vertexCount <= 4 
               ? t('analysis.clipping.status.optimal')
               : mask.vertexCount <= 8 

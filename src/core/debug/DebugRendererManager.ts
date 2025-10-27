@@ -4,6 +4,9 @@ import { DebugLayer } from './DebugLayer';
 import { DebugLayerFactory, DebugLayerType } from './DebugLayerFactory';
 import { DebugFlagsManager, DebugFlags } from './DebugFlagsManager';
 
+// Re-export DebugFlags for external use
+export type { DebugFlags } from './DebugFlagsManager';
+
 export class DebugRendererManager {
   private app: Application;
   private container: Container;
@@ -53,6 +56,8 @@ export class DebugRendererManager {
   }
 
   public update(): void {
+    if (!this.currentSpine) return;
+
     if (this.flagsManager.isLayerVisible('bones')) {
       this.layers.get('bones')?.update(this.currentSpine);
     }
@@ -77,7 +82,6 @@ export class DebugRendererManager {
       this.layers.get('physics')?.update(this.currentSpine);
     }
   }
-
   public setDebugFlags(flags: Partial<DebugFlags>): void {
     this.flagsManager.setDebugFlags(flags);
     
