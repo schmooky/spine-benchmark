@@ -3,6 +3,11 @@
   "version": "2.0.0",
   "description": "A tool for benchmarking and analyzing Spine animations",
   "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -10,7 +15,11 @@
     "test": "jest",
     "test:e2e": "jest tests/e2e",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "postinstall": "pnpm run build:types",
+    "build:types": "tsc --noEmit",
+    "clean": "rimraf dist node_modules/.vite",
+    "reinstall": "pnpm clean && pnpm install"
   },
   "dependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.94",
@@ -33,8 +42,20 @@
     "@types/react-dom": "^19.2.2",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
+    "rimraf": "^6.0.1",
     "ts-jest": "^29.4.5",
     "typescript": "^5.9.3",
     "vite": "^7.1.12"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@types/node"
+      ]
+    },
+    "overrides": {
+      "@types/react": "^19.2.2",
+      "@types/react-dom": "^19.2.2"
+    }
   }
 }

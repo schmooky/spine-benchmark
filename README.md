@@ -53,18 +53,25 @@ Spine Benchmark provides comprehensive performance analysis through quantitative
 
 ## Installation
 
+### Prerequisites
+- Node.js 18.0.0+
+- pnpm 8.0.0+ (recommended) or npm 9.0.0+
+
+### Setup
 ```bash
 git clone https://github.com/schmooky/spine-benchmark.git
 cd spine-benchmark
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 **Scripts**:
-- `npm run build` - Production build
-- `npm run test` - Unit tests
-- `npm run test:e2e` - Game state performance tests
-- `npm run test:coverage` - Coverage report
+- `pnpm build` - Production build
+- `pnpm test` - Unit tests
+- `pnpm test:e2e` - Game state performance tests
+- `pnpm test:coverage` - Coverage report
+- `pnpm clean` - Clean build artifacts
+- `pnpm reinstall` - Clean install
 
 ## Usage
 
@@ -89,7 +96,7 @@ Create performance validation tests for complex scenes:
 # Create test configuration
 mkdir tests/e2e/game-states/my-scene
 # Add config.json with spine instances and thresholds
-npm run test:e2e
+pnpm test:e2e
 ```
 
 **Example config.json**:
