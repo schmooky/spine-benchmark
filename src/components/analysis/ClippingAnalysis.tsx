@@ -11,7 +11,6 @@ interface ClippingAnalysisProps {
 export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
   
-  // Calculate median score for clipping
   const scores = data.animations.map(a => a.clippingMetrics.score);
   const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
 

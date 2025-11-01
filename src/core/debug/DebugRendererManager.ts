@@ -16,12 +16,10 @@ export class DebugRendererManager {
     this.container = new Container();
     this.flagsManager = new DebugFlagsManager();
     
-    // Initialize debug layers
     this.initializeLayers();
   }
 
   private initializeLayers(): void {
-    // Define all supported layer types
     const layerTypes: DebugLayerType[] = [
       'bones', 
       'pathConstraints', 
@@ -31,7 +29,6 @@ export class DebugRendererManager {
       'physics'
     ];
     
-    // Create all layers using the factory
     layerTypes.forEach(type => {
       try {
         const layer = DebugLayerFactory.createLayer(type, 
@@ -56,7 +53,6 @@ export class DebugRendererManager {
   }
 
   public update(): void {
-    // Update each layer based on its flag
     if (this.flagsManager.isLayerVisible('bones')) {
       this.layers.get('bones')?.update(this.currentSpine);
     }
@@ -69,17 +65,14 @@ export class DebugRendererManager {
       this.layers.get('ikConstraints')?.update(this.currentSpine);
     }
 
-    // Update mesh layers based on their flags
     if (this.flagsManager.isLayerVisible('meshes')) {
       this.layers.get('meshes')?.update(this.currentSpine);
     }
     
-    // Update transform constraint layer
     if (this.flagsManager.isLayerVisible('transformConstraints')) {
       this.layers.get('transformConstraints')?.update(this.currentSpine);
     }
     
-    // Update physics constraint layer
     if (this.flagsManager.isLayerVisible('physics')) {
       this.layers.get('physics')?.update(this.currentSpine);
     }
@@ -88,13 +81,11 @@ export class DebugRendererManager {
   public setDebugFlags(flags: Partial<DebugFlags>): void {
     this.flagsManager.setDebugFlags(flags);
     
-    // Update layer visibility based on flags
     this.layers.forEach((layer, type) => {
       const visible = this.flagsManager.isLayerVisible(type);
       layer.setVisible(visible);
     });
 
-    // Force update if we have a spine
     if (this.currentSpine) {
       this.update();
     }
@@ -119,7 +110,6 @@ export class DebugRendererManager {
     this.container.destroy({ children: true });
   }
 
-  // Convenience methods for toggling specific debug features
   public togglePathConstraints(visible?: boolean): void {
     this.flagsManager.togglePathConstraints(visible);
     this.setDebugFlags(this.flagsManager.getDebugFlags());

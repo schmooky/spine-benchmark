@@ -17,10 +17,15 @@ import { useCommandRegistration } from './hooks/useCommandRegistration';
 import { useUrlHash } from './hooks/useUrlHash';
 import { useFileProcessor } from './hooks/useFileProcessor';
 import { useAppEventHandlers } from './hooks/useAppEventHandlers';
+import { useAssetHistory } from './hooks/useAssetHistory';
+import { useTimeScale } from './hooks/useTimeScale';
 import { commandRegistry } from './utils/commandRegistry';
 import { FileProcessor } from './core/utils/fileProcessor';
+import { AssetHistoryButton } from './components/AssetHistoryButton';
+import { AssetHistoryDrawer } from './components/AssetHistoryDrawer';
+import { TimeScaleButton } from './components/TimeScaleButton';
+import { TimeScalePanel } from './components/TimeScalePanel';
 
-// URL Input Modal Component
 const UrlInputModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -87,12 +92,10 @@ const App: React.FC = () => {
   const [urlLoadAttempted, setUrlLoadAttempted] = useState(false);
   const [urlLoadStatus, setUrlLoadStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  // Debug log for language modal state changes
   useEffect(() => {
     console.log('🏠 App: Language modal state changed:', showLanguageModal);
   }, [showLanguageModal]);
 
-  // Enhanced setShowLanguageModal with additional logging
   const setShowLanguageModalWithLogging = (show: boolean) => {
     console.log('🏠 App: setShowLanguageModal called with:', show);
     console.log('🏠 App: Current modal state before change:', showLanguageModal);
@@ -106,6 +109,18 @@ const App: React.FC = () => {
   const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
   const { collectFilesFromDataTransfer } = useFileProcessor();
   const { handleKeyDown, handleContextMenu, handleWheel } = useAppEventHandlers();
+  const {
+    historyEntries,
+    isHistoryDrawerOpen,
+    addHistoryEntry,
+    removeHistoryEntry,
+    clearHistory,
+    updateEntryAnalysis,
+    toggleHistoryDrawer,
+    closeHistoryDrawer,
+    convertFilesToStoredFiles,
+    convertStoredFilesToFileList
+  } = useAssetHistory();
   
   const {
     spineInstance,
@@ -119,10 +134,19 @@ const App: React.FC = () => {
     toggleMeshes,
     togglePhysics,
     toggleIk,
-    cameraContainer  // Add this
+    cameraContainer,
+    performanceData
   } = useSpineApp(app);
+  
+  const {
+    currentTimeScale,
+    isTimeScalePanelOpen,
+    setTimeScale,
+    toggleTimeScalePanel,
+    closeTimeScalePanel,
+    resetTimeScale
+  } = useTimeScale(spineInstance);
 
-  // Check for URL parameters on mount - Enhanced version
   useEffect(() => {
     if (!app || urlLoadAttempted) return;
 
@@ -151,14 +175,36 @@ const App: React.FC = () => {
     checkAndLoadFromUrl();
   }, [app, loadSpineFromUrls, urlLoadAttempted, addToast, t]);
 
-  // Handle URL loading from modal
+  useEffect(() => {
+    if (benchmarkData && performanceData && historyEntries.length > 0) {
+      const latestEntry = historyEntries[0];
+      if (latestEntry && (latestEntry.ciValue === undefined || latestEntry.riValue === undefined)) {
+        const ciValue = performanceData.globalMetrics.computationImpact;
+        const riValue = performanceData.globalMetrics.renderingImpact;
+        
+        updateEntryAnalysis(latestEntry.id, ciValue, riValue, {
+          benchmark: benchmarkData,
+          performance: performanceData
+        });
+      }
+    }
+  }, [benchmarkData, performanceData, historyEntries, updateEntryAnalysis]);
+
   const handleUrlLoad = useCallback(async (jsonUrl: string, atlasUrl: string) => {
     try {
       setUrlLoadStatus('loading');
       await loadSpineFromUrls(jsonUrl, atlasUrl);
       setUrlLoadStatus('success');
       
-      // Update URL parameters to persist the loaded URLs
+      const assetName = jsonUrl.split('/').pop()?.replace('.json', '') || 'Spine Asset';
+      addHistoryEntry({
+        name: assetName,
+        jsonUrl,
+        atlasUrl,
+        isReloadable: true,
+        source: 'url'
+      });
+      
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('json', jsonUrl);
       newUrl.searchParams.set('atlas', atlasUrl);
@@ -170,9 +216,8 @@ const App: React.FC = () => {
       console.error('Failed to load from URLs:', error);
       addToast(t('error.failedToLoadFromUrls', { error: (error as any).message }), 'error');
     }
-  }, [loadSpineFromUrls, addToast, t]);
+  }, [loadSpineFromUrls, addToast, t, addHistoryEntry]);
 
-  // Check initial hash state for benchmark panel
   useEffect(() => {
     const hashState = getStateFromHash();
     if (hashState.benchmarkInfo) {
@@ -180,7 +225,6 @@ const App: React.FC = () => {
     }
   }, [getStateFromHash]);
 
-  // Listen for browser navigation changes
   useEffect(() => {
     const cleanup = onHashChange((hashState) => {
       setShowBenchmark(hashState.benchmarkInfo);
@@ -189,7 +233,6 @@ const App: React.FC = () => {
     return cleanup;
   }, [onHashChange]);
 
-  // Update hash when showBenchmark changes (but avoid infinite loops)
   useEffect(() => {
     const currentHashState = getStateFromHash();
     if (currentHashState.benchmarkInfo !== showBenchmark) {
@@ -197,7 +240,6 @@ const App: React.FC = () => {
     }
   }, [showBenchmark, updateHash, getStateFromHash]);
 
-  // Handle global keyboard events
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -205,7 +247,6 @@ const App: React.FC = () => {
     };
   }, [handleKeyDown]);
 
-  // Handle context menu
   useEffect(() => {
     window.addEventListener('contextmenu', handleContextMenu);
     return () => {
@@ -213,7 +254,6 @@ const App: React.FC = () => {
     };
   }, [handleContextMenu]);
 
-  // Handle wheel events
   useEffect(() => {
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => {
@@ -221,11 +261,29 @@ const App: React.FC = () => {
     };
   }, [handleWheel]);
 
-  // Handle file drop
   const handleFilesDrop = useCallback(async (files: FileList) => {
     try {
       setIsLoading(true);
       await loadSpineFiles(files);
+      
+      const fileArray = Array.from(files);
+      const jsonFile = fileArray.find(f => f.name.endsWith('.json'));
+      const assetName = jsonFile?.name.replace('.json', '') || 'Spine Asset';
+      
+      const storedFiles = await convertFilesToStoredFiles(files);
+      
+      addHistoryEntry({
+        name: assetName,
+        files: fileArray.map(f => ({
+          name: f.name,
+          type: f.type,
+          size: f.size
+        })),
+        storedFiles,
+        isReloadable: storedFiles.length > 0,
+        source: 'files'
+      });
+      
       addToast(t('success.filesLoaded', 'Files loaded successfully'), 'success');
     } catch (error) {
       console.error('Error handling Spine files:', error);
@@ -233,14 +291,12 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [loadSpineFiles, addToast, t]);
-
+  }, [loadSpineFiles, addToast, t, addHistoryEntry, convertFilesToStoredFiles]);
   useEffect(() => {
     if (!canvasRef.current) return;
     
     let cleanupFunction: (() => void) | undefined;
     
-    // Initialize PIXI Application (async)
     const initApp = async () => {
       try {
         const pixiApp = new Application();
@@ -253,11 +309,9 @@ const App: React.FC = () => {
           autoDensity: true,
         });
         
-        // Store app in state for other components to use
-        app?.destroy(); // Clean up old app if exists
+        app?.destroy();
         setApp(pixiApp);
         
-        // Setup cleanup function
         cleanupFunction = () => {
           pixiApp.destroy();
         };
@@ -269,13 +323,11 @@ const App: React.FC = () => {
     
     initApp();
     
-    // Return a cleanup function
     return () => {
       if (cleanupFunction) cleanupFunction();
     };
   }, []);
 
-  // File processor instance
   const fileProcessorRef = useRef<FileProcessor | null>(new FileProcessor(app));
   
   useEffect(() => {
@@ -286,7 +338,6 @@ const App: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Clear highlighting
     e.currentTarget.classList.remove('highlight');
     
     if (!fileProcessorRef.current) {
@@ -297,22 +348,18 @@ const App: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Process dropped items using the working approach from your other project
       const items = e.dataTransfer?.items;
       if (!items || items.length === 0) {
         if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) {
           addToast(t('error.noFilesDropped'), 'error');
           return;
         }
-        // If we only have files (not items), use the simple approach
         await handleSpineFiles(e.dataTransfer.files);
         return;
       }
       
-      // Convert DataTransferItemList to array
       const itemsArray = Array.from(items);
       
-      // Process all dropped items (files and directories)
       const fileList = await fileProcessorRef.current.processItems(itemsArray);
       
       console.log(`Traversal complete, found ${fileList.length} files`);
@@ -324,10 +371,8 @@ const App: React.FC = () => {
       
       console.log('Files collected:', fileList.map(f => (f as any).fullPath || f.name));
       
-      // Convert to FileList-like object
       const files = fileProcessorRef.current.convertToFileList(fileList);
       
-      // Load files into SpineBenchmark
       await handleSpineFiles(files);
       
     } catch (error) {
@@ -357,13 +402,29 @@ const App: React.FC = () => {
     }
     
     try {
-      // Handle Spine files with version checking
       const processedFiles = await fileProcessorRef.current.handleSpineFiles(files);
       
-      // Validate files before loading
       fileProcessorRef.current.validateFiles(processedFiles);
       
       await loadSpineFiles(processedFiles);
+      
+      const fileArray = Array.from(files);
+      const jsonFile = fileArray.find(f => f.name.endsWith('.json'));
+      const assetName = jsonFile?.name.replace('.json', '') || 'Spine Asset';
+      
+      const storedFiles = await convertFilesToStoredFiles(files);
+      
+      addHistoryEntry({
+        name: assetName,
+        files: fileArray.map(f => ({
+          name: f.name,
+          type: f.type,
+          size: f.size
+        })),
+        storedFiles,
+        isReloadable: storedFiles.length > 0,
+        source: 'files'
+      });
     } catch (error) {
       console.error("Error handling Spine files:", error);
       addToast(t('error.loadingError', error instanceof Error ? error.message : 'Unknown error'), 'error');
@@ -374,6 +435,27 @@ const App: React.FC = () => {
     window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank');
   };
 
+  const handleLoadFromHistory = useCallback(async (entry: any) => {
+    try {
+      if (entry.jsonUrl && entry.atlasUrl) {
+        await handleUrlLoad(entry.jsonUrl, entry.atlasUrl);
+      } else if (entry.storedFiles && entry.storedFiles.length > 0) {
+        setIsLoading(true);
+        const fileList = await convertStoredFilesToFileList(entry.storedFiles);
+        await loadSpineFiles(fileList);
+        addToast(t('success.filesLoaded', 'Files loaded successfully from history'), 'success');
+      } else if (entry.files) {
+        addToast(t('history.cannotReloadFiles', 'Cannot reload files from history. Please drag and drop the files again.'), 'warning');
+      }
+      closeHistoryDrawer();
+    } catch (error) {
+      console.error('Error loading from history:', error);
+      addToast(t('error.failedToLoadFromHistory', 'Failed to load asset from history'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleUrlLoad, addToast, t, closeHistoryDrawer, convertStoredFilesToFileList, loadSpineFiles]);
+
 
   useEffect(() => {
     if (app) {
@@ -381,12 +463,10 @@ const App: React.FC = () => {
     }
   }, [backgroundColor, app]);
   
-  // Enhanced setShowBenchmark function that updates hash
   const setShowBenchmarkWithHash = useCallback((show: boolean) => {
     setShowBenchmark(show);
     updateHash({ benchmarkInfo: show });
   }, [updateHash]);
-  // Register commands for the command palette
   useCommandRegistration({
     spineInstance,
     showBenchmark,
@@ -399,10 +479,9 @@ const App: React.FC = () => {
     toggleMeshes,
     togglePhysics,
     toggleIk,
-    cameraContainer  // Add this
+    cameraContainer
   });
 
-  // Add this to register URL load command
   useEffect(() => {
     if (app) {
       commandRegistry.register({
@@ -461,6 +540,7 @@ const App: React.FC = () => {
             return <AnimationControls
               spineInstance={spineInstance}
               onAnimationChange={setCurrentAnimation}
+              timeScale={currentTimeScale}
             />;
           })()}
       </div>
@@ -468,16 +548,18 @@ const App: React.FC = () => {
       {/* Benchmark Panel - shows when analysis is complete and benchmark info is not visible */}
       <BenchmarkPanel
         benchmarkData={benchmarkData}
+        performanceData={performanceData}
         showBenchmark={showBenchmark}
         setShowBenchmark={setShowBenchmarkWithHash}
       />
       
-      {showBenchmark && benchmarkData && (
-        <InfoPanel
-          data={benchmarkData}
-          onClose={() => setShowBenchmarkWithHash(false)}
-        />
-      )}
+{showBenchmark && benchmarkData && (
+  <InfoPanel
+    data={benchmarkData}
+    performanceData={performanceData}
+    onClose={() => setShowBenchmarkWithHash(false)}
+  />
+)}
       
       {/* React Toastify Container with dark theme */}
       <ToastContainer
@@ -516,6 +598,38 @@ const App: React.FC = () => {
         isOpen={showUrlModal}
         onClose={() => setShowUrlModal(false)}
         onLoad={handleUrlLoad}
+      />
+
+      {/* Time Scale Button - only show when spine instance is loaded */}
+      {spineInstance && (
+        <TimeScaleButton
+          onClick={toggleTimeScalePanel}
+          currentTimeScale={currentTimeScale}
+        />
+      )}
+
+      {/* Time Scale Panel */}
+      <TimeScalePanel
+        isOpen={isTimeScalePanelOpen}
+        currentTimeScale={currentTimeScale}
+        onTimeScaleChange={setTimeScale}
+        onClose={closeTimeScalePanel}
+      />
+
+      {/* Asset History Button */}
+      <AssetHistoryButton
+        onClick={toggleHistoryDrawer}
+        hasHistory={historyEntries.length > 0}
+      />
+
+      {/* Asset History Drawer */}
+      <AssetHistoryDrawer
+        isOpen={isHistoryDrawerOpen}
+        entries={historyEntries}
+        onClose={closeHistoryDrawer}
+        onLoadEntry={handleLoadFromHistory}
+        onRemoveEntry={removeHistoryEntry}
+        onClearHistory={clearHistory}
       />
     </div>
   );

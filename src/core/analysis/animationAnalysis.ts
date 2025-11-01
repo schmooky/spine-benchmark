@@ -44,7 +44,7 @@ import {
 import { calculateOverallScore } from "../utils/scoreCalculator";
 import { AnimationAnalysis, SpineAnalysisResult } from "../SpineAnalyzer";
 
-export interface ActiveComponents {
+interface ActiveComponents {
   slots: Set<string>;
   meshes: Set<string>;
   bones: Set<string>;
@@ -62,12 +62,12 @@ export interface ActiveComponents {
   };
 }
 
-export interface SamplingOptions {
-  sampleRate?: number; // Frames per second to sample (default: 30)
-  preserveState?: boolean; // Whether to preserve the original animation state (default: true)
+interface SamplingOptions {
+  sampleRate?: number;
+  preserveState?: boolean;
 }
 
-export interface AnimationState {
+interface AnimationState {
   trackTime: number;
   animationName: string | null;
   loop: boolean;
@@ -77,7 +77,7 @@ export interface AnimationState {
  * AnimationSampler class
  * Provides utilities for sampling Spine animations at different time points
  */
-export class AnimationSampler {
+class AnimationSampler {
   /**
    * Sample an animation at multiple time points
    * @param spineInstance - The Spine instance
@@ -96,7 +96,6 @@ export class AnimationSampler {
     const sampleRate = options.sampleRate ?? 30;
     const preserveState = options.preserveState ?? true;
     
-    // Store current state if we need to preserve it
     let originalState: AnimationState | null = null;
     if (preserveState) {
       const currentAnimationTrack0 = state.getCurrent(0);
@@ -108,18 +107,15 @@ export class AnimationSampler {
     }
     
     try {
-      // Clear and set the animation we want to analyze
       state.clearTrack(0);
       state.setAnimation(0, animation.name, false);
       
-      // Sample the animation at multiple points
       const duration = animation.duration;
       const samples = Math.max(1, Math.ceil(duration * sampleRate));
       
       for (let i = 0; i <= samples; i++) {
         const time = (i / samples) * duration;
         
-        // Set track time and apply
         const track = state.getCurrent(0);
         if (track) {
           track.trackTime = time;
@@ -127,16 +123,13 @@ export class AnimationSampler {
           track.animationEnd = duration;
         }
         
-        // Apply the animation state
         state.update(0);
         state.apply(skeleton);
         skeleton.updateWorldTransform(Physics.update);
         
-        // Call the callback with the current time and skeleton state
         callback(time, skeleton);
       }
     } finally {
-      // Restore original animation state if needed
       if (preserveState && originalState) {
         state.clearTrack(0);
         if (originalState.animationName) {
@@ -215,7 +208,7 @@ export class AnimationSampler {
 /**
  * Determines which components are active/used in a specific animation by sampling frames
  */
-export function getActiveComponentsForAnimation(
+function getActiveComponentsForAnimation(
   spineInstance: Spine, 
   animation: Animation
 ): ActiveComponents {
@@ -239,17 +232,14 @@ export function getActiveComponentsForAnimation(
     }
   };
 
-  // Sample the animation using the AnimationSampler utility
   AnimationSampler.sampleAnimation(
     spineInstance, 
     animation, 
     (time, sampledSkeleton) => {
-      // Analyze current frame
       analyzeFrameState(sampledSkeleton, activeComponents);
     }
   );
   
-  // Also check which constraints are actually keyframed in this animation
   analyzeAnimationTimelines(animation, skeleton, activeComponents);
   
   return activeComponents;
@@ -259,30 +249,24 @@ export function getActiveComponentsForAnimation(
  * Analyzes the current frame state to detect active components
  */
 function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): void {
-  // Check all slots
   skeleton.slots.forEach((slot: any) => {
-    // Skip if slot is not visible (alpha = 0 or attachment is null)
     if (slot.color.a === 0) return;
     
     const attachment = slot.getAttachment();
     if (!attachment) return;
     
-    // Slot is visible and has attachment
     activeComponents.slots.add(slot.data.name);
     
-    // Check attachment type
     if (attachment instanceof MeshAttachment) {
       activeComponents.meshes.add(`${slot.data.name}:${attachment.name}`);
     } else if (attachment instanceof ClippingAttachment) {
       activeComponents.hasClipping = true;
     }
     
-    // Check blend mode
-    if (slot.data.blendMode !== 0) { // 0 is Normal
+    if (slot.data.blendMode !== 0) {
       activeComponents.hasBlendModes = true;
     }
     
-    // Track bones that affect this slot
     let bone = slot.bone;
     while (bone) {
       activeComponents.bones.add(bone.data.name);
@@ -290,22 +274,18 @@ function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): v
     }
   });
   
-  // Check active constraints
   
-  // IK Constraints
   skeleton.ikConstraints.forEach((constraint: any) => {
     if (constraint.isActive() && constraint.mix > 0) {
       activeComponents.hasIK = true;
       activeComponents.activeConstraints.ik.add(constraint.data.name);
       
-      // Add bones affected by this constraint
       constraint.bones.forEach((bone: any) => {
         activeComponents.bones.add(bone.data.name);
       });
     }
   });
   
-  // Transform Constraints
   skeleton.transformConstraints.forEach((constraint: any) => {
     if (constraint.isActive()) {
       const hasEffect = constraint.mixRotate > 0 || 
@@ -326,7 +306,6 @@ function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): v
     }
   });
   
-  // Path Constraints
   skeleton.pathConstraints.forEach((constraint: any) => {
     if (constraint.isActive() && (constraint.mixRotate > 0 || constraint.mixX > 0 || constraint.mixY > 0)) {
       activeComponents.hasPath = true;
@@ -338,7 +317,6 @@ function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): v
     }
   });
   
-  // Physics Constraints
   if (skeleton.physicsConstraints) {
     skeleton.physicsConstraints.forEach((constraint: any) => {
       if (constraint.isActive() && constraint.mix > 0) {
@@ -362,12 +340,10 @@ function analyzeAnimationTimelines(
   activeComponents: ActiveComponents
 ): void {
   animation.timelines.forEach(timeline => {
-    // Check constraint timelines to ensure we don't miss any
     if (timeline instanceof IkConstraintTimeline) {
       const constraintIndex = (timeline as any).ikConstraintIndex;
       const constraint = skeleton.ikConstraints[constraintIndex];
       if (constraint) {
-        // Even if not currently active, mark it as used in this animation
         activeComponents.hasIK = true;
         activeComponents.activeConstraints.ik.add(constraint.data.name);
       }
@@ -396,7 +372,6 @@ function analyzeAnimationTimelines(
       }
     }
     
-    // Check for deform timelines
     else if (timeline instanceof DeformTimeline) {
       const slotIndex = (timeline as any).slotIndex;
       const slot = skeleton.slots[slotIndex];
@@ -446,28 +421,22 @@ export function analyzeGlobalData(spineInstance: Spine): {
  * @param animation - The animation to analyze
  * @returns AnimationAnalysis - Analysis of the single animation
  */
-export function analyzeSingleAnimation(
+function analyzeSingleAnimation(
   spineInstance: Spine, 
   animation: any
 ): AnimationAnalysis {
-  // Get active components for this animation (frame-by-frame analysis)
   const activeComponents = getActiveComponentsForAnimation(spineInstance, animation);
 
-  // Analyze meshes for this animation
   const meshMetrics = analyzeMeshesForAnimation(spineInstance, animation, activeComponents);
 
-  // Analyze clipping for this animation
   const clippingMetrics = analyzeClippingForAnimation(spineInstance, animation, activeComponents);
 
-  // Analyze blend modes for this animation
   const blendModeMetrics = analyzeBlendModesForAnimation(spineInstance, animation, activeComponents);
 
-  // Analyze constraints for this animation
   const constraintMetrics = analyzePhysicsForAnimation(spineInstance, animation, activeComponents);
 
-  // Calculate overall performance score for this animation
   const componentScores = {
-    boneScore: analyzeSkeleton(spineInstance).metrics.score, // Bone score is same for all animations
+    boneScore: analyzeSkeleton(spineInstance).metrics.score,
     meshScore: meshMetrics.score,
     clippingScore: clippingMetrics.score,
     blendModeScore: blendModeMetrics.score,
@@ -533,14 +502,12 @@ export function sortAnalyses(animationAnalyses: AnimationAnalysis[]): {
   worst: AnimationAnalysis | null;
   medianScore: number;
 } {
-  // Calculate median score
   const scores = animationAnalyses.map(a => a.overallScore);
   scores.sort((a, b) => a - b);
   const medianScore = scores.length > 0 
     ? scores[Math.floor(scores.length / 2)]
     : 100;
 
-  // Find best and worst performing animations
   const sortedAnalyses = [...animationAnalyses].sort((a, b) => b.overallScore - a.overallScore);
   const bestAnimation = sortedAnalyses.length > 0 ? sortedAnalyses[0] : null;
   const worstAnimation = sortedAnalyses.length > 0 ? sortedAnalyses[sortedAnalyses.length - 1] : null;

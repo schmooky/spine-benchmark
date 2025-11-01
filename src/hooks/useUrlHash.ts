@@ -1,12 +1,12 @@
 import { useEffect, useCallback, useRef } from 'react';
 
-export interface WindowState {
+interface WindowState {
   commandPalette: boolean;
   benchmarkInfo: boolean;
   benchmarkTab?: string;
 }
 
-export interface UseUrlHashReturn {
+interface UseUrlHashReturn {
   updateHash: (state: Partial<WindowState>) => void;
   clearHash: () => void;
   getStateFromHash: () => WindowState;
@@ -29,7 +29,6 @@ export function useUrlHash(): UseUrlHashReturn {
       return state;
     }
     
-    // Remove the # and split by & for multiple states
     const hashParts = hash.substring(1).split('&');
     
     hashParts.forEach(part => {
@@ -39,7 +38,7 @@ export function useUrlHash(): UseUrlHashReturn {
         state.benchmarkInfo = true;
       } else if (part.startsWith('benchmark-tab=')) {
         state.benchmarkTab = part.split('=')[1];
-        state.benchmarkInfo = true; // If tab is specified, panel should be open
+        state.benchmarkInfo = true;
       }
     });
     
@@ -68,14 +67,12 @@ export function useUrlHash(): UseUrlHashReturn {
     const currentState = parseHashToState(window.location.hash);
     const updatedState = { ...currentState, ...newState };
     
-    // Clean up state - if benchmarkInfo is false, remove benchmarkTab
     if (!updatedState.benchmarkInfo) {
       delete updatedState.benchmarkTab;
     }
     
     const newHash = stateToHash(updatedState);
     
-    // Only update if hash actually changed
     if (window.location.hash !== newHash) {
       if (newHash) {
         window.history.replaceState(null, '', newHash);
@@ -96,13 +93,11 @@ export function useUrlHash(): UseUrlHashReturn {
   const onHashChange = useCallback((callback: (state: WindowState) => void) => {
     hashChangeCallbacks.current.add(callback);
     
-    // Return cleanup function
     return () => {
       hashChangeCallbacks.current.delete(callback);
     };
   }, []);
 
-  // Listen for browser navigation (back/forward buttons)
   useEffect(() => {
     const handleHashChange = () => {
       const newState = parseHashToState(window.location.hash);

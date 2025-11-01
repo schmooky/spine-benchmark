@@ -16,7 +16,6 @@ export function useSpineLoader(app: Application | null) {
   const loaderRef = useRef<SpineLoader | null>(null);
   const { addToast } = useToast();
 
-  // Initialize loader when app changes
   useEffect(() => {
     if (app) {
       loaderRef.current = new SpineLoader(app);
@@ -42,12 +41,10 @@ export function useSpineLoader(app: Application | null) {
     try {
       console.log('Loading Spine files from URLs:', { jsonUrl, atlasUrl });
       
-      // Remove previous Spine instance if exists
       if (spineInstance) {
         setSpineInstance(null);
       }
 
-      // Load spine files from URLs
       const newSpineInstance = await loaderRef.current.loadSpineFromUrls(jsonUrl, atlasUrl);
       
       if (!newSpineInstance) {
@@ -82,18 +79,15 @@ export function useSpineLoader(app: Application | null) {
     setIsLoading(true);
     
     try {
-      // Log file information for debugging
       console.log(`Processing ${files.length} files:`);
       Array.from(files).forEach((file, index) => {
         console.log(`File ${index + 1}: ${file.name} (${file.type})`);
       });
 
-      // Remove previous Spine instance if exists
       if (spineInstance) {
         setSpineInstance(null);
       }
 
-      // Load spine files
       const newSpineInstance = await loaderRef.current.loadSpineFiles(files);
       
       if (!newSpineInstance) {

@@ -15,7 +15,7 @@ export interface ConstraintMetrics {
   score: number;
 }
 
-export interface IkConstraintInfo {
+interface IkConstraintInfo {
   name: string;
   target: string;
   bones: string[];
@@ -27,7 +27,7 @@ export interface IkConstraintInfo {
   isActive: boolean;
 }
 
-export interface TransformConstraintInfo {
+interface TransformConstraintInfo {
   name: string;
   target: string;
   bones: string[];
@@ -42,7 +42,7 @@ export interface TransformConstraintInfo {
   isRelative: boolean;
 }
 
-export interface PathConstraintInfo {
+interface PathConstraintInfo {
   name: string;
   target: string;
   bones: string[];
@@ -61,7 +61,7 @@ export interface PathConstraintInfo {
   hasLengths: boolean;
 }
 
-export interface PhysicsConstraintInfo {
+interface PhysicsConstraintInfo {
   name: string;
   bone: string;
   inertia: number;
@@ -107,7 +107,6 @@ export function analyzePhysicsForAnimation(
 ): ConstraintMetrics {
   const skeleton = spineInstance.skeleton;
   
-  // Count active constraints in this animation
   const activeIkCount = activeComponents.activeConstraints.ik.size;
   const activeTransformCount = activeComponents.activeConstraints.transform.size;
   const activePathCount = activeComponents.activeConstraints.path.size;
@@ -120,13 +119,11 @@ export function analyzePhysicsForAnimation(
     physics: activePhysicsCount
   });
   
-  // Get detailed constraint data for active constraints
   const ikData: any[] = [];
   const transformData: any[] = [];
   const pathData: any[] = [];
   const physicsData: any[] = [];
   
-  // Collect IK constraint data
   skeleton.ikConstraints.forEach((constraint: any) => {
     if (activeComponents.activeConstraints.ik.has(constraint.data.name)) {
       ikData.push({
@@ -137,7 +134,6 @@ export function analyzePhysicsForAnimation(
     }
   });
   
-  // Collect Transform constraint data
   skeleton.transformConstraints.forEach((constraint: any) => {
     if (activeComponents.activeConstraints.transform.has(constraint.data.name)) {
       const affectedProps = [];
@@ -163,7 +159,6 @@ export function analyzePhysicsForAnimation(
     }
   });
   
-  // Collect Path constraint data
   skeleton.pathConstraints.forEach((constraint: any) => {
     if (activeComponents.activeConstraints.path.has(constraint.data.name)) {
       pathData.push({
@@ -175,7 +170,6 @@ export function analyzePhysicsForAnimation(
     }
   });
   
-  // Collect Physics constraint data
   if (skeleton.physicsConstraints) {
     skeleton.physicsConstraints.forEach((constraint: any) => {
       if (activeComponents.activeConstraints.physics.has(constraint.data.name)) {
@@ -197,17 +191,14 @@ export function analyzePhysicsForAnimation(
     });
   }
   
-  // Calculate constraint performance impact scores
   const ikImpact = calculateIkImpact(ikData);
   const transformImpact = calculateTransformImpact(transformData);
   const pathImpact = calculatePathImpact(pathData);
   const physicsImpact = calculatePhysicsImpact(physicsData);
   
-  // Total active constraints
   const totalActiveConstraints = activeIkCount + activeTransformCount + 
                                 activePathCount + activePhysicsCount;
   
-  // Calculate constraint score based on weighted impacts
   let constraintScore = 100;
   
   if (totalActiveConstraints > 0) {
@@ -242,13 +233,11 @@ export function analyzePhysicsForAnimation(
 export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysis {
   const skeleton = spineInstance.skeleton;
   
-  // Get all constraints
   const ikConstraints = skeleton.ikConstraints;
   const transformConstraints = skeleton.transformConstraints;
   const pathConstraints = skeleton.pathConstraints;
   const physicsConstraints = skeleton.physicsConstraints || [];
   
-  // Analyze IK Constraints
   const ikData: IkConstraintInfo[] = ikConstraints.map(constraint => ({
     name: constraint.data.name,
     target: constraint.target.data.name,
@@ -261,7 +250,6 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     isActive: constraint.isActive()
   }));
   
-  // Analyze Transform Constraints
   const transformData: TransformConstraintInfo[] = transformConstraints.map(constraint => ({
     name: constraint.data.name,
     target: constraint.target.data.name,
@@ -277,7 +265,6 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     isRelative: constraint.data.relative
   }));
   
-  // Analyze Path Constraints
   const pathData: PathConstraintInfo[] = pathConstraints.map(constraint => ({
     name: constraint.data.name,
     target: constraint.target.data.name,
@@ -297,7 +284,6 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     hasLengths: constraint.lengths && constraint.lengths.length > 0
   }));
   
-  // Analyze Physics Constraints
   const physicsData: PhysicsConstraintInfo[] = physicsConstraints.map(constraint => ({
     name: constraint.data.name,
     bone: constraint.bone.data.name,
@@ -316,17 +302,14 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     isActive: constraint.isActive()
   }));
   
-  // Calculate constraint performance impact scores
   const ikImpact = calculateIkImpact(ikData);
   const transformImpact = calculateTransformImpact(transformData);
   const pathImpact = calculatePathImpact(pathData);
   const physicsImpact = calculatePhysicsImpact(physicsData);
   
-  // Total constraints
   const totalConstraints = ikConstraints.length + transformConstraints.length + 
                            pathConstraints.length + physicsConstraints.length;
   
-  // Calculate constraint score based on weighted impacts
   let constraintScore = 100;
   
   if (totalConstraints > 0) {
@@ -350,7 +333,6 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     pathImpact,
     physicsImpact,
     score: constraintScore,
-    // Additional fields for compatibility
     ikCount: ikConstraints.length,
     transformCount: transformConstraints.length,
     pathCount: pathConstraints.length,
@@ -367,7 +349,6 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
   };
 }
 
-// Helper functions (unchanged from original)
 function calculateIkImpact(ikData: any[]): number {
   if (ikData.length === 0) return 0;
   
@@ -426,12 +407,12 @@ function calculatePathImpact(pathData: any[]): number {
   
   let modeComplexity = 0;
   pathData.forEach(p => {
-    if (p.rotateMode === 2) modeComplexity += 3; // ChainScale
-    else if (p.rotateMode === 1) modeComplexity += 2; // Chain
-    else modeComplexity += 1; // Tangent
+    if (p.rotateMode === 2) modeComplexity += 3;
+    else if (p.rotateMode === 1) modeComplexity += 2;
+    else modeComplexity += 1;
     
-    if (p.spacingMode === 3) modeComplexity += 2; // Proportional
-    else modeComplexity += 1; // Other modes
+    if (p.spacingMode === 3) modeComplexity += 2;
+    else modeComplexity += 1;
   });
   
   impact += modeComplexity * 7;

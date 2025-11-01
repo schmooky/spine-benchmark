@@ -15,11 +15,13 @@ import { ModernSelect } from './ModernSelect';
 interface AnimationControlsProps {
   spineInstance: Spine;
   onAnimationChange?: (animationName: string) => void;
+  timeScale?: number;
 }
 
-export const AnimationControls: React.FC<AnimationControlsProps> = ({ 
-  spineInstance, 
-  onAnimationChange 
+export const AnimationControls: React.FC<AnimationControlsProps> = ({
+  spineInstance,
+  onAnimationChange,
+  timeScale = 1.0
 }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLooping, setIsLooping] = useState(false);
@@ -27,7 +29,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const [animations, setAnimations] = useState<string[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   
-  // Initialize animations list and set default animation
   useEffect(() => {
     if (!spineInstance) return;
     
@@ -40,20 +41,18 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     }
     
     return () => {
-      // Cleanup if needed
     };
   }, [spineInstance]);
   
-  // Handle play/pause
   useEffect(() => {
     if (!spineInstance) return;
     
     if (isPlaying) {
-      spineInstance.state.timeScale = 1;
+      spineInstance.state.timeScale = timeScale;
     } else {
       spineInstance.state.timeScale = 0;
     }
-  }, [isPlaying, spineInstance]);
+  }, [isPlaying, spineInstance, timeScale]);
   
   const playAnimation = (name: string, loop: boolean = isLooping) => {
     if (!spineInstance) return;
@@ -62,7 +61,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     setCurrentAnimation(name);
     setIsPlaying(true);
     
-    // Notify parent component about animation change
     if (onAnimationChange) {
       onAnimationChange(name);
     }
@@ -75,7 +73,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const toggleLoop = () => {
     setIsLooping(!isLooping);
     
-    // Reapply the current animation with new loop setting
     if (currentAnimation) {
       playAnimation(currentAnimation, !isLooping);
     }
@@ -91,7 +88,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const rewindAnimation = () => {
     if (!spineInstance || !currentAnimation) return;
     
-    // Restart the current animation
     playAnimation(currentAnimation);
   };
   
@@ -111,7 +107,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     playAnimation(animations[newIndex]);
   };
   
-  // Debug logging to validate assumptions
   console.log('AnimationControls rendering:', {
     spineInstance: !!spineInstance,
     currentAnimation,

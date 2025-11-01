@@ -2,7 +2,7 @@ import { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
 import { calculateBoneScore, calculateMaxDepth } from "../utils/scoreCalculator";
 
-export interface BoneNode {
+interface BoneNode {
   name: string;
   type: string;
   x: string;
@@ -30,7 +30,6 @@ export interface SkeletonAnalysis {
 export function analyzeSkeletonStructure(spineInstance: Spine): SkeletonAnalysis {
   const skeleton = spineInstance.skeleton;
   
-  // Generate tree structure
   function buildBoneNode(bone: any): BoneNode {
     const children = bone.children || [];
     return {
@@ -48,7 +47,6 @@ export function analyzeSkeletonStructure(spineInstance: Spine): SkeletonAnalysis
   const maxDepth = calculateMaxDepth(boneTree);
   const totalBones = skeleton.bones.length;
   
-  // Calculate bone score
   const boneScore = calculateBoneScore(totalBones, maxDepth);
   
   const metrics: SkeletonMetrics = {

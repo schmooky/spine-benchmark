@@ -11,7 +11,6 @@ interface MeshAnalysisProps {
 export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
   
-  // Calculate median score for meshes
   const scores = data.animations.map(a => a.meshMetrics.score);
   const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
 
@@ -95,7 +94,6 @@ const GlobalMeshDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
   const { t } = useTranslation();
   const { meshes } = data.globalMesh;
   
-  // Sort by vertex count descending
   const sortedMeshes = [...meshes].sort((a, b) => b.vertices - a.vertices);
   
   return (
@@ -113,7 +111,6 @@ const GlobalMeshDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
         </thead>
         <tbody>
           {sortedMeshes.slice(0, 10).map((mesh) => {
-            // Determine row color based on vertex count and deformation
             let rowClass = '';
             if (mesh.vertices > 100 || (mesh.vertices > 50 && mesh.isDeformed)) {
               rowClass = 'row-danger';

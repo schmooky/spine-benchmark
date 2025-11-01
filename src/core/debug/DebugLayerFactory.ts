@@ -14,7 +14,6 @@ import { PhysicsConstraintDebugLayer } from './layers/PhysicsConstraintDebugLaye
  * and helps reduce complexity in DebugRendererManager.
  */
 
-// Define layer types
 export type DebugLayerType = 
   'bones' | 
   'meshes' | 
@@ -26,7 +25,6 @@ export type DebugLayerType =
   'blendModes' |
   'boundingBoxes';
 
-// Define options for each layer type
 interface BaseLayerOptions {
   app: Application;
   alpha?: number;

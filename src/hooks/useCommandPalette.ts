@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { commandRegistry, Command, CommandCategory } from '../utils/commandRegistry';
 import { useUrlHash } from './useUrlHash';
 
-export interface UseCommandPaletteReturn {
+interface UseCommandPaletteReturn {
   isOpen: boolean;
   query: string;
   selectedIndex: number;
@@ -26,18 +26,15 @@ export function useCommandPalette(): UseCommandPaletteReturn {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
 
-  // Load recent commands on mount and check initial hash state
   useEffect(() => {
     commandRegistry.loadRecentCommands();
     
-    // Check if command palette should be open based on URL hash
     const hashState = getStateFromHash();
     if (hashState.commandPalette) {
       setIsOpen(true);
     }
   }, [getStateFromHash]);
 
-  // Listen for browser navigation changes
   useEffect(() => {
     const cleanup = onHashChange((hashState) => {
       setIsOpen(hashState.commandPalette);
@@ -66,10 +63,8 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     updateHash({ commandPalette: false });
   }, [updateHash]);
 
-  // Get grouped commands based on current query
   const groupedCommands = commandRegistry.getGroupedCommands(query, t);
   
-  // Flatten commands for navigation
   const flatCommands: Command[] = groupedCommands.reduce((acc, category) => {
     return [...acc, ...category.commands];
   }, [] as Command[]);
@@ -97,12 +92,10 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     closePalette();
   }, [closePalette]);
 
-  // Update selected index when query changes
   useEffect(() => {
     setSelectedIndex(0);
   }, [query]);
 
-  // Keyboard shortcuts
   useHotkeys('ctrl+k,cmd+k', (e) => {
     e.preventDefault();
     console.log('⌨️ Ctrl+K pressed, palette open:', isOpen);

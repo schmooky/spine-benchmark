@@ -48,10 +48,7 @@ class CommandRegistry {
   executeCommand(commandId: string): void {
     const command = this.commands.get(commandId);
     if (command) {
-      // Add to recent commands
       this.addToRecent(commandId);
-      
-      // Execute the command
       try {
         command.execute();
       } catch (error) {
@@ -61,21 +58,17 @@ class CommandRegistry {
   }
 
   private addToRecent(commandId: string): void {
-    // Remove if already exists
     const existingIndex = this.recentCommands.indexOf(commandId);
     if (existingIndex !== -1) {
       this.recentCommands.splice(existingIndex, 1);
     }
 
-    // Add to beginning
     this.recentCommands.unshift(commandId);
 
-    // Limit size
     if (this.recentCommands.length > this.maxRecentCommands) {
       this.recentCommands = this.recentCommands.slice(0, this.maxRecentCommands);
     }
 
-    // Persist to localStorage
     this.saveRecentCommands();
   }
 
@@ -160,7 +153,6 @@ class CommandRegistry {
       }
     ];
 
-    // Filter out empty categories
     return categories.filter(category => category.commands.length > 0);
   }
 }

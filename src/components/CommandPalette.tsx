@@ -79,14 +79,12 @@ export const CommandPalette: React.FC = () => {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input when palette opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isOpen]);
 
-  // Scroll selected item into view
   useEffect(() => {
     const selectedElement = document.querySelector('.command-item.selected');
     if (selectedElement) {
@@ -105,7 +103,6 @@ export const CommandPalette: React.FC = () => {
     executeCommand(commandId);
   };
 
-  // Calculate flat command indices for proper selection highlighting
   let flatCommandsCount = 0;
   const categoriesWithIndices = groupedCommands.map(category => {
     const startIndex = flatCommandsCount;

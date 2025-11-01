@@ -14,7 +14,6 @@ export function useBackgroundManager(app: Application | null) {
   const [hasBackground, setHasBackground] = useState(false);
   const { addToast } = useToast();
 
-  // Initialize background manager when app changes
   useEffect(() => {
     if (app) {
       backgroundManagerRef.current = new BackgroundManager(app);

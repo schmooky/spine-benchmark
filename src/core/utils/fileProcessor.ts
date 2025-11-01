@@ -67,7 +67,6 @@ export class FileProcessor {
   private async processFile(entry: any, path: string, fileList: File[]): Promise<void> {
     return new Promise((resolve, reject) => {
       entry.file((file: File) => {
-        // Store the path in a custom property
         Object.defineProperty(file, 'fullPath', {
           value: path + file.name,
           writable: false
@@ -88,16 +87,13 @@ export class FileProcessor {
   private async processDirectory(entry: any, path: string, fileList: File[]): Promise<void> {
     const dirReader = entry.createReader();
     
-    // Function to read all entries in the directory
     const readAllEntries = (entries: any[] = []): Promise<any[]> => {
       return new Promise((resolveEntries, rejectEntries) => {
         dirReader.readEntries((results: any[]) => {
           if (results.length) {
-            // More entries to process
             entries = entries.concat(Array.from(results));
             readAllEntries(entries).then(resolveEntries).catch(rejectEntries);
           } else {
-            // No more entries, we have all of them
             resolveEntries(entries);
           }
         }, rejectEntries);
@@ -106,7 +102,6 @@ export class FileProcessor {
     
     const entries = await readAllEntries();
     
-    // Process all entries in the directory
     const promises = entries.map(entry => 
       this.traverseEntry(entry, path + entry.name + "/", fileList)
     );
@@ -131,16 +126,13 @@ export class FileProcessor {
    * @returns Promise<FileList> - Processed files
    */
   async handleSpineFiles(files: FileList): Promise<FileList> {
-    // Check for JSON skeleton file
     const jsonFile = Array.from(files).find(file => file.name.endsWith('.json'));
     if (jsonFile) {
       const content = await jsonFile.text();
       if (content.includes('"spine":"4.1')) {
-        // Create a modified file with version replaced
         const modifiedContent = content.replace(/"spine":"4.1[^"]*"/, '"spine":"4.2.0"');
         const modifiedFile = new File([modifiedContent], jsonFile.name, { type: 'application/json' });
         
-        // Replace the original file in the list
         const newFileList = Array.from(files);
         const index = newFileList.findIndex(f => f.name === jsonFile.name);
         if (index !== -1) {

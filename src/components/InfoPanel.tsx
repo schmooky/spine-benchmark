@@ -6,25 +6,24 @@ import { IconButton } from './IconButton';
 import { SpineAnalysisResult } from '../core/SpineAnalyzer';
 import { useUrlHash } from '../hooks/useUrlHash';
 
-// Import analysis components
-import { Summary } from './analysis/Summary';
 import { MeshAnalysis } from './analysis/MeshAnalysis';
 import { ClippingAnalysis } from './analysis/ClippingAnalysis';
 import { BlendModeAnalysis } from './analysis/BlendModeAnalysis';
 import { PhysicsAnalysis } from './analysis/PhysicsAnalysis';
-import { SkeletonTree } from './analysis/SkeletonTree';
+import { PerformanceSummary } from './analysis/PerformanceSummary';
+import { BatchingAnalysis } from './analysis/BatchingAnalysis';
 
 interface InfoPanelProps {
   data: SpineAnalysisResult;
+  performanceData?: any;
   onClose: () => void;
 }
 
-export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
+export const InfoPanel: React.FC<InfoPanelProps> = ({ data, performanceData, onClose }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('summary');
+  const [activeTab, setActiveTab] = useState(performanceData ? 'performance' : 'summary');
   const { updateHash, getStateFromHash } = useUrlHash();
   
-  // Check initial hash state for active tab
   useEffect(() => {
     const hashState = getStateFromHash();
     if (hashState.benchmarkTab) {
@@ -32,12 +31,10 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
     }
   }, [getStateFromHash]);
 
-  // Update hash when active tab changes
   useEffect(() => {
     updateHash({ benchmarkInfo: true, benchmarkTab: activeTab });
   }, [activeTab, updateHash]);
 
-  // Create a container for the portal if it doesn't exist
   const container = document.getElementById('info-panel-container') || (() => {
     const div = document.createElement('div');
     div.id = 'info-panel-container';
@@ -46,18 +43,20 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
   })();
   
   const tabs = [
-    { id: 'summary', label: t('infoPanel.tabs.summary') },
+    ...(performanceData ? [{ id: 'performance', label: t('infoPanel.tabs.performance', 'Performance Impact') }] : []),
+    ...(performanceData ? [{ id: 'batchingAnalysis', label: t('infoPanel.tabs.batchingAnalysis', 'Draw Call Batching') }] : []),
     { id: 'meshAnalysis', label: t('infoPanel.tabs.meshAnalysis') },
     { id: 'clippingAnalysis', label: t('infoPanel.tabs.clipping') },
     { id: 'blendModeAnalysis', label: t('infoPanel.tabs.blendModes') },
-    { id: 'physicsAnalysis', label: t('infoPanel.tabs.physicsAnalysis') },
-    { id: 'skeletonTree', label: t('infoPanel.tabs.skeletonTree') },
+    { id: 'physicsAnalysis', label: t('infoPanel.tabs.physicsAnalysis') }
   ];
   
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'summary':
-        return <Summary data={data} />;
+      case 'performance':
+        return performanceData ? <PerformanceSummary data={performanceData} /> : null;
+      case 'batchingAnalysis':
+        return performanceData ? <BatchingAnalysis data={performanceData} /> : null;
       case 'meshAnalysis':
         return <MeshAnalysis data={data} />;
       case 'clippingAnalysis':
@@ -66,10 +65,8 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ data, onClose }) => {
         return <BlendModeAnalysis data={data} />;
       case 'physicsAnalysis':
         return <PhysicsAnalysis data={data} />;
-      case 'skeletonTree':
-        return <SkeletonTree data={data} />;
       default:
-        return <div>{t('infoPanel.content.selectTab')}</div>;
+        return performanceData ? <PerformanceSummary data={performanceData} /> : <div>{t('infoPanel.content.selectTab')}</div>;
     }
   };
   

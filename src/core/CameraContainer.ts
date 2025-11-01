@@ -20,23 +20,18 @@ export class CameraContainer extends Container {
     this.originalHeight = options.height;
     this.app = options.app;
 
-    // Create debug renderer
     this.debugRenderer = new DebugRendererManager(this.app);
     
-    // Create a container for debug graphics that will be added to the spine
     this.debugContainer = new Container();
 
     this.setupEventListeners();
 
-    // Center initially
     this.x = this.app.renderer.width / 2;
     this.y = this.app.renderer.height / 2;
 
-    // Resize
     this.onResize = this.onResize.bind(this);
     window.addEventListener("resize", this.onResize);
 
-    // Set up ticker for debug updates
     this.app.ticker.add(() => {
       if (this.currentSpine) {
         this.debugRenderer.update();
@@ -99,26 +94,20 @@ export class CameraContainer extends Container {
   public lookAtChild(spine: Spine): void {
     this.currentSpine = spine;
     
-    // Remove debug container from previous spine if exists
     if (this.debugRenderer.getContainer().parent) {
       this.debugRenderer.getContainer().parent.removeChild(this.debugRenderer.getContainer());
     }
     
-    // Add debug container AFTER the spine to ensure it renders on top
     if (this.currentSpine) {
-      // Get the index of the spine in this container
       const spineIndex = this.getChildIndex(this.currentSpine);
-      // Add debug container right after the spine
       this.addChildAt(this.debugRenderer.getContainer(), spineIndex + 1);
       console.log(`CameraContainer: Added debug container at index ${spineIndex + 1}, spine at ${spineIndex}`);
       this.debugRenderer.setSpine(this.currentSpine);
     }
 
-    // Fit & center view around the spine
     const padding = 20;
     let bounds = spine.getBounds();
     if (bounds.width === 0 || bounds.height === 0) {
-      // fallback to data size halves if bounds unavailable
       bounds.width = spine.skeleton.data.width / 2;
       bounds.height = spine.skeleton.data.height / 2;
     }

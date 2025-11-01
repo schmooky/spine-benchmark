@@ -14,7 +14,7 @@ export interface MeshMetrics {
   score: number;
 }
 
-export interface MeshInfo {
+interface MeshInfo {
   slotName: string;
   vertices: number;
   isDeformed: boolean;
@@ -48,7 +48,6 @@ export function analyzeMeshesForAnimation(
   
   const deformedMeshes = new Set<string>();
   
-  // Check for deformed meshes in this animation
   animation.timelines.forEach(timeline => {
     if (timeline instanceof DeformTimeline) {
       const slotIndex = (timeline as any).slotIndex;
@@ -63,37 +62,31 @@ export function analyzeMeshesForAnimation(
   
   console.log(`Analyzing ${activeComponents.meshes.size} active meshes for animation: ${animation.name}`);
   
-  // Analyze only active meshes in this animation
   activeComponents.meshes.forEach(meshId => {
     const [slotName, ...attachmentNameParts] = meshId.split(':');
-    const attachmentName = attachmentNameParts.join(':'); // Handle attachment names with colons
+    const attachmentName = attachmentNameParts.join(':');
     const slot = skeleton.slots.find((s: any) => s.data.name === slotName);
     
     if (slot) {
-      // Try to get the attachment directly from the slot first
       const currentAttachment = slot.getAttachment();
       let attachment = null;
       
       if (currentAttachment && currentAttachment.name === attachmentName) {
         attachment = currentAttachment;
       } else {
-        // Try to get from skeleton data
         attachment = skeleton.getAttachment(slot.data.index, attachmentName);
       }
       
       if (attachment && attachment instanceof MeshAttachment) {
         activeMeshCount++;
         
-        // Count vertices
         const vertexCount = attachment.worldVerticesLength / 2;
         totalVertices += vertexCount;
         
-        // Check if mesh has bone weights
         if (attachment.bones?.length) {
           weightedMeshCount++;
         }
         
-        // Check if mesh is deformed in this animation
         if (deformedMeshes.has(meshId)) {
           deformedMeshCount++;
         }
@@ -101,19 +94,17 @@ export function analyzeMeshesForAnimation(
     }
   });
   
-  // Calculate mesh complexity metrics
   const meshComplexityMetrics: MeshMetrics = {
     activeMeshCount,
     totalVertices,
     weightedMeshCount,
     deformedMeshCount,
     avgVerticesPerMesh: activeMeshCount > 0 ? totalVertices / activeMeshCount : 0,
-    highVertexMeshes: 0, // Will be calculated if needed
-    complexMeshes: 0,    // Will be calculated if needed
+    highVertexMeshes: 0,
+    complexMeshes: 0,
     score: 0
   };
   
-  // Calculate mesh score
   const meshScore = calculateMeshScore(meshComplexityMetrics);
   meshComplexityMetrics.score = meshScore;
   
@@ -137,17 +128,14 @@ export function analyzeGlobalMeshes(spineInstance: Spine): GlobalMeshAnalysis {
   const meshesWithChangesInTimelines = new Map<string, boolean>();
   const meshInfos: MeshInfo[] = [];
   
-  // Count total meshes and analyze properties
   skeleton.slots.forEach((slot) => {
     const attachment = slot.getAttachment();
     if (attachment && attachment instanceof MeshAttachment) {
       totalMeshCount++;
       
-      // Count vertices
       const vertexCount = attachment.worldVerticesLength / 2;
       totalVertices += vertexCount;
       
-      // Track meshes with bone weights
       const hasBoneWeights = (attachment.bones?.length ?? 0) > 0;
       if (hasBoneWeights) {
         weightedMeshCount++;
@@ -158,7 +146,7 @@ export function analyzeGlobalMeshes(spineInstance: Spine): GlobalMeshAnalysis {
       meshInfos.push({
         slotName: slot.data.name,
         vertices: vertexCount,
-        isDeformed: false, // Will be updated below
+        isDeformed: false,
         boneWeights: attachment.bones?.length || 0,
         hasParentMesh
       });
@@ -167,7 +155,6 @@ export function analyzeGlobalMeshes(spineInstance: Spine): GlobalMeshAnalysis {
     }
   });
   
-  // Analyze animations for mesh changes
   animations.forEach((animation) => {
     animation.timelines.forEach((timeline) => {
       if (timeline instanceof DeformTimeline) {
@@ -180,7 +167,6 @@ export function analyzeGlobalMeshes(spineInstance: Spine): GlobalMeshAnalysis {
             deformedMeshCount++;
             meshesWithChangesInTimelines.set(slot.data.name, true);
             
-            // Update mesh info
             const meshInfo = meshInfos.find(m => m.slotName === slot.data.name);
             if (meshInfo) {
               meshInfo.isDeformed = true;
@@ -191,10 +177,8 @@ export function analyzeGlobalMeshes(spineInstance: Spine): GlobalMeshAnalysis {
     });
   });
   
-  // Sort by vertex count descending
   meshInfos.sort((a, b) => b.vertices - a.vertices);
   
-  // Calculate mesh complexity metrics for performance score
   const metrics: MeshMetrics = {
     activeMeshCount: totalMeshCount,
     totalVertices,
@@ -206,7 +190,6 @@ export function analyzeGlobalMeshes(spineInstance: Spine): GlobalMeshAnalysis {
     score: 0
   };
   
-  // Calculate mesh score using logarithmic scale
   const meshScore = calculateMeshScore(metrics);
   metrics.score = meshScore;
   

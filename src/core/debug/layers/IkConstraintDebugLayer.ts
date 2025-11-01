@@ -1,7 +1,7 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface IkConstraintDebugOptions extends DebugLayerOptions {
+interface IkConstraintDebugOptions extends DebugLayerOptions {
   boneColor?: number;
   targetColor?: number;
   startCircleColor?: number;
@@ -50,17 +50,14 @@ export class IkConstraintDebugLayer extends DebugLayer {
       const bones = constraint.bones || [];
       if (bones.length === 0) continue;
 
-      // Draw start circle at the first bone
       if (this.showStartCircle && bones.length > 0) {
         this.drawStartCircle(bones[0]);
       }
 
-      // Draw bone chain
       if (this.showBoneChain) {
         this.drawBoneChain(bones);
       }
 
-      // Draw connection to target and target itself
       if (this.showTarget && constraint.target) {
         this.drawTarget(bones[bones.length - 1], constraint.target);
       }
@@ -72,12 +69,10 @@ export class IkConstraintDebugLayer extends DebugLayer {
 
     const g = this.graphics;
     
-    // Fill
     g.fill({ color: this.startCircleColor, alpha: this.alpha * 0.5 })
       .circle(firstBone.worldX, firstBone.worldY, this.startCircleRadius)
       .fill();
     
-    // Stroke
     g.stroke({ 
       color: this.startCircleColor, 
       width: 2, 
@@ -112,7 +107,6 @@ export class IkConstraintDebugLayer extends DebugLayer {
     const tx = target.worldX;
     const ty = target.worldY;
 
-    // Draw line from last bone to target
     if (this.isSegmentVisible(lastBone.worldX, lastBone.worldY, tx, ty)) {
       const g = this.graphics;
       g.stroke({ 
@@ -125,16 +119,13 @@ export class IkConstraintDebugLayer extends DebugLayer {
         .lineTo(tx, ty);
     }
 
-    // Draw target circle with crosshair
     if (this.isCircleVisible(tx, ty, this.targetCircleRadius)) {
       const g = this.graphics;
       
-      // Fill
       g.fill({ color: this.targetColor, alpha: this.alpha * 0.3 })
         .circle(tx, ty, this.targetCircleRadius)
         .fill();
       
-      // Stroke circle
       g.stroke({ 
         color: this.targetColor, 
         width: 2, 
@@ -143,7 +134,6 @@ export class IkConstraintDebugLayer extends DebugLayer {
       })
         .circle(tx, ty, this.targetCircleRadius);
       
-      // Crosshair
       const crossSize = 5;
       g.moveTo(tx - crossSize, ty)
         .lineTo(tx + crossSize, ty)
@@ -152,7 +142,6 @@ export class IkConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  // Configuration methods
   public setShowBoneChain(show: boolean): void {
     this.showBoneChain = show;
   }

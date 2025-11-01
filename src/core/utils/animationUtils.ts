@@ -35,7 +35,7 @@ export interface ActiveComponents {
 /**
  * Determines which components are active/used in a specific animation by sampling frames
  */
-export function getActiveComponentsForAnimation(
+function getActiveComponentsForAnimation(
   spineInstance: Spine, 
   animation: Animation
 ): ActiveComponents {
@@ -59,17 +59,14 @@ export function getActiveComponentsForAnimation(
     }
   };
 
-  // Sample the animation using the AnimationSampler utility
   AnimationSampler.sampleAnimation(
     spineInstance, 
     animation, 
     (time, sampledSkeleton) => {
-      // Analyze current frame
       analyzeFrameState(sampledSkeleton, activeComponents);
     }
   );
   
-  // Also check which constraints are actually keyframed in this animation
   analyzeAnimationTimelines(animation, skeleton, activeComponents);
   
   console.log(`Completed analysis of "${animation.name}": found ${activeComponents.slots.size} active slots, ${activeComponents.meshes.size} meshes`);
@@ -81,30 +78,24 @@ export function getActiveComponentsForAnimation(
  * Analyzes the current frame state to detect active components
  */
 function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): void {
-  // Check all slots
   skeleton.slots.forEach((slot: any) => {
-    // Skip if slot is not visible (alpha = 0 or attachment is null)
     if (slot.color.a === 0) return;
     
     const attachment = slot.getAttachment();
     if (!attachment) return;
     
-    // Slot is visible and has attachment
     activeComponents.slots.add(slot.data.name);
     
-    // Check attachment type
     if (attachment instanceof MeshAttachment) {
       activeComponents.meshes.add(`${slot.data.name}:${attachment.name}`);
     } else if (attachment instanceof ClippingAttachment) {
       activeComponents.hasClipping = true;
     }
     
-    // Check blend mode
-    if (slot.data.blendMode !== 0) { // 0 is Normal
+    if (slot.data.blendMode !== 0) {
       activeComponents.hasBlendModes = true;
     }
     
-    // Track bones that affect this slot
     let bone = slot.bone;
     while (bone) {
       activeComponents.bones.add(bone.data.name);
@@ -112,22 +103,18 @@ function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): v
     }
   });
   
-  // Check active constraints
   
-  // IK Constraints
   skeleton.ikConstraints.forEach((constraint: any) => {
     if (constraint.isActive() && constraint.mix > 0) {
       activeComponents.hasIK = true;
       activeComponents.activeConstraints.ik.add(constraint.data.name);
       
-      // Add bones affected by this constraint
       constraint.bones.forEach((bone: any) => {
         activeComponents.bones.add(bone.data.name);
       });
     }
   });
   
-  // Transform Constraints
   skeleton.transformConstraints.forEach((constraint: any) => {
     if (constraint.isActive()) {
       const hasEffect = constraint.mixRotate > 0 || 
@@ -148,7 +135,6 @@ function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): v
     }
   });
   
-  // Path Constraints
   skeleton.pathConstraints.forEach((constraint: any) => {
     if (constraint.isActive() && (constraint.mixRotate > 0 || constraint.mixX > 0 || constraint.mixY > 0)) {
       activeComponents.hasPath = true;
@@ -160,7 +146,6 @@ function analyzeFrameState(skeleton: any, activeComponents: ActiveComponents): v
     }
   });
   
-  // Physics Constraints
   if (skeleton.physicsConstraints) {
     skeleton.physicsConstraints.forEach((constraint: any) => {
       if (constraint.isActive() && constraint.mix > 0) {
@@ -184,12 +169,10 @@ function analyzeAnimationTimelines(
   activeComponents: ActiveComponents
 ): void {
   animation.timelines.forEach(timeline => {
-    // Check constraint timelines to ensure we don't miss any
     if (timeline instanceof IkConstraintTimeline) {
       const constraintIndex = (timeline as any).ikConstraintIndex;
       const constraint = skeleton.ikConstraints[constraintIndex];
       if (constraint) {
-        // Even if not currently active, mark it as used in this animation
         activeComponents.hasIK = true;
         activeComponents.activeConstraints.ik.add(constraint.data.name);
       }
@@ -218,7 +201,6 @@ function analyzeAnimationTimelines(
       }
     }
     
-    // Check for deform timelines
     else if (timeline instanceof DeformTimeline) {
       const slotIndex = (timeline as any).slotIndex;
       const slot = skeleton.slots[slotIndex];

@@ -2,7 +2,7 @@ import { Graphics } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer';
 
-export interface PathConstraintDebugOptions extends DebugLayerOptions {
+interface PathConstraintDebugOptions extends DebugLayerOptions {
   /** Main path color */
   pathColor?: number;
   /** Start/End node color */
@@ -39,10 +39,9 @@ export class PathConstraintDebugLayer extends DebugLayer {
 
   constructor(options: PathConstraintDebugOptions) {
     super(options);
-    // "orangy" palette
-    this.pathColor = options.pathColor ?? 0xffa500;       // orange
-    this.startEndColor = options.startEndColor ?? 0xffc266; // lighter orange
-    this.boneConnectionColor = options.boneConnectionColor ?? 0xff8c00; // dark orange
+    this.pathColor = options.pathColor ?? 0xffa500;
+    this.startEndColor = options.startEndColor ?? 0xffc266;
+    this.boneConnectionColor = options.boneConnectionColor ?? 0xff8c00;
     this.targetColor = options.targetColor ?? 0xffa500;
     
     this.showPath = options.showPath ?? true;
@@ -62,7 +61,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
     const pathConstraints = skeleton.pathConstraints || [];
 
     for (const constraint of pathConstraints) {
-      // Some runtimes expose isActive, some always true; guard either way
       if (typeof constraint?.isActive === 'function' && !constraint.isActive()) continue;
       
       const world = constraint.world as number[] | undefined;
@@ -76,13 +74,11 @@ export class PathConstraintDebugLayer extends DebugLayer {
   }
 
   private drawPath(world: number[]): void {
-    // world is [x,y,curve?, x,y,curve?, ...] -> step 3
     if (!this.isPolylineVisible(world, 3, 0, 1)) return;
 
     const g = this.graphics;
     const width = this.pathStrokeWidth ?? this.strokeWidth;
 
-    // Main smooth path
     g.stroke({ color: this.pathColor, width, pixelLine: true, alpha: this.alpha })
       .moveTo(world[0], world[1]);
 
@@ -92,7 +88,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
       g.lineTo(px, py);
     }
 
-    // Draw tiny semi-transparent dots along the path for a nice "editor" look
     const r = this.pathDotRadius;
     if (r > 0) {
       g.stroke({ width: 0, alpha: 0 });
@@ -107,9 +102,7 @@ export class PathConstraintDebugLayer extends DebugLayer {
       }
     }
 
-    // Add small forward-facing arrowheads every ~N points to indicate orientation
-    // (use triangle pointing to the next point)
-    const arrowEvery = 9; // choose a stride in triplets
+    const arrowEvery = 9;
     const arrowSize = Math.max(4, width * 1.5);
     for (let i = 3; i < world.length; i += 3 * arrowEvery) {
       const sx = world[i - 3];
@@ -124,7 +117,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
     const g = this.graphics;
     const radius = 8;
 
-    // Start circle
     if (world.length >= 3 && this.isCircleVisible(world[0], world[1], radius)) {
       g.fill({ color: this.startEndColor, alpha: this.alpha * 0.6 })
         .circle(world[0], world[1], radius)
@@ -133,7 +125,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
         .circle(world[0], world[1], radius);
     }
 
-    // End circle
     const endX = world[world.length - 3];
     const endY = world[world.length - 2];
     if (this.isCircleVisible(endX, endY, radius)) {
@@ -161,7 +152,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
       const bx = bone.worldX;
       const by = bone.worldY;
 
-      // find closest sampled path point
       let closestIdx = 0;
       let bestDist = Number.POSITIVE_INFINITY;
       for (let i = 0; i < world.length; i += 3) {
@@ -180,7 +170,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
       if (this.isSegmentVisible(bx, by, px, py)) {
         g.moveTo(bx, by).lineTo(px, py);
 
-        // subtle anchor dot at projection point
         if (this.isCircleVisible(px, py, 2)) {
           g.fill({ color: this.boneConnectionColor, alpha: this.alpha * 0.8 })
             .circle(px, py, 2)
@@ -198,7 +187,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
 
     const g = this.graphics;
 
-    // ring + crosshair for target
     g.fill({ color: this.targetColor, alpha: this.alpha * 0.18 })
       .circle(tx, ty, R)
       .fill();
@@ -233,7 +221,6 @@ export class PathConstraintDebugLayer extends DebugLayer {
       .fill();
   }
 
-  // Configuration methods
   public setShowPath(show: boolean): void { this.showPath = show; }
   public setShowStartEnd(show: boolean): void { this.showStartEnd = show; }
   public setShowBoneConnections(show: boolean): void { this.showBoneConnections = show; }

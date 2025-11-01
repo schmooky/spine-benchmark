@@ -47,21 +47,17 @@ export const ModernSelect: React.FC<ModernSelectProps> = ({
     };
   }, [isOpen]);
 
-  // Calculate dropdown position when opened
   useLayoutEffect(() => {
     if (isOpen && containerRef.current) {
       const container = containerRef.current;
       const rect = container.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       
-      // Estimate dropdown height (max-height is 200px from CSS)
       const estimatedDropdownHeight = Math.min(options.length * 36 + 16, 200);
       
-      // Check if there's enough space below
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
       
-      // If not enough space below but enough space above, position upwards
       if (spaceBelow < estimatedDropdownHeight + 8 && spaceAbove > estimatedDropdownHeight + 8) {
         setDropdownPosition('up');
       } else {

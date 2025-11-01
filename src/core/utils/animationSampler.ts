@@ -11,12 +11,12 @@ import {
  * and reduce complexity in animation analysis.
  */
 
-export interface SamplingOptions {
-  sampleRate?: number; // Frames per second to sample (default: 30)
-  preserveState?: boolean; // Whether to preserve the original animation state (default: true)
+interface SamplingOptions {
+  sampleRate?: number;
+  preserveState?: boolean;
 }
 
-export interface AnimationState {
+interface AnimationState {
   trackTime: number;
   animationName: string | null;
   loop: boolean;
@@ -45,7 +45,6 @@ export class AnimationSampler {
     const sampleRate = options.sampleRate ?? 30;
     const preserveState = options.preserveState ?? true;
     
-    // Store current state if we need to preserve it
     let originalState: AnimationState | null = null;
     if (preserveState) {
       const currentAnimationTrack0 = state.getCurrent(0);
@@ -57,11 +56,9 @@ export class AnimationSampler {
     }
     
     try {
-      // Clear and set the animation we want to analyze
       state.clearTrack(0);
       state.setAnimation(0, animation.name, false);
       
-      // Sample the animation at multiple points
       const duration = animation.duration;
       const samples = Math.max(1, Math.ceil(duration * sampleRate));
       
@@ -70,7 +67,6 @@ export class AnimationSampler {
       for (let i = 0; i <= samples; i++) {
         const time = (i / samples) * duration;
         
-        // Set track time and apply
         const track = state.getCurrent(0);
         if (track) {
           track.trackTime = time;
@@ -78,16 +74,13 @@ export class AnimationSampler {
           track.animationEnd = duration;
         }
         
-        // Apply the animation state
         state.update(0);
         state.apply(skeleton);
         skeleton.updateWorldTransform(Physics.update);
         
-        // Call the callback with the current time and skeleton state
         callback(time, skeleton);
       }
     } finally {
-      // Restore original animation state if needed
       if (preserveState && originalState) {
         state.clearTrack(0);
         if (originalState.animationName) {

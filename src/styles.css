@@ -1565,3 +1565,51 @@ body {
   font-size: 16px;
   color: #e2e8f0;
 }
+
+/* Performance Summary Styles */
+.performance-summary {
+  padding: 20px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.metric-label {
+  font-weight: 600;
+  color: #888;
+}
+
+.metric-value {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.impact-breakdown {
+  margin-top: 30px;
+}
+
+.breakdown-details {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 15px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.breakdown-details p {
+  margin: 5px 0;
+  font-family: monospace;
+  font-size: 0.9em;
+}

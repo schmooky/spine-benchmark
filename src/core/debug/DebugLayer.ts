@@ -46,7 +46,6 @@ export abstract class DebugLayer {
 
   public abstract update(spine: Spine): void;
 
-  // Viewport culling helpers
   protected get screenRect() {
     return this.app.renderer.screen;
   }

@@ -12,45 +12,39 @@ export interface AnimationAnalysis {
   name: string;
   duration: number;
   overallScore: number;
-  meshMetrics: any; // Will be properly typed later
-  clippingMetrics: any; // Will be properly typed later
-  blendModeMetrics: any; // Will be properly typed later
-  constraintMetrics: any; // Will be properly typed later
-  activeComponents: any; // Will be properly typed later
+  meshMetrics: any;
+  clippingMetrics: any;
+  blendModeMetrics: any;
+  constraintMetrics: any;
+  activeComponents: any;
 }
 
 export interface SpineAnalysisResult {
-  // Basic info
   skeletonName: string;
   totalAnimations: number;
   totalSkins: number;
   
-  // Skeleton analysis
-  skeleton: any; // Will be properly typed later
+  skeleton: any;
   
-  // Per-animation analyses
   animations: AnimationAnalysis[];
   
-  // Global analyses
-  globalMesh: any; // Will be properly typed later
-  globalClipping: any; // Will be properly typed later
-  globalBlendMode: any; // Will be properly typed later
-  globalPhysics: any; // Will be properly typed later
+  globalMesh: any;
+  globalClipping: any;
+  globalBlendMode: any;
+  globalPhysics: any;
   
-  // Aggregate scores
   medianScore: number;
   bestAnimation: AnimationAnalysis | null;
   worstAnimation: AnimationAnalysis | null;
   
-  // Statistics
   stats: {
     animationsWithPhysics: number;
     animationsWithClipping: number;
     animationsWithBlendModes: number;
     animationsWithIK: number;
     animationsWithPath: number;
-    highVertexAnimations: number; // >500 vertices
-    poorPerformingAnimations: number; // score < 55
+    highVertexAnimations: number;
+    poorPerformingAnimations: number;
   };
 }
 
@@ -64,22 +58,16 @@ export class SpineAnalyzer {
    * @returns Complete analysis data
    */
   static analyze(spineInstance: Spine): SpineAnalysisResult {
-    // Analyze skeleton structure (common for all animations)
     const skeletonData = analyzeSkeleton(spineInstance);
 
-    // Analyze global data
     const globalData = analyzeGlobalData(spineInstance);
 
-    // Analyze each animation individually
     const animationData = analyzeAnimations(spineInstance);
 
-    // Calculate statistics
     const statistics = calculateStatistics(animationData);
 
-    // Sort animations and calculate median score
     const sortedData = sortAnalyses(animationData);
 
-    // Aggregate all results
     return aggregateResults(
       spineInstance,
       skeletonData,

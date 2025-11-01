@@ -15,7 +15,7 @@ interface UseCommandRegistrationProps {
   toggleMeshes: () => void;
   togglePhysics: () => void;
   toggleIk: () => void;
-  cameraContainer?: any; // Add camera container reference
+  cameraContainer?: any;
 }
 
 export function useCommandRegistration({
@@ -35,7 +35,6 @@ export function useCommandRegistration({
   const { t } = useTranslation();
   
   useEffect(() => {
-    // Animation Commands
     if (spineInstance) {
       commandRegistry.register({
         id: 'animation.play-pause',
@@ -74,7 +73,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Register skin commands dynamically
       const skins = spineInstance.skeleton.data.skins;
       skins.forEach((skin: any) => {
         commandRegistry.register({
@@ -91,9 +89,7 @@ export function useCommandRegistration({
       });
     }
 
-    // Debug Commands - only register if spine instance exists
     if (spineInstance) {
-      // Bones Debug
       commandRegistry.register({
         id: 'debug.toggle-bones',
         title: t('commands.debug.toggleBones', 'Toggle Bones'),
@@ -114,7 +110,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Mesh Debug (triangles and hull)
       commandRegistry.register({
         id: 'debug.toggle-meshes',
         title: t('commands.debug.toggleMeshes', 'Toggle Meshes'),
@@ -138,7 +133,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Region Attachments Debug
       commandRegistry.register({
         id: 'debug.toggle-regions',
         title: t('commands.debug.toggleRegions', 'Toggle Region Attachments'),
@@ -153,7 +147,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Bounding Boxes Debug
       commandRegistry.register({
         id: 'debug.toggle-bounding-boxes',
         title: t('commands.debug.toggleBoundingBoxes', 'Toggle Bounding Boxes'),
@@ -168,7 +161,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Paths Debug
       commandRegistry.register({
         id: 'debug.toggle-paths',
         title: t('commands.debug.togglePaths', 'Toggle Paths'),
@@ -183,7 +175,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Clipping Debug
       commandRegistry.register({
         id: 'debug.toggle-clipping',
         title: t('commands.debug.toggleClipping', 'Toggle Clipping'),
@@ -198,7 +189,6 @@ export function useCommandRegistration({
         }
       });
 
-      // IK Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-ik-constraints',
         title: t('commands.debug.toggleIkConstraints', 'Toggle IK Constraints'),
@@ -213,7 +203,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Transform Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-transform-constraints',
         title: t('commands.debug.toggleTransformConstraints', 'Toggle Transform Constraints'),
@@ -228,7 +217,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Path Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-path-constraints',
         title: t('commands.debug.togglePathConstraints', 'Toggle Path Constraints'),
@@ -243,7 +231,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Physics Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-physics-constraints',
         title: t('commands.debug.togglePhysicsConstraints', 'Toggle Physics Constraints'),
@@ -258,7 +245,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Convenience commands for common debug combinations
       commandRegistry.register({
         id: 'debug.show-all',
         title: t('commands.debug.showAll', 'Show All Debug'),
@@ -309,7 +295,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Legacy compatibility - use the convenience toggle functions
       if (!meshesVisible) {
         commandRegistry.register({
           id: 'debug.show-mesh',
@@ -371,7 +356,6 @@ export function useCommandRegistration({
       }
     }
 
-    // Performance Commands - only register if spine instance exists
     if (spineInstance) {
       commandRegistry.register({
         id: 'performance.show-benchmark',
@@ -383,7 +367,6 @@ export function useCommandRegistration({
       });
     }
 
-    // Navigation Commands
     commandRegistry.register({
       id: 'help.documentation',
       title: t('commands.help.documentation'),
@@ -393,7 +376,6 @@ export function useCommandRegistration({
       execute: openGitHubReadme
     });
 
-    // Language Commands - single command to open modal
     console.log('🔧 Registering language command with translations:', {
       title: t('language.changeLanguage'),
       description: t('language.changeLanguageDescription'),
@@ -424,7 +406,6 @@ export function useCommandRegistration({
     
     console.log('✅ Language command registered successfully');
 
-    // Cleanup function to unregister commands
     return () => {
       const commandIds = [
         'animation.play-pause',
@@ -454,7 +435,6 @@ export function useCommandRegistration({
       ];
 
       commandIds.forEach(id => commandRegistry.unregister(id));
-      // Unregister skin commands
       if (spineInstance) {
         const skins = spineInstance.skeleton.data.skins;
         skins.forEach((skin: any) => {
