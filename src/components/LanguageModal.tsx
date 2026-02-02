@@ -23,11 +23,8 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
   const modalRef = useRef<HTMLDivElement>(null);
   const firstLanguageRef = useRef<HTMLButtonElement>(null);
 
-  console.log('🌐 LanguageModal render:', { isOpen, currentLanguage: i18n.language });
-
   useEffect(() => {
     if (isOpen && firstLanguageRef.current) {
-      console.log('🎯 Focusing first language option');
       firstLanguageRef.current.focus();
     }
   }, [isOpen]);
@@ -72,25 +69,19 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
   }, [isOpen, onClose]);
 
   const handleLanguageChange = (languageCode: string) => {
-    console.log('🔄 Language change requested:', { from: i18n.language, to: languageCode });
     i18n.changeLanguage(languageCode);
-    console.log('✅ Language changed, closing modal');
     onClose();
   };
 
   const handleBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) {
-      console.log('🖱️ Modal backdrop clicked - closing modal');
       onClose();
     }
   };
 
   if (!isOpen) {
-    console.log('🚫 Modal not open - returning null');
     return null;
   }
-
-  console.log('🎨 Rendering language modal with languages:', languages.map(l => l.code));
 
   return (
     <div className="language-modal-backdrop" onClick={handleBackdropClick}>

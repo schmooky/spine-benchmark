@@ -111,16 +111,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     playAnimation(animations[newIndex]);
   };
   
-  // Debug logging to validate assumptions
-  console.log('AnimationControls rendering:', {
-    spineInstance: !!spineInstance,
-    currentAnimation,
-    animations: animations.length,
-    isPlaying,
-    isLooping
-  });
-  console.log('Rendering playback controls with buttons');
-
   return (
     <div className="animation-controls">
       {/* <div className="animation-name">

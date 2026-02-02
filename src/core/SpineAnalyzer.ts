@@ -1,57 +1,55 @@
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
-import { 
+import { MeshMetrics, GlobalMeshAnalysis } from "./analyzers/meshAnalyzer";
+import { ClippingMetrics, GlobalClippingAnalysis } from "./analyzers/clippingAnalyzer";
+import { BlendModeMetrics, GlobalBlendModeAnalysis } from "./analyzers/blendModeAnalyzer";
+import { ConstraintMetrics, GlobalPhysicsAnalysis } from "./analyzers/physicsAnalyzer";
+import { SkeletonAnalysis } from "./analyzers/skeletonAnalyzer";
+import {
   analyzeSkeleton,
   analyzeGlobalData,
   analyzeAnimations,
   calculateStatistics,
   sortAnalyses,
-  aggregateResults
+  aggregateResults,
 } from "./analysis/animationAnalysis";
+import type { ActiveComponents } from "./analysis/animationAnalysis";
 
 export interface AnimationAnalysis {
   name: string;
   duration: number;
   overallScore: number;
-  meshMetrics: any; // Will be properly typed later
-  clippingMetrics: any; // Will be properly typed later
-  blendModeMetrics: any; // Will be properly typed later
-  constraintMetrics: any; // Will be properly typed later
-  activeComponents: any; // Will be properly typed later
+  meshMetrics: MeshMetrics;
+  clippingMetrics: ClippingMetrics;
+  blendModeMetrics: BlendModeMetrics;
+  constraintMetrics: ConstraintMetrics;
+  activeComponents: ActiveComponents;
+}
+
+export interface AnalysisStatistics {
+  animationsWithPhysics: number;
+  animationsWithClipping: number;
+  animationsWithBlendModes: number;
+  animationsWithIK: number;
+  animationsWithTransform: number;
+  animationsWithPath: number;
+  highVertexAnimations: number;
+  poorPerformingAnimations: number;
 }
 
 export interface SpineAnalysisResult {
-  // Basic info
   skeletonName: string;
   totalAnimations: number;
   totalSkins: number;
-  
-  // Skeleton analysis
-  skeleton: any; // Will be properly typed later
-  
-  // Per-animation analyses
+  skeleton: SkeletonAnalysis;
   animations: AnimationAnalysis[];
-  
-  // Global analyses
-  globalMesh: any; // Will be properly typed later
-  globalClipping: any; // Will be properly typed later
-  globalBlendMode: any; // Will be properly typed later
-  globalPhysics: any; // Will be properly typed later
-  
-  // Aggregate scores
+  globalMesh: GlobalMeshAnalysis;
+  globalClipping: GlobalClippingAnalysis;
+  globalBlendMode: GlobalBlendModeAnalysis;
+  globalPhysics: GlobalPhysicsAnalysis;
   medianScore: number;
   bestAnimation: AnimationAnalysis | null;
   worstAnimation: AnimationAnalysis | null;
-  
-  // Statistics
-  stats: {
-    animationsWithPhysics: number;
-    animationsWithClipping: number;
-    animationsWithBlendModes: number;
-    animationsWithIK: number;
-    animationsWithPath: number;
-    highVertexAnimations: number; // >500 vertices
-    poorPerformingAnimations: number; // score < 55
-  };
+  stats: AnalysisStatistics;
 }
 
 /**

@@ -1,7 +1,8 @@
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
 import gsap from "gsap";
 import { Application, Container } from "pixi.js";
-import { DebugRendererManager, DebugFlags } from './debug/DebugRendererManager';
+import { DebugFlags } from './debug/DebugFlagsManager';
+import { DebugRendererManager } from './debug/DebugRendererManager';
 
 export class CameraContainer extends Container {
   originalWidth: number;
@@ -110,7 +111,6 @@ export class CameraContainer extends Container {
       const spineIndex = this.getChildIndex(this.currentSpine);
       // Add debug container right after the spine
       this.addChildAt(this.debugRenderer.getContainer(), spineIndex + 1);
-      console.log(`CameraContainer: Added debug container at index ${spineIndex + 1}, spine at ${spineIndex}`);
       this.debugRenderer.setSpine(this.currentSpine);
     }
 

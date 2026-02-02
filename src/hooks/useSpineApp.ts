@@ -1,6 +1,6 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Application } from 'pixi.js';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CameraContainer } from '../core/CameraContainer';
 import { SpineAnalyzer, SpineAnalysisResult } from '../core/SpineAnalyzer';
@@ -9,17 +9,7 @@ import { useSpineLoader } from './useSpineLoader';
 import { useDebugVisualizer } from './useDebugVisualizer';
 import { useBackgroundManager } from './useBackgroundManager';
 
-export interface DebugFlags {
-  showBones: boolean;
-  showRegionAttachments: boolean;
-  showMeshTriangles: boolean;
-  showMeshHull: boolean;
-  showVertices: boolean;
-  showBoundingBoxes: boolean;
-  showClipping: boolean;
-  showIkConstraints: boolean;
-  showTransformConstraints: boolean;
-}
+export type { DebugFlags } from '../core/debug/DebugFlagsManager';
 
 export function useSpineApp(app: Application | null) {
   const { i18n } = useTranslation();
@@ -29,7 +19,6 @@ export function useSpineApp(app: Application | null) {
   const previousSpineInstanceRef = useRef<Spine | null>(null);
   const { addToast } = useToast();
   
-  // Use specialized hooks for different concerns
   const { 
     spineInstance, 
     isLoading, 
@@ -40,8 +29,10 @@ export function useSpineApp(app: Application | null) {
   
   const { 
     meshesVisible, 
+    physicsVisible, 
     ikVisible, 
     toggleMeshes, 
+    togglePhysics, 
     toggleIk
   } = useDebugVisualizer();
   
@@ -51,11 +42,13 @@ export function useSpineApp(app: Application | null) {
     clearBackgroundImage
   } = useBackgroundManager(app);
 
-  // This effect runs when the app instance changes
+  const getCameraContainer = useCallback((): CameraContainer | null => {
+    return cameraContainerRef.current;
+  }, []);
+
   useEffect(() => {
     if (!app) return;
 
-    // Create and add camera container
     const cameraContainer = new CameraContainer({
       width: app.screen.width,
       height: app.screen.height,
@@ -73,46 +66,25 @@ export function useSpineApp(app: Application | null) {
     };
   }, [app]);
 
-  // Effect to regenerate benchmark data when language changes
   useEffect(() => {
-    if (spineInstance) {
-      const analysisResult = SpineAnalyzer.analyze(spineInstance);
-      setBenchmarkData(analysisResult);
-    }
-  }, [i18n.language, spineInstance]);
-
-  // Effect to handle spine instance changes and update camera
-  useEffect(() => {
-    // Clean up previous spine instance from camera container
-    if (previousSpineInstanceRef.current && cameraContainerRef.current) {
-      // Remove from camera container if it's still a child
-      if (previousSpineInstanceRef.current.parent === cameraContainerRef.current) {
-        cameraContainerRef.current.removeChild(previousSpineInstanceRef.current);
-      }
-    }
-
     if (!spineInstance || !cameraContainerRef.current) {
-      // Clear benchmark data when no spine instance
       if (!spineInstance) {
         setBenchmarkData(null);
       }
       previousSpineInstanceRef.current = null;
       return;
     }
-    
-    // Store reference to current spine instance
+
+    if (previousSpineInstanceRef.current && cameraContainerRef.current) {
+      if (previousSpineInstanceRef.current.parent === cameraContainerRef.current) {
+        cameraContainerRef.current.removeChild(previousSpineInstanceRef.current);
+      }
+    }
+
     previousSpineInstanceRef.current = spineInstance;
-    
-    // Add to camera container and look at it
     cameraContainerRef.current.addChild(spineInstance);
     cameraContainerRef.current.lookAtChild(spineInstance);
-    
-    // Analyze spine data with new analyzer
-    const analysisResult = SpineAnalyzer.analyze(spineInstance);
-    setBenchmarkData(analysisResult);
-    
-    // Reset all debug flags
-    // Ensure debug visualization is turned off by default
+
     cameraContainerRef.current.setDebugFlags({
       showBones: false,
       showMeshTriangles: false,
@@ -122,12 +94,17 @@ export function useSpineApp(app: Application | null) {
       showBoundingBoxes: false,
       showClipping: false,
       showIkConstraints: false,
-      showTransformConstraints: false
+      showTransformConstraints: false,
+      showPhysics: false
     });
-    
   }, [spineInstance]);
+
+  useEffect(() => {
+    if (spineInstance) {
+      setBenchmarkData(SpineAnalyzer.analyze(spineInstance));
+    }
+  }, [spineInstance, i18n.language]);
   
-  // Effect to update debug visualization when flags change
   useEffect(() => {
     if (!cameraContainerRef.current) return;
     
@@ -135,12 +112,12 @@ export function useSpineApp(app: Application | null) {
       showMeshTriangles: meshesVisible,
       showMeshHull: meshesVisible,
       showRegionAttachments: meshesVisible,
-      showIkConstraints: ikVisible
+      showIkConstraints: ikVisible,
+      showPhysics: physicsVisible
     });
     
-    // Force update debug graphics
     cameraContainerRef.current.forceResetDebugGraphics();
-  }, [meshesVisible, ikVisible]);
+  }, [meshesVisible, ikVisible, physicsVisible]);
 
   return {
     spineInstance,
@@ -151,9 +128,11 @@ export function useSpineApp(app: Application | null) {
     setBackgroundImage,
     clearBackgroundImage,
     toggleMeshes,
+    togglePhysics,
     toggleIk,
     meshesVisible,
+    physicsVisible,
     ikVisible,
-    cameraContainer: cameraContainerRef.current
+    getCameraContainer
   };
 }

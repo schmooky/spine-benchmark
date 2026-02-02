@@ -1,26 +1,25 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { commandRegistry } from '../utils/commandRegistry';
-import i18n from '../i18n';
+import { CameraContainer } from '../core/CameraContainer';
 
 interface UseCommandRegistrationProps {
-  spineInstance: any;
-  showBenchmark: boolean;
+  spineInstance: Spine | null;
   setShowBenchmark: (show: boolean) => void;
   openGitHubReadme: () => void;
   setShowLanguageModal: (show: boolean) => void;
   meshesVisible: boolean;
   physicsVisible: boolean;
   ikVisible: boolean;
-  toggleMeshes: () => void;
-  togglePhysics: () => void;
-  toggleIk: () => void;
-  cameraContainer?: any; // Add camera container reference
+  toggleMeshes: (visible?: boolean) => void;
+  togglePhysics: (visible?: boolean) => void;
+  toggleIk: (visible?: boolean) => void;
+  getCameraContainer: () => CameraContainer | null;
 }
 
 export function useCommandRegistration({
   spineInstance,
-  showBenchmark,
   setShowBenchmark,
   openGitHubReadme,
   setShowLanguageModal,
@@ -30,12 +29,11 @@ export function useCommandRegistration({
   toggleMeshes,
   togglePhysics,
   toggleIk,
-  cameraContainer
+  getCameraContainer,
 }: UseCommandRegistrationProps) {
   const { t } = useTranslation();
   
   useEffect(() => {
-    // Animation Commands
     if (spineInstance) {
       commandRegistry.register({
         id: 'animation.play-pause',
@@ -74,9 +72,8 @@ export function useCommandRegistration({
         }
       });
 
-      // Register skin commands dynamically
       const skins = spineInstance.skeleton.data.skins;
-      skins.forEach((skin: any) => {
+      skins.forEach((skin: { name: string }) => {
         commandRegistry.register({
           id: `skin.${skin.name}`,
           title: t('commands.skin.switchTo', { 0: skin.name }),
@@ -91,9 +88,7 @@ export function useCommandRegistration({
       });
     }
 
-    // Debug Commands - only register if spine instance exists
     if (spineInstance) {
-      // Bones Debug
       commandRegistry.register({
         id: 'debug.toggle-bones',
         title: t('commands.debug.toggleBones', 'Toggle Bones'),
@@ -101,20 +96,14 @@ export function useCommandRegistration({
         description: t('commands.debug.toggleBonesDescription', 'Show/hide bone structure'),
         keywords: [t('commands.keywords.toggle'), 'bones', 'skeleton', 'debug', 'joints'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
-            console.log('Toggle Bones - Current flags:', flags);
-            console.log('Toggle Bones - showBones before:', flags.showBones);
             cameraContainer.setDebugFlags({ showBones: !flags.showBones });
-            const newFlags = cameraContainer.getDebugFlags();
-            console.log('Toggle Bones - showBones after:', newFlags.showBones);
-          } else {
-            console.error('Toggle Bones - No camera container!');
           }
         }
       });
 
-      // Mesh Debug (triangles and hull)
       commandRegistry.register({
         id: 'debug.toggle-meshes',
         title: t('commands.debug.toggleMeshes', 'Toggle Meshes'),
@@ -122,6 +111,7 @@ export function useCommandRegistration({
         description: t('commands.debug.toggleMeshesDescription', 'Show/hide mesh triangles and hulls'),
         keywords: [t('commands.keywords.toggle'), 'mesh', 'triangles', 'hull', 'debug', 'vertices'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             const newValue = !flags.showMeshTriangles;
@@ -138,7 +128,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Region Attachments Debug
       commandRegistry.register({
         id: 'debug.toggle-regions',
         title: t('commands.debug.toggleRegions', 'Toggle Region Attachments'),
@@ -146,6 +135,7 @@ export function useCommandRegistration({
         description: t('commands.debug.toggleRegionsDescription', 'Show/hide region attachment bounds'),
         keywords: [t('commands.keywords.toggle'), 'region', 'attachments', 'debug', 'bounds'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showRegionAttachments: !flags.showRegionAttachments });
@@ -153,7 +143,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Bounding Boxes Debug
       commandRegistry.register({
         id: 'debug.toggle-bounding-boxes',
         title: t('commands.debug.toggleBoundingBoxes', 'Toggle Bounding Boxes'),
@@ -161,6 +150,7 @@ export function useCommandRegistration({
         description: t('commands.debug.toggleBoundingBoxesDescription', 'Show/hide bounding boxes'),
         keywords: [t('commands.keywords.toggle'), 'bounding', 'boxes', 'debug', 'collision'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showBoundingBoxes: !flags.showBoundingBoxes });
@@ -168,7 +158,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Paths Debug
       commandRegistry.register({
         id: 'debug.toggle-paths',
         title: t('commands.debug.togglePaths', 'Toggle Paths'),
@@ -176,6 +165,7 @@ export function useCommandRegistration({
         description: t('commands.debug.togglePathsDescription', 'Show/hide path attachments'),
         keywords: [t('commands.keywords.toggle'), 'paths', 'debug', 'curves'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showPaths: !flags.showPaths });
@@ -183,7 +173,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Clipping Debug
       commandRegistry.register({
         id: 'debug.toggle-clipping',
         title: t('commands.debug.toggleClipping', 'Toggle Clipping'),
@@ -191,6 +180,7 @@ export function useCommandRegistration({
         description: t('commands.debug.toggleClippingDescription', 'Show/hide clipping masks'),
         keywords: [t('commands.keywords.toggle'), 'clipping', 'masks', 'debug'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showClipping: !flags.showClipping });
@@ -198,7 +188,6 @@ export function useCommandRegistration({
         }
       });
 
-      // IK Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-ik-constraints',
         title: t('commands.debug.toggleIkConstraints', 'Toggle IK Constraints'),
@@ -206,6 +195,7 @@ export function useCommandRegistration({
         description: t('commands.debug.toggleIkConstraintsDescription', 'Show/hide IK constraints'),
         keywords: [t('commands.keywords.toggle'), 'ik', 'constraints', 'debug', 'inverse', 'kinematics'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showIkConstraints: !flags.showIkConstraints });
@@ -213,7 +203,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Transform Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-transform-constraints',
         title: t('commands.debug.toggleTransformConstraints', 'Toggle Transform Constraints'),
@@ -221,6 +210,7 @@ export function useCommandRegistration({
         description: t('commands.debug.toggleTransformConstraintsDescription', 'Show/hide transform constraints'),
         keywords: [t('commands.keywords.toggle'), 'transform', 'constraints', 'debug'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showTransformConstraints: !flags.showTransformConstraints });
@@ -228,7 +218,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Path Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-path-constraints',
         title: t('commands.debug.togglePathConstraints', 'Toggle Path Constraints'),
@@ -236,6 +225,7 @@ export function useCommandRegistration({
         description: t('commands.debug.togglePathConstraintsDescription', 'Show/hide path constraints'),
         keywords: [t('commands.keywords.toggle'), 'path', 'constraints', 'debug'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showPathConstraints: !flags.showPathConstraints });
@@ -243,7 +233,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Physics Constraints Debug
       commandRegistry.register({
         id: 'debug.toggle-physics-constraints',
         title: t('commands.debug.togglePhysicsConstraints', 'Toggle Physics Constraints'),
@@ -251,6 +240,7 @@ export function useCommandRegistration({
         description: t('commands.debug.togglePhysicsConstraintsDescription', 'Show/hide physics constraints'),
         keywords: [t('commands.keywords.toggle'), 'physics', 'constraints', 'debug', 'simulation'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             const flags = cameraContainer.getDebugFlags();
             cameraContainer.setDebugFlags({ showPhysics: !flags.showPhysics });
@@ -258,7 +248,6 @@ export function useCommandRegistration({
         }
       });
 
-      // Convenience commands for common debug combinations
       commandRegistry.register({
         id: 'debug.show-all',
         title: t('commands.debug.showAll', 'Show All Debug'),
@@ -266,6 +255,7 @@ export function useCommandRegistration({
         description: t('commands.debug.showAllDescription', 'Enable all debug visualizations'),
         keywords: [t('commands.keywords.show'), 'all', 'debug', 'everything'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             cameraContainer.setDebugFlags({
               showBones: true,
@@ -291,6 +281,7 @@ export function useCommandRegistration({
         description: t('commands.debug.hideAllDescription', 'Disable all debug visualizations'),
         keywords: ['hide', 'all', 'debug', 'clear'],
         execute: () => {
+          const cameraContainer = getCameraContainer();
           if (cameraContainer) {
             cameraContainer.setDebugFlags({
               showBones: false,
@@ -393,18 +384,6 @@ export function useCommandRegistration({
       execute: openGitHubReadme
     });
 
-    // Language Commands - single command to open modal
-    console.log('🔧 Registering language command with translations:', {
-      title: t('language.changeLanguage'),
-      description: t('language.changeLanguageDescription'),
-      keywords: [
-        t('commands.keywords.language'),
-        t('commands.keywords.switch'),
-        'change',
-        'modal'
-      ]
-    });
-    
     commandRegistry.register({
       id: 'language.change',
       title: t('language.changeLanguage'),
@@ -416,13 +395,8 @@ export function useCommandRegistration({
         'change',
         'modal'
       ],
-      execute: () => {
-        console.log('🌐 Language command executed - opening modal');
-        setShowLanguageModal(true);
-      }
+      execute: () => setShowLanguageModal(true)
     });
-    
-    console.log('✅ Language command registered successfully');
 
     // Cleanup function to unregister commands
     return () => {
@@ -464,7 +438,6 @@ export function useCommandRegistration({
     };
   }, [
     spineInstance,
-    showBenchmark,
     setShowBenchmark,
     openGitHubReadme,
     setShowLanguageModal,
@@ -474,7 +447,7 @@ export function useCommandRegistration({
     toggleMeshes,
     togglePhysics,
     toggleIk,
-    cameraContainer,
+    getCameraContainer,
     t
   ]);
 }

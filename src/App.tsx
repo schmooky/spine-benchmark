@@ -1,4 +1,3 @@
-import { Application } from 'pixi.js';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,105 +7,35 @@ import { InfoPanel } from './components/InfoPanel';
 import { CommandPalette } from './components/CommandPalette';
 import { VersionDisplay } from './components/VersionDisplay';
 import { LanguageModal } from './components/LanguageModal';
+import { UrlInputModal } from './components/UrlInputModal';
 import { BenchmarkPanel } from './components/BenchmarkPanel';
-import { DropZone } from './components/DropZone';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
+import { usePixiApp } from './hooks/usePixiApp';
 import { useSpineApp } from './hooks/useSpineApp';
+import { useUrlLoad } from './hooks/useUrlLoad';
+import { useLoadingState } from './hooks/useLoadingState';
 import { useCommandRegistration } from './hooks/useCommandRegistration';
 import { useUrlHash } from './hooks/useUrlHash';
-import { useFileProcessor } from './hooks/useFileProcessor';
 import { useAppEventHandlers } from './hooks/useAppEventHandlers';
 import { commandRegistry } from './utils/commandRegistry';
 import { FileProcessor } from './core/utils/fileProcessor';
 
-// URL Input Modal Component
-const UrlInputModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onLoad: (jsonUrl: string, atlasUrl: string) => void;
-}> = ({ isOpen, onClose, onLoad }) => {
-  const [jsonUrl, setJsonUrl] = useState('');
-  const [atlasUrl, setAtlasUrl] = useState('');
-  const { t } = useTranslation();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (jsonUrl && atlasUrl) {
-      onLoad(jsonUrl, atlasUrl);
-      onClose();
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>{t('ui.loadFromUrl', 'Load Spine from URL')}</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="json-url">JSON URL:</label>
-            <input
-              id="json-url"
-              type="url"
-              value={jsonUrl}
-              onChange={(e) => setJsonUrl(e.target.value)}
-              placeholder="https://example.com/spine.json"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="atlas-url">Atlas URL:</label>
-            <input
-              id="atlas-url"
-              type="url"
-              value={atlasUrl}
-              onChange={(e) => setAtlasUrl(e.target.value)}
-              placeholder="https://example.com/spine.atlas"
-              required
-            />
-          </div>
-          <div className="form-actions">
-            <button type="button" onClick={onClose}>{t('ui.cancel', 'Cancel')}</button>
-            <button type="submit">{t('ui.load', 'Load')}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 const App: React.FC = () => {
   const { t } = useTranslation();
-  const [app, setApp] = useState<Application | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
   const [showBenchmark, setShowBenchmark] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
-  const [urlLoadAttempted, setUrlLoadAttempted] = useState(false);
-  const [urlLoadStatus, setUrlLoadStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-
-  // Debug log for language modal state changes
-  useEffect(() => {
-    console.log('🏠 App: Language modal state changed:', showLanguageModal);
-  }, [showLanguageModal]);
-
-  // Enhanced setShowLanguageModal with additional logging
-  const setShowLanguageModalWithLogging = (show: boolean) => {
-    console.log('🏠 App: setShowLanguageModal called with:', show);
-    console.log('🏠 App: Current modal state before change:', showLanguageModal);
-    setShowLanguageModal(show);
-    console.log('🏠 App: setShowLanguageModal completed');
-  };
-  const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isDropLoading, setIsDropLoading] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState('');
   const { addToast } = useToast();
   const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
-  const { collectFilesFromDataTransfer } = useFileProcessor();
   const { handleKeyDown, handleContextMenu, handleWheel } = useAppEventHandlers();
-  
+
+  const app = usePixiApp({ canvasRef, backgroundColor });
+
   const {
     spineInstance,
     loadSpineFiles,
@@ -119,60 +48,12 @@ const App: React.FC = () => {
     toggleMeshes,
     togglePhysics,
     toggleIk,
-    cameraContainer  // Add this
+    getCameraContainer,
   } = useSpineApp(app);
 
-  // Check for URL parameters on mount - Enhanced version
-  useEffect(() => {
-    if (!app || urlLoadAttempted) return;
+  const { urlLoadStatus, handleUrlLoad } = useUrlLoad({ app, loadSpineFromUrls });
+  const { isAnyLoading, loadingMessage } = useLoadingState(isDropLoading, spineLoading, urlLoadStatus);
 
-    const checkAndLoadFromUrl = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const jsonUrl = urlParams.get('json');
-      const atlasUrl = urlParams.get('atlas');
-
-      if (jsonUrl && atlasUrl) {
-        console.log('Found Spine URLs in query parameters:', { jsonUrl, atlasUrl });
-        setUrlLoadAttempted(true);
-        setUrlLoadStatus('loading');
-        
-        try {
-          await loadSpineFromUrls(jsonUrl, atlasUrl);
-          setUrlLoadStatus('success');
-          addToast(t('success.loadedFromUrl', 'Successfully loaded Spine from URL'), 'success');
-        } catch (error) {
-          console.error('Failed to load files from URLs:', error);
-          setUrlLoadStatus('error');
-          addToast(t('error.failedToLoadFromUrls', { error: (error as any).message }), 'error');
-        }
-      }
-    };
-
-    checkAndLoadFromUrl();
-  }, [app, loadSpineFromUrls, urlLoadAttempted, addToast, t]);
-
-  // Handle URL loading from modal
-  const handleUrlLoad = useCallback(async (jsonUrl: string, atlasUrl: string) => {
-    try {
-      setUrlLoadStatus('loading');
-      await loadSpineFromUrls(jsonUrl, atlasUrl);
-      setUrlLoadStatus('success');
-      
-      // Update URL parameters to persist the loaded URLs
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set('json', jsonUrl);
-      newUrl.searchParams.set('atlas', atlasUrl);
-      window.history.replaceState({}, '', newUrl);
-      
-      addToast(t('success.loadedFromUrl', 'Successfully loaded Spine from URL'), 'success');
-    } catch (error) {
-      setUrlLoadStatus('error');
-      console.error('Failed to load from URLs:', error);
-      addToast(t('error.failedToLoadFromUrls', { error: (error as any).message }), 'error');
-    }
-  }, [loadSpineFromUrls, addToast, t]);
-
-  // Check initial hash state for benchmark panel
   useEffect(() => {
     const hashState = getStateFromHash();
     if (hashState.benchmarkInfo) {
@@ -180,16 +61,13 @@ const App: React.FC = () => {
     }
   }, [getStateFromHash]);
 
-  // Listen for browser navigation changes
   useEffect(() => {
     const cleanup = onHashChange((hashState) => {
       setShowBenchmark(hashState.benchmarkInfo);
     });
-    
     return cleanup;
   }, [onHashChange]);
 
-  // Update hash when showBenchmark changes (but avoid infinite loops)
   useEffect(() => {
     const currentHashState = getStateFromHash();
     if (currentHashState.benchmarkInfo !== showBenchmark) {
@@ -197,146 +75,88 @@ const App: React.FC = () => {
     }
   }, [showBenchmark, updateHash, getStateFromHash]);
 
-  // Handle global keyboard events
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Handle context menu
   useEffect(() => {
     window.addEventListener('contextmenu', handleContextMenu);
-    return () => {
-      window.removeEventListener('contextmenu', handleContextMenu);
-    };
+    return () => window.removeEventListener('contextmenu', handleContextMenu);
   }, [handleContextMenu]);
 
-  // Handle wheel events
   useEffect(() => {
     window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-    };
+    return () => window.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
-  // Handle file drop
-  const handleFilesDrop = useCallback(async (files: FileList) => {
-    try {
-      setIsLoading(true);
-      await loadSpineFiles(files);
-      addToast(t('success.filesLoaded', 'Files loaded successfully'), 'success');
-    } catch (error) {
-      console.error('Error handling Spine files:', error);
-      addToast(t('error.failedToLoadFiles', { error: (error as any).message }), 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadSpineFiles, addToast, t]);
-
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    
-    let cleanupFunction: (() => void) | undefined;
-    
-    // Initialize PIXI Application (async)
-    const initApp = async () => {
-      try {
-        const pixiApp = new Application();
-        await pixiApp.init({
-          backgroundColor: parseInt(backgroundColor.replace('#', '0x')),
-          canvas: canvasRef.current!,
-          resizeTo: canvasRef.current!.parentElement || undefined,
-          antialias: true,
-          resolution: 2,
-          autoDensity: true,
-        });
-        
-        // Store app in state for other components to use
-        app?.destroy(); // Clean up old app if exists
-        setApp(pixiApp);
-        
-        // Setup cleanup function
-        cleanupFunction = () => {
-          pixiApp.destroy();
-        };
-      } catch (error) {
-        console.error("Failed to initialize Pixi application:", error);
-        addToast(t('error.failedToInitialize', error instanceof Error ? error.message : 'Unknown error'), 'error');
-      }
-    };
-    
-    initApp();
-    
-    // Return a cleanup function
-    return () => {
-      if (cleanupFunction) cleanupFunction();
-    };
-  }, []);
-
-  // File processor instance
-  const fileProcessorRef = useRef<FileProcessor | null>(new FileProcessor(app));
-  
+  const fileProcessorRef = useRef<FileProcessor | null>(null);
   useEffect(() => {
     fileProcessorRef.current = app ? new FileProcessor(app) : null;
   }, [app]);
 
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Clear highlighting
-    e.currentTarget.classList.remove('highlight');
-    
-    if (!fileProcessorRef.current) {
-      addToast('Application not initialized', 'error');
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      // Process dropped items using the working approach from your other project
-      const items = e.dataTransfer?.items;
-      if (!items || items.length === 0) {
-        if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) {
-          addToast(t('error.noFilesDropped'), 'error');
+  const handleSpineFiles = useCallback(
+    async (files: FileList) => {
+      if (!fileProcessorRef.current) {
+        addToast(t('error.failedToInitialize', 'Application not initialized'), 'error');
+        return;
+      }
+      try {
+        const processedFiles = await fileProcessorRef.current.handleSpineFiles(files);
+        fileProcessorRef.current.validateFiles(processedFiles);
+        await loadSpineFiles(processedFiles);
+      } catch (error) {
+        addToast(
+          t('error.loadingError', error instanceof Error ? error.message : 'Unknown error'),
+          'error'
+        );
+      }
+    },
+    [loadSpineFiles, addToast, t]
+  );
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.remove('highlight');
+
+      if (!fileProcessorRef.current) {
+        addToast(t('error.failedToInitialize', 'Application not initialized'), 'error');
+        return;
+      }
+
+      try {
+        setIsDropLoading(true);
+        const items = e.dataTransfer?.items;
+        if (!items || items.length === 0) {
+          if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) {
+            addToast(t('error.noFilesDropped'), 'error');
+            return;
+          }
+          await handleSpineFiles(e.dataTransfer.files);
           return;
         }
-        // If we only have files (not items), use the simple approach
-        await handleSpineFiles(e.dataTransfer.files);
-        return;
+
+        const fileList = await fileProcessorRef.current.processItems(Array.from(items));
+        if (fileList.length === 0) {
+          addToast(t('error.noValidFiles'), 'error');
+          return;
+        }
+
+        const files = fileProcessorRef.current.convertToFileList(fileList);
+        await handleSpineFiles(files);
+      } catch (error) {
+        addToast(
+          t('error.processingError', error instanceof Error ? error.message : 'Unknown error'),
+          'error'
+        );
+      } finally {
+        setIsDropLoading(false);
       }
-      
-      // Convert DataTransferItemList to array
-      const itemsArray = Array.from(items);
-      
-      // Process all dropped items (files and directories)
-      const fileList = await fileProcessorRef.current.processItems(itemsArray);
-      
-      console.log(`Traversal complete, found ${fileList.length} files`);
-      
-      if (fileList.length === 0) {
-        addToast(t('error.noValidFiles'), 'error');
-        return;
-      }
-      
-      console.log('Files collected:', fileList.map(f => (f as any).fullPath || f.name));
-      
-      // Convert to FileList-like object
-      const files = fileProcessorRef.current.convertToFileList(fileList);
-      
-      // Load files into SpineBenchmark
-      await handleSpineFiles(files);
-      
-    } catch (error) {
-      console.error('Error processing dropped items:', error);
-      addToast(t('error.processingError', error instanceof Error ? error.message : 'Unknown error'), 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [addToast, t, handleSpineFiles]
+  );
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -350,56 +170,30 @@ const App: React.FC = () => {
     e.currentTarget.classList.remove('highlight');
   };
 
-  const handleSpineFiles = async (files: FileList) => {
-    if (!fileProcessorRef.current) {
-      addToast('File processor not initialized', 'error');
-      return;
-    }
-    
-    try {
-      // Handle Spine files with version checking
-      const processedFiles = await fileProcessorRef.current.handleSpineFiles(files);
-      
-      // Validate files before loading
-      fileProcessorRef.current.validateFiles(processedFiles);
-      
-      await loadSpineFiles(processedFiles);
-    } catch (error) {
-      console.error("Error handling Spine files:", error);
-      addToast(t('error.loadingError', error instanceof Error ? error.message : 'Unknown error'), 'error');
-    }
-  };
-
-  const openGitHubReadme = () => {
+  const openGitHubReadme = useCallback(() => {
     window.open('https://github.com/schmooky/spine-benchmark/blob/main/README.md', '_blank');
-  };
+  }, []);
 
+  const setShowBenchmarkWithHash = useCallback(
+    (show: boolean) => {
+      setShowBenchmark(show);
+      updateHash({ benchmarkInfo: show });
+    },
+    [updateHash]
+  );
 
-  useEffect(() => {
-    if (app) {
-      app.renderer.background.color = parseInt(backgroundColor.replace('#', '0x'));
-    }
-  }, [backgroundColor, app]);
-  
-  // Enhanced setShowBenchmark function that updates hash
-  const setShowBenchmarkWithHash = useCallback((show: boolean) => {
-    setShowBenchmark(show);
-    updateHash({ benchmarkInfo: show });
-  }, [updateHash]);
-  // Register commands for the command palette
   useCommandRegistration({
     spineInstance,
-    showBenchmark,
     setShowBenchmark: setShowBenchmarkWithHash,
     openGitHubReadme,
-    setShowLanguageModal: setShowLanguageModalWithLogging,
+    setShowLanguageModal,
     meshesVisible,
     physicsVisible,
     ikVisible,
     toggleMeshes,
     togglePhysics,
     toggleIk,
-    cameraContainer  // Add this
+    getCameraContainer,
   });
 
   // Add this to register URL load command
@@ -435,10 +229,10 @@ const App: React.FC = () => {
             <p>{t('ui.dropArea')}</p>
           </div>
         )}
-        
-        {(isLoading || spineLoading || urlLoadStatus === 'loading') && (
+
+        {isAnyLoading && (
           <div className="loading-indicator">
-            <p>{urlLoadStatus === 'loading' ? t('ui.loadingFromUrl', 'Loading from URL...') : t('ui.loading')}</p>
+            <p>{loadingMessage}</p>
           </div>
         )}
       </div>
@@ -450,19 +244,13 @@ const App: React.FC = () => {
         </div>
      {/* )} */}
       
-      {/* Controls container - only visible when Spine file is loaded */}
-      <div className={`controls-container ${spineInstance ? 'visible' : 'hidden'}`}>    
-
-          {spineInstance && (() => {
-            console.log('App center-controls render:', {
-              hasSpineInstance: !!spineInstance,
-              spineInstanceType: spineInstance?.constructor?.name
-            });
-            return <AnimationControls
-              spineInstance={spineInstance}
-              onAnimationChange={setCurrentAnimation}
-            />;
-          })()}
+      <div className={`controls-container ${spineInstance ? 'visible' : 'hidden'}`}>
+        {spineInstance && (
+          <AnimationControls
+            spineInstance={spineInstance}
+            onAnimationChange={setCurrentAnimation}
+          />
+        )}
       </div>
       
       {/* Benchmark Panel - shows when analysis is complete and benchmark info is not visible */}
@@ -502,13 +290,9 @@ const App: React.FC = () => {
         spineVersion="4.2.*"
       />
       
-      {/* Language Modal */}
       <LanguageModal
         isOpen={showLanguageModal}
-        onClose={() => {
-          console.log('🏠 App: Closing language modal');
-          setShowLanguageModalWithLogging(false);
-        }}
+        onClose={() => setShowLanguageModal(false)}
       />
       
       {/* URL Input Modal */}

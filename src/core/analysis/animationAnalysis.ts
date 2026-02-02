@@ -42,6 +42,7 @@ import {
   GlobalPhysicsAnalysis
 } from "../analyzers/physicsAnalyzer";
 import { calculateOverallScore } from "../utils/scoreCalculator";
+import type { AnalysisStatistics } from "../SpineAnalyzer";
 import { AnimationAnalysis, SpineAnalysisResult } from "../SpineAnalyzer";
 
 export interface ActiveComponents {
@@ -509,7 +510,7 @@ export function analyzeAnimations(spineInstance: Spine): AnimationAnalysis[] {
  * @param animationAnalyses - Array of AnimationAnalysis objects
  * @returns Statistics object
  */
-export function calculateStatistics(animationAnalyses: AnimationAnalysis[]): any {
+export function calculateStatistics(animationAnalyses: AnimationAnalysis[]): AnalysisStatistics {
   return {
     animationsWithPhysics: animationAnalyses.filter(a => a.activeComponents.hasPhysics).length,
     animationsWithClipping: animationAnalyses.filter(a => a.activeComponents.hasClipping).length,
@@ -573,7 +574,7 @@ export function aggregateResults(
     globalPhysics: GlobalPhysicsAnalysis;
   },
   animationData: AnimationAnalysis[],
-  statistics: any,
+  statistics: AnalysisStatistics,
   sortedData: {
     sorted: AnimationAnalysis[];
     best: AnimationAnalysis | null;

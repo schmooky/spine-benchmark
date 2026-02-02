@@ -329,27 +329,57 @@ src/
 │   │   ├── PhysicsAnalysis.tsx
 │   │   └── SkeletonTree.tsx
 │   ├── AnimationControls.tsx
+│   ├── BenchmarkPanel.tsx
 │   ├── CommandPalette.tsx
-│   └── InfoPanel.tsx
+│   ├── InfoPanel.tsx
+│   ├── LanguageModal.tsx
+│   ├── UrlInputModal.tsx
+│   └── VersionDisplay.tsx
 ├── core/
+│   ├── analysis/
+│   │   └── animationAnalysis.ts
 │   ├── analyzers/
 │   │   ├── meshAnalyzer.ts
 │   │   ├── clippingAnalyzer.ts
 │   │   ├── blendModeAnalyzer.ts
 │   │   ├── physicsAnalyzer.ts
 │   │   └── skeletonAnalyzer.ts
+│   ├── constants/
+│   │   └── performanceFactors.ts
+│   ├── debug/
+│   │   ├── DebugFlagsManager.ts
+│   │   ├── DebugRendererManager.ts
+│   │   ├── DebugLayerFactory.ts
+│   │   └── layers/
 │   ├── utils/
 │   │   ├── scoreCalculator.ts
-│   │   └── animationUtils.ts
+│   │   ├── animationUtils.ts
+│   │   ├── animationSampler.ts
+│   │   ├── analysisUtils.ts
+│   │   └── fileProcessor.ts
 │   ├── SpineAnalyzer.ts
 │   ├── SpineLoader.ts
-│   └── CameraContainer.ts
+│   ├── CameraContainer.ts
+│   └── BackgroundManager.ts
 ├── hooks/
 │   ├── useSpineApp.ts
+│   ├── useSpineLoader.ts
+│   ├── usePixiApp.ts
+│   ├── useUrlLoad.ts
+│   ├── useLoadingState.ts
 │   ├── useCommandPalette.ts
-│   └── useUrlHash.ts
+│   ├── useCommandRegistration.ts
+│   ├── useUrlHash.ts
+│   ├── useBenchmarkPanel.ts
+│   ├── useDebugVisualizer.ts
+│   ├── useBackgroundManager.ts
+│   ├── useAppEventHandlers.ts
+│   ├── useFileProcessor.ts
+│   └── useSafeLocalStorage.ts
 ├── locales/
 │   └── [language].json
+├── utils/
+│   └── commandRegistry.ts
 └── App.tsx
 ```
 
@@ -357,12 +387,12 @@ src/
 
 | Layer | Technology | Version |
 |-------|------------|---------|
-| UI Framework | React | 18.2.0 |
-| Rendering | Pixi.js | 8.0.0 |
+| UI Framework | React | 19.x |
+| Rendering | Pixi.js | 8.x |
 | Spine Runtime | @esotericsoftware/spine-pixi-v8 | 4.2.* |
-| Build Tool | Vite | 5.0.0 |
-| Language | TypeScript | 5.3.0 |
-| Internationalization | i18next | 23.7.0 |
+| Build Tool | Vite | 6.x |
+| Language | TypeScript | 5.7.x |
+| Internationalization | i18next | 25.x |
 
 ### Performance Characteristics
 
