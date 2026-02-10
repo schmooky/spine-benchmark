@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
+import { useTranslation } from 'react-i18next';
 import {
   PlayIcon,
   PauseIcon,
@@ -21,6 +22,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   spineInstance, 
   onAnimationChange 
 }) => {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLooping, setIsLooping] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState<string>('');
@@ -113,39 +115,36 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   
   return (
     <div className="animation-controls">
-      {/* <div className="animation-name">
-        {currentAnimation}
-      </div> */}
-      
+      <div className="controls-label">{t('controls.title')}</div>
       <div className="playback-controls">
         <IconButton
           icon={<RewindIcon className='flipped'/>}
           onClick={previousAnimation}
-          tooltip="Previous Animation"
+          tooltip={t('controls.actions.previous')}
         />
         
         <IconButton
           icon={<StopIcon />}
           onClick={stopAnimation}
-          tooltip="Stop"
+          tooltip={t('controls.actions.stop')}
         />
         
         <IconButton
           icon={isPlaying ? <PauseIcon /> : <PlayIcon />}
           onClick={togglePlay}
-          tooltip={isPlaying ? "Pause" : "Play"}
+          tooltip={isPlaying ? t('controls.actions.pause') : t('controls.actions.play')}
         />
         
         <IconButton
           icon={<ArrowPathIcon />}
           onClick={rewindAnimation}
-          tooltip="Restart Animation"
+          tooltip={t('controls.actions.restart')}
         />
         
         <IconButton
           icon={<ForwardIcon />}
           onClick={nextAnimation}
-          tooltip="Next Animation"
+          tooltip={t('controls.actions.next')}
         />
       </div>
       
@@ -153,8 +152,8 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
         <ToggleSwitch
           checked={isLooping}
           onChange={toggleLoop}
-          label="Loop"
-          tooltip="Toggle animation looping"
+          label={t('controls.labels.loop')}
+          tooltip={t('controls.labels.loopHint')}
         />
         
         <ModernSelect
@@ -164,7 +163,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
             value: name,
             label: name
           }))}
-          placeholder="Select Animation"
+          placeholder={t('controls.labels.selectAnimation')}
         />
       </div>
     </div>

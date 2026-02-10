@@ -15,6 +15,7 @@
     "@esotericsoftware/spine-core": "^4.2.101",
     "@esotericsoftware/spine-pixi-v8": "^4.2.101",
     "@esotericsoftware/spine-ts": "^4.2.13",
+    "@tanstack/react-router": "^1.159.5",
     "@vitejs/plugin-react": "^5.1.4",
     "driver.js": "^1.4.0",
     "gsap": "^3.14.2",

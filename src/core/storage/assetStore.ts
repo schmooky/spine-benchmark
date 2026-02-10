@@ -11,6 +11,7 @@ export interface StoredAsset {
   updatedAt: number;
   fileCount: number;
   totalBytes: number;
+  previewImageDataUrl?: string;
   files: StoredAssetFile[];
 }
 
@@ -38,6 +39,20 @@ function randomId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function isPreviewImage(file: File): boolean {
+  if (file.type.startsWith('image/')) return true;
+  return /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(file.name);
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
 export function deriveAssetName(files: FileList | File[]): string {
   const list = Array.from(files);
   const skeleton = list.find((file) => file.name.endsWith('.json') || file.name.endsWith('.skel'));
@@ -50,6 +65,7 @@ export function deriveAssetName(files: FileList | File[]): string {
 export async function saveAsset(files: FileList | File[], preferredName?: string): Promise<StoredAsset> {
   const list = Array.from(files);
   const now = Date.now();
+  const previewSource = list.find(isPreviewImage);
   const name = preferredName?.trim() || deriveAssetName(list);
   const record: StoredAsset = {
     id: randomId(),
@@ -60,6 +76,14 @@ export async function saveAsset(files: FileList | File[], preferredName?: string
     totalBytes: list.reduce((sum, file) => sum + file.size, 0),
     files: []
   };
+
+  if (previewSource) {
+    try {
+      record.previewImageDataUrl = await blobToDataUrl(previewSource);
+    } catch {
+      // Preview is optional and should not block asset persistence.
+    }
+  }
 
   for (const file of list) {
     const buffer = await file.arrayBuffer();

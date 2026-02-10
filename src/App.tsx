@@ -4,14 +4,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
-import { AnimationControls } from './components/AnimationControls';
 import { InfoPanel } from './components/InfoPanel';
 import { CommandPalette } from './components/CommandPalette';
 import { VersionDisplay } from './components/VersionDisplay';
 import { LanguageModal } from './components/LanguageModal';
 import { UrlInputModal } from './components/UrlInputModal';
 import { BenchmarkPanel } from './components/BenchmarkPanel';
-import { MeshOptimizerPanel } from './components/MeshOptimizerPanel';
+import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
 import { usePixiApp } from './hooks/usePixiApp';
@@ -31,8 +30,8 @@ import {
   deleteAsset,
   deriveAssetName
 } from './core/storage/assetStore';
+import { WorkbenchProvider } from './workbench/WorkbenchContext';
 
-type ToolMode = 'benchmark' | 'optimizer';
 type OnboardingStep = 'language' | 'intro';
 
 const ONBOARDING_KEY = 'spine-workbench-onboarding-done-v1';
@@ -55,16 +54,10 @@ const partnerTools = [
   { labelKey: 'dashboard.links.partner.texturePacker', href: 'https://www.codeandweb.com/texturepacker' }
 ];
 
-const guides = [
+const documentationLinks = [
   { labelKey: 'dashboard.links.guides.performanceScoring', href: 'https://github.com/schmooky/spine-benchmark/blob/main/README.md#performance-scoring-algorithm' },
   { labelKey: 'dashboard.links.guides.prepareExports', href: 'https://github.com/schmooky/spine-benchmark/blob/main/README.md#usage' },
   { labelKey: 'dashboard.links.guides.optimizationTips', href: 'https://esotericsoftware.com/spine-optimization' }
-];
-
-const communities = [
-  { labelKey: 'dashboard.links.community.telegram', href: 'https://t.me/spine_benchmark' },
-  { labelKey: 'dashboard.links.community.forum', href: 'https://en.esotericsoftware.com/forum/' },
-  { labelKey: 'dashboard.links.community.issues', href: 'https://github.com/schmooky/spine-benchmark/issues' }
 ];
 
 function formatBytes(bytes: number, t: (key: string, options?: Record<string, unknown>) => string): string {
@@ -81,10 +74,12 @@ function filesToFileList(files: File[]): FileList {
 
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const pixiContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
-  const [activeTool, setActiveTool] = useState<ToolMode>('benchmark');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useSafeLocalStorage('spine-workbench-sidebar-collapsed-v1', false);
   const [showBenchmark, setShowBenchmark] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
@@ -94,6 +89,7 @@ const App: React.FC = () => {
   const [hasAutoLoadedAsset, setHasAutoLoadedAsset] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('language');
+  const [pixelFootprint, setPixelFootprint] = useState<{ width: number; height: number; coverage: number } | null>(null);
 
   const { addToast } = useToast();
   const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
@@ -124,8 +120,10 @@ const App: React.FC = () => {
     return assets.find((asset) => asset.id === selectedAssetId) || null;
   }, [assets, selectedAssetId]);
 
+  const pathname = location.pathname;
+
   const startGuidedTour = useCallback(() => {
-    setActiveTool('benchmark');
+    void navigate({ to: '/tools/benchmark' });
     setTimeout(() => {
       const guided = driver({
         showProgress: true,
@@ -177,14 +175,6 @@ const App: React.FC = () => {
             }
           },
           {
-            element: '[data-tour="asset-review"]',
-            popover: {
-              title: t('dashboard.tour.steps.assetReview.title'),
-              description: t('dashboard.tour.steps.assetReview.description'),
-              side: 'left'
-            }
-          },
-          {
             element: '[data-tour="partner-links"]',
             popover: {
               title: t('dashboard.tour.steps.guidesCommunity.title'),
@@ -196,7 +186,7 @@ const App: React.FC = () => {
       });
       guided.drive();
     }, 250);
-  }, [t]);
+  }, [navigate, t]);
 
   const refreshAssets = useCallback(async () => {
     try {
@@ -298,6 +288,39 @@ const App: React.FC = () => {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
 
+  useEffect(() => {
+    if (!app || !spineInstance) {
+      setPixelFootprint(null);
+      return;
+    }
+
+    let lastUpdate = 0;
+    const updateFootprint = () => {
+      const now = performance.now();
+      if (now - lastUpdate < 180) return;
+      lastUpdate = now;
+
+      const bounds = spineInstance.getBounds();
+      const width = Math.max(0, Math.round(bounds.width));
+      const height = Math.max(0, Math.round(bounds.height));
+      const canvasArea = Math.max(1, app.screen.width * app.screen.height);
+      const coverage = Math.min(100, Number((((width * height) / canvasArea) * 100).toFixed(1)));
+
+      setPixelFootprint((prev) => {
+        if (prev && prev.width === width && prev.height === height && prev.coverage === coverage) {
+          return prev;
+        }
+        return { width, height, coverage };
+      });
+    };
+
+    updateFootprint();
+    app.ticker.add(updateFootprint);
+    return () => {
+      app.ticker.remove(updateFootprint);
+    };
+  }, [app, spineInstance]);
+
   const fileProcessorRef = useRef<FileProcessor | null>(null);
   useEffect(() => {
     fileProcessorRef.current = app ? new FileProcessor(app) : null;
@@ -328,9 +351,7 @@ const App: React.FC = () => {
           await persistAsset(processedFiles, options?.assetName);
         }
 
-        if (activeTool !== 'benchmark') {
-          setActiveTool('benchmark');
-        }
+        void navigate({ to: '/tools/benchmark' });
       } catch (error) {
         addToast(
           t('error.loadingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }),
@@ -338,7 +359,7 @@ const App: React.FC = () => {
         );
       }
     },
-    [loadSpineFiles, addToast, t, persistAsset, activeTool]
+    [loadSpineFiles, addToast, t, persistAsset, navigate]
   );
 
   const loadStoredAsset = useCallback(
@@ -346,9 +367,9 @@ const App: React.FC = () => {
       const files = assetToFiles(asset);
       await handleSpineFiles(filesToFileList(files), { persist: false });
       setSelectedAssetId(asset.id);
-      setActiveTool('benchmark');
+      void navigate({ to: '/tools/benchmark' });
     },
-    [handleSpineFiles]
+    [handleSpineFiles, navigate]
   );
 
   useEffect(() => {
@@ -508,104 +529,118 @@ const App: React.FC = () => {
     };
   }, [app, t]);
 
+  const workbenchContextValue = useMemo(() => ({
+    spineInstance,
+    benchmarkData,
+    showBenchmark,
+    setShowBenchmarkWithHash,
+    pixiContainerRef,
+    urlLoadStatus,
+    isAnyLoading,
+    loadingMessage,
+    handleDrop,
+    handleDragOver,
+    handleDragLeave,
+    pixelFootprint,
+    selectedAsset,
+    loadStoredAsset,
+    assets,
+    selectedAssetId,
+    setSelectedAssetId,
+    handleDeleteAsset,
+    handleUploadFromInput,
+    fileInputRef,
+    formatBytes: (bytes: number) => formatBytes(bytes, t),
+    onLoadOptimizedFiles: async (files: File[]) => {
+      await handleSpineFiles(filesToFileList(files));
+    },
+    setShowUrlModal,
+    partnerTools,
+    documentationLinks
+  }), [
+    spineInstance,
+    benchmarkData,
+    showBenchmark,
+    setShowBenchmarkWithHash,
+    urlLoadStatus,
+    isAnyLoading,
+    loadingMessage,
+    handleDrop,
+    handleDragOver,
+    handleDragLeave,
+    pixelFootprint,
+    selectedAsset,
+    loadStoredAsset,
+    assets,
+    selectedAssetId,
+    handleDeleteAsset,
+    handleUploadFromInput,
+    t,
+    handleSpineFiles
+  ]);
+
+  const headerTitle = pathname.startsWith('/tools/benchmark')
+    ? t('dashboard.workspace.benchmarkTitle')
+    : pathname.startsWith('/tools/mesh-optimizer')
+      ? t('dashboard.workspace.optimizerTitle')
+      : pathname.startsWith('/tools/physics-baker')
+        ? t('dashboard.workspace.physicsBakerTitle')
+        : pathname.startsWith('/assets')
+          ? t('dashboard.sections.assetLibrary')
+          : pathname.startsWith('/documentation')
+            ? t('dashboard.sections.documentation')
+            : t('dashboard.sections.partners');
+
+  const inBenchmarkRoute = pathname.startsWith('/tools/benchmark');
+
   return (
+    <WorkbenchProvider value={workbenchContextValue}>
     <div className="app-container app-shell">
-      <aside className="app-sidebar">
+      <aside className={`app-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <h1>{t('dashboard.brand.title')}</h1>
           <p>{t('dashboard.brand.subtitle')}</p>
+          <button
+            type="button"
+            className="sidebar-collapse-btn"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            aria-label={isSidebarCollapsed ? t('dashboard.actions.expandSidebar') : t('dashboard.actions.collapseSidebar')}
+            title={isSidebarCollapsed ? t('dashboard.actions.expandSidebar') : t('dashboard.actions.collapseSidebar')}
+          >
+            {isSidebarCollapsed ? '>>' : '<<'}
+          </button>
         </div>
 
         <section className="sidebar-section" data-tour="tool-switcher">
           <h2>{t('dashboard.sections.tools')}</h2>
-          <div className="tool-switcher">
-            <button
-              type="button"
-              className={`tool-chip ${activeTool === 'benchmark' ? 'active' : ''}`}
-              onClick={() => setActiveTool('benchmark')}
-            >
+          <div className="tool-switcher nav-list">
+            <Link to="/tools/benchmark" className={`tool-chip ${pathname.startsWith('/tools/benchmark') ? 'active' : ''}`}>
               {t('dashboard.tools.benchmark')}
-            </button>
-            <button
-              type="button"
-              className={`tool-chip ${activeTool === 'optimizer' ? 'active' : ''}`}
-              onClick={() => setActiveTool('optimizer')}
-            >
+            </Link>
+            <Link to="/tools/mesh-optimizer" className={`tool-chip ${pathname.startsWith('/tools/mesh-optimizer') ? 'active' : ''}`}>
               {t('dashboard.tools.meshOptimizer')}
-            </button>
+            </Link>
+            <Link to="/tools/physics-baker" className={`tool-chip ${pathname.startsWith('/tools/physics-baker') ? 'active' : ''}`}>
+              {t('dashboard.tools.physicsBaker')}
+            </Link>
           </div>
         </section>
 
-        <section className="sidebar-section" data-tour="asset-library">
-          <div className="section-header-row">
-            <h2>{t('dashboard.sections.assetLibrary')}</h2>
-            <button
-              className="secondary-btn"
-              type="button"
-              data-tour="import-assets-btn"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {t('dashboard.actions.import')}
-            </button>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden-input"
-            onChange={handleUploadFromInput}
-          />
-
-          <div className="asset-list">
-            {assets.length === 0 && <p className="subtle-text">{t('dashboard.messages.noAssets')}</p>}
-            {assets.map((asset) => (
-              <article
-                key={asset.id}
-                className={`asset-card ${selectedAssetId === asset.id ? 'active' : ''}`}
-                onClick={() => setSelectedAssetId(asset.id)}
-              >
-                <div>
-                  <h3>{asset.name}</h3>
-                  <p>{t('dashboard.assetCard.summary', { count: asset.fileCount, size: formatBytes(asset.totalBytes, t) })}</p>
-                </div>
-                <div className="asset-card-actions">
-                  <button type="button" className="mini-btn" onClick={(event) => {
-                    event.stopPropagation();
-                    void loadStoredAsset(asset);
-                  }}>
-                    {t('dashboard.actions.load')}
-                  </button>
-                  <button type="button" className="mini-btn danger" onClick={(event) => {
-                    event.stopPropagation();
-                    void handleDeleteAsset(asset.id);
-                  }}>
-                    {t('dashboard.actions.delete')}
-                  </button>
-                </div>
-              </article>
-            ))}
+        <section className="sidebar-section">
+          <h2>{t('dashboard.sections.navigation')}</h2>
+          <div className="tool-switcher nav-list">
+            <Link to="/assets" className={`tool-chip ${pathname.startsWith('/assets') ? 'active' : ''}`}>
+              {t('dashboard.sections.assetLibrary')}
+            </Link>
+            <Link to="/documentation" className={`tool-chip ${pathname.startsWith('/documentation') ? 'active' : ''}`}>
+              {t('dashboard.sections.documentation')}
+            </Link>
+            <Link to="/partners" className={`tool-chip ${pathname.startsWith('/partners') ? 'active' : ''}`}>
+              {t('dashboard.sections.partners')}
+            </Link>
           </div>
         </section>
-
-        <section className="sidebar-section quick-links" data-tour="partner-links">
-          <h2>{t('dashboard.sections.partnerTools')}</h2>
-          {partnerTools.map((item) => (
-            <a key={item.labelKey} href={item.href} target="_blank" rel="noreferrer">{t(item.labelKey)}</a>
-          ))}
-        </section>
-
-        <section className="sidebar-section quick-links">
-          <h2>{t('dashboard.sections.guides')}</h2>
-          {guides.map((item) => (
-            <a key={item.labelKey} href={item.href} target="_blank" rel="noreferrer">{t(item.labelKey)}</a>
-          ))}
-        </section>
-
-        <section className="sidebar-section quick-links">
-          <h2>{t('dashboard.sections.community')}</h2>
-          {communities.map((item) => (
-            <a key={item.labelKey} href={item.href} target="_blank" rel="noreferrer">{t(item.labelKey)}</a>
-          ))}
+        <section className="sidebar-section">
           <button type="button" className="secondary-btn sidebar-tour-btn" onClick={startGuidedTour}>
             {t('dashboard.actions.startTour')}
           </button>
@@ -615,7 +650,7 @@ const App: React.FC = () => {
       <main className="workspace-main">
         <header className="workspace-header" data-tour="workspace-header">
           <div>
-            <h2>{activeTool === 'benchmark' ? t('dashboard.workspace.benchmarkTitle') : t('dashboard.workspace.optimizerTitle')}</h2>
+            <h2>{headerTitle}</h2>
             <p>
               {selectedAsset
                 ? t('dashboard.workspace.selectedAsset', { name: selectedAsset.name, count: selectedAsset.fileCount })
@@ -626,71 +661,10 @@ const App: React.FC = () => {
             {t('dashboard.actions.loadFromUrl')}
           </button>
         </header>
-
-        {activeTool === 'benchmark' ? (
-          <div className="benchmark-layout">
-            <div
-              className="canvas-container"
-              data-tour="canvas-dropzone"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-            >
-              <div ref={pixiContainerRef} className="pixi-host" />
-
-              {!spineInstance && urlLoadStatus !== 'loading' && (
-                <div className="drop-area">
-                  <p>{t('dashboard.workspace.dropArea')}</p>
-                </div>
-              )}
-
-              {isAnyLoading && (
-                <div className="loading-indicator">
-                  <p>{loadingMessage}</p>
-                </div>
-              )}
-            </div>
-
-            <aside className="asset-review-pane" data-tour="asset-review">
-              <h3>{t('dashboard.workspace.assetReview')}</h3>
-              {!selectedAsset && <p className="subtle-text">{t('dashboard.workspace.selectForReview')}</p>}
-              {selectedAsset && (
-                <>
-                  <p className="subtle-text">{t('dashboard.workspace.updatedAt', { date: new Date(selectedAsset.updatedAt).toLocaleString() })}</p>
-                  <div className="review-list">
-                    {selectedAsset.files.map((file) => (
-                      <div className="review-row" key={`${selectedAsset.id}-${file.name}`}>
-                        <span>{file.name}</span>
-                        <span>{file.type || t('dashboard.workspace.binaryType')}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <button type="button" className="primary-btn" onClick={() => void loadStoredAsset(selectedAsset)}>
-                    {t('dashboard.actions.reloadSelected')}
-                  </button>
-                </>
-              )}
-            </aside>
-
-            <div className={`controls-container ${spineInstance ? 'visible' : 'hidden'}`}>
-              {spineInstance && (
-                <AnimationControls
-                  spineInstance={spineInstance}
-                />
-              )}
-            </div>
-          </div>
-        ) : (
-          <MeshOptimizerPanel
-            asset={selectedAsset}
-            onLoadOptimized={async (files) => {
-              await handleSpineFiles(filesToFileList(files));
-            }}
-          />
-        )}
+        <Outlet />
       </main>
 
-      {activeTool === 'benchmark' && (
+      {inBenchmarkRoute && (
         <BenchmarkPanel
           benchmarkData={benchmarkData}
           showBenchmark={showBenchmark}
@@ -698,7 +672,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {showBenchmark && benchmarkData && activeTool === 'benchmark' && (
+      {showBenchmark && benchmarkData && inBenchmarkRoute && (
         <InfoPanel
           data={benchmarkData}
           onClose={() => setShowBenchmarkWithHash(false)}
@@ -781,6 +755,7 @@ const App: React.FC = () => {
         onLoad={handleUrlLoad}
       />
     </div>
+    </WorkbenchProvider>
   );
 };
 

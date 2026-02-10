@@ -626,14 +626,15 @@
     },
     "sections": {
       "tools": "Tools",
+      "navigation": "Navigation",
       "assetLibrary": "Asset Library (IndexedDB)",
-      "partnerTools": "Partner Tools",
-      "guides": "Guides",
-      "community": "Community"
+      "documentation": "Documentation",
+      "partners": "Partners"
     },
     "tools": {
       "benchmark": "Benchmark",
-      "meshOptimizer": "Mesh Optimizer"
+      "meshOptimizer": "Mesh Optimizer",
+      "physicsBaker": "Physics Baker"
     },
     "actions": {
       "import": "Import",
@@ -643,7 +644,9 @@
       "loadFromUrl": "Load From URL",
       "reloadSelected": "Reload Selected Asset",
       "continue": "Continue",
-      "skipForNow": "Skip For Now"
+      "skipForNow": "Skip For Now",
+      "collapseSidebar": "Collapse Sidebar",
+      "expandSidebar": "Expand Sidebar"
     },
     "messages": {
       "noAssets": "No assets stored yet. Drop files into the workspace to add one.",
@@ -657,13 +660,16 @@
     "workspace": {
       "benchmarkTitle": "Benchmark Workspace",
       "optimizerTitle": "Mesh Optimizer Workspace",
+      "physicsBakerTitle": "Physics Baker Workspace",
       "selectedAsset": "Selected asset: {{name}} ({{count}} files)",
       "empty": "Select an asset from the library or drop files to begin.",
       "dropArea": "Drop Spine folders/files here to load and save into your asset library",
       "assetReview": "Asset Review",
       "selectForReview": "Select an asset to review file inventory.",
       "updatedAt": "Updated {{date}}",
-      "binaryType": "application/octet-stream"
+      "binaryType": "application/octet-stream",
+      "pixelFootprint": "Footprint: {{width}}x{{height}} px",
+      "canvasCoverage": "Canvas coverage: {{coverage}}%"
     },
     "assetCard": {
       "summary": "{{count}} files • {{size}}"
@@ -771,6 +777,36 @@
       "selectJsonAsset": "Select an asset with a JSON skeleton first.",
       "jsonNotFound": "JSON file not found in selected asset.",
       "optimizationFailed": "Optimization failed"
+    }
+  },
+  "physicsBaker": {
+    "title": "Physics Baker",
+    "subtitle": "Bake runtime physics into timeline keys for deterministic playback and lower runtime cost.",
+    "labels": {
+      "asset": "Asset:"
+    },
+    "values": {
+      "noneSelected": "None selected"
+    },
+    "comingSoon": "Physics baking workflow is being integrated for Spine-compatible exports.",
+    "actions": {
+      "bake": "Bake Physics (Soon)"
+    }
+  },
+  "controls": {
+    "title": "Playback Controls",
+    "labels": {
+      "loop": "Loop",
+      "loopHint": "Toggle animation looping",
+      "selectAnimation": "Select Animation"
+    },
+    "actions": {
+      "previous": "Previous Animation",
+      "stop": "Stop",
+      "pause": "Pause",
+      "play": "Play",
+      "restart": "Restart Animation",
+      "next": "Next Animation"
     }
   }
 }

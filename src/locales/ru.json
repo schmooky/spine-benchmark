@@ -623,11 +623,15 @@
       "assetLibrary": "Asset Library (IndexedDB)",
       "partnerTools": "Partner Tools",
       "guides": "Guides",
-      "community": "Community"
+      "community": "Community",
+      "documentation": "Documentation",
+      "partners": "Partners",
+      "navigation": "Navigation"
     },
     "tools": {
       "benchmark": "Benchmark",
-      "meshOptimizer": "Mesh Optimizer"
+      "meshOptimizer": "Mesh Optimizer",
+      "physicsBaker": "Physics Baker"
     },
     "actions": {
       "import": "Import",
@@ -637,7 +641,9 @@
       "loadFromUrl": "Load From URL",
       "reloadSelected": "Reload Selected Asset",
       "continue": "Continue",
-      "skipForNow": "Skip For Now"
+      "skipForNow": "Skip For Now",
+      "collapseSidebar": "Collapse Sidebar",
+      "expandSidebar": "Expand Sidebar"
     },
     "messages": {
       "noAssets": "No assets stored yet. Drop files into the workspace to add one.",
@@ -657,7 +663,10 @@
       "assetReview": "Asset Review",
       "selectForReview": "Select an asset to review file inventory.",
       "updatedAt": "Updated {{date}}",
-      "binaryType": "application/octet-stream"
+      "binaryType": "application/octet-stream",
+      "physicsBakerTitle": "Physics Baker Workspace",
+      "pixelFootprint": "Footprint: {{width}}x{{height}} px",
+      "canvasCoverage": "Canvas coverage: {{coverage}}%"
     },
     "assetCard": {
       "summary": "{{count}} files • {{size}}"
@@ -772,5 +781,35 @@
     "description": "The app hit an unexpected error. Reload to continue.",
     "reload": "Reload App",
     "retry": "Try Again"
+  },
+  "physicsBaker": {
+    "title": "Physics Baker",
+    "subtitle": "Bake runtime physics into timeline keys for deterministic playback and lower runtime cost.",
+    "labels": {
+      "asset": "Asset:"
+    },
+    "values": {
+      "noneSelected": "None selected"
+    },
+    "comingSoon": "Physics baking workflow is being integrated for Spine-compatible exports.",
+    "actions": {
+      "bake": "Bake Physics (Soon)"
+    }
+  },
+  "controls": {
+    "title": "Playback Controls",
+    "labels": {
+      "loop": "Loop",
+      "loopHint": "Toggle animation looping",
+      "selectAnimation": "Select Animation"
+    },
+    "actions": {
+      "previous": "Previous Animation",
+      "stop": "Stop",
+      "pause": "Pause",
+      "play": "Play",
+      "restart": "Restart Animation",
+      "next": "Next Animation"
+    }
   }
 }
