@@ -56,32 +56,35 @@ export class DebugRendererManager {
   }
 
   public update(): void {
+    const spine = this.currentSpine;
+    if (!spine) return;
+
     // Update each layer based on its flag
     if (this.flagsManager.isLayerVisible('bones')) {
-      this.layers.get('bones')?.update(this.currentSpine);
+      this.layers.get('bones')?.update(spine);
     }
 
     if (this.flagsManager.isLayerVisible('pathConstraints')) {
-      this.layers.get('pathConstraints')?.update(this.currentSpine);
+      this.layers.get('pathConstraints')?.update(spine);
     }
 
     if (this.flagsManager.isLayerVisible('ikConstraints')) {
-      this.layers.get('ikConstraints')?.update(this.currentSpine);
+      this.layers.get('ikConstraints')?.update(spine);
     }
 
     // Update mesh layers based on their flags
     if (this.flagsManager.isLayerVisible('meshes')) {
-      this.layers.get('meshes')?.update(this.currentSpine);
+      this.layers.get('meshes')?.update(spine);
     }
     
     // Update transform constraint layer
     if (this.flagsManager.isLayerVisible('transformConstraints')) {
-      this.layers.get('transformConstraints')?.update(this.currentSpine);
+      this.layers.get('transformConstraints')?.update(spine);
     }
     
     // Update physics constraint layer
     if (this.flagsManager.isLayerVisible('physics')) {
-      this.layers.get('physics')?.update(this.currentSpine);
+      this.layers.get('physics')?.update(spine);
     }
   }
 

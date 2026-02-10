@@ -66,13 +66,13 @@ export function useCommandRegistration({
         keywords: [t('commands.keywords.animation'), t('commands.keywords.restart'), t('commands.keywords.reset')],
         execute: () => {
           const currentEntry = spineInstance.state.getCurrent(0);
-          if (currentEntry) {
+          if (currentEntry?.animation) {
             spineInstance.state.setAnimation(0, currentEntry.animation.name, currentEntry.loop);
           }
         }
       });
 
-      const skins = spineInstance.skeleton.data.skins;
+      const skins = spineInstance.skeleton.data.skins as Array<{ name: string }>;
       skins.forEach((skin: { name: string }) => {
         commandRegistry.register({
           id: `skin.${skin.name}`,
@@ -81,8 +81,11 @@ export function useCommandRegistration({
           description: t('commands.skin.switchToDescription', { 0: skin.name }),
           keywords: [t('commands.keywords.skin'), skin.name.toLowerCase()],
           execute: () => {
-            spineInstance.skeleton.setSkin(skin.name);
-            spineInstance.skeleton.setSlotsToSetupPose();
+            const targetSkin = spineInstance.skeleton.data.skins.find((entry: any) => entry.name === skin.name);
+            if (targetSkin) {
+              spineInstance.skeleton.setSkin(targetSkin as any);
+              spineInstance.skeleton.setSlotsToSetupPose();
+            }
           }
         });
       });
@@ -91,9 +94,9 @@ export function useCommandRegistration({
     if (spineInstance) {
       commandRegistry.register({
         id: 'debug.toggle-bones',
-        title: t('commands.debug.toggleBones', 'Toggle Bones'),
+        title: t('commands.debug.toggleBones'),
         category: 'debug',
-        description: t('commands.debug.toggleBonesDescription', 'Show/hide bone structure'),
+        description: t('commands.debug.toggleBonesDescription'),
         keywords: [t('commands.keywords.toggle'), 'bones', 'skeleton', 'debug', 'joints'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -106,9 +109,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-meshes',
-        title: t('commands.debug.toggleMeshes', 'Toggle Meshes'),
+        title: t('commands.debug.toggleMeshes'),
         category: 'debug',
-        description: t('commands.debug.toggleMeshesDescription', 'Show/hide mesh triangles and hulls'),
+        description: t('commands.debug.toggleMeshesDescription'),
         keywords: [t('commands.keywords.toggle'), 'mesh', 'triangles', 'hull', 'debug', 'vertices'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -130,9 +133,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-regions',
-        title: t('commands.debug.toggleRegions', 'Toggle Region Attachments'),
+        title: t('commands.debug.toggleRegions'),
         category: 'debug',
-        description: t('commands.debug.toggleRegionsDescription', 'Show/hide region attachment bounds'),
+        description: t('commands.debug.toggleRegionsDescription'),
         keywords: [t('commands.keywords.toggle'), 'region', 'attachments', 'debug', 'bounds'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -145,9 +148,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-bounding-boxes',
-        title: t('commands.debug.toggleBoundingBoxes', 'Toggle Bounding Boxes'),
+        title: t('commands.debug.toggleBoundingBoxes'),
         category: 'debug',
-        description: t('commands.debug.toggleBoundingBoxesDescription', 'Show/hide bounding boxes'),
+        description: t('commands.debug.toggleBoundingBoxesDescription'),
         keywords: [t('commands.keywords.toggle'), 'bounding', 'boxes', 'debug', 'collision'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -160,9 +163,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-paths',
-        title: t('commands.debug.togglePaths', 'Toggle Paths'),
+        title: t('commands.debug.togglePaths'),
         category: 'debug',
-        description: t('commands.debug.togglePathsDescription', 'Show/hide path attachments'),
+        description: t('commands.debug.togglePathsDescription'),
         keywords: [t('commands.keywords.toggle'), 'paths', 'debug', 'curves'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -175,9 +178,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-clipping',
-        title: t('commands.debug.toggleClipping', 'Toggle Clipping'),
+        title: t('commands.debug.toggleClipping'),
         category: 'debug',
-        description: t('commands.debug.toggleClippingDescription', 'Show/hide clipping masks'),
+        description: t('commands.debug.toggleClippingDescription'),
         keywords: [t('commands.keywords.toggle'), 'clipping', 'masks', 'debug'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -190,9 +193,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-ik-constraints',
-        title: t('commands.debug.toggleIkConstraints', 'Toggle IK Constraints'),
+        title: t('commands.debug.toggleIkConstraints'),
         category: 'debug',
-        description: t('commands.debug.toggleIkConstraintsDescription', 'Show/hide IK constraints'),
+        description: t('commands.debug.toggleIkConstraintsDescription'),
         keywords: [t('commands.keywords.toggle'), 'ik', 'constraints', 'debug', 'inverse', 'kinematics'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -205,9 +208,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-transform-constraints',
-        title: t('commands.debug.toggleTransformConstraints', 'Toggle Transform Constraints'),
+        title: t('commands.debug.toggleTransformConstraints'),
         category: 'debug',
-        description: t('commands.debug.toggleTransformConstraintsDescription', 'Show/hide transform constraints'),
+        description: t('commands.debug.toggleTransformConstraintsDescription'),
         keywords: [t('commands.keywords.toggle'), 'transform', 'constraints', 'debug'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -220,9 +223,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-path-constraints',
-        title: t('commands.debug.togglePathConstraints', 'Toggle Path Constraints'),
+        title: t('commands.debug.togglePathConstraints'),
         category: 'debug',
-        description: t('commands.debug.togglePathConstraintsDescription', 'Show/hide path constraints'),
+        description: t('commands.debug.togglePathConstraintsDescription'),
         keywords: [t('commands.keywords.toggle'), 'path', 'constraints', 'debug'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -235,9 +238,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.toggle-physics-constraints',
-        title: t('commands.debug.togglePhysicsConstraints', 'Toggle Physics Constraints'),
+        title: t('commands.debug.togglePhysicsConstraints'),
         category: 'debug',
-        description: t('commands.debug.togglePhysicsConstraintsDescription', 'Show/hide physics constraints'),
+        description: t('commands.debug.togglePhysicsConstraintsDescription'),
         keywords: [t('commands.keywords.toggle'), 'physics', 'constraints', 'debug', 'simulation'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -250,9 +253,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.show-all',
-        title: t('commands.debug.showAll', 'Show All Debug'),
+        title: t('commands.debug.showAll'),
         category: 'debug',
-        description: t('commands.debug.showAllDescription', 'Enable all debug visualizations'),
+        description: t('commands.debug.showAllDescription'),
         keywords: [t('commands.keywords.show'), 'all', 'debug', 'everything'],
         execute: () => {
           const cameraContainer = getCameraContainer();
@@ -276,9 +279,9 @@ export function useCommandRegistration({
 
       commandRegistry.register({
         id: 'debug.hide-all',
-        title: t('commands.debug.hideAll', 'Hide All Debug'),
+        title: t('commands.debug.hideAll'),
         category: 'debug',
-        description: t('commands.debug.hideAllDescription', 'Disable all debug visualizations'),
+        description: t('commands.debug.hideAllDescription'),
         keywords: ['hide', 'all', 'debug', 'clear'],
         execute: () => {
           const cameraContainer = getCameraContainer();

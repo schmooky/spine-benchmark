@@ -31,7 +31,7 @@ export function useUrlLoad({ app, loadSpineFromUrls }: UseUrlLoadOptions) {
         newUrl.searchParams.set('atlas', atlasUrl);
         window.history.replaceState({}, '', newUrl);
 
-        addToast(t('success.loadedFromUrl', 'Successfully loaded Spine from URL'), 'success');
+        addToast(t('success.loadedFromUrl'), 'success');
       } catch (error) {
         setUrlLoadStatus('error');
         addToast(
@@ -58,7 +58,7 @@ export function useUrlLoad({ app, loadSpineFromUrls }: UseUrlLoadOptions) {
         try {
           await loadSpineFromUrls(jsonUrl, atlasUrl);
           setUrlLoadStatus('success');
-          addToast(t('success.loadedFromUrl', 'Successfully loaded Spine from URL'), 'success');
+          addToast(t('success.loadedFromUrl'), 'success');
         } catch (error) {
           setUrlLoadStatus('error');
           addToast(

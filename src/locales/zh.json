@@ -21,13 +21,32 @@
     "noFilesDropped": "沒有拖放檔案",
     "noValidFiles": "在拖放的項目中找不到有效檔案",
     "processingError": "處理拖放檔案錯誤：{0}",
-    "loadingError": "載入 Spine 檔案錯誤：{0}"
+    "loadingError": "載入 Spine 檔案錯誤：{0}",
+    "failedToLoadFromUrls": "Failed to load from URLs: {{error}}"
   },
   "ui": {
     "dropArea": "將 Spine 檔案或資料夾拖放到此處（JSON、Atlas 和圖片）",
     "loading": "載入中...",
     "helpText": "Ctrl+K 開啟面板",
-    "close": "關閉"
+    "close": "關閉",
+    "loadFromUrl": "Load from URL",
+    "loadingFromUrl": "Loading from URL...",
+    "urlHelp": "You can also load Spine files from URL using the button above or by adding ?json=<url>&atlas=<url> to the URL",
+    "cancel": "Cancel",
+    "load": "Load",
+    "urlModal": {
+      "jsonLabel": "JSON URL:",
+      "atlasLabel": "Atlas URL:",
+      "jsonPlaceholder": "https://example.com/spine.json",
+      "atlasPlaceholder": "https://example.com/spine.atlas"
+    },
+    "keys": {
+      "enter": "Enter",
+      "escape": "Esc"
+    },
+    "dropFilesHere": "Drop Spine files here",
+    "supportedFormats": "Supports .json, .skel, .atlas, and image files",
+    "browseFiles": "Browse Files"
   },
   "commands": {
     "categories": {
@@ -36,7 +55,8 @@
       "animation": "動畫指令",
       "skin": "外觀指令",
       "performance": "效能指令",
-      "language": "語言指令"
+      "language": "語言指令",
+      "file": "File Commands"
     },
     "debug": {
       "showAttachmentDebug": "顯示附件除錯",
@@ -54,7 +74,31 @@
       "showPhysicsDebug": "顯示物理除錯",
       "showPhysicsDebugDescription": "顯示物理除錯視覺化，顯示物理約束和模擬資料",
       "hidePhysicsDebug": "隱藏物理除錯",
-      "hidePhysicsDebugDescription": "隱藏物理除錯視覺化"
+      "hidePhysicsDebugDescription": "隱藏物理除錯視覺化",
+      "toggleBones": "Toggle Bones",
+      "toggleBonesDescription": "Show/hide bone structure",
+      "toggleMeshes": "Toggle Meshes",
+      "toggleMeshesDescription": "Show/hide mesh triangles and hulls",
+      "toggleRegions": "Toggle Region Attachments",
+      "toggleRegionsDescription": "Show/hide region attachment bounds",
+      "toggleBoundingBoxes": "Toggle Bounding Boxes",
+      "toggleBoundingBoxesDescription": "Show/hide bounding boxes",
+      "togglePaths": "Toggle Paths",
+      "togglePathsDescription": "Show/hide path attachments",
+      "toggleClipping": "Toggle Clipping",
+      "toggleClippingDescription": "Show/hide clipping masks",
+      "toggleIkConstraints": "Toggle IK Constraints",
+      "toggleIkConstraintsDescription": "Show/hide IK constraints",
+      "toggleTransformConstraints": "Toggle Transform Constraints",
+      "toggleTransformConstraintsDescription": "Show/hide transform constraints",
+      "togglePathConstraints": "Toggle Path Constraints",
+      "togglePathConstraintsDescription": "Show/hide path constraints",
+      "togglePhysicsConstraints": "Toggle Physics Constraints",
+      "togglePhysicsConstraintsDescription": "Show/hide physics constraints",
+      "showAll": "Show All Debug",
+      "showAllDescription": "Enable all debug visualizations",
+      "hideAll": "Hide All Debug",
+      "hideAllDescription": "Disable all debug visualizations"
     },
     "animation": {
       "playPause": "播放/暫停動畫",
@@ -100,6 +144,10 @@
       "github": "github",
       "language": "語言",
       "switch": "切換"
+    },
+    "file": {
+      "loadFromUrl": "Load Spine from URL",
+      "loadFromUrlDescription": "Load Spine files from remote URLs"
     }
   },
   "commandPalette": {
@@ -168,7 +216,11 @@
         "meter": "指標",
         "scoreRange": "評分範圍",
         "rating": "評級",
-        "interpretation": "解釋"
+        "interpretation": "解釋",
+        "duration": "Duration",
+        "overallScore": "Overall Score",
+        "activeFeatures": "Active Features",
+        "performanceImpact": "Performance Impact"
       },
       "statistics": {
         "totalBones": "總骨骼數",
@@ -179,7 +231,8 @@
         "nonNormalBlendModes": "非正常混合模式",
         "totalConstraints": "總約束數",
         "animations": "動畫",
-        "skins": "外觀"
+        "skins": "外觀",
+        "totalAnimations": "Total Animations"
       },
       "recommendations": {
         "reduceBoneDepth": "盡可能簡化結構以減少骨骼階層深度。",
@@ -193,7 +246,14 @@
         "minimizeAdditiveBlendModes": "最小化加法混合模式的使用，因為它們特別昂貴。",
         "reducePhysicsConstraints": "物理約束特別昂貴 - 考慮減少它們的數量或複雜度。",
         "simplifyIkConstraints": "透過減少鏈長度或受影響的骨骼數量來簡化 IK 約束。",
-        "optimizePathConstraints": "透過簡化路徑或減少受約束的骨骼數量來最佳化路徑約束。"
+        "optimizePathConstraints": "透過簡化路徑或減少受約束的骨骼數量來最佳化路徑約束。",
+        "physicsUsage": "Physics constraints are used in {{used}} out of {{total}} animations. Consider baking physics simulation for static animations.",
+        "andMore": " and {{count}} more",
+        "clippingFound": "Clipping masks found in: {{names}}{{more}}. Consider using alpha blending or pre-masked textures instead.",
+        "highVertexAnimations": "{{count}} animations have high vertex counts (>500). Consider simplifying meshes for: {{names}}",
+        "focusPoorAnimations": "Focus optimization on these poor-performing animations: {{names}}",
+        "multiIssueAnimations": "{{count}} animations combine multiple expensive features. Consider simplifying: {{names}}",
+        "performanceGenerallyGood": "Performance is generally good across all animations. Minor optimizations may still be possible in specific areas."
       },
       "performanceRanges": {
         "excellent": {
@@ -216,7 +276,34 @@
           "rating": "差",
           "description": "在大多數設備上可能出現效能問題"
         }
-      }
+      },
+      "animationOverview": {
+        "title": "Animation Performance Overview",
+        "totalAnimations": "Total Animations:",
+        "bestPerformance": "Best Performance:",
+        "worstPerformance": "Worst Performance:",
+        "withPhysics": "With Physics:",
+        "withClipping": "With Clipping:",
+        "withSpecialBlendModes": "With Special Blend Modes:",
+        "animationsCount": "{{count}} animations"
+      },
+      "perAnimationScoresTitle": "Per-Animation Scores",
+      "features": {
+        "physics": "Physics",
+        "ik": "IK",
+        "clipping": "Clipping",
+        "blend": "Blend",
+        "none": "None"
+      },
+      "impact": {
+        "minimal": "Minimal",
+        "low": "Low",
+        "moderate": "Moderate",
+        "high": "High",
+        "veryHigh": "Very High"
+      },
+      "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
+      "medianPerformanceLabel": "{{rating}} Performance"
     },
     "scores": {
       "ratings": {
@@ -267,7 +354,15 @@
         "deformation": "變形：變形網格每幀需要額外計算 - 比靜態網格昂貴 {{factor}} 倍。",
         "boneWeights": "骨骼權重：每個骨骼權重增加矩陣乘法運算 - 每個加權頂點的影響增加 {{factor}} 倍。",
         "optimizationTip": "最佳化提示：對於變形或具有骨骼權重的網格使用較少的頂點。考慮對簡單形狀使用 Region attachments。"
-      }
+      },
+      "headers": {
+        "activeMeshes": "Active Meshes",
+        "totalVertices": "Total Vertices",
+        "deformed": "Deformed",
+        "weighted": "Weighted"
+      },
+      "globalDetails": "Global Mesh Details",
+      "topMeshesNote": "Showing top 10 meshes by vertex count. Total: {{count}} meshes"
     },
     "clipping": {
       "title": "裁剪遮罩",
@@ -301,7 +396,13 @@
         "optimalConfiguration": "最佳配置：盡可能使用三角形或四邊形遮罩（3-4 個頂點）",
         "gpuCost": "GPU 成本：每個裁剪遮罩需要額外的 GPU 渲染通道（模板緩衝區操作）",
         "recommendation": "建議：每個骨架限制 2-3 個遮罩，每個遮罩少於 6 個頂點"
-      }
+      },
+      "headers": {
+        "hasClipping": "Has Clipping",
+        "activeMasks": "Active Masks",
+        "totalVertices": "Total Vertices"
+      },
+      "globalMasksTitle": "Global Clipping Masks"
     },
     "blendMode": {
       "title": "混合模式",
@@ -330,7 +431,22 @@
         "renderingCost": "渲染成本：每次混合模式變更都會強制渲染器「刷新」操作",
         "additiveBlend": "加法混合：由於混合計算，成本比正常混合高",
         "multiplyBlend": "乘法混合：類似於加法，需要額外的 GPU 操作",
-        "recommendation": "建議：每個骨架限制 2 個非正常混合模式"
+        "recommendation": "建議：每個骨架限制 2 個非正常混合模式",
+        "frameByFrameTitle": "Frame-by-Frame Analysis",
+        "frameByFrameDescription": "Values shown are the maximum number of blend modes visible at any single frame.",
+        "impactTitle": "Blend Mode Impact",
+        "impactDescription": "Non-normal blend modes require additional GPU render passes.",
+        "concurrentTitle": "Concurrent vs Total",
+        "concurrentDescription": "Having 10 blend modes where only 2 are visible at once is much better than having 10 visible simultaneously.",
+        "optimizationTitle": "Optimization",
+        "optimizationDescription": "Use normal blend mode when possible, pre-composite effects for static elements."
+      },
+      "perAnimationBreakdownTitle": "Per-Animation Breakdown (Maximum Concurrent)",
+      "headers": {
+        "hasBlendModes": "Has Blend Modes",
+        "maxNonNormal": "Max Non-Normal",
+        "maxAdditive": "Max Additive",
+        "maxMultiply": "Max Multiply"
       }
     },
     "skeleton": {
@@ -469,7 +585,192 @@
         "pathConstraints": "路徑約束：複雜的路徑曲線和 ChainScale 旋轉模式更昂貴",
         "transformConstraints": "變換約束：每個受影響的屬性（位置、旋轉、縮放）都會增加計算開銷",
         "recommendation": "建議：盡可能謹慎使用約束，並在可能時使用最小的骨骼鏈"
+      },
+      "headers": {
+        "physics": "Physics",
+        "ik": "IK",
+        "transform": "Transform",
+        "path": "Path",
+        "totalActive": "Total Active"
+      },
+      "values": {
+        "activeCount": "✓ ({{count}})",
+        "none": "-"
       }
+    },
+    "common": {
+      "medianScore": "Median Performance Score: {{score}}%",
+      "perAnimationBreakdown": "Per-Animation Breakdown",
+      "headers": {
+        "animation": "Animation",
+        "score": "Score"
+      },
+      "yes": "Yes",
+      "no": "No"
     }
+  },
+  "success": {
+    "loadedFromUrl": "Successfully loaded Spine from URL",
+    "loadedFromFile": "Spine files loaded successfully"
+  },
+  "dashboard": {
+    "brand": {
+      "title": "Spine Workbench",
+      "subtitle": "Analyze, optimize, and manage Spine assets in one workspace."
+    },
+    "sections": {
+      "tools": "Tools",
+      "assetLibrary": "Asset Library (IndexedDB)",
+      "partnerTools": "Partner Tools",
+      "guides": "Guides",
+      "community": "Community"
+    },
+    "tools": {
+      "benchmark": "Benchmark",
+      "meshOptimizer": "Mesh Optimizer"
+    },
+    "actions": {
+      "import": "Import",
+      "load": "Load",
+      "delete": "Delete",
+      "startTour": "Start Guided Tour",
+      "loadFromUrl": "Load From URL",
+      "reloadSelected": "Reload Selected Asset",
+      "continue": "Continue",
+      "skipForNow": "Skip For Now"
+    },
+    "messages": {
+      "noAssets": "No assets stored yet. Drop files into the workspace to add one.",
+      "seedDefaultFailed": "Could not seed demo asset. You can still import your own files.",
+      "autoLoadFailed": "Failed to auto-load default asset.",
+      "loadAssetsFailed": "Failed to load stored assets",
+      "deleteAssetFailed": "Failed to delete asset",
+      "unknownError": "Unknown error",
+      "notInitialized": "Application not initialized"
+    },
+    "workspace": {
+      "benchmarkTitle": "Benchmark Workspace",
+      "optimizerTitle": "Mesh Optimizer Workspace",
+      "selectedAsset": "Selected asset: {{name}} ({{count}} files)",
+      "empty": "Select an asset from the library or drop files to begin.",
+      "dropArea": "Drop Spine folders/files here to load and save into your asset library",
+      "assetReview": "Asset Review",
+      "selectForReview": "Select an asset to review file inventory.",
+      "updatedAt": "Updated {{date}}",
+      "binaryType": "application/octet-stream"
+    },
+    "assetCard": {
+      "summary": "{{count}} files • {{size}}"
+    },
+    "onboarding": {
+      "languageTitle": "Choose Your Language",
+      "languageDescription": "Set your preferred language first, then we will guide you around the workspace.",
+      "welcomeTitle": "Welcome to Spine Workbench",
+      "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
+    },
+    "tour": {
+      "next": "Next",
+      "back": "Back",
+      "done": "Done",
+      "steps": {
+        "welcome": {
+          "title": "Welcome to Spine Workbench",
+          "description": "You can benchmark, optimize, and manage Spine assets in one place."
+        },
+        "toolCollection": {
+          "title": "Tool Collection",
+          "description": "Switch between Benchmark and Mesh Optimizer at any time."
+        },
+        "assetLibrary": {
+          "title": "Asset Library",
+          "description": "Your uploaded assets are stored in IndexedDB and available on next visit."
+        },
+        "importAssets": {
+          "title": "Import Assets",
+          "description": "Use Import for files, or drag and drop directly onto the canvas area."
+        },
+        "viewer": {
+          "title": "Viewer and Dropzone",
+          "description": "Preview and inspect loaded Spine content here. The default demo asset is preloaded."
+        },
+        "assetReview": {
+          "title": "Asset Review",
+          "description": "See the exact files included in the selected asset and quickly reload it."
+        },
+        "guidesCommunity": {
+          "title": "Guides and Community",
+          "description": "Jump to partner tools, docs, and community channels from this sidebar."
+        }
+      }
+    },
+    "links": {
+      "partner": {
+        "spineEditor": "Spine Editor",
+        "spineRuntimes": "Spine Runtimes",
+        "texturePacker": "Texture Packer"
+      },
+      "guides": {
+        "performanceScoring": "Performance Scoring Guide",
+        "prepareExports": "How To Prepare Exports",
+        "optimizationTips": "Spine Optimization Tips"
+      },
+      "community": {
+        "telegram": "Telegram Updates",
+        "forum": "Spine Forum",
+        "issues": "Repository Issues"
+      }
+    },
+    "languages": {
+      "en": "English",
+      "ru": "Русский",
+      "zh": "繁體中文",
+      "uk": "Українська",
+      "fr": "Français",
+      "de": "Deutsch",
+      "pt": "Português (Brasil)",
+      "es": "Español"
+    },
+    "defaultAssetName": "Demo Bunny",
+    "units": {
+      "byte": "B",
+      "kilobyte": "KB",
+      "megabyte": "MB"
+    }
+  },
+  "meshOptimizer": {
+    "title": "Mesh Optimizer",
+    "subtitle": "Safe pass: removes empty deform timelines and duplicate consecutive deform frames.",
+    "labels": {
+      "asset": "Asset:",
+      "json": "JSON:"
+    },
+    "values": {
+      "noneSelected": "None selected",
+      "noJson": "This asset has no JSON skeleton"
+    },
+    "actions": {
+      "run": "Run Optimization",
+      "download": "Download Optimized JSON",
+      "loadInBenchmark": "Load In Benchmark",
+      "loading": "Loading..."
+    },
+    "report": {
+      "title": "Optimization Report",
+      "animationsScanned": "Animations scanned: {{count}}",
+      "animationsChanged": "Animations changed: {{count}}",
+      "emptyRemoved": "Empty deform timelines removed: {{count}}",
+      "duplicateRemoved": "Duplicate deform frames removed: {{count}}"
+    },
+    "messages": {
+      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
+      "jsonNotFound": "JSON file not found in selected asset.",
+      "optimizationFailed": "Optimization failed"
+    }
+  },
+  "appErrorBoundary": {
+    "title": "Something went wrong",
+    "description": "The app hit an unexpected error. Reload to continue.",
+    "reload": "Reload App",
+    "retry": "Try Again"
   }
 }

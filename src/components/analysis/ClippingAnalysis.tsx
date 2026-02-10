@@ -20,7 +20,7 @@ export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
       <h3>{t('analysis.clipping.title')}</h3>
       
       <div className="median-score">
-        <h4>Median Performance Score: {medianScore.toFixed(1)}%</h4>
+        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
         <div className="progress-bar">
           <div 
             className="progress-fill" 
@@ -32,15 +32,15 @@ export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
         </div>
       </div>
 
-      <h4>Per-Animation Breakdown</h4>
+      <h4>{t('analysis.common.perAnimationBreakdown')}</h4>
       <table className="benchmark-table">
         <thead>
           <tr>
-            <th>Animation</th>
-            <th>Has Clipping</th>
-            <th>Active Masks</th>
-            <th>Total Vertices</th>
-            <th>Score</th>
+            <th>{t('analysis.common.headers.animation')}</th>
+            <th>{t('analysis.clipping.headers.hasClipping')}</th>
+            <th>{t('analysis.clipping.headers.activeMasks')}</th>
+            <th>{t('analysis.clipping.headers.totalVertices')}</th>
+            <th>{t('analysis.common.headers.score')}</th>
           </tr>
         </thead>
         <tbody>
@@ -51,7 +51,7 @@ export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
-                <td>{animation.activeComponents.hasClipping ? 'Yes' : 'No'}</td>
+                <td>{animation.activeComponents.hasClipping ? t('analysis.common.yes') : t('analysis.common.no')}</td>
                 <td>{c.activeMaskCount}</td>
                 <td>{c.totalVertices}</td>
                 <td>
@@ -100,7 +100,7 @@ const GlobalClippingDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }
   
   return (
     <>
-      <h4>Global Clipping Masks</h4>
+      <h4>{t('analysis.clipping.globalMasksTitle')}</h4>
       <table className="benchmark-table">
         <thead>
           <tr>

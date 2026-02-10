@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Spine Benchmark</title>
+    <link rel="icon" href="/assets/bunny.webp" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,7 +13,21 @@
     />
     <link rel="stylesheet" href="scrollbars.css">
     <meta name="description" content="A tool for benchmarking and analyzing Spine animations" />
-    <script defer src="/stats.js" data-website-id="f3238670-8864-44f1-823d-c2f95b2efa4c" data-host-url="https://umami.schmooky.dev"></script>
+    <script>
+      const isLocalHost =
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' ||
+        location.hostname === '0.0.0.0' ||
+        location.hostname.endsWith('.local');
+      if (!isLocalHost) {
+        const script = document.createElement('script');
+        script.defer = true;
+        script.src = '/stats.js';
+        script.dataset.websiteId = 'f3238670-8864-44f1-823d-c2f95b2efa4c';
+        script.dataset.hostUrl = 'https://umami.schmooky.dev';
+        document.head.appendChild(script);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

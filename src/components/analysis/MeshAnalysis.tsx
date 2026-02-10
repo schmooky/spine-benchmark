@@ -20,7 +20,7 @@ export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
       <h3>{t('analysis.mesh.title')}</h3>
       
       <div className="median-score">
-        <h4>Median Performance Score: {medianScore.toFixed(1)}%</h4>
+        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
         <div className="progress-bar">
           <div 
             className="progress-fill" 
@@ -32,16 +32,16 @@ export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
         </div>
       </div>
 
-      <h4>Per-Animation Breakdown</h4>
+      <h4>{t('analysis.common.perAnimationBreakdown')}</h4>
       <table className="benchmark-table">
         <thead>
           <tr>
-            <th>Animation</th>
-            <th>Active Meshes</th>
-            <th>Total Vertices</th>
-            <th>Deformed</th>
-            <th>Weighted</th>
-            <th>Score</th>
+            <th>{t('analysis.common.headers.animation')}</th>
+            <th>{t('analysis.mesh.headers.activeMeshes')}</th>
+            <th>{t('analysis.mesh.headers.totalVertices')}</th>
+            <th>{t('analysis.mesh.headers.deformed')}</th>
+            <th>{t('analysis.mesh.headers.weighted')}</th>
+            <th>{t('analysis.common.headers.score')}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +100,7 @@ const GlobalMeshDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
   
   return (
     <>
-      <h4>Global Mesh Details</h4>
+      <h4>{t('analysis.mesh.globalDetails')}</h4>
       <table className="benchmark-table">
         <thead>
           <tr>
@@ -134,7 +134,7 @@ const GlobalMeshDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
         </tbody>
       </table>
       {sortedMeshes.length > 10 && (
-        <p className="table-note">Showing top 10 meshes by vertex count. Total: {sortedMeshes.length} meshes</p>
+        <p className="table-note">{t('analysis.mesh.topMeshesNote', { count: sortedMeshes.length })}</p>
       )}
     </>
   );

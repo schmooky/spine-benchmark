@@ -160,10 +160,10 @@ export const CommandPalette: React.FC = () => {
                   <kbd>↑</kbd><kbd>↓</kbd> {t('commandPalette.shortcuts.navigate')}
                 </span>
                 <span className="shortcut">
-                  <kbd>Enter</kbd> {t('commandPalette.shortcuts.select')}
+                  <kbd>{t('ui.keys.enter')}</kbd> {t('commandPalette.shortcuts.select')}
                 </span>
                 <span className="shortcut">
-                  <kbd>Esc</kbd> {t('commandPalette.shortcuts.close')}
+                  <kbd>{t('ui.keys.escape')}</kbd> {t('commandPalette.shortcuts.close')}
                 </span>
               </div>
             </div>

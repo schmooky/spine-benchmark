@@ -1,6 +1,7 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Application } from 'pixi.js';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SpineLoader } from '../core/SpineLoader';
 import { useToast } from './ToastContext';
 
@@ -15,6 +16,7 @@ export function useSpineLoader(app: Application | null) {
   const [isLoading, setIsLoading] = useState(false);
   const loaderRef = useRef<SpineLoader | null>(null);
   const { addToast } = useToast();
+  const { t } = useTranslation();
 
   // Initialize loader when app changes
   useEffect(() => {
@@ -33,8 +35,9 @@ export function useSpineLoader(app: Application | null) {
    */
   const loadSpineFromUrls = async (jsonUrl: string, atlasUrl: string): Promise<Spine> => {
     if (!app || !loaderRef.current) {
-      addToast('Application not initialized', 'error');
-      throw new Error('Application not initialized');
+      const message = t('dashboard.messages.notInitialized');
+      addToast(message, 'error');
+      throw new Error(message);
     }
 
     setIsLoading(true);
@@ -55,13 +58,13 @@ export function useSpineLoader(app: Application | null) {
       }
 
       setSpineInstance(newSpineInstance);
-      addToast('Spine files loaded successfully from URLs', 'success');
+      addToast(t('success.loadedFromUrl'), 'success');
       
       return newSpineInstance;
       
     } catch (error) {
       console.error('Error loading Spine files from URLs:', error);
-      addToast(`Error loading Spine files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(t('error.loadingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }), 'error');
       throw error;
     } finally {
       setIsLoading(false);
@@ -75,8 +78,9 @@ export function useSpineLoader(app: Application | null) {
    */
   const loadSpineFiles = async (files: FileList): Promise<Spine> => {
     if (!app || !loaderRef.current) {
-      addToast('Application not initialized', 'error');
-      throw new Error('Application not initialized');
+      const message = t('dashboard.messages.notInitialized');
+      addToast(message, 'error');
+      throw new Error(message);
     }
 
     setIsLoading(true);
@@ -101,13 +105,13 @@ export function useSpineLoader(app: Application | null) {
       }
 
       setSpineInstance(newSpineInstance);
-      addToast('Spine files loaded successfully', 'success');
+      addToast(t('success.loadedFromFile'), 'success');
       
       return newSpineInstance;
       
     } catch (error) {
       console.error('Error loading Spine files:', error);
-      addToast(`Error loading Spine files: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(t('error.loadingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }), 'error');
       throw error;
     } finally {
       setIsLoading(false);

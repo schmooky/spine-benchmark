@@ -20,7 +20,7 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
       <h3>{t('analysis.physics.title')}</h3>
       
       <div className="median-score">
-        <h4>Median Performance Score: {medianScore.toFixed(1)}%</h4>
+        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
         <div className="progress-bar">
           <div 
             className="progress-fill" 
@@ -32,17 +32,17 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
         </div>
       </div>
 
-      <h4>Per-Animation Breakdown</h4>
+      <h4>{t('analysis.common.perAnimationBreakdown')}</h4>
       <table className="benchmark-table">
         <thead>
           <tr>
-            <th>Animation</th>
-            <th>Physics</th>
-            <th>IK</th>
-            <th>Transform</th>
-            <th>Path</th>
-            <th>Total Active</th>
-            <th>Score</th>
+            <th>{t('analysis.common.headers.animation')}</th>
+            <th>{t('analysis.physics.headers.physics')}</th>
+            <th>{t('analysis.physics.headers.ik')}</th>
+            <th>{t('analysis.physics.headers.transform')}</th>
+            <th>{t('analysis.physics.headers.path')}</th>
+            <th>{t('analysis.physics.headers.totalActive')}</th>
+            <th>{t('analysis.common.headers.score')}</th>
           </tr>
         </thead>
         <tbody>
@@ -58,10 +58,10 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
-                <td>{hasPhysics ? `✓ (${c.activePhysicsCount})` : '-'}</td>
-                <td>{hasIK ? `✓ (${c.activeIkCount})` : '-'}</td>
-                <td>{hasTransform ? `✓ (${c.activeTransformCount})` : '-'}</td>
-                <td>{hasPath ? `✓ (${c.activePathCount})` : '-'}</td>
+                <td>{hasPhysics ? t('analysis.physics.values.activeCount', { count: c.activePhysicsCount }) : t('analysis.physics.values.none')}</td>
+                <td>{hasIK ? t('analysis.physics.values.activeCount', { count: c.activeIkCount }) : t('analysis.physics.values.none')}</td>
+                <td>{hasTransform ? t('analysis.physics.values.activeCount', { count: c.activeTransformCount }) : t('analysis.physics.values.none')}</td>
+                <td>{hasPath ? t('analysis.physics.values.activeCount', { count: c.activePathCount }) : t('analysis.physics.values.none')}</td>
                 <td>{c.totalActiveConstraints}</td>
                 <td>
                   <div className="inline-score">

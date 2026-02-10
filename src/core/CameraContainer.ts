@@ -101,8 +101,9 @@ export class CameraContainer extends Container {
     this.currentSpine = spine;
     
     // Remove debug container from previous spine if exists
-    if (this.debugRenderer.getContainer().parent) {
-      this.debugRenderer.getContainer().parent.removeChild(this.debugRenderer.getContainer());
+    const existingParent = this.debugRenderer.getContainer().parent;
+    if (existingParent) {
+      existingParent.removeChild(this.debugRenderer.getContainer());
     }
     
     // Add debug container AFTER the spine to ensure it renders on top
@@ -185,8 +186,9 @@ export class CameraContainer extends Container {
 
   public override destroy(): void {
     window.removeEventListener("resize", this.onResize);
-    if (this.debugRenderer.getContainer().parent) {
-      this.debugRenderer.getContainer().parent.removeChild(this.debugRenderer.getContainer());
+    const existingParent = this.debugRenderer.getContainer().parent;
+    if (existingParent) {
+      existingParent.removeChild(this.debugRenderer.getContainer());
     }
     this.debugRenderer.destroy();
     super.destroy();

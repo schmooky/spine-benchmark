@@ -21,7 +21,7 @@ export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) =>
       <h3>{t('analysis.blendMode.title')}</h3>
       
       <div className="median-score">
-        <h4>Median Performance Score: {medianScore.toFixed(1)}%</h4>
+        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
         <div className="progress-bar">
           <div 
             className="progress-fill" 
@@ -33,16 +33,16 @@ export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) =>
         </div>
       </div>
 
-      <h4>Per-Animation Breakdown (Maximum Concurrent)</h4>
+      <h4>{t('analysis.blendMode.perAnimationBreakdownTitle')}</h4>
       <table className="benchmark-table">
         <thead>
           <tr>
-            <th>Animation</th>
-            <th>Has Blend Modes</th>
-            <th>Max Non-Normal</th>
-            <th>Max Additive</th>
-            <th>Max Multiply</th>
-            <th>Score</th>
+            <th>{t('analysis.common.headers.animation')}</th>
+            <th>{t('analysis.blendMode.headers.hasBlendModes')}</th>
+            <th>{t('analysis.blendMode.headers.maxNonNormal')}</th>
+            <th>{t('analysis.blendMode.headers.maxAdditive')}</th>
+            <th>{t('analysis.blendMode.headers.maxMultiply')}</th>
+            <th>{t('analysis.common.headers.score')}</th>
           </tr>
         </thead>
         <tbody>
@@ -53,7 +53,7 @@ export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) =>
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
-                <td>{animation.activeComponents.hasBlendModes ? 'Yes' : 'No'}</td>
+                <td>{animation.activeComponents.hasBlendModes ? t('analysis.common.yes') : t('analysis.common.no')}</td>
                 <td>{b.activeNonNormalCount}</td>
                 <td>{b.activeAdditiveCount}</td>
                 <td>{b.activeMultiplyCount}</td>
@@ -82,10 +82,10 @@ export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) =>
       <div className="analysis-notes">
         <h4>{t('analysis.blendMode.notes.title')}</h4>
         <ul>
-          <li><strong>Frame-by-Frame Analysis:</strong> Values shown are the maximum number of blend modes visible at any single frame.</li>
-          <li><strong>Blend Mode Impact:</strong> Non-normal blend modes require additional GPU render passes.</li>
-          <li><strong>Concurrent vs Total:</strong> Having 10 blend modes where only 2 are visible at once is much better than having 10 visible simultaneously.</li>
-          <li><strong>Optimization:</strong> Use normal blend mode when possible, pre-composite effects for static elements.</li>
+          <li><strong>{t('analysis.blendMode.notes.frameByFrameTitle')}:</strong> {t('analysis.blendMode.notes.frameByFrameDescription')}</li>
+          <li><strong>{t('analysis.blendMode.notes.impactTitle')}:</strong> {t('analysis.blendMode.notes.impactDescription')}</li>
+          <li><strong>{t('analysis.blendMode.notes.concurrentTitle')}:</strong> {t('analysis.blendMode.notes.concurrentDescription')}</li>
+          <li><strong>{t('analysis.blendMode.notes.optimizationTitle')}:</strong> {t('analysis.blendMode.notes.optimizationDescription')}</li>
         </ul>
       </div>
     </div>

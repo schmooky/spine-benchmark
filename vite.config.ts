@@ -13,6 +13,10 @@ export default defineConfig({
           src: "stats.js", // Or wherever your stats.js is
           dest: "", // '' means place it in root of dist/
         },
+        {
+          src: "examples/test/*",
+          dest: "examples/test",
+        },
       ],
     }),
   ],

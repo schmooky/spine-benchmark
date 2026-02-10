@@ -20,7 +20,7 @@ export function useLoadingState(
 
   const loadingMessage = useMemo(() => {
     if (urlLoadStatus === 'loading') {
-      return t('ui.loadingFromUrl', 'Loading from URL...');
+      return t('ui.loadingFromUrl');
     }
     return t('ui.loading');
   }, [urlLoadStatus, t]);

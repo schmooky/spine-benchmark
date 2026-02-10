@@ -93,12 +93,12 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
       />
       <div className="drop-zone-content">
         <div className="drop-zone-icon">📁</div>
-        <p>{t('ui.dropFilesHere', 'Drop Spine files here')}</p>
+        <p>{t('ui.dropFilesHere')}</p>
         <p className="drop-zone-subtext">
-          {t('ui.supportedFormats', 'Supports .json, .skel, .atlas, and image files')}
+          {t('ui.supportedFormats')}
         </p>
         <button className="browse-button" type="button">
-          {t('ui.browseFiles', 'Browse Files')}
+          {t('ui.browseFiles')}
         </button>
       </div>
     </div>

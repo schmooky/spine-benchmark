@@ -87,7 +87,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
     <div className="language-modal-backdrop" onClick={handleBackdropClick}>
       <div className="language-modal-content" ref={modalRef}>
         <div className="language-modal-header">
-          <h2 className="language-modal-title">{t('language.modal.title', 'Select Language')}</h2>
+          <h2 className="language-modal-title">{t('language.modal.title')}</h2>
           <button 
             className="language-modal-close" 
             onClick={onClose}
@@ -120,10 +120,10 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
               <kbd>↑</kbd><kbd>↓</kbd> {t('commandPalette.shortcuts.navigate')}
             </span>
             <span className="shortcut">
-              <kbd>Enter</kbd> {t('commandPalette.shortcuts.select')}
+              <kbd>{t('ui.keys.enter')}</kbd> {t('commandPalette.shortcuts.select')}
             </span>
             <span className="shortcut">
-              <kbd>Esc</kbd> {t('commandPalette.shortcuts.close')}
+              <kbd>{t('ui.keys.escape')}</kbd> {t('commandPalette.shortcuts.close')}
             </span>
           </div>
         </div>
