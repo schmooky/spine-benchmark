@@ -17,7 +17,11 @@ export interface WorkbenchContextValue {
   handleDragLeave: (event: React.DragEvent<HTMLDivElement>) => void;
   pixelFootprint: { width: number; height: number; coverage: number } | null;
   selectedAsset: StoredAsset | null;
+  atlasOptions: string[];
+  selectedAtlasName: string | null;
+  setSelectedAtlasName: React.Dispatch<React.SetStateAction<string | null>>;
   loadStoredAsset: (asset: StoredAsset) => Promise<void>;
+  loadCurrentAssetIntoBenchmark: () => Promise<void>;
   assets: StoredAsset[];
   selectedAssetId: string | null;
   setSelectedAssetId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -26,6 +30,7 @@ export interface WorkbenchContextValue {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   formatBytes: (bytes: number) => string;
   onLoadOptimizedFiles: (files: File[]) => Promise<void>;
+  uploadBundleFiles: (files: File[]) => Promise<void>;
   setShowUrlModal: React.Dispatch<React.SetStateAction<boolean>>;
   partnerTools: Array<{ labelKey: string; href: string }>;
   documentationLinks: Array<{ labelKey: string; href: string }>;

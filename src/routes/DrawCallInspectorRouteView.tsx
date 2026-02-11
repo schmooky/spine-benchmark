@@ -1,17 +1,16 @@
 import React from 'react';
-import { MeshOptimizerPanel } from '../components/MeshOptimizerPanel';
+import { DrawCallInspectorPanel } from '../components/DrawCallInspectorPanel';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
 
-export function MeshOptimizerRouteView() {
+export function DrawCallInspectorRouteView() {
   const {
     selectedAsset,
-    onLoadOptimizedFiles,
+    selectedAtlasName,
     assets,
     selectedAssetId,
     setSelectedAssetId,
     atlasOptions,
-    selectedAtlasName,
     setSelectedAtlasName,
     uploadBundleFiles,
   } = useWorkbench();
@@ -27,7 +26,7 @@ export function MeshOptimizerRouteView() {
         setSelectedAtlasName={setSelectedAtlasName}
         onUploadBundle={uploadBundleFiles}
       />
-      <MeshOptimizerPanel asset={selectedAsset} onLoadOptimized={onLoadOptimizedFiles} />
+      <DrawCallInspectorPanel asset={selectedAsset} atlasFileName={selectedAtlasName} />
     </>
   );
 }

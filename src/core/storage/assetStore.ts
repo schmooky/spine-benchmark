@@ -15,6 +15,8 @@ export interface StoredAsset {
   files: StoredAssetFile[];
 }
 
+type BasicAssetFile = { name: string; type?: string };
+
 const DB_NAME = 'spine-benchmark-assets';
 const DB_VERSION = 1;
 const STORE_NAME = 'assets';
@@ -53,6 +55,39 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+function isImageName(name: string): boolean {
+  return /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(name);
+}
+
+export function getAssetBundleCompleteness(files: BasicAssetFile[]): {
+  hasSkeleton: boolean;
+  hasAtlas: boolean;
+  hasImages: boolean;
+} {
+  const hasSkeleton = files.some((file) => /\.(json|skel)$/i.test(file.name));
+  const hasAtlas = files.some((file) => /\.atlas$/i.test(file.name));
+  const hasImages = files.some((file) => (file.type || '').startsWith('image/') || isImageName(file.name));
+  return { hasSkeleton, hasAtlas, hasImages };
+}
+
+export function isCompleteAssetBundle(files: BasicAssetFile[]): boolean {
+  const { hasSkeleton, hasAtlas, hasImages } = getAssetBundleCompleteness(files);
+  return hasSkeleton && hasAtlas && hasImages;
+}
+
+export function assertCompleteAssetBundle(files: BasicAssetFile[]): void {
+  const { hasSkeleton, hasAtlas, hasImages } = getAssetBundleCompleteness(files);
+  if (!hasSkeleton) {
+    throw new Error('Missing skeleton file (.json or .skel).');
+  }
+  if (!hasAtlas) {
+    throw new Error('Missing atlas file (.atlas).');
+  }
+  if (!hasImages) {
+    throw new Error('Missing image files referenced by atlas.');
+  }
+}
+
 export function deriveAssetName(files: FileList | File[]): string {
   const list = Array.from(files);
   const skeleton = list.find((file) => file.name.endsWith('.json') || file.name.endsWith('.skel'));
@@ -64,6 +99,7 @@ export function deriveAssetName(files: FileList | File[]): string {
 
 export async function saveAsset(files: FileList | File[], preferredName?: string): Promise<StoredAsset> {
   const list = Array.from(files);
+  assertCompleteAssetBundle(list);
   const now = Date.now();
   const previewSource = list.find(isPreviewImage);
   const name = preferredName?.trim() || deriveAssetName(list);
@@ -114,7 +150,9 @@ export async function listAssets(): Promise<StoredAsset[]> {
     request.onerror = () => reject(request.error);
   });
   db.close();
-  return assets.sort((a, b) => b.updatedAt - a.updatedAt);
+  return assets
+    .filter((asset) => isCompleteAssetBundle(asset.files))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 export async function getAsset(assetId: string): Promise<StoredAsset | null> {

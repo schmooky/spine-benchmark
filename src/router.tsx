@@ -13,6 +13,8 @@ import { PhysicsBakerRouteView } from './routes/PhysicsBakerRouteView';
 import { AssetsRouteView } from './routes/AssetsRouteView';
 import { DocumentationRouteView } from './routes/DocumentationRouteView';
 import { PartnersRouteView } from './routes/PartnersRouteView';
+import { DrawCallInspectorRouteView } from './routes/DrawCallInspectorRouteView';
+import { AtlasRepackRouteView } from './routes/AtlasRepackRouteView';
 
 const rootRoute = createRootRoute({
   component: () => <App />,
@@ -29,6 +31,11 @@ const indexRoute = createRoute({
 const toolsLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/tools',
+  beforeLoad: ({ location }) => {
+    if (location.pathname === '/tools') {
+      throw redirect({ to: '/tools/benchmark' });
+    }
+  },
   component: () => <Outlet />,
 });
 
@@ -48,6 +55,18 @@ const physicsBakerRoute = createRoute({
   getParentRoute: () => toolsLayoutRoute,
   path: '/physics-baker',
   component: PhysicsBakerRouteView,
+});
+
+const drawCallInspectorRoute = createRoute({
+  getParentRoute: () => toolsLayoutRoute,
+  path: '/draw-call-inspector',
+  component: DrawCallInspectorRouteView,
+});
+
+const atlasRepackRoute = createRoute({
+  getParentRoute: () => toolsLayoutRoute,
+  path: '/atlas-repack',
+  component: AtlasRepackRouteView,
 });
 
 const assetsRoute = createRoute({
@@ -70,7 +89,13 @@ const partnersRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  toolsLayoutRoute.addChildren([benchmarkRoute, meshOptimizerRoute, physicsBakerRoute]),
+  toolsLayoutRoute.addChildren([
+    benchmarkRoute,
+    meshOptimizerRoute,
+    physicsBakerRoute,
+    drawCallInspectorRoute,
+    atlasRepackRoute,
+  ]),
   assetsRoute,
   documentationRoute,
   partnersRoute,

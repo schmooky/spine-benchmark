@@ -72,6 +72,13 @@ function filesToFileList(files: File[]): FileList {
   return dataTransfer.files;
 }
 
+function filterAssetFilesByAtlas(files: File[], selectedAtlasName?: string | null): File[] {
+  if (!selectedAtlasName) return files;
+  const atlasFiles = files.filter((file) => file.name.endsWith('.atlas'));
+  if (atlasFiles.length <= 1) return files;
+  return files.filter((file) => !file.name.endsWith('.atlas') || file.name === selectedAtlasName);
+}
+
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
@@ -86,6 +93,7 @@ const App: React.FC = () => {
   const [isDropLoading, setIsDropLoading] = useState(false);
   const [assets, setAssets] = useState<StoredAsset[]>([]);
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [selectedAtlasName, setSelectedAtlasName] = useState<string | null>(null);
   const [hasAutoLoadedAsset, setHasAutoLoadedAsset] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('language');
@@ -119,6 +127,11 @@ const App: React.FC = () => {
     if (!selectedAssetId) return null;
     return assets.find((asset) => asset.id === selectedAssetId) || null;
   }, [assets, selectedAssetId]);
+
+  const atlasOptions = useMemo(() => {
+    if (!selectedAsset) return [];
+    return selectedAsset.files.filter((file) => file.name.endsWith('.atlas')).map((file) => file.name);
+  }, [selectedAsset]);
 
   const pathname = location.pathname;
 
@@ -321,6 +334,16 @@ const App: React.FC = () => {
     };
   }, [app, spineInstance]);
 
+  useEffect(() => {
+    if (!atlasOptions.length) {
+      setSelectedAtlasName(null);
+      return;
+    }
+    if (!selectedAtlasName || !atlasOptions.includes(selectedAtlasName)) {
+      setSelectedAtlasName(atlasOptions[0]);
+    }
+  }, [atlasOptions, selectedAtlasName]);
+
   const fileProcessorRef = useRef<FileProcessor | null>(null);
   useEffect(() => {
     fileProcessorRef.current = app ? new FileProcessor(app) : null;
@@ -363,14 +386,19 @@ const App: React.FC = () => {
   );
 
   const loadStoredAsset = useCallback(
-    async (asset: StoredAsset) => {
-      const files = assetToFiles(asset);
+    async (asset: StoredAsset, atlasName?: string | null) => {
+      const files = filterAssetFilesByAtlas(assetToFiles(asset), atlasName);
       await handleSpineFiles(filesToFileList(files), { persist: false });
       setSelectedAssetId(asset.id);
       void navigate({ to: '/tools/benchmark' });
     },
     [handleSpineFiles, navigate]
   );
+
+  const loadCurrentAssetIntoBenchmark = useCallback(async () => {
+    if (!selectedAsset) return;
+    await loadStoredAsset(selectedAsset, selectedAtlasName);
+  }, [selectedAsset, selectedAtlasName, loadStoredAsset]);
 
   useEffect(() => {
     if (!app || !selectedAsset || hasAutoLoadedAsset || spineInstance || isAnyLoading) {
@@ -543,7 +571,11 @@ const App: React.FC = () => {
     handleDragLeave,
     pixelFootprint,
     selectedAsset,
+    atlasOptions,
+    selectedAtlasName,
+    setSelectedAtlasName,
     loadStoredAsset,
+    loadCurrentAssetIntoBenchmark,
     assets,
     selectedAssetId,
     setSelectedAssetId,
@@ -552,6 +584,9 @@ const App: React.FC = () => {
     fileInputRef,
     formatBytes: (bytes: number) => formatBytes(bytes, t),
     onLoadOptimizedFiles: async (files: File[]) => {
+      await handleSpineFiles(filesToFileList(files));
+    },
+    uploadBundleFiles: async (files: File[]) => {
       await handleSpineFiles(filesToFileList(files));
     },
     setShowUrlModal,
@@ -570,7 +605,10 @@ const App: React.FC = () => {
     handleDragLeave,
     pixelFootprint,
     selectedAsset,
+    atlasOptions,
+    selectedAtlasName,
     loadStoredAsset,
+    loadCurrentAssetIntoBenchmark,
     assets,
     selectedAssetId,
     handleDeleteAsset,
@@ -585,6 +623,10 @@ const App: React.FC = () => {
       ? t('dashboard.workspace.optimizerTitle')
       : pathname.startsWith('/tools/physics-baker')
         ? t('dashboard.workspace.physicsBakerTitle')
+        : pathname.startsWith('/tools/draw-call-inspector')
+          ? t('dashboard.workspace.drawCallInspectorTitle')
+          : pathname.startsWith('/tools/atlas-repack')
+            ? t('dashboard.workspace.atlasRepackTitle')
         : pathname.startsWith('/assets')
           ? t('dashboard.sections.assetLibrary')
           : pathname.startsWith('/documentation')
@@ -598,7 +640,10 @@ const App: React.FC = () => {
     <div className="app-container app-shell">
       <aside className={`app-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <h1>{t('dashboard.brand.title')}</h1>
+          <div className="sidebar-logo">
+            <span className="sidebar-logo-mark" />
+            <h1>{t('dashboard.brand.title')}</h1>
+          </div>
           <p>{t('dashboard.brand.subtitle')}</p>
           <button
             type="button"
@@ -622,6 +667,12 @@ const App: React.FC = () => {
             </Link>
             <Link to="/tools/physics-baker" className={`tool-chip ${pathname.startsWith('/tools/physics-baker') ? 'active' : ''}`}>
               {t('dashboard.tools.physicsBaker')}
+            </Link>
+            <Link to="/tools/draw-call-inspector" className={`tool-chip ${pathname.startsWith('/tools/draw-call-inspector') ? 'active' : ''}`}>
+              {t('dashboard.tools.drawCallInspector')}
+            </Link>
+            <Link to="/tools/atlas-repack" className={`tool-chip ${pathname.startsWith('/tools/atlas-repack') ? 'active' : ''}`}>
+              {t('dashboard.tools.atlasRepack')}
             </Link>
           </div>
         </section>

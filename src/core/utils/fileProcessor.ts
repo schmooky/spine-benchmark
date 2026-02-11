@@ -1,5 +1,6 @@
 import { SpineLoader } from '../SpineLoader';
 import { Application } from 'pixi.js';
+import { assertCompleteAssetBundle } from '../storage/assetStore';
 
 /**
  * FileProcessor - Utility class for handling file processing operations
@@ -159,36 +160,6 @@ export class FileProcessor {
    * @throws Error if required files are missing
    */
   validateFiles(files: FileList): void {
-    const hasJsonFile = Array.from(files).some(file => 
-      file.name.endsWith('.json') || file.type === 'application/json'
-    );
-    
-    const hasSkelFile = Array.from(files).some(file => 
-      file.name.endsWith('.skel')
-    );
-    
-    const hasAtlasFile = Array.from(files).some(file => 
-      file.name.endsWith('.atlas')
-    );
-    
-    const hasImageFiles = Array.from(files).some(file => 
-      file.type.startsWith('image/') || 
-      file.name.endsWith('.png') || 
-      file.name.endsWith('.jpg') || 
-      file.name.endsWith('.jpeg') || 
-      file.name.endsWith('.webp')
-    );
-    
-    if (!hasAtlasFile) {
-      throw new Error('Missing .atlas file. Please include an atlas file with your Spine data.');
-    }
-    
-    if (!hasJsonFile && !hasSkelFile) {
-      throw new Error('Missing skeleton file (.json or .skel). Please include a skeleton file with your Spine data.');
-    }
-    
-    if (!hasImageFiles) {
-      throw new Error('Missing image files. Please include image files referenced by your atlas.');
-    }
+    assertCompleteAssetBundle(Array.from(files));
   }
 }

@@ -11,6 +11,7 @@ interface OptimizationReport {
   animationCount: number;
   removedEmptyDeforms: number;
   removedDuplicateFrames: number;
+  removedDuplicateDrawOrderFrames: number;
   changedAnimations: number;
 }
 
@@ -37,6 +38,26 @@ function isZeroDeform(vertices: number[] | undefined): boolean {
   return vertices.every((value) => Math.abs(value) < 0.000001);
 }
 
+function normalizeDrawOrderOffsets(frame: any): Array<{ slot: string; offset: number }> {
+  if (!frame || !Array.isArray(frame.offsets)) return [];
+  return frame.offsets.map((entry: any) => ({
+    slot: String(entry?.slot ?? ''),
+    offset: typeof entry?.offset === 'number' ? entry.offset : 0,
+  }));
+}
+
+function areDrawOrderOffsetsEqual(a: any, b: any): boolean {
+  const left = normalizeDrawOrderOffsets(a);
+  const right = normalizeDrawOrderOffsets(b);
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i].slot !== right[i].slot || left[i].offset !== right[i].offset) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function optimizeJson(rawText: string): { optimizedText: string; report: OptimizationReport } {
   const data = JSON.parse(rawText);
   const animations = data?.animations;
@@ -48,6 +69,7 @@ function optimizeJson(rawText: string): { optimizedText: string; report: Optimiz
         animationCount: 0,
         removedEmptyDeforms: 0,
         removedDuplicateFrames: 0,
+        removedDuplicateDrawOrderFrames: 0,
         changedAnimations: 0
       }
     };
@@ -55,6 +77,7 @@ function optimizeJson(rawText: string): { optimizedText: string; report: Optimiz
 
   let removedEmptyDeforms = 0;
   let removedDuplicateFrames = 0;
+  let removedDuplicateDrawOrderFrames = 0;
   let changedAnimations = 0;
   const animationNames = Object.keys(animations);
 
@@ -122,6 +145,22 @@ function optimizeJson(rawText: string): { optimizedText: string; report: Optimiz
       });
     });
 
+    const drawOrderTimeline = animation?.drawOrder;
+    if (Array.isArray(drawOrderTimeline) && drawOrderTimeline.length > 1) {
+      const dedupedDrawOrder: any[] = [];
+      let previousFrame: any | null = null;
+      drawOrderTimeline.forEach((frame: any, index: number) => {
+        if (index > 0 && previousFrame && areDrawOrderOffsetsEqual(previousFrame, frame)) {
+          removedDuplicateDrawOrderFrames += 1;
+          animationChanged = true;
+          return;
+        }
+        dedupedDrawOrder.push(frame);
+        previousFrame = frame;
+      });
+      animation.drawOrder = dedupedDrawOrder;
+    }
+
     if (animationChanged) {
       changedAnimations += 1;
     }
@@ -133,6 +172,7 @@ function optimizeJson(rawText: string): { optimizedText: string; report: Optimiz
       animationCount: animationNames.length,
       removedEmptyDeforms,
       removedDuplicateFrames,
+      removedDuplicateDrawOrderFrames,
       changedAnimations
     }
   };
@@ -235,6 +275,7 @@ export const MeshOptimizerPanel: React.FC<MeshOptimizerPanelProps> = ({ asset, o
           <p>{t('meshOptimizer.report.animationsChanged', { count: report.changedAnimations })}</p>
           <p>{t('meshOptimizer.report.emptyRemoved', { count: report.removedEmptyDeforms })}</p>
           <p>{t('meshOptimizer.report.duplicateRemoved', { count: report.removedDuplicateFrames })}</p>
+          <p>{t('meshOptimizer.report.drawOrderDuplicateRemoved', { count: report.removedDuplicateDrawOrderFrames })}</p>
           <div className="optimizer-actions">
             <button className="primary-btn" type="button" onClick={downloadOptimized}>
               {t('meshOptimizer.actions.download')}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWorkbench } from '../workbench/WorkbenchContext';
+import { ToolRouteControls } from '../components/ToolRouteControls';
 
 export function AssetsRouteView() {
   const { t } = useTranslation();
@@ -8,10 +9,12 @@ export function AssetsRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
+    atlasOptions,
+    selectedAtlasName,
+    setSelectedAtlasName,
     handleDeleteAsset,
     loadStoredAsset,
-    fileInputRef,
-    handleUploadFromInput,
+    uploadBundleFiles,
     formatBytes,
   } = useWorkbench();
 
@@ -19,11 +22,18 @@ export function AssetsRouteView() {
     <section className="route-section" data-tour="asset-library">
       <div className="route-section-header">
         <h3>{t('dashboard.sections.assetLibrary')}</h3>
-        <button className="secondary-btn" type="button" data-tour="import-assets-btn" onClick={() => fileInputRef.current?.click()}>
-          {t('dashboard.actions.import')}
-        </button>
       </div>
-      <input ref={fileInputRef} type="file" multiple className="hidden-input" onChange={handleUploadFromInput} />
+
+      <ToolRouteControls
+        assets={assets}
+        selectedAssetId={selectedAssetId}
+        setSelectedAssetId={setSelectedAssetId}
+        atlasOptions={atlasOptions}
+        selectedAtlasName={selectedAtlasName}
+        setSelectedAtlasName={setSelectedAtlasName}
+        onUploadBundle={uploadBundleFiles}
+        triggerLabel={t('dashboard.actions.import')}
+      />
 
       <div className="asset-grid route-asset-grid">
         {assets.length === 0 && <p className="subtle-text">{t('dashboard.messages.noAssets')}</p>}

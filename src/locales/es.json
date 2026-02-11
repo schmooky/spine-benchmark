@@ -631,7 +631,9 @@
     "tools": {
       "benchmark": "Benchmark",
       "meshOptimizer": "Mesh Optimizer",
-      "physicsBaker": "Physics Baker"
+      "physicsBaker": "Physics Baker",
+      "drawCallInspector": "Draw Call Inspector",
+      "atlasRepack": "Atlas Repack Advisor"
     },
     "actions": {
       "import": "Import",
@@ -666,7 +668,9 @@
       "binaryType": "application/octet-stream",
       "physicsBakerTitle": "Physics Baker Workspace",
       "pixelFootprint": "Footprint: {{width}}x{{height}} px",
-      "canvasCoverage": "Canvas coverage: {{coverage}}%"
+      "canvasCoverage": "Canvas coverage: {{coverage}}%",
+      "drawCallInspectorTitle": "Draw Call Inspector",
+      "atlasRepackTitle": "Atlas Repack Advisor"
     },
     "assetCard": {
       "summary": "{{count}} files • {{size}}"
@@ -768,7 +772,8 @@
       "animationsScanned": "Animations scanned: {{count}}",
       "animationsChanged": "Animations changed: {{count}}",
       "emptyRemoved": "Empty deform timelines removed: {{count}}",
-      "duplicateRemoved": "Duplicate deform frames removed: {{count}}"
+      "duplicateRemoved": "Duplicate deform frames removed: {{count}}",
+      "drawOrderDuplicateRemoved": "Duplicate draw-order frames removed: {{count}}"
     },
     "messages": {
       "selectJsonAsset": "Select an asset with a JSON skeleton first.",
@@ -786,14 +791,31 @@
     "title": "Physics Baker",
     "subtitle": "Bake runtime physics into timeline keys for deterministic playback and lower runtime cost.",
     "labels": {
-      "asset": "Asset:"
+      "asset": "Asset:",
+      "json": "JSON:"
     },
     "values": {
-      "noneSelected": "None selected"
+      "noneSelected": "None selected",
+      "noJson": "This asset has no JSON skeleton"
     },
     "comingSoon": "Physics baking workflow is being integrated for Spine-compatible exports.",
     "actions": {
-      "bake": "Bake Physics (Soon)"
+      "bake": "Bake Physics (Soon)",
+      "download": "Download Baked JSON",
+      "loadInBenchmark": "Load In Benchmark",
+      "loading": "Loading..."
+    },
+    "report": {
+      "title": "Physics Bake Report",
+      "animationsScanned": "Animations scanned: {{count}}",
+      "animationsChanged": "Animations changed: {{count}}",
+      "constraintDefinitionsRemoved": "Physics constraint definitions removed: {{count}}",
+      "timelineGroupsRemoved": "Physics timeline groups removed: {{count}}"
+    },
+    "messages": {
+      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
+      "jsonNotFound": "JSON file not found in selected asset.",
+      "bakeFailed": "Physics bake failed"
     }
   },
   "controls": {
@@ -810,6 +832,102 @@
       "play": "Play",
       "restart": "Restart Animation",
       "next": "Next Animation"
+    }
+  },
+  "drawCallInspector": {
+    "title": "Draw Call Inspector",
+    "subtitle": "Estimate draw calls and batching breaks caused by blend mode and atlas page transitions.",
+    "labels": {
+      "asset": "Asset:"
+    },
+    "values": {
+      "noneSelected": "None selected"
+    },
+    "actions": {
+      "run": "Analyze Draw Calls"
+    },
+    "report": {
+      "title": "Draw Call Report",
+      "baseDrawCalls": "Base pose draw calls: {{count}}",
+      "pageBreaks": "Page transition breaks: {{count}}",
+      "blendBreaks": "Blend mode breaks: {{count}}",
+      "unknownPages": "Unknown page attachments: {{count}}",
+      "uniquePages": "Unique atlas pages: {{count}}",
+      "uniqueBlends": "Unique blend modes: {{count}}",
+      "animationSection": "Animation Draw-Order Samples",
+      "animationWorst": "Worst sampled DC: {{count}}"
+    },
+    "messages": {
+      "selectAsset": "Select an asset first.",
+      "analysisFailed": "Draw call analysis failed"
+    }
+  },
+  "atlasRepack": {
+    "title": "Atlas Repack Advisor",
+    "subtitle": "Generate a repack plan that groups regions by blend to reduce draw-call breaks.",
+    "labels": {
+      "asset": "Asset:"
+    },
+    "values": {
+      "noneSelected": "None selected"
+    },
+    "actions": {
+      "run": "Build Repack Plan",
+      "downloadPlan": "Download Repack Plan"
+    },
+    "report": {
+      "title": "Repack Opportunity",
+      "currentDrawCalls": "Current estimated draw calls: {{count}}",
+      "theoreticalMin": "Theoretical minimum (blend-bound): {{count}}",
+      "potentialSavings": "Potential draw-call savings: {{count}}",
+      "groups": "Blend groups in plan: {{count}}"
+    },
+    "messages": {
+      "selectAsset": "Select an asset first.",
+      "analysisFailed": "Atlas repack analysis failed"
+    }
+  },
+  "toolRouteControls": {
+    "title": "Tool Inputs",
+    "labels": {
+      "asset": "Asset",
+      "atlas": "Atlas"
+    },
+    "values": {
+      "noAssets": "No assets available",
+      "noAtlas": "No atlas in asset"
+    },
+    "actions": {
+      "import": "Import Files",
+      "loadSelected": "Load Selected",
+      "loading": "Loading...",
+      "openPicker": "Asset Picker",
+      "close": "Close",
+      "addAll": "Add All",
+      "addSkeleton": "Add Skeleton",
+      "addAtlas": "Add Atlas",
+      "addImages": "Add Images",
+      "uploadBundle": "Upload Bundle",
+      "uploading": "Uploading...",
+      "clear": "Clear"
+    },
+    "dropHint": "Drop Spine files/folders here to import and switch context for this tool.",
+    "summary": "Asset: {{asset}} • Atlas: {{atlas}}",
+    "status": {
+      "filesAdded": "Files added: {{count}}",
+      "skeletonReady": "Skeleton: ready",
+      "skeletonMissing": "Skeleton: missing (.json/.skel)",
+      "atlasReady": "Atlas: ready",
+      "atlasMissing": "Atlas: missing (.atlas/.atlas.txt)",
+      "imagesReady": "Images: ready",
+      "imagesMissing": "Images: missing",
+      "atlasImagesResolved": "Atlas image references resolved: {{count}}",
+      "atlasImagesMissing": "Atlas image references missing: {{count}}"
+    },
+    "errors": {
+      "incompleteBundle": "Bundle is incomplete. Add skeleton, atlas, and required images.",
+      "missingAtlasImages": "Missing {{count}} atlas-referenced images.",
+      "uploadFailed": "Bundle upload failed."
     }
   }
 }
