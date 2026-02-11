@@ -7,26 +7,28 @@ interface ToolRouteControlsProps {
   assets: StoredAsset[];
   selectedAssetId: string | null;
   setSelectedAssetId: (id: string) => void;
-  atlasOptions: string[];
-  selectedAtlasName: string | null;
-  setSelectedAtlasName: (name: string) => void;
-  onUploadBundle: (files: File[]) => Promise<void>;
+  atlasOptions?: string[];
+  selectedAtlasName?: string | null;
+  setSelectedAtlasName?: (name: string) => void;
+  onUploadBundle?: (files: File[]) => Promise<void>;
   onLoadSelected?: () => Promise<void> | void;
   isLoadingSelected?: boolean;
   triggerLabel?: string;
+  minimal?: boolean;
 }
 
 export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
   assets,
   selectedAssetId,
   setSelectedAssetId,
-  atlasOptions,
-  selectedAtlasName,
+  atlasOptions = [],
+  selectedAtlasName = null,
   setSelectedAtlasName,
   onUploadBundle,
   onLoadSelected,
   isLoadingSelected = false,
   triggerLabel,
+  minimal = false,
 }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -153,7 +155,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
 
     setIsUploading(true);
     try {
-      await onUploadBundle(pendingFiles);
+      await onUploadBundle?.(pendingFiles);
       setPendingFiles([]);
       setRequiredAtlasImages([]);
       setUploadError(null);
@@ -164,6 +166,31 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
       setIsUploading(false);
     }
   };
+
+  if (minimal) {
+    return (
+      <section className="tool-route-inline tool-route-minimal">
+        <select
+          className="modern-select"
+          value={selectedAssetId ?? ''}
+          onChange={(event) => setSelectedAssetId(event.target.value)}
+        >
+          {assets.length === 0 ? (
+            <option value="">{t('toolRouteControls.values.noAssets')}</option>
+          ) : (
+            assets.map((asset) => (
+              <option key={asset.id} value={asset.id}>{asset.name}</option>
+            ))
+          )}
+        </select>
+        {onLoadSelected && (
+          <button type="button" className="primary-btn" onClick={() => void onLoadSelected()} disabled={isLoadingSelected}>
+            {isLoadingSelected ? t('toolRouteControls.actions.loading') : t('toolRouteControls.actions.loadSelected')}
+          </button>
+        )}
+      </section>
+    );
+  }
 
   return (
     <>
@@ -218,7 +245,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                 <span>{t('toolRouteControls.labels.atlas')}</span>
                 <select
                   value={selectedAtlasName ?? ''}
-                  onChange={(event) => setSelectedAtlasName(event.target.value)}
+                  onChange={(event) => setSelectedAtlasName?.(event.target.value)}
                   disabled={atlasOptions.length === 0}
                 >
                   {atlasOptions.length === 0 ? (

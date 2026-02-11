@@ -633,7 +633,7 @@
     },
     "sections": {
       "tools": "Tools",
-      "assetLibrary": "Asset Library (IndexedDB)",
+      "assetLibrary": "Asset Library",
       "partnerTools": "Partner Tools",
       "guides": "Guides",
       "community": "Community",

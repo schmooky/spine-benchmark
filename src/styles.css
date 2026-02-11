@@ -58,7 +58,6 @@
 
   /* Sidebar */
   --sb-sidebar-width: 260px;
-  --sb-sidebar-collapsed: 64px;
 
   /* Scrollbar */
   --sb-scrollbar-size: 6px;
@@ -140,7 +139,8 @@ body {
 .timeline-modal-content::-webkit-scrollbar,
 .dc-inspector-list::-webkit-scrollbar,
 .atlas-repack-pages::-webkit-scrollbar,
-.mesh-inspector-list::-webkit-scrollbar {
+.mesh-inspector-list::-webkit-scrollbar,
+.mesh-inspector-preview::-webkit-scrollbar {
   width: var(--sb-scrollbar-size);
   height: var(--sb-scrollbar-size);
 }
@@ -159,7 +159,8 @@ body {
 .timeline-modal-content::-webkit-scrollbar-track,
 .dc-inspector-list::-webkit-scrollbar-track,
 .atlas-repack-pages::-webkit-scrollbar-track,
-.mesh-inspector-list::-webkit-scrollbar-track {
+.mesh-inspector-list::-webkit-scrollbar-track,
+.mesh-inspector-preview::-webkit-scrollbar-track {
   background: var(--sb-scrollbar-track);
 }
 
@@ -177,7 +178,8 @@ body {
 .timeline-modal-content::-webkit-scrollbar-thumb,
 .dc-inspector-list::-webkit-scrollbar-thumb,
 .atlas-repack-pages::-webkit-scrollbar-thumb,
-.mesh-inspector-list::-webkit-scrollbar-thumb {
+.mesh-inspector-list::-webkit-scrollbar-thumb,
+.mesh-inspector-preview::-webkit-scrollbar-thumb {
   background: var(--sb-scrollbar-thumb);
   border-radius: calc(var(--sb-scrollbar-size) / 2);
 }
@@ -196,7 +198,8 @@ body {
 .timeline-modal-content::-webkit-scrollbar-thumb:hover,
 .dc-inspector-list::-webkit-scrollbar-thumb:hover,
 .atlas-repack-pages::-webkit-scrollbar-thumb:hover,
-.mesh-inspector-list::-webkit-scrollbar-thumb:hover {
+.mesh-inspector-list::-webkit-scrollbar-thumb:hover,
+.mesh-inspector-preview::-webkit-scrollbar-thumb:hover {
   background: var(--sb-scrollbar-thumb-hover);
 }
 
@@ -214,7 +217,8 @@ body {
 .timeline-modal-content::-webkit-scrollbar-corner,
 .dc-inspector-list::-webkit-scrollbar-corner,
 .atlas-repack-pages::-webkit-scrollbar-corner,
-.mesh-inspector-list::-webkit-scrollbar-corner {
+.mesh-inspector-list::-webkit-scrollbar-corner,
+.mesh-inspector-preview::-webkit-scrollbar-corner {
   background: transparent;
 }
 
@@ -278,17 +282,13 @@ body {
 
 
 /* ── 3. App Shell ─────────────────────────────────────────────────── */
-.app-container {
+.app-shell {
   position: relative;
+  display: grid;
+  grid-template-columns: var(--sb-sidebar-width) minmax(0, 1fr);
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-}
-
-.app-shell {
-  display: grid;
-  grid-template-columns: var(--sb-sidebar-width) minmax(0, 1fr);
-  height: 100vh;
   background: var(--sb-bg-0);
 }
 
@@ -308,52 +308,6 @@ body {
               padding var(--sb-duration) var(--sb-ease);
 }
 
-/* Sidebar collapsed */
-.app-sidebar.collapsed {
-  width: var(--sb-sidebar-collapsed);
-  padding: 16px 8px;
-}
-
-.app-sidebar.collapsed .sidebar-header p,
-.app-sidebar.collapsed .sidebar-section h2,
-.app-sidebar.collapsed .sidebar-section-toggle span,
-.app-sidebar.collapsed .asset-card h3,
-.app-sidebar.collapsed .asset-card p,
-.app-sidebar.collapsed .mini-btn,
-.app-sidebar.collapsed .quick-links a,
-.app-sidebar.collapsed .sidebar-tour-btn {
-  display: none;
-}
-
-.app-sidebar.collapsed .sidebar-header h1 {
-  font-size: 0;
-  overflow: hidden;
-  margin: 0;
-}
-
-.app-sidebar.collapsed .sidebar-logo-mark {
-  margin: 0 auto;
-}
-
-.app-sidebar.collapsed .tool-chip {
-  justify-content: center;
-  padding: 8px 0;
-  font-size: 0;
-}
-
-.app-sidebar.collapsed .tool-chip::before {
-  content: "\2022";
-  font-size: 14px;
-  color: inherit;
-}
-
-.app-sidebar.collapsed .sidebar-collapse-btn {
-  right: 8px;
-}
-
-.app-shell:has(.app-sidebar.collapsed) .tool-route-inline {
-  left: calc(var(--sb-sidebar-collapsed) + (100vw - var(--sb-sidebar-collapsed)) / 2);
-}
 
 /* Sidebar header */
 .sidebar-header {
@@ -388,31 +342,6 @@ body {
 
 .sidebar-header p {
   display: none;
-}
-
-/* Sidebar collapse button */
-.sidebar-collapse-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--sb-bg-2);
-  border: 1px solid var(--sb-border);
-  border-radius: var(--sb-radius-sm);
-  color: var(--sb-text-secondary);
-  font-size: 10px;
-  cursor: pointer;
-  transition: all var(--sb-duration) var(--sb-ease);
-}
-
-.sidebar-collapse-btn:hover {
-  background: var(--sb-bg-3);
-  color: var(--sb-text);
-  border-color: var(--sb-border-strong);
 }
 
 
@@ -978,44 +907,23 @@ input[type="color"]::-webkit-color-swatch {
 
 /* ── 13. Workspace ────────────────────────────────────────────────── */
 .workspace-main {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
   position: relative;
-  min-height: 100vh;
+  height: 100%;
   overflow: hidden;
   background: transparent;
 }
 
-.workspace-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 20px;
-  background: var(--sb-bg-1);
-  border-bottom: 1px solid var(--sb-border);
+.workspace-main > * {
+  height: 100%;
 }
 
-.workspace-header h2 {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--sb-text);
-  margin: 0 0 2px;
-}
-
-.workspace-header p {
-  font-family: var(--sb-font-mono);
-  font-size: 11px;
-  color: var(--sb-text-muted);
-  margin: 0;
-}
 
 
 /* ── 14. Benchmark Layout ─────────────────────────────────────────── */
 .benchmark-layout {
   position: relative;
   display: block;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
 }
@@ -1261,6 +1169,7 @@ input[type="color"]::-webkit-color-swatch {
   backdrop-filter: blur(12px);
   box-shadow: var(--sb-shadow-md);
   max-width: 520px;
+  height: auto !important;
   pointer-events: auto;
 }
 
@@ -1270,6 +1179,51 @@ input[type="color"]::-webkit-color-swatch {
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0;
+}
+
+.tool-route-minimal .modern-select {
+  background: var(--sb-bg-2);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-sm);
+  color: var(--sb-text);
+  font-size: 12px;
+  padding: 4px 8px;
+  min-width: 140px;
+}
+
+/* ── Assets two-panel layout ──────────────────────────────────────── */
+.assets-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.assets-panel {
+  overflow-y: auto;
+  padding: 16px;
+  border-right: 1px solid var(--sb-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assets-panel .route-section-header {
+  margin-bottom: 4px;
+}
+
+.assets-canvas {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .assets-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 280px 1fr;
+  }
 }
 
 .tool-route-actions {
@@ -1626,6 +1580,8 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: var(--sb-radius-md);
   background: var(--sb-bg-1);
   overflow-y: auto;
+  height: calc(100% - 28px);
+  box-sizing: border-box;
 }
 
 .route-section-header {
@@ -2504,7 +2460,7 @@ input[type="color"]::-webkit-color-swatch {
 /* ── 35. Version Display ──────────────────────────────────────────── */
 .version-display {
   position: fixed;
-  bottom: 12px;
+  top: 62px;
   right: 14px;
   font-family: var(--sb-font-mono);
   font-size: 10px;
@@ -3349,6 +3305,8 @@ input[type="color"]::-webkit-color-swatch {
   background: var(--sb-bg-2);
   overflow-y: auto;
   flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-scrollbar-thumb) var(--sb-scrollbar-track);
 }
 
 .mesh-inspector-preview-header {
@@ -3687,13 +3645,6 @@ input[type="color"]::-webkit-color-swatch {
     min-height: 60vh;
   }
 
-  .workspace-header {
-    padding: 12px 14px;
-  }
-
-  .workspace-header h2 {
-    font-size: 15px;
-  }
 
   .asset-grid {
     grid-template-columns: 1fr;

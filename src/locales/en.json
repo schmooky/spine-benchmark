@@ -640,7 +640,7 @@
     "sections": {
       "tools": "Tools",
       "navigation": "Navigation",
-      "assetLibrary": "Asset Library (IndexedDB)",
+      "assetLibrary": "Asset Library",
       "documentation": "Documentation",
       "partners": "Partners"
     },

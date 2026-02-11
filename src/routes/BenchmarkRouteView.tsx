@@ -21,11 +21,7 @@ export function BenchmarkRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
-    atlasOptions,
-    selectedAtlasName,
-    setSelectedAtlasName,
     loadCurrentAssetIntoBenchmark,
-    uploadBundleFiles,
   } = useWorkbench();
 
   // Re-parent the singleton PIXI canvas into this route's pixi-host div
@@ -47,13 +43,10 @@ export function BenchmarkRouteView() {
   return (
     <>
       <ToolRouteControls
+        minimal
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
-        atlasOptions={atlasOptions}
-        selectedAtlasName={selectedAtlasName}
-        setSelectedAtlasName={setSelectedAtlasName}
-        onUploadBundle={uploadBundleFiles}
         onLoadSelected={handleLoadSelected}
         isLoadingSelected={isLoadingSelected}
       />

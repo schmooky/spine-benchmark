@@ -30,11 +30,7 @@ export function PhysicsBakerRouteView() {
     selectedAssetId,
     setSelectedAssetId,
     selectedAsset,
-    atlasOptions,
-    selectedAtlasName,
-    setSelectedAtlasName,
     loadCurrentAssetIntoBenchmark,
-    uploadBundleFiles,
     togglePhysics,
     toggleIk,
     toggleTransformConstraints,
@@ -173,13 +169,10 @@ export function PhysicsBakerRouteView() {
   return (
     <>
       <ToolRouteControls
+        minimal
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
-        atlasOptions={atlasOptions}
-        selectedAtlasName={selectedAtlasName}
-        setSelectedAtlasName={setSelectedAtlasName}
-        onUploadBundle={uploadBundleFiles}
         onLoadSelected={handleLoadSelected}
         isLoadingSelected={isLoadingSelected}
       />

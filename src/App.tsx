@@ -86,7 +86,6 @@ const App: React.FC = () => {
   const pixiContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useSafeLocalStorage('spine-workbench-sidebar-collapsed-v1', false);
   const [showBenchmark, setShowBenchmark] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
@@ -646,43 +645,18 @@ const App: React.FC = () => {
     saveAndLoadOptimizedAsset
   ]);
 
-  const headerTitle = pathname.startsWith('/tools/benchmark')
-    ? t('dashboard.workspace.benchmarkTitle')
-    : pathname.startsWith('/tools/mesh-optimizer')
-      ? t('dashboard.workspace.optimizerTitle')
-      : pathname.startsWith('/tools/physics-baker')
-        ? t('dashboard.workspace.physicsBakerTitle')
-        : pathname.startsWith('/tools/draw-call-inspector')
-          ? t('dashboard.workspace.drawCallInspectorTitle')
-          : pathname.startsWith('/tools/atlas-repack')
-            ? t('dashboard.workspace.atlasRepackTitle')
-        : pathname.startsWith('/assets')
-          ? t('dashboard.sections.assetLibrary')
-          : pathname.startsWith('/documentation')
-            ? t('dashboard.sections.documentation')
-            : t('dashboard.sections.partners');
-
   const inBenchmarkRoute = pathname.startsWith('/tools/benchmark');
 
   return (
     <WorkbenchProvider value={workbenchContextValue}>
-    <div className="app-container app-shell">
-      <aside className={`app-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+    <div className="app-shell">
+      <aside className="app-sidebar">
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <span className="sidebar-logo-mark" />
             <h1>{t('dashboard.brand.title')}</h1>
           </div>
           <p>{t('dashboard.brand.subtitle')}</p>
-          <button
-            type="button"
-            className="sidebar-collapse-btn"
-            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-            aria-label={isSidebarCollapsed ? t('dashboard.actions.expandSidebar') : t('dashboard.actions.collapseSidebar')}
-            title={isSidebarCollapsed ? t('dashboard.actions.expandSidebar') : t('dashboard.actions.collapseSidebar')}
-          >
-            {isSidebarCollapsed ? '>>' : '<<'}
-          </button>
         </div>
 
         <section className="sidebar-section" data-tour="tool-switcher">
@@ -728,19 +702,6 @@ const App: React.FC = () => {
       </aside>
 
       <main className="workspace-main">
-        <header className="workspace-header" data-tour="workspace-header">
-          <div>
-            <h2>{headerTitle}</h2>
-            <p>
-              {selectedAsset
-                ? t('dashboard.workspace.selectedAsset', { name: selectedAsset.name, count: selectedAsset.fileCount })
-                : t('dashboard.workspace.empty')}
-            </p>
-          </div>
-          <button className="secondary-btn" type="button" onClick={() => setShowUrlModal(true)}>
-            {t('dashboard.actions.loadFromUrl')}
-          </button>
-        </header>
         <Outlet />
       </main>
 
