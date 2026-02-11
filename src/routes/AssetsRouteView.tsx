@@ -1,10 +1,12 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from '@tanstack/react-router';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
 
 export function AssetsRouteView() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const {
     assets,
     selectedAssetId,
@@ -49,6 +51,7 @@ export function AssetsRouteView() {
             <div>
               <h3>{asset.name}</h3>
               <p>{t('dashboard.assetCard.summary', { count: asset.fileCount, size: formatBytes(asset.totalBytes) })}</p>
+              {asset.description && <p className="asset-description">{asset.description}</p>}
             </div>
             <div className="asset-card-actions">
               <button
@@ -56,7 +59,7 @@ export function AssetsRouteView() {
                 className="mini-btn"
                 onClick={(event) => {
                   event.stopPropagation();
-                  void loadStoredAsset(asset);
+                  void loadStoredAsset(asset).then(() => navigate({ to: '/tools/benchmark' }));
                 }}
               >
                 {t('dashboard.actions.load')}

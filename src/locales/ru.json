@@ -764,34 +764,54 @@
     }
   },
   "meshOptimizer": {
-    "title": "Mesh Optimizer",
-    "subtitle": "Safe pass: removes empty deform timelines and duplicate consecutive deform frames.",
-    "labels": {
-      "asset": "Asset:",
-      "json": "JSON:"
+    "title": "Инспектор мешей",
+    "subtitle": "Визуализация мешей в реальном времени — треугольники, вершины и деформация",
+    "summary": {
+      "meshes": "Меши",
+      "vertices": "Вершины",
+      "triangles": "Треугольники",
+      "weighted": "Взвешенные"
     },
-    "values": {
-      "noneSelected": "None selected",
-      "noJson": "This asset has no JSON skeleton"
+    "list": {
+      "headers": {
+        "index": "#",
+        "attachment": "Вложение",
+        "vertices": "Верш",
+        "triangles": "Треуг",
+        "bones": "Кости"
+      }
     },
-    "actions": {
-      "run": "Run Optimization",
-      "download": "Download Optimized JSON",
-      "loadInBenchmark": "Load In Benchmark",
-      "loading": "Loading..."
+    "row": {
+      "deformed": "Деформирован в текущей анимации",
+      "weighted": "Взвешенный меш ({{count}} костей)"
     },
-    "report": {
-      "title": "Optimization Report",
-      "animationsScanned": "Animations scanned: {{count}}",
-      "animationsChanged": "Animations changed: {{count}}",
-      "emptyRemoved": "Empty deform timelines removed: {{count}}",
-      "duplicateRemoved": "Duplicate deform frames removed: {{count}}",
-      "drawOrderDuplicateRemoved": "Duplicate draw-order frames removed: {{count}}"
+    "empty": {
+      "title": "Загрузите ассет для инспекции мешей",
+      "hint": "Выберите ассет и нажмите Загрузить для просмотра структуры мешей и деформации"
     },
-    "messages": {
-      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
-      "jsonNotFound": "JSON file not found in selected asset.",
-      "optimizationFailed": "Optimization failed"
+    "optimize": {
+      "button": "Оптимизировать",
+      "saving": "Сохранение...",
+      "saveAndLoad": "Сохранить и загрузить",
+      "noJson": "У этого ассета нет JSON-скелета",
+      "report": {
+        "title": "Предпросмотр оптимизации",
+        "animationsScanned": "Анимаций проверено",
+        "animationsChanged": "Анимаций изменено",
+        "emptyDeforms": "Пустые деформ-таймлайны",
+        "duplicateFrames": "Дублирующие деформ-кадры",
+        "drawOrderDuplicates": "Дублирующие кадры draw-order",
+        "noChanges": "Оптимизация не требуется — ассет уже оптимален"
+      },
+      "description": "Оптимизировано: удалено {{emptyDeforms}} пустых деформаций, {{duplicateFrames}} дублирующих кадров, {{drawOrderDuplicates}} дублей draw-order"
+    },
+    "preview": {
+      "density": "Доля перегруженных",
+      "deformMagnitude": "Макс. смещение деформации",
+      "pixelArea": "Площадь меша",
+      "overclustered": "Перегруженные треугольники",
+      "invisibleDeform": "Невидимая деформация",
+      "noProblems": "Проблем не обнаружено"
     }
   },
   "appErrorBoundary": {
@@ -870,27 +890,23 @@
   },
   "atlasRepack": {
     "title": "Atlas Repack Advisor",
-    "subtitle": "Generate a repack plan that groups regions by blend to reduce draw-call breaks.",
-    "labels": {
-      "asset": "Asset:"
+    "subtitle": "Визуальный анализ атласа — посмотрите, как страницы и регионы атласа влияют на draw calls",
+    "summary": {
+      "pages": "Страницы",
+      "regions": "Регионы",
+      "drawCalls": "Draw Calls",
+      "pageBreaks": "Смены страниц"
     },
-    "values": {
-      "noneSelected": "None selected"
+    "page": {
+      "title": "{{name}} ({{width}}×{{height}})",
+      "regionCount": "{{count}} регионов"
     },
-    "actions": {
-      "run": "Build Repack Plan",
-      "downloadPlan": "Download Repack Plan"
+    "region": {
+      "problematic": "Вызывает разрыв draw call"
     },
-    "report": {
-      "title": "Repack Opportunity",
-      "currentDrawCalls": "Current estimated draw calls: {{count}}",
-      "theoreticalMin": "Theoretical minimum (blend-bound): {{count}}",
-      "potentialSavings": "Potential draw-call savings: {{count}}",
-      "groups": "Blend groups in plan: {{count}}"
-    },
-    "messages": {
-      "selectAsset": "Select an asset first.",
-      "analysisFailed": "Atlas repack analysis failed"
+    "empty": {
+      "title": "Загрузите ассет для просмотра страниц атласа",
+      "hint": "Выберите ассет и нажмите Загрузить, чтобы увидеть регионы атласа и влияние на draw calls"
     }
   },
   "toolRouteControls": {

@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
 import { useDrawCallInspector, LiveSlotInfo } from '../hooks/useDrawCallInspector';
+import { reparentPixiCanvas } from '../hooks/usePixiApp';
 
 const PAGE_COLORS = [
   '#2DD4A8', '#60A5FA', '#FBBF24', '#F472B6', '#A78BFA',
@@ -15,6 +16,13 @@ function getPageColor(pageName: string, colorMap: Map<string, string>): string {
   const color = PAGE_COLORS[colorMap.size % PAGE_COLORS.length];
   colorMap.set(pageName, color);
   return color;
+}
+
+/** Lower value = greener (better), higher = redder (worse). */
+function getStatColor(value: number, low: number, high: number): string {
+  if (value <= low) return '#34D399';   // green — excellent
+  if (value <= high) return '#FBBF24';  // yellow — moderate
+  return '#F87171';                     // red — bad
 }
 
 export function DrawCallInspectorRouteView() {
@@ -38,6 +46,13 @@ export function DrawCallInspectorRouteView() {
     loadCurrentAssetIntoBenchmark,
     uploadBundleFiles,
   } = useWorkbench();
+
+  // Re-parent the singleton PIXI canvas into this route's pixi-host div
+  useEffect(() => {
+    if (pixiContainerRef.current) {
+      reparentPixiCanvas(pixiContainerRef.current);
+    }
+  });
 
   const snapshot = useDrawCallInspector(spineInstance);
 
@@ -77,15 +92,30 @@ export function DrawCallInspectorRouteView() {
             <>
               <div className="dc-inspector-summary">
                 <div className="dc-inspector-stat">
-                  <span className="dc-inspector-stat-value">{snapshot.drawCallCount}</span>
+                  <span
+                    className="dc-inspector-stat-value"
+                    style={{ '--dc-stat-color': getStatColor(snapshot.drawCallCount, 3, 8) } as React.CSSProperties}
+                  >
+                    {snapshot.drawCallCount}
+                  </span>
                   <span className="dc-inspector-stat-label">{t('drawCallInspector.summary.drawCalls')}</span>
                 </div>
                 <div className="dc-inspector-stat">
-                  <span className="dc-inspector-stat-value">{snapshot.pageBreaks}</span>
+                  <span
+                    className="dc-inspector-stat-value"
+                    style={{ '--dc-stat-color': getStatColor(snapshot.pageBreaks, 1, 4) } as React.CSSProperties}
+                  >
+                    {snapshot.pageBreaks}
+                  </span>
                   <span className="dc-inspector-stat-label">{t('drawCallInspector.summary.pageBreaks')}</span>
                 </div>
                 <div className="dc-inspector-stat">
-                  <span className="dc-inspector-stat-value">{snapshot.blendBreaks}</span>
+                  <span
+                    className="dc-inspector-stat-value"
+                    style={{ '--dc-stat-color': getStatColor(snapshot.blendBreaks, 0, 2) } as React.CSSProperties}
+                  >
+                    {snapshot.blendBreaks}
+                  </span>
                   <span className="dc-inspector-stat-label">{t('drawCallInspector.summary.blendBreaks')}</span>
                 </div>
               </div>

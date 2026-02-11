@@ -32,8 +32,11 @@ export interface WorkbenchContextValue {
   onLoadOptimizedFiles: (files: File[]) => Promise<void>;
   uploadBundleFiles: (files: File[]) => Promise<void>;
   setShowUrlModal: React.Dispatch<React.SetStateAction<boolean>>;
+  toggleMeshes: (visible?: boolean) => void;
+  meshesVisible: boolean;
   partnerTools: Array<{ labelKey: string; href: string }>;
   documentationLinks: Array<{ labelKey: string; href: string }>;
+  saveAndLoadOptimizedAsset: (files: File[], name: string, description: string) => Promise<void>;
 }
 
 const WorkbenchContext = createContext<WorkbenchContextValue | null>(null);

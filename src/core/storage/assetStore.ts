@@ -12,6 +12,7 @@ export interface StoredAsset {
   fileCount: number;
   totalBytes: number;
   previewImageDataUrl?: string;
+  description?: string;
   files: StoredAssetFile[];
 }
 
@@ -97,7 +98,11 @@ export function deriveAssetName(files: FileList | File[]): string {
   return skeleton.name.replace(/\.(json|skel)$/i, '');
 }
 
-export async function saveAsset(files: FileList | File[], preferredName?: string): Promise<StoredAsset> {
+export async function saveAsset(
+  files: FileList | File[],
+  preferredName?: string,
+  options?: { description?: string }
+): Promise<StoredAsset> {
   const list = Array.from(files);
   assertCompleteAssetBundle(list);
   const now = Date.now();
@@ -110,6 +115,7 @@ export async function saveAsset(files: FileList | File[], preferredName?: string
     updatedAt: now,
     fileCount: list.length,
     totalBytes: list.reduce((sum, file) => sum + file.size, 0),
+    description: options?.description,
     files: []
   };
 

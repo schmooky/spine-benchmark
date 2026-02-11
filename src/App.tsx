@@ -359,7 +359,7 @@ const App: React.FC = () => {
   );
 
   const handleSpineFiles = useCallback(
-    async (files: FileList, options?: { persist?: boolean; assetName?: string }) => {
+    async (files: FileList, options?: { persist?: boolean; assetName?: string; skipNavigate?: boolean }) => {
       if (!fileProcessorRef.current) {
         addToast(t('error.failedToInitialize', { 0: t('dashboard.messages.notInitialized') }), 'error');
         return;
@@ -374,7 +374,9 @@ const App: React.FC = () => {
           await persistAsset(processedFiles, options?.assetName);
         }
 
-        void navigate({ to: '/tools/benchmark' });
+        if (!options?.skipNavigate) {
+          void navigate({ to: '/tools/benchmark' });
+        }
       } catch (error) {
         addToast(
           t('error.loadingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }),
@@ -388,11 +390,10 @@ const App: React.FC = () => {
   const loadStoredAsset = useCallback(
     async (asset: StoredAsset, atlasName?: string | null) => {
       const files = filterAssetFilesByAtlas(assetToFiles(asset), atlasName);
-      await handleSpineFiles(filesToFileList(files), { persist: false });
+      await handleSpineFiles(filesToFileList(files), { persist: false, skipNavigate: true });
       setSelectedAssetId(asset.id);
-      void navigate({ to: '/tools/benchmark' });
     },
-    [handleSpineFiles, navigate]
+    [handleSpineFiles]
   );
 
   const loadCurrentAssetIntoBenchmark = useCallback(async () => {
@@ -412,6 +413,16 @@ const App: React.FC = () => {
         setHasAutoLoadedAsset(true);
       });
   }, [app, selectedAsset, hasAutoLoadedAsset, spineInstance, isAnyLoading, loadStoredAsset, addToast, t]);
+
+  const saveAndLoadOptimizedAsset = useCallback(
+    async (files: File[], name: string, description: string) => {
+      const asset = await saveAsset(files, name, { description });
+      await refreshAssets();
+      setSelectedAssetId(asset.id);
+      await loadStoredAsset(asset);
+    },
+    [refreshAssets, loadStoredAsset]
+  );
 
   const handleDeleteAsset = useCallback(
     async (assetId: string) => {
@@ -589,9 +600,12 @@ const App: React.FC = () => {
     uploadBundleFiles: async (files: File[]) => {
       await handleSpineFiles(filesToFileList(files));
     },
+    toggleMeshes,
+    meshesVisible,
     setShowUrlModal,
     partnerTools,
-    documentationLinks
+    documentationLinks,
+    saveAndLoadOptimizedAsset
   }), [
     spineInstance,
     benchmarkData,
@@ -613,8 +627,11 @@ const App: React.FC = () => {
     selectedAssetId,
     handleDeleteAsset,
     handleUploadFromInput,
+    toggleMeshes,
+    meshesVisible,
     t,
-    handleSpineFiles
+    handleSpineFiles,
+    saveAndLoadOptimizedAsset
   ]);
 
   const headerTitle = pathname.startsWith('/tools/benchmark')

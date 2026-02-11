@@ -764,34 +764,54 @@
     }
   },
   "meshOptimizer": {
-    "title": "Mesh Optimizer",
-    "subtitle": "Safe pass: removes empty deform timelines and duplicate consecutive deform frames.",
-    "labels": {
-      "asset": "Asset:",
-      "json": "JSON:"
+    "title": "網格檢查器",
+    "subtitle": "即時網格視覺化 — 查看三角形、頂點和變形效果",
+    "summary": {
+      "meshes": "網格",
+      "vertices": "頂點",
+      "triangles": "三角形",
+      "weighted": "加權"
     },
-    "values": {
-      "noneSelected": "None selected",
-      "noJson": "This asset has no JSON skeleton"
+    "list": {
+      "headers": {
+        "index": "#",
+        "attachment": "附件",
+        "vertices": "頂點",
+        "triangles": "三角",
+        "bones": "骨骼"
+      }
     },
-    "actions": {
-      "run": "Run Optimization",
-      "download": "Download Optimized JSON",
-      "loadInBenchmark": "Load In Benchmark",
-      "loading": "Loading..."
+    "row": {
+      "deformed": "在當前動畫中已變形",
+      "weighted": "加權網格（{{count}} 個骨骼）"
     },
-    "report": {
-      "title": "Optimization Report",
-      "animationsScanned": "Animations scanned: {{count}}",
-      "animationsChanged": "Animations changed: {{count}}",
-      "emptyRemoved": "Empty deform timelines removed: {{count}}",
-      "duplicateRemoved": "Duplicate deform frames removed: {{count}}",
-      "drawOrderDuplicateRemoved": "Duplicate draw-order frames removed: {{count}}"
+    "empty": {
+      "title": "載入資產以檢查網格",
+      "hint": "選擇資產並點擊載入以查看網格結構和變形"
     },
-    "messages": {
-      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
-      "jsonNotFound": "JSON file not found in selected asset.",
-      "optimizationFailed": "Optimization failed"
+    "optimize": {
+      "button": "最佳化",
+      "saving": "儲存中...",
+      "saveAndLoad": "儲存並載入最佳化版本",
+      "noJson": "此資產沒有 JSON 骨架",
+      "report": {
+        "title": "最佳化預覽",
+        "animationsScanned": "掃描的動畫",
+        "animationsChanged": "已更改的動畫",
+        "emptyDeforms": "空的變形時間線",
+        "duplicateFrames": "重複的變形影格",
+        "drawOrderDuplicates": "重複的繪製順序影格",
+        "noChanges": "未找到可最佳化項目 — 資產已是最佳狀態"
+      },
+      "description": "已最佳化：移除 {{emptyDeforms}} 個空變形、{{duplicateFrames}} 個重複影格、{{drawOrderDuplicates}} 個繪製順序重複"
+    },
+    "preview": {
+      "density": "过密比例",
+      "deformMagnitude": "最大变形位移",
+      "pixelArea": "网格面积",
+      "overclustered": "过密三角形",
+      "invisibleDeform": "不可见变形",
+      "noProblems": "未检测到问题"
     }
   },
   "appErrorBoundary": {
@@ -870,27 +890,23 @@
   },
   "atlasRepack": {
     "title": "Atlas Repack Advisor",
-    "subtitle": "Generate a repack plan that groups regions by blend to reduce draw-call breaks.",
-    "labels": {
-      "asset": "Asset:"
+    "subtitle": "可视化图集分析 — 查看图集页面和区域如何影响 draw calls",
+    "summary": {
+      "pages": "页面",
+      "regions": "区域",
+      "drawCalls": "Draw Calls",
+      "pageBreaks": "页面切换"
     },
-    "values": {
-      "noneSelected": "None selected"
+    "page": {
+      "title": "{{name}} ({{width}}×{{height}})",
+      "regionCount": "{{count}} 个区域"
     },
-    "actions": {
-      "run": "Build Repack Plan",
-      "downloadPlan": "Download Repack Plan"
+    "region": {
+      "problematic": "导致 draw call 中断"
     },
-    "report": {
-      "title": "Repack Opportunity",
-      "currentDrawCalls": "Current estimated draw calls: {{count}}",
-      "theoreticalMin": "Theoretical minimum (blend-bound): {{count}}",
-      "potentialSavings": "Potential draw-call savings: {{count}}",
-      "groups": "Blend groups in plan: {{count}}"
-    },
-    "messages": {
-      "selectAsset": "Select an asset first.",
-      "analysisFailed": "Atlas repack analysis failed"
+    "empty": {
+      "title": "加载资源以检查图集页面",
+      "hint": "选择资源并点击加载，查看图集区域及其对 draw calls 的影响"
     }
   },
   "toolRouteControls": {

@@ -764,34 +764,54 @@
     }
   },
   "meshOptimizer": {
-    "title": "Mesh Optimizer",
-    "subtitle": "Safe pass: removes empty deform timelines and duplicate consecutive deform frames.",
-    "labels": {
-      "asset": "Asset:",
-      "json": "JSON:"
+    "title": "Mesh-Inspektor",
+    "subtitle": "Live-Mesh-Visualisierung — Dreiecke, Vertices und Verformung in Echtzeit",
+    "summary": {
+      "meshes": "Meshes",
+      "vertices": "Vertices",
+      "triangles": "Dreiecke",
+      "weighted": "Gewichtet"
     },
-    "values": {
-      "noneSelected": "None selected",
-      "noJson": "This asset has no JSON skeleton"
+    "list": {
+      "headers": {
+        "index": "#",
+        "attachment": "Anhang",
+        "vertices": "Vert",
+        "triangles": "Drei",
+        "bones": "Knochen"
+      }
     },
-    "actions": {
-      "run": "Run Optimization",
-      "download": "Download Optimized JSON",
-      "loadInBenchmark": "Load In Benchmark",
-      "loading": "Loading..."
+    "row": {
+      "deformed": "In aktueller Animation verformt",
+      "weighted": "Gewichtetes Mesh ({{count}} Knochen)"
     },
-    "report": {
-      "title": "Optimization Report",
-      "animationsScanned": "Animations scanned: {{count}}",
-      "animationsChanged": "Animations changed: {{count}}",
-      "emptyRemoved": "Empty deform timelines removed: {{count}}",
-      "duplicateRemoved": "Duplicate deform frames removed: {{count}}",
-      "drawOrderDuplicateRemoved": "Duplicate draw-order frames removed: {{count}}"
+    "empty": {
+      "title": "Asset laden um Meshes zu inspizieren",
+      "hint": "Wählen Sie ein Asset und klicken Sie auf Laden um Mesh-Struktur und Verformung zu sehen"
     },
-    "messages": {
-      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
-      "jsonNotFound": "JSON file not found in selected asset.",
-      "optimizationFailed": "Optimization failed"
+    "optimize": {
+      "button": "Optimieren",
+      "saving": "Wird gespeichert...",
+      "saveAndLoad": "Speichern & Laden",
+      "noJson": "Dieses Asset hat kein JSON-Skelett",
+      "report": {
+        "title": "Optimierungsvorschau",
+        "animationsScanned": "Animationen gescannt",
+        "animationsChanged": "Animationen geändert",
+        "emptyDeforms": "Leere Deform-Timelines",
+        "duplicateFrames": "Doppelte Deform-Frames",
+        "drawOrderDuplicates": "Doppelte Draw-Order-Frames",
+        "noChanges": "Keine Optimierungen gefunden — Asset ist bereits optimiert"
+      },
+      "description": "Optimiert: {{emptyDeforms}} leere Deformationen, {{duplicateFrames}} doppelte Frames, {{drawOrderDuplicates}} Draw-Order-Duplikate entfernt"
+    },
+    "preview": {
+      "density": "Überdichte-Anteil",
+      "deformMagnitude": "Max. Deformationsverschiebung",
+      "pixelArea": "Mesh-Fläche",
+      "overclustered": "Überdichte Dreiecke",
+      "invisibleDeform": "Unsichtbare Deformation",
+      "noProblems": "Keine Probleme erkannt"
     }
   },
   "appErrorBoundary": {
@@ -870,27 +890,23 @@
   },
   "atlasRepack": {
     "title": "Atlas Repack Advisor",
-    "subtitle": "Generate a repack plan that groups regions by blend to reduce draw-call breaks.",
-    "labels": {
-      "asset": "Asset:"
+    "subtitle": "Visuelle Atlas-Analyse — sehen Sie, wie Atlas-Seiten und Regionen Draw Calls beeinflussen",
+    "summary": {
+      "pages": "Seiten",
+      "regions": "Regionen",
+      "drawCalls": "Draw Calls",
+      "pageBreaks": "Seitenwechsel"
     },
-    "values": {
-      "noneSelected": "None selected"
+    "page": {
+      "title": "{{name}} ({{width}}×{{height}})",
+      "regionCount": "{{count}} Regionen"
     },
-    "actions": {
-      "run": "Build Repack Plan",
-      "downloadPlan": "Download Repack Plan"
+    "region": {
+      "problematic": "Verursacht Draw-Call-Unterbrechung"
     },
-    "report": {
-      "title": "Repack Opportunity",
-      "currentDrawCalls": "Current estimated draw calls: {{count}}",
-      "theoreticalMin": "Theoretical minimum (blend-bound): {{count}}",
-      "potentialSavings": "Potential draw-call savings: {{count}}",
-      "groups": "Blend groups in plan: {{count}}"
-    },
-    "messages": {
-      "selectAsset": "Select an asset first.",
-      "analysisFailed": "Atlas repack analysis failed"
+    "empty": {
+      "title": "Asset laden, um Atlas-Seiten zu inspizieren",
+      "hint": "Wählen Sie ein Asset und klicken Sie auf Laden, um Atlas-Regionen und Draw-Call-Auswirkungen zu sehen"
     }
   },
   "toolRouteControls": {

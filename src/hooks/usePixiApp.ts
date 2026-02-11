@@ -11,6 +11,21 @@ export interface UsePixiAppOptions {
 let singletonApp: Application | null = null;
 let singletonInitPromise: Promise<Application> | null = null;
 
+/** Returns the singleton PIXI canvas element (even if detached from DOM). */
+export function getPixiCanvas(): HTMLCanvasElement | null {
+  return singletonApp?.canvas ?? null;
+}
+
+/** Re-parent the singleton canvas into a new host and update resizeTo so it fills the container. */
+export function reparentPixiCanvas(container: HTMLElement): void {
+  if (!singletonApp) return;
+  if (singletonApp.canvas.parentElement !== container) {
+    container.appendChild(singletonApp.canvas);
+  }
+  singletonApp.resizeTo = container;
+  singletonApp.resize();
+}
+
 const parseBackgroundColor = (value: string): number => parseInt(value.replace('#', '0x'), 16);
 
 async function getOrCreateApp(container: HTMLDivElement, backgroundColor: string): Promise<Application> {
@@ -18,7 +33,9 @@ async function getOrCreateApp(container: HTMLDivElement, backgroundColor: string
     if (singletonApp.canvas.parentElement !== container) {
       container.appendChild(singletonApp.canvas);
     }
+    singletonApp.resizeTo = container;
     singletonApp.renderer.background.color = parseBackgroundColor(backgroundColor);
+    singletonApp.resize();
     return singletonApp;
   }
 
@@ -27,7 +44,9 @@ async function getOrCreateApp(container: HTMLDivElement, backgroundColor: string
     if (app.canvas.parentElement !== container) {
       container.appendChild(app.canvas);
     }
+    app.resizeTo = container;
     app.renderer.background.color = parseBackgroundColor(backgroundColor);
+    app.resize();
     return app;
   }
 

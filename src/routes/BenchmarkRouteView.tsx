@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
+import { reparentPixiCanvas } from '../hooks/usePixiApp';
 
 export function BenchmarkRouteView() {
   const { t } = useTranslation();
@@ -26,6 +27,13 @@ export function BenchmarkRouteView() {
     loadCurrentAssetIntoBenchmark,
     uploadBundleFiles,
   } = useWorkbench();
+
+  // Re-parent the singleton PIXI canvas into this route's pixi-host div
+  useEffect(() => {
+    if (pixiContainerRef.current) {
+      reparentPixiCanvas(pixiContainerRef.current);
+    }
+  });
 
   const handleLoadSelected = async () => {
     setIsLoadingSelected(true);

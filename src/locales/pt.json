@@ -764,34 +764,54 @@
     }
   },
   "meshOptimizer": {
-    "title": "Mesh Optimizer",
-    "subtitle": "Safe pass: removes empty deform timelines and duplicate consecutive deform frames.",
-    "labels": {
-      "asset": "Asset:",
-      "json": "JSON:"
+    "title": "Inspetor de Malhas",
+    "subtitle": "Visualização de malhas em tempo real — triângulos, vértices e deformação",
+    "summary": {
+      "meshes": "Malhas",
+      "vertices": "Vértices",
+      "triangles": "Triângulos",
+      "weighted": "Ponderados"
     },
-    "values": {
-      "noneSelected": "None selected",
-      "noJson": "This asset has no JSON skeleton"
+    "list": {
+      "headers": {
+        "index": "#",
+        "attachment": "Anexo",
+        "vertices": "Vért",
+        "triangles": "Tris",
+        "bones": "Ossos"
+      }
     },
-    "actions": {
-      "run": "Run Optimization",
-      "download": "Download Optimized JSON",
-      "loadInBenchmark": "Load In Benchmark",
-      "loading": "Loading..."
+    "row": {
+      "deformed": "Deformado na animação atual",
+      "weighted": "Malha ponderada ({{count}} ossos)"
     },
-    "report": {
-      "title": "Optimization Report",
-      "animationsScanned": "Animations scanned: {{count}}",
-      "animationsChanged": "Animations changed: {{count}}",
-      "emptyRemoved": "Empty deform timelines removed: {{count}}",
-      "duplicateRemoved": "Duplicate deform frames removed: {{count}}",
-      "drawOrderDuplicateRemoved": "Duplicate draw-order frames removed: {{count}}"
+    "empty": {
+      "title": "Carregue um asset para inspecionar malhas",
+      "hint": "Selecione um asset e clique em Carregar para ver a estrutura e deformação das malhas"
     },
-    "messages": {
-      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
-      "jsonNotFound": "JSON file not found in selected asset.",
-      "optimizationFailed": "Optimization failed"
+    "optimize": {
+      "button": "Otimizar",
+      "saving": "Salvando...",
+      "saveAndLoad": "Salvar e carregar",
+      "noJson": "Este asset não possui esqueleto JSON",
+      "report": {
+        "title": "Prévia da otimização",
+        "animationsScanned": "Animações analisadas",
+        "animationsChanged": "Animações alteradas",
+        "emptyDeforms": "Timelines de deformação vazias",
+        "duplicateFrames": "Frames de deformação duplicados",
+        "drawOrderDuplicates": "Frames de draw-order duplicados",
+        "noChanges": "Nenhuma otimização encontrada — asset já está limpo"
+      },
+      "description": "Otimizado: {{emptyDeforms}} deformações vazias, {{duplicateFrames}} frames duplicados, {{drawOrderDuplicates}} duplicatas de draw-order removidos"
+    },
+    "preview": {
+      "density": "Proporção de sobredensidade",
+      "deformMagnitude": "Deslocamento máx. de deformação",
+      "pixelArea": "Área do mesh",
+      "overclustered": "Triângulos sobredensos",
+      "invisibleDeform": "Deformação invisível",
+      "noProblems": "Nenhum problema detectado"
     }
   },
   "appErrorBoundary": {
@@ -870,27 +890,23 @@
   },
   "atlasRepack": {
     "title": "Atlas Repack Advisor",
-    "subtitle": "Generate a repack plan that groups regions by blend to reduce draw-call breaks.",
-    "labels": {
-      "asset": "Asset:"
+    "subtitle": "Análise visual do atlas — veja como as páginas e regiões do atlas afetam os draw calls",
+    "summary": {
+      "pages": "Páginas",
+      "regions": "Regiões",
+      "drawCalls": "Draw Calls",
+      "pageBreaks": "Mudanças de página"
     },
-    "values": {
-      "noneSelected": "None selected"
+    "page": {
+      "title": "{{name}} ({{width}}×{{height}})",
+      "regionCount": "{{count}} regiões"
     },
-    "actions": {
-      "run": "Build Repack Plan",
-      "downloadPlan": "Download Repack Plan"
+    "region": {
+      "problematic": "Causa interrupção de draw call"
     },
-    "report": {
-      "title": "Repack Opportunity",
-      "currentDrawCalls": "Current estimated draw calls: {{count}}",
-      "theoreticalMin": "Theoretical minimum (blend-bound): {{count}}",
-      "potentialSavings": "Potential draw-call savings: {{count}}",
-      "groups": "Blend groups in plan: {{count}}"
-    },
-    "messages": {
-      "selectAsset": "Select an asset first.",
-      "analysisFailed": "Atlas repack analysis failed"
+    "empty": {
+      "title": "Carregue um asset para inspecionar as páginas do atlas",
+      "hint": "Selecione um asset e clique em Carregar para ver as regiões do atlas e o impacto nos draw calls"
     }
   },
   "toolRouteControls": {
