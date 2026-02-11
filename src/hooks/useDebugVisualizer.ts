@@ -11,6 +11,8 @@ export function useDebugVisualizer() {
   const [meshesVisible, setMeshesVisible] = useState(false);
   const [physicsVisible, setPhysicsVisible] = useState(false);
   const [ikVisible, setIkVisible] = useState(false);
+  const [transformConstraintsVisible, setTransformConstraintsVisible] = useState(false);
+  const [pathConstraintsVisible, setPathConstraintsVisible] = useState(false);
 
   /**
    * Toggle meshes visualization
@@ -36,12 +38,32 @@ export function useDebugVisualizer() {
     setIkVisible(prev => visible ?? !prev);
   }, []);
 
+  /**
+   * Toggle transform constraints visualization
+   * @param visible - Optional boolean to set visibility state
+   */
+  const toggleTransformConstraints = useCallback((visible?: boolean) => {
+    setTransformConstraintsVisible(prev => visible ?? !prev);
+  }, []);
+
+  /**
+   * Toggle path constraints visualization
+   * @param visible - Optional boolean to set visibility state
+   */
+  const togglePathConstraints = useCallback((visible?: boolean) => {
+    setPathConstraintsVisible(prev => visible ?? !prev);
+  }, []);
+
   return {
     meshesVisible,
     physicsVisible,
     ikVisible,
+    transformConstraintsVisible,
+    pathConstraintsVisible,
     toggleMeshes,
     togglePhysics,
-    toggleIk
+    toggleIk,
+    toggleTransformConstraints,
+    togglePathConstraints
   };
 }

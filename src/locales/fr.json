@@ -851,6 +851,49 @@
       "bakeFailed": "Physics bake failed"
     }
   },
+  "constraintBaker": {
+    "title": "Constraint Baker",
+    "subtitle": "Bake IK, transform, path and physics constraints into keyframes for zero-cost playback",
+    "summary": {
+      "ik": "IK",
+      "transform": "Transform",
+      "path": "Path",
+      "physics": "Physics"
+    },
+    "list": {
+      "headers": {
+        "type": "Type",
+        "name": "Name",
+        "target": "Target",
+        "bones": "Bones",
+        "active": "Active"
+      }
+    },
+    "empty": {
+      "title": "Load an asset to inspect constraints",
+      "hint": "Select an asset and click Load to see constraint structure"
+    },
+    "noConstraints": "No constraints found in this skeleton",
+    "bake": {
+      "button": "Bake All Constraints",
+      "baking": "Baking...",
+      "saveAndLoad": "Save & Load Baked",
+      "saving": "Saving...",
+      "noJson": "This asset has no JSON skeleton",
+      "report": {
+        "title": "Bake Report",
+        "animationsScanned": "Animations scanned",
+        "animationsBaked": "Animations baked",
+        "keyframesGenerated": "Keyframes generated",
+        "ikRemoved": "IK constraints removed",
+        "transformRemoved": "Transform constraints removed",
+        "pathRemoved": "Path constraints removed",
+        "physicsRemoved": "Physics constraints removed",
+        "affectedBones": "Affected bones",
+        "sampleRate": "Sample rate"
+      }
+    }
+  },
   "controls": {
     "title": "Playback Controls",
     "labels": {

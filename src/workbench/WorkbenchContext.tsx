@@ -33,6 +33,10 @@ export interface WorkbenchContextValue {
   uploadBundleFiles: (files: File[]) => Promise<void>;
   setShowUrlModal: React.Dispatch<React.SetStateAction<boolean>>;
   toggleMeshes: (visible?: boolean) => void;
+  togglePhysics: (visible?: boolean) => void;
+  toggleIk: (visible?: boolean) => void;
+  toggleTransformConstraints: (visible?: boolean) => void;
+  togglePathConstraints: (visible?: boolean) => void;
   meshesVisible: boolean;
   partnerTools: Array<{ labelKey: string; href: string }>;
   documentationLinks: Array<{ labelKey: string; href: string }>;

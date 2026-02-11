@@ -27,13 +27,17 @@ export function useSpineApp(app: Application | null) {
     clearSpineInstance
   } = useSpineLoader(app);
   
-  const { 
-    meshesVisible, 
-    physicsVisible, 
-    ikVisible, 
-    toggleMeshes, 
-    togglePhysics, 
-    toggleIk
+  const {
+    meshesVisible,
+    physicsVisible,
+    ikVisible,
+    transformConstraintsVisible,
+    pathConstraintsVisible,
+    toggleMeshes,
+    togglePhysics,
+    toggleIk,
+    toggleTransformConstraints,
+    togglePathConstraints
   } = useDebugVisualizer();
   
   const { 
@@ -113,11 +117,13 @@ export function useSpineApp(app: Application | null) {
       showMeshHull: meshesVisible,
       showRegionAttachments: meshesVisible,
       showIkConstraints: ikVisible,
-      showPhysics: physicsVisible
+      showPhysics: physicsVisible,
+      showTransformConstraints: transformConstraintsVisible,
+      showPathConstraints: pathConstraintsVisible
     });
-    
+
     cameraContainerRef.current.forceResetDebugGraphics();
-  }, [meshesVisible, ikVisible, physicsVisible]);
+  }, [meshesVisible, ikVisible, physicsVisible, transformConstraintsVisible, pathConstraintsVisible]);
 
   return {
     spineInstance,
@@ -130,9 +136,13 @@ export function useSpineApp(app: Application | null) {
     toggleMeshes,
     togglePhysics,
     toggleIk,
+    toggleTransformConstraints,
+    togglePathConstraints,
     meshesVisible,
     physicsVisible,
     ikVisible,
+    transformConstraintsVisible,
+    pathConstraintsVisible,
     getCameraContainer
   };
 }
