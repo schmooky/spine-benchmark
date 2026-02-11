@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useBenchmarkPanel } from '../hooks/useBenchmarkPanel';
 import { SpineAnalysisResult } from '../core/SpineAnalyzer';
+import { getImpactBadgeClass } from '../core/utils/scoreCalculator';
 import './BenchmarkPanel.css';
 
 interface BenchmarkPanelProps {
@@ -14,34 +16,33 @@ export const BenchmarkPanel: React.FC<BenchmarkPanelProps> = ({
   showBenchmark,
   setShowBenchmark
 }) => {
+  const { t } = useTranslation();
   const {
     isVisible,
     shouldPulsate,
-    score,
-    scoreClass,
+    rendering,
+    computational,
     handleClick
   } = useBenchmarkPanel(benchmarkData, showBenchmark, setShowBenchmark);
 
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Handle pulsation animation trigger
   useEffect(() => {
     if (shouldPulsate) {
       setIsAnimating(true);
       const timer = setTimeout(() => {
         setIsAnimating(false);
-      }, 500); // Match animation duration
-      
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [shouldPulsate]);
 
-  if (!isVisible || score === null) {
+  if (!isVisible || !rendering || !computational) {
     return null;
   }
 
   return (
-    <div 
+    <div
       className={`benchmark-panel ${isAnimating ? 'pulsate' : ''}`}
       onClick={handleClick}
       role="button"
@@ -54,8 +55,17 @@ export const BenchmarkPanel: React.FC<BenchmarkPanelProps> = ({
         }
       }}
     >
-      <div className={`benchmark-score ${scoreClass}`}>
-        {Math.round(score)}
+      <div className="benchmark-impact-row">
+        <span className="benchmark-impact-label">RI</span>
+        <span className="benchmark-impact-value" style={{ color: rendering.color }}>
+          {Math.round(rendering.cost)}
+        </span>
+      </div>
+      <div className="benchmark-impact-row">
+        <span className="benchmark-impact-label">CI</span>
+        <span className="benchmark-impact-value" style={{ color: computational.color }}>
+          {Math.round(computational.cost)}
+        </span>
       </div>
     </div>
   );

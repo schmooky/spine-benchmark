@@ -1,35 +1,33 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
-import { getScoreColor } from '../../core/utils/scoreCalculator';
-import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
+import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 
 interface ClippingAnalysisProps {
   data: SpineAnalysisResult;
 }
 
+function clippingImpactCost(c: any): number {
+  return (c.activeMaskCount * 5);
+}
+
 export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
-  
-  // Calculate median score for clipping
-  const scores = data.animations.map(a => a.clippingMetrics.score);
-  const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
+
+  const worstImpact = data.animations.reduce((worst, a) => {
+    const cost = clippingImpactCost(a.clippingMetrics);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
 
   return (
     <div className="clipping-analysis">
       <h3>{t('analysis.clipping.title')}</h3>
-      
+
       <div className="median-score">
-        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ 
-              width: `${medianScore}%`, 
-              backgroundColor: getScoreColor(medianScore) 
-            }}
-          />
-        </div>
+        <h4>{t('analysis.common.worstImpact')}</h4>
+        <span className={`performance-impact ${getImpactBadgeClass(worstImpact.level)}`}>
+          {t('analysis.summary.impact.' + worstImpact.level)}
+        </span>
       </div>
 
       <h4>{t('analysis.common.perAnimationBreakdown')}</h4>
@@ -40,14 +38,15 @@ export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
             <th>{t('analysis.clipping.headers.hasClipping')}</th>
             <th>{t('analysis.clipping.headers.activeMasks')}</th>
             <th>{t('analysis.clipping.headers.totalVertices')}</th>
-            <th>{t('analysis.common.headers.score')}</th>
+            <th>{t('analysis.common.headers.impact')}</th>
           </tr>
         </thead>
         <tbody>
           {data.animations.map((animation) => {
             const c = animation.clippingMetrics;
-            const rowClass = c.score < 70 ? 'row-warning' : c.score < 50 ? 'row-danger' : '';
-            
+            const impact = getImpactFromCost(clippingImpactCost(c));
+            const rowClass = impact.cost >= 25 ? 'row-danger' : impact.cost >= 15 ? 'row-warning' : '';
+
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
@@ -55,27 +54,18 @@ export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
                 <td>{c.activeMaskCount}</td>
                 <td>{c.totalVertices}</td>
                 <td>
-                  <div className="inline-score">
-                    <span>{c.score.toFixed(1)}%</span>
-                    <div className="mini-progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ 
-                          width: `${c.score}%`, 
-                          backgroundColor: getScoreColor(c.score) 
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <span className={`performance-impact ${getImpactBadgeClass(impact.level)}`}>
+                    {t('analysis.summary.impact.' + impact.level)}
+                  </span>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      
+
       <GlobalClippingDetails data={data} />
-      
+
       <div className="analysis-notes">
         <h4>{t('analysis.clipping.notes.title')}</h4>
         <ul>
@@ -93,11 +83,11 @@ export const ClippingAnalysis: React.FC<ClippingAnalysisProps> = ({ data }) => {
 const GlobalClippingDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => {
   const { t } = useTranslation();
   const { masks } = data.globalClipping;
-  
+
   if (masks.length === 0) {
     return <p>{t('analysis.clipping.noMasks')}</p>;
   }
-  
+
   return (
     <>
       <h4>{t('analysis.clipping.globalMasksTitle')}</h4>
@@ -111,18 +101,18 @@ const GlobalClippingDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }
         </thead>
         <tbody>
           {masks.map((mask) => {
-            const status = mask.vertexCount <= 4 
+            const status = mask.vertexCount <= 4
               ? t('analysis.clipping.status.optimal')
-              : mask.vertexCount <= 8 
+              : mask.vertexCount <= 8
                 ? t('analysis.clipping.status.acceptable')
                 : t('analysis.clipping.status.highVertexCount');
-            
-            const rowClass = mask.vertexCount <= 4 
-              ? '' 
-              : mask.vertexCount <= 8 
-                ? 'row-warning' 
+
+            const rowClass = mask.vertexCount <= 4
+              ? ''
+              : mask.vertexCount <= 8
+                ? 'row-warning'
                 : 'row-danger';
-            
+
             return (
               <tr key={mask.slotName} className={rowClass}>
                 <td>{mask.slotName}</td>

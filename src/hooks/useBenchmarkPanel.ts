@@ -1,11 +1,26 @@
 import { useEffect, useState, useCallback } from 'react';
-import { SpineAnalysisResult } from '../core/SpineAnalyzer';
+import { SpineAnalysisResult, AnimationAnalysis } from '../core/SpineAnalyzer';
+import { getImpactFromCost, ImpactResult } from '../core/utils/scoreCalculator';
+
+function worstRenderingImpact(animations: AnimationAnalysis[]): ImpactResult {
+  return animations.reduce((worst, a) => {
+    const cost = (a.blendModeMetrics.activeNonNormalCount * 3) + (a.clippingMetrics.activeMaskCount * 5) + (a.meshMetrics.totalVertices / 200);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
+}
+
+function worstComputationalImpact(animations: AnimationAnalysis[]): ImpactResult {
+  return animations.reduce((worst, a) => {
+    const cost = (a.constraintMetrics.activePhysicsCount * 4) + (a.constraintMetrics.activeIkCount * 2) + (a.constraintMetrics.activeTransformCount * 1.5) + (a.constraintMetrics.activePathCount * 2.5) + (a.meshMetrics.deformedMeshCount * 1.5) + (a.meshMetrics.weightedMeshCount * 2);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
+}
 
 export interface UseBenchmarkPanelResult {
   isVisible: boolean;
   shouldPulsate: boolean;
-  score: number | null;
-  scoreClass: string;
+  rendering: ImpactResult | null;
+  computational: ImpactResult | null;
   handleClick: () => void;
 }
 
@@ -16,54 +31,32 @@ export const useBenchmarkPanel = (
 ): UseBenchmarkPanelResult => {
   const [isVisible, setIsVisible] = useState(false);
   const [pulsateCount, setPulsateCount] = useState(0);
-  const [score, setScore] = useState<number | null>(null);
-  const [scoreClass, setScoreClass] = useState('');
+  const [rendering, setRendering] = useState<ImpactResult | null>(null);
+  const [computational, setComputational] = useState<ImpactResult | null>(null);
 
-  // Determine if panel should be visible
   useEffect(() => {
     const shouldShowPanel = benchmarkData !== null && !showBenchmark;
     setIsVisible(shouldShowPanel);
-    
-    // Reset pulsation when visibility changes
     if (shouldShowPanel) {
       setPulsateCount(0);
     }
   }, [benchmarkData, showBenchmark]);
 
-  // Handle pulsation animation - exactly twice
   useEffect(() => {
-    if (!isVisible || pulsateCount >= 2) {
-      return;
-    }
-
+    if (!isVisible || pulsateCount >= 2) return;
     const timer = setTimeout(() => {
       setPulsateCount(prev => prev + 1);
-    }, 500); // Match animation duration
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [isVisible, pulsateCount]);
 
-  // Calculate score and class when benchmarkData changes
   useEffect(() => {
-    if (benchmarkData) {
-      const calculatedScore = benchmarkData.medianScore;
-      setScore(calculatedScore);
-      
-      // Determine score class based on performance
-      if (calculatedScore !== null) {
-        if (calculatedScore <= 30) {
-          setScoreClass('poor');
-        } else if (calculatedScore <= 70) {
-          setScoreClass('fair');
-        } else {
-          setScoreClass('good');
-        }
-      } else {
-        setScoreClass('');
-      }
+    if (benchmarkData && benchmarkData.animations.length > 0) {
+      setRendering(worstRenderingImpact(benchmarkData.animations));
+      setComputational(worstComputationalImpact(benchmarkData.animations));
     } else {
-      setScore(null);
-      setScoreClass('');
+      setRendering(null);
+      setComputational(null);
     }
   }, [benchmarkData]);
 
@@ -74,8 +67,8 @@ export const useBenchmarkPanel = (
   return {
     isVisible,
     shouldPulsate: isVisible && pulsateCount < 2,
-    score,
-    scoreClass,
+    rendering,
+    computational,
     handleClick
   };
 };

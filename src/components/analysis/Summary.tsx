@@ -1,51 +1,95 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
-import { getScoreColor, getScoreRating, getScoreInterpretation } from '../../core/utils/scoreCalculator';
+import { SpineAnalysisResult, AnimationAnalysis } from '../../core/SpineAnalyzer';
+import { getImpactFromCost, getImpactBadgeClass, ImpactResult } from '../../core/utils/scoreCalculator';
 
 interface SummaryProps {
   data: SpineAnalysisResult;
 }
 
+function renderingImpact(a: AnimationAnalysis): ImpactResult {
+  const cost = (a.blendModeMetrics.activeNonNormalCount * 3) + (a.clippingMetrics.activeMaskCount * 5) + (a.meshMetrics.totalVertices / 200);
+  return getImpactFromCost(cost);
+}
+
+function computationalImpact(a: AnimationAnalysis): ImpactResult {
+  const cost = (a.constraintMetrics.activePhysicsCount * 4) + (a.constraintMetrics.activeIkCount * 2) + (a.constraintMetrics.activeTransformCount * 1.5) + (a.constraintMetrics.activePathCount * 2.5) + (a.meshMetrics.deformedMeshCount * 1.5) + (a.meshMetrics.weightedMeshCount * 2);
+  return getImpactFromCost(cost);
+}
+
+function worstImpact(impacts: ImpactResult[]): ImpactResult {
+  if (impacts.length === 0) return getImpactFromCost(0);
+  return impacts.reduce((worst, cur) => cur.cost > worst.cost ? cur : worst, impacts[0]);
+}
+
 export const Summary: React.FC<SummaryProps> = ({ data }) => {
   const { t } = useTranslation();
-  
-  const { medianScore, bestAnimation, worstAnimation, stats, skeleton } = data;
-  const performanceRating = getScoreRating(medianScore);
-  const interpretation = getScoreInterpretation(medianScore);
-  const scoreColor = getScoreColor(medianScore);
-  
-  // Sort animations by score for the table
-  const sortedAnimations = [...data.animations].sort((a, b) => b.overallScore - a.overallScore);
-  
+
+  const sortedAnimations = [...data.animations].sort((a, b) => {
+    const aCost = renderingImpact(a).cost + computationalImpact(a).cost;
+    const bCost = renderingImpact(b).cost + computationalImpact(b).cost;
+    return bCost - aCost;
+  });
+
+  const worstRendering = worstImpact(data.animations.map(renderingImpact));
+  const worstCompute = worstImpact(data.animations.map(computationalImpact));
+
+  // Aggregate metrics across all animations for summary
+  const totalBlendBreaks = Math.max(...data.animations.map(a => a.blendModeMetrics.activeNonNormalCount));
+  const totalClipMasks = Math.max(...data.animations.map(a => a.clippingMetrics.activeMaskCount));
+  const peakVertices = Math.max(...data.animations.map(a => a.meshMetrics.totalVertices));
+  const totalPhysics = Math.max(...data.animations.map(a => a.constraintMetrics.activePhysicsCount));
+  const totalIK = Math.max(...data.animations.map(a => a.constraintMetrics.activeIkCount));
+  const peakDeformed = Math.max(...data.animations.map(a => a.meshMetrics.deformedMeshCount));
+  const peakWeighted = Math.max(...data.animations.map(a => a.meshMetrics.weightedMeshCount));
+
   return (
     <div className="benchmark-summary">
       <h2>{t('analysis.summary.title')}</h2>
       <p>{t('analysis.summary.skeletonLabel', { name: data.skeletonName })}</p>
-      
-      <div className="score-container">
-        <div className="performance-score" style={{ color: scoreColor }}>
-          {Math.round(medianScore)}
+
+      <div className="impact-summary-grid">
+        <div className="impact-summary-card">
+          <div className="impact-summary-header">
+            <span className="impact-summary-title">{t('analysis.impact.rendering')}</span>
+            <span className={`performance-impact ${getImpactBadgeClass(worstRendering.level)}`}>
+              {t('analysis.summary.impact.' + worstRendering.level)}
+            </span>
+          </div>
+          <div className="impact-summary-details">
+            {totalBlendBreaks > 0 && <span>{t('analysis.impact.blendBreaks', { count: totalBlendBreaks })}</span>}
+            {totalClipMasks > 0 && <span>{t('analysis.impact.clipMasks', { count: totalClipMasks })}</span>}
+            <span>{t('analysis.impact.peakVertices', { count: peakVertices })}</span>
+          </div>
         </div>
-        <div className="score-label">
-          {t('analysis.summary.medianPerformanceLabel', { rating: performanceRating })}
+        <div className="impact-summary-card">
+          <div className="impact-summary-header">
+            <span className="impact-summary-title">{t('analysis.impact.computational')}</span>
+            <span className={`performance-impact ${getImpactBadgeClass(worstCompute.level)}`}>
+              {t('analysis.summary.impact.' + worstCompute.level)}
+            </span>
+          </div>
+          <div className="impact-summary-details">
+            {totalPhysics > 0 && <span>{t('analysis.impact.physicsCount', { count: totalPhysics })}</span>}
+            {totalIK > 0 && <span>{t('analysis.impact.ikCount', { count: totalIK })}</span>}
+            {peakDeformed > 0 && <span>{t('analysis.impact.deformedCount', { count: peakDeformed })}</span>}
+            {peakWeighted > 0 && <span>{t('analysis.impact.weightedCount', { count: peakWeighted })}</span>}
+          </div>
         </div>
-        <p className="score-interpretation">{interpretation}</p>
       </div>
-      
+
       <AnimationOverview data={data} />
-      <AnimationScoresTable animations={sortedAnimations} />
+      <AnimationImpactTable animations={sortedAnimations} />
       <GlobalStatistics data={data} />
       <OptimizationRecommendations data={data} />
-      <PerformanceExplanation />
     </div>
   );
 };
 
 const AnimationOverview: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => {
   const { t } = useTranslation();
-  const { bestAnimation, worstAnimation, stats } = data;
-  
+  const { stats } = data;
+
   return (
     <div className="animation-overview">
       <h3>{t('analysis.summary.animationOverview.title')}</h3>
@@ -54,22 +98,6 @@ const AnimationOverview: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
           <span className="stat-label">{t('analysis.summary.animationOverview.totalAnimations')}</span>
           <span className="stat-value">{data.totalAnimations}</span>
         </div>
-        {bestAnimation && (
-          <div className="stat-item">
-            <span className="stat-label">{t('analysis.summary.animationOverview.bestPerformance')}</span>
-            <span className="stat-value">
-              {bestAnimation.name} ({bestAnimation.overallScore.toFixed(1)}%)
-            </span>
-          </div>
-        )}
-        {worstAnimation && (
-          <div className="stat-item">
-            <span className="stat-label">{t('analysis.summary.animationOverview.worstPerformance')}</span>
-            <span className="stat-value">
-              {worstAnimation.name} ({worstAnimation.overallScore.toFixed(1)}%)
-            </span>
-          </div>
-        )}
         <div className="stat-item">
           <span className="stat-label">{t('analysis.summary.animationOverview.withPhysics')}</span>
           <span className="stat-value">{t('analysis.summary.animationOverview.animationsCount', { count: stats.animationsWithPhysics })}</span>
@@ -87,7 +115,7 @@ const AnimationOverview: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
   );
 };
 
-const AnimationScoresTable: React.FC<{ animations: any[] }> = ({ animations }) => {
+const AnimationImpactTable: React.FC<{ animations: AnimationAnalysis[] }> = ({ animations }) => {
   const { t } = useTranslation();
   return (
     <>
@@ -97,47 +125,39 @@ const AnimationScoresTable: React.FC<{ animations: any[] }> = ({ animations }) =
           <tr>
             <th>{t('analysis.common.headers.animation')}</th>
             <th>{t('analysis.summary.tableHeaders.duration')}</th>
-            <th>{t('analysis.summary.tableHeaders.overallScore')}</th>
+            <th>{t('analysis.impact.rendering')}</th>
+            <th>{t('analysis.impact.computational')}</th>
             <th>{t('analysis.summary.tableHeaders.activeFeatures')}</th>
-            <th>{t('analysis.summary.tableHeaders.performanceImpact')}</th>
           </tr>
         </thead>
         <tbody>
           {animations.map((animation) => {
-            const features = [];
+            const features: string[] = [];
             if (animation.activeComponents.hasPhysics) features.push(t('analysis.summary.features.physics'));
             if (animation.activeComponents.hasIK) features.push(t('analysis.summary.features.ik'));
             if (animation.activeComponents.hasClipping) features.push(t('analysis.summary.features.clipping'));
             if (animation.activeComponents.hasBlendModes) features.push(t('analysis.summary.features.blend'));
-            
-            const rowClass = animation.overallScore < 55 ? 'row-danger' : 
-                           animation.overallScore < 70 ? 'row-warning' : '';
-            
-            const impact = animation.overallScore >= 85 ? t('analysis.summary.impact.minimal') :
-                          animation.overallScore >= 70 ? t('analysis.summary.impact.low') :
-                          animation.overallScore >= 55 ? t('analysis.summary.impact.moderate') :
-                          animation.overallScore >= 40 ? t('analysis.summary.impact.high') : t('analysis.summary.impact.veryHigh');
-            
+
+            const render = renderingImpact(animation);
+            const compute = computationalImpact(animation);
+            const totalCost = render.cost + compute.cost;
+            const rowClass = totalCost >= 25 ? 'row-danger' : totalCost >= 15 ? 'row-warning' : '';
+
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
                 <td>{animation.duration.toFixed(2)}s</td>
                 <td>
-                  <div className="inline-score">
-                    <span>{animation.overallScore.toFixed(1)}%</span>
-                    <div className="mini-progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ 
-                          width: `${animation.overallScore}%`, 
-                          backgroundColor: getScoreColor(animation.overallScore) 
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <span className={`performance-impact ${getImpactBadgeClass(render.level)}`}>
+                    {t('analysis.summary.impact.' + render.level)}
+                  </span>
+                </td>
+                <td>
+                  <span className={`performance-impact ${getImpactBadgeClass(compute.level)}`}>
+                    {t('analysis.summary.impact.' + compute.level)}
+                  </span>
                 </td>
                 <td>{features.length > 0 ? features.join(', ') : t('analysis.summary.features.none')}</td>
-                <td>{impact}</td>
               </tr>
             );
           })}
@@ -150,7 +170,7 @@ const AnimationScoresTable: React.FC<{ animations: any[] }> = ({ animations }) =
 const GlobalStatistics: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => {
   const { t } = useTranslation();
   const { skeleton } = data;
-  
+
   return (
     <>
       <h3>{t('analysis.summary.globalSkeletonStatisticsTitle')}</h3>
@@ -182,19 +202,17 @@ const GlobalStatistics: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => 
 
 const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => {
   const { t } = useTranslation();
-  
+
   const recommendations: string[] = [];
   const { skeleton, stats, animations } = data;
-  
-  // Bone recommendations
+
   if (skeleton.metrics.maxDepth > 5) {
     recommendations.push(t('analysis.summary.recommendations.reduceBoneDepth'));
   }
   if (skeleton.metrics.totalBones > 50) {
     recommendations.push(t('analysis.summary.recommendations.reduceTotalBones'));
   }
-  
-  // Animation-specific recommendations
+
   if (stats.animationsWithPhysics > data.totalAnimations * 0.5) {
     recommendations.push(
       t('analysis.summary.recommendations.physicsUsage', {
@@ -203,7 +221,7 @@ const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ 
       })
     );
   }
-  
+
   if (stats.animationsWithClipping > 0) {
     const clippingAnimations = animations.filter(a => a.activeComponents.hasClipping);
     const animationNames = clippingAnimations.slice(0, 3).map(a => a.name).join(', ');
@@ -212,7 +230,7 @@ const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ 
       t('analysis.summary.recommendations.clippingFound', { names: animationNames, more })
     );
   }
-  
+
   if (stats.highVertexAnimations > 0) {
     const highVertexAnims = animations.filter(a => a.meshMetrics.totalVertices > 500);
     recommendations.push(
@@ -222,39 +240,27 @@ const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ 
       })
     );
   }
-  
-  if (stats.poorPerformingAnimations > 0) {
-    const poorAnims = animations.filter(a => a.overallScore < 55);
-    recommendations.push(
-      t('analysis.summary.recommendations.focusPoorAnimations', {
-        names: poorAnims.slice(0, 3).map(a => `${a.name} (${a.overallScore.toFixed(0)}%)`).join(', ')
-      })
-    );
-  }
-  
-  // Find animations with multiple expensive features
-  const multiIssueAnimations = animations.filter(a => {
-    let issueCount = 0;
-    if (a.activeComponents.hasPhysics) issueCount++;
-    if (a.activeComponents.hasClipping) issueCount++;
-    if (a.meshMetrics.deformedMeshCount > 3) issueCount++;
-    if (a.blendModeMetrics.activeNonNormalCount > 2) issueCount++;
-    return issueCount >= 2;
+
+  // Find animations with high combined impact
+  const highImpactAnimations = animations.filter(a => {
+    const r = renderingImpact(a);
+    const c = computationalImpact(a);
+    return (r.cost + c.cost) >= 25;
   });
-  
-  if (multiIssueAnimations.length > 0) {
+
+  if (highImpactAnimations.length > 0) {
     recommendations.push(
       t('analysis.summary.recommendations.multiIssueAnimations', {
-        count: multiIssueAnimations.length,
-        names: multiIssueAnimations.slice(0, 2).map(a => a.name).join(', ')
+        count: highImpactAnimations.length,
+        names: highImpactAnimations.slice(0, 2).map(a => a.name).join(', ')
       })
     );
   }
-  
+
   if (recommendations.length === 0) {
     recommendations.push(t('analysis.summary.recommendations.performanceGenerallyGood'));
   }
-  
+
   return (
     <div className="optimization-tips">
       <h3>{t('analysis.summary.optimizationTitle')}</h3>
@@ -263,47 +269,6 @@ const OptimizationRecommendations: React.FC<{ data: SpineAnalysisResult }> = ({ 
           <li key={index}>{tip}</li>
         ))}
       </ul>
-    </div>
-  );
-};
-
-const PerformanceExplanation: React.FC = () => {
-  const { t } = useTranslation();
-  
-  return (
-    <div className="performance-explanation">
-      <h3>{t('analysis.summary.performanceExplanationTitle')}</h3>
-      <table className="benchmark-table">
-        <thead>
-          <tr>
-            <th>{t('analysis.summary.tableHeaders.scoreRange')}</th>
-            <th>{t('analysis.summary.tableHeaders.rating')}</th>
-            <th>{t('analysis.summary.tableHeaders.interpretation')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{t('analysis.summary.performanceRanges.excellent.range')}</td>
-            <td>{t('analysis.summary.performanceRanges.excellent.rating')}</td>
-            <td>{t('analysis.summary.performanceRanges.excellent.description')}</td>
-          </tr>
-          <tr>
-            <td>{t('analysis.summary.performanceRanges.good.range')}</td>
-            <td>{t('analysis.summary.performanceRanges.good.rating')}</td>
-            <td>{t('analysis.summary.performanceRanges.good.description')}</td>
-          </tr>
-          <tr>
-            <td>{t('analysis.summary.performanceRanges.moderate.range')}</td>
-            <td>{t('analysis.summary.performanceRanges.moderate.rating')}</td>
-            <td>{t('analysis.summary.performanceRanges.moderate.description')}</td>
-          </tr>
-          <tr>
-            <td>{t('analysis.summary.performanceRanges.poor.range')}</td>
-            <td>{t('analysis.summary.performanceRanges.poor.rating')}</td>
-            <td>{t('analysis.summary.performanceRanges.poor.description')}</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   );
 };

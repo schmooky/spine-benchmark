@@ -1,65 +1,76 @@
+/* ── Benchmark Impact Panel ──────────────────────────────────────── */
 .benchmark-panel {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  width: 60px;
-  height: 60px;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  border-radius: 8px;
+  top: 62px;
+  left: calc(var(--sb-sidebar-width) + 12px);
+  background: rgba(14, 17, 23, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius-lg);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-md);
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  box-shadow: var(--sb-shadow-md);
   z-index: 100;
   cursor: pointer;
-  transition: opacity 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition:
+    opacity var(--sb-duration) var(--sb-ease),
+    transform 0.4s var(--sb-ease),
+    border-color var(--sb-duration) var(--sb-ease);
   opacity: 1;
 }
 
+.app-shell:has(.app-sidebar.collapsed) .benchmark-panel {
+  left: calc(var(--sb-sidebar-collapsed) + 12px);
+}
+
+.benchmark-panel:hover {
+  border-color: var(--sb-accent);
+}
+
 .benchmark-panel:focus {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--sb-accent);
   outline-offset: 2px;
 }
 
-.benchmark-score {
-  font-size: 20px;
-  font-weight: bold;
-  text-align: center;
-  font-family: 'Inter', sans-serif;
-  user-select: none;
+/* Impact rows */
+.benchmark-impact-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.benchmark-score.poor {
-  color: #f04747;
+.benchmark-impact-label {
+  font-family: var(--sb-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sb-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 16px;
 }
 
-.benchmark-score.fair {
-  color: #faa61a;
+.benchmark-impact-value {
+  font-family: var(--sb-font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.benchmark-score.good {
-  color: #43b581;
-}
-
+/* Pulse animation on data change */
 @keyframes pulse-attention {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
 }
 
 .benchmark-panel.pulsate {
-  animation: pulse-attention 0.5s ease-in-out;
+  animation: pulse-attention 0.45s var(--sb-ease);
 }
 
-/* Ensure smooth transitions */
-.benchmark-panel {
-  transition: opacity 0.3s ease, transform 0.5s ease;
+@media (max-width: 900px) {
+  .benchmark-panel {
+    left: 12px;
+  }
 }

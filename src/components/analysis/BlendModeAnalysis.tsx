@@ -2,35 +2,33 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BlendMode } from "@esotericsoftware/spine-pixi-v8";
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
-import { getScoreColor } from '../../core/utils/scoreCalculator';
-import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
+import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 
 interface BlendModeAnalysisProps {
   data: SpineAnalysisResult;
 }
 
+function blendModeImpactCost(b: any): number {
+  return (b.activeNonNormalCount * 3);
+}
+
 export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
-  
-  // Calculate median score for blend modes
-  const scores = data.animations.map(a => a.blendModeMetrics.score);
-  const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
+
+  const worstImpact = data.animations.reduce((worst, a) => {
+    const cost = blendModeImpactCost(a.blendModeMetrics);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
 
   return (
     <div className="blend-mode-analysis">
       <h3>{t('analysis.blendMode.title')}</h3>
-      
+
       <div className="median-score">
-        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ 
-              width: `${medianScore}%`, 
-              backgroundColor: getScoreColor(medianScore) 
-            }}
-          />
-        </div>
+        <h4>{t('analysis.common.worstImpact')}</h4>
+        <span className={`performance-impact ${getImpactBadgeClass(worstImpact.level)}`}>
+          {t('analysis.summary.impact.' + worstImpact.level)}
+        </span>
       </div>
 
       <h4>{t('analysis.blendMode.perAnimationBreakdownTitle')}</h4>
@@ -42,14 +40,15 @@ export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) =>
             <th>{t('analysis.blendMode.headers.maxNonNormal')}</th>
             <th>{t('analysis.blendMode.headers.maxAdditive')}</th>
             <th>{t('analysis.blendMode.headers.maxMultiply')}</th>
-            <th>{t('analysis.common.headers.score')}</th>
+            <th>{t('analysis.common.headers.impact')}</th>
           </tr>
         </thead>
         <tbody>
           {data.animations.map((animation) => {
             const b = animation.blendModeMetrics;
-            const rowClass = b.score < 70 ? 'row-warning' : b.score < 50 ? 'row-danger' : '';
-            
+            const impact = getImpactFromCost(blendModeImpactCost(b));
+            const rowClass = impact.cost >= 25 ? 'row-danger' : impact.cost >= 15 ? 'row-warning' : '';
+
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
@@ -58,27 +57,18 @@ export const BlendModeAnalysis: React.FC<BlendModeAnalysisProps> = ({ data }) =>
                 <td>{b.activeAdditiveCount}</td>
                 <td>{b.activeMultiplyCount}</td>
                 <td>
-                  <div className="inline-score">
-                    <span>{b.score.toFixed(1)}%</span>
-                    <div className="mini-progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ 
-                          width: `${b.score}%`, 
-                          backgroundColor: getScoreColor(b.score) 
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <span className={`performance-impact ${getImpactBadgeClass(impact.level)}`}>
+                    {t('analysis.summary.impact.' + impact.level)}
+                  </span>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      
+
       <GlobalBlendModeDetails data={data} />
-      
+
       <div className="analysis-notes">
         <h4>{t('analysis.blendMode.notes.title')}</h4>
         <ul>
@@ -96,11 +86,11 @@ const GlobalBlendModeDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data 
   const { t } = useTranslation();
   const { globalBlendMode } = data;
   const { blendModeCounts, slotsWithNonNormalBlendMode, metrics } = globalBlendMode;
-  
+
   if (slotsWithNonNormalBlendMode.size === 0) {
     return null;
   }
-  
+
   return (
     <>
       <h4>{t('analysis.blendMode.slotsWithNonNormalTitle')}</h4>

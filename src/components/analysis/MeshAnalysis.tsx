@@ -1,35 +1,34 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
-import { getScoreColor } from '../../core/utils/scoreCalculator';
+import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
 
 interface MeshAnalysisProps {
   data: SpineAnalysisResult;
 }
 
+function meshImpactCost(m: any): number {
+  return (m.totalVertices / 200) + (m.deformedMeshCount * 1.5) + (m.weightedMeshCount * 2);
+}
+
 export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
-  
-  // Calculate median score for meshes
-  const scores = data.animations.map(a => a.meshMetrics.score);
-  const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
+
+  const worstImpact = data.animations.reduce((worst, a) => {
+    const cost = meshImpactCost(a.meshMetrics);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
 
   return (
     <div className="mesh-analysis">
       <h3>{t('analysis.mesh.title')}</h3>
-      
+
       <div className="median-score">
-        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ 
-              width: `${medianScore}%`, 
-              backgroundColor: getScoreColor(medianScore) 
-            }}
-          />
-        </div>
+        <h4>{t('analysis.common.worstImpact')}</h4>
+        <span className={`performance-impact ${getImpactBadgeClass(worstImpact.level)}`}>
+          {t('analysis.summary.impact.' + worstImpact.level)}
+        </span>
       </div>
 
       <h4>{t('analysis.common.perAnimationBreakdown')}</h4>
@@ -41,14 +40,15 @@ export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
             <th>{t('analysis.mesh.headers.totalVertices')}</th>
             <th>{t('analysis.mesh.headers.deformed')}</th>
             <th>{t('analysis.mesh.headers.weighted')}</th>
-            <th>{t('analysis.common.headers.score')}</th>
+            <th>{t('analysis.common.headers.impact')}</th>
           </tr>
         </thead>
         <tbody>
           {data.animations.map((animation) => {
             const m = animation.meshMetrics;
-            const rowClass = m.score < 70 ? 'row-warning' : m.score < 50 ? 'row-danger' : '';
-            
+            const impact = getImpactFromCost(meshImpactCost(m));
+            const rowClass = impact.cost >= 25 ? 'row-danger' : impact.cost >= 15 ? 'row-warning' : '';
+
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
@@ -57,27 +57,18 @@ export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
                 <td>{m.deformedMeshCount}</td>
                 <td>{m.weightedMeshCount}</td>
                 <td>
-                  <div className="inline-score">
-                    <span>{m.score.toFixed(1)}%</span>
-                    <div className="mini-progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ 
-                          width: `${m.score}%`, 
-                          backgroundColor: getScoreColor(m.score) 
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <span className={`performance-impact ${getImpactBadgeClass(impact.level)}`}>
+                    {t('analysis.summary.impact.' + impact.level)}
+                  </span>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      
+
       <GlobalMeshDetails data={data} />
-      
+
       <div className="analysis-notes">
         <h4>{t('analysis.mesh.notes.title')}</h4>
         <ul>
@@ -94,10 +85,10 @@ export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
 const GlobalMeshDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => {
   const { t } = useTranslation();
   const { meshes } = data.globalMesh;
-  
+
   // Sort by vertex count descending
   const sortedMeshes = [...meshes].sort((a, b) => b.vertices - a.vertices);
-  
+
   return (
     <>
       <h4>{t('analysis.mesh.globalDetails')}</h4>
@@ -113,14 +104,13 @@ const GlobalMeshDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
         </thead>
         <tbody>
           {sortedMeshes.slice(0, 10).map((mesh) => {
-            // Determine row color based on vertex count and deformation
             let rowClass = '';
             if (mesh.vertices > 100 || (mesh.vertices > 50 && mesh.isDeformed)) {
               rowClass = 'row-danger';
             } else if (mesh.vertices > 50 || (mesh.vertices > 20 && mesh.isDeformed)) {
               rowClass = 'row-warning';
             }
-            
+
             return (
               <tr key={mesh.slotName} className={rowClass}>
                 <td>{mesh.slotName}</td>

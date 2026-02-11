@@ -239,3 +239,37 @@ export function getScoreInterpretation(score: number): string {
   if (score >= 40) return i18n.t('analysis.scores.interpretations.poor');
   return i18n.t('analysis.scores.interpretations.veryPoor');
 }
+
+/**
+ * Impact result used for rendering/computational impact display
+ */
+export interface ImpactResult {
+  level: string;
+  cost: number;
+  color: string;
+}
+
+/**
+ * Converts a raw cost number into an impact level with color
+ */
+export function getImpactFromCost(cost: number): ImpactResult {
+  if (cost < 3) return { level: 'minimal', cost, color: '#34D399' };
+  if (cost < 8) return { level: 'low', cost, color: '#A3E635' };
+  if (cost < 15) return { level: 'moderate', cost, color: '#FBBF24' };
+  if (cost < 25) return { level: 'high', cost, color: '#FB923C' };
+  return { level: 'veryHigh', cost, color: '#F87171' };
+}
+
+/**
+ * Returns the CSS class name for an impact badge
+ */
+export function getImpactBadgeClass(level: string): string {
+  switch (level) {
+    case 'minimal': return 'impact-minimal';
+    case 'low': return 'impact-low';
+    case 'moderate': return 'impact-moderate';
+    case 'high': return 'impact-high';
+    case 'veryHigh': return 'impact-very-high';
+    default: return 'impact-minimal';
+  }
+}

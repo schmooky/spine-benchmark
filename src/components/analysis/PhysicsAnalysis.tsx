@@ -1,35 +1,34 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
-import { getScoreColor } from '../../core/utils/scoreCalculator';
+import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
 
 interface PhysicsAnalysisProps {
   data: SpineAnalysisResult;
 }
 
+function constraintImpactCost(c: any): number {
+  return (c.activePhysicsCount * 4) + (c.activeIkCount * 2) + (c.activeTransformCount * 1.5) + (c.activePathCount * 2.5);
+}
+
 export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
   const { t } = useTranslation();
-  
-  // Calculate median score for constraints
-  const scores = data.animations.map(a => a.constraintMetrics.score);
-  const medianScore = scores.sort((a, b) => a - b)[Math.floor(scores.length / 2)] || 100;
+
+  const worstImpact = data.animations.reduce((worst, a) => {
+    const cost = constraintImpactCost(a.constraintMetrics);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
 
   return (
     <div className="physics-analysis">
       <h3>{t('analysis.physics.title')}</h3>
-      
+
       <div className="median-score">
-        <h4>{t('analysis.common.medianScore', { score: medianScore.toFixed(1) })}</h4>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ 
-              width: `${medianScore}%`, 
-              backgroundColor: getScoreColor(medianScore) 
-            }}
-          />
-        </div>
+        <h4>{t('analysis.common.worstImpact')}</h4>
+        <span className={`performance-impact ${getImpactBadgeClass(worstImpact.level)}`}>
+          {t('analysis.summary.impact.' + worstImpact.level)}
+        </span>
       </div>
 
       <h4>{t('analysis.common.perAnimationBreakdown')}</h4>
@@ -42,7 +41,7 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
             <th>{t('analysis.physics.headers.transform')}</th>
             <th>{t('analysis.physics.headers.path')}</th>
             <th>{t('analysis.physics.headers.totalActive')}</th>
-            <th>{t('analysis.common.headers.score')}</th>
+            <th>{t('analysis.common.headers.impact')}</th>
           </tr>
         </thead>
         <tbody>
@@ -52,9 +51,10 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
             const hasIK = animation.activeComponents.hasIK;
             const hasTransform = animation.activeComponents.hasTransform;
             const hasPath = animation.activeComponents.hasPath;
-            
-            const rowClass = c.score < 70 ? 'row-warning' : c.score < 50 ? 'row-danger' : '';
-            
+
+            const impact = getImpactFromCost(constraintImpactCost(c));
+            const rowClass = impact.cost >= 25 ? 'row-danger' : impact.cost >= 15 ? 'row-warning' : '';
+
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
@@ -64,18 +64,9 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
                 <td>{hasPath ? t('analysis.physics.values.activeCount', { count: c.activePathCount }) : t('analysis.physics.values.none')}</td>
                 <td>{c.totalActiveConstraints}</td>
                 <td>
-                  <div className="inline-score">
-                    <span>{c.score.toFixed(1)}%</span>
-                    <div className="mini-progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ 
-                          width: `${c.score}%`, 
-                          backgroundColor: getScoreColor(c.score) 
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <span className={`performance-impact ${getImpactBadgeClass(impact.level)}`}>
+                    {t('analysis.summary.impact.' + impact.level)}
+                  </span>
                 </td>
               </tr>
             );

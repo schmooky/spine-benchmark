@@ -311,6 +311,17 @@
       "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
       "medianPerformanceLabel": "{{rating}} Performance"
     },
+    "impact": {
+      "rendering": "Rendering Impact",
+      "computational": "Computational Impact",
+      "blendBreaks": "{{count}} blend breaks",
+      "clipMasks": "{{count}} clip masks",
+      "peakVertices": "{{count}} peak vertices",
+      "physicsCount": "{{count}} physics",
+      "ikCount": "{{count}} IK",
+      "deformedCount": "{{count}} deformed",
+      "weightedCount": "{{count}} weighted"
+    },
     "scores": {
       "ratings": {
         "excellent": "Excellent",
@@ -606,10 +617,12 @@
     },
     "common": {
       "medianScore": "Median Performance Score: {{score}}%",
+      "worstImpact": "Worst Impact:",
       "perAnimationBreakdown": "Per-Animation Breakdown",
       "headers": {
         "animation": "Animation",
-        "score": "Score"
+        "score": "Score",
+        "impact": "Impact"
       },
       "yes": "Yes",
       "no": "No"
@@ -816,30 +829,23 @@
   },
   "drawCallInspector": {
     "title": "Draw Call Inspector",
-    "subtitle": "Estimate draw calls and batching breaks caused by blend mode and atlas page transitions.",
-    "labels": {
-      "asset": "Asset:"
+    "subtitle": "Live draw call analysis with real-time slot visualization",
+    "summary": {
+      "drawCalls": "Draw Calls",
+      "pageBreaks": "Page Breaks",
+      "blendBreaks": "Blend Breaks"
     },
-    "values": {
-      "noneSelected": "None selected"
+    "list": {
+      "headers": {
+        "index": "#",
+        "attachment": "Attachment",
+        "page": "Atlas Page",
+        "blend": "Blend"
+      }
     },
-    "actions": {
-      "run": "Analyze Draw Calls"
-    },
-    "report": {
-      "title": "Draw Call Report",
-      "baseDrawCalls": "Base pose draw calls: {{count}}",
-      "pageBreaks": "Page transition breaks: {{count}}",
-      "blendBreaks": "Blend mode breaks: {{count}}",
-      "unknownPages": "Unknown page attachments: {{count}}",
-      "uniquePages": "Unique atlas pages: {{count}}",
-      "uniqueBlends": "Unique blend modes: {{count}}",
-      "animationSection": "Animation Draw-Order Samples",
-      "animationWorst": "Worst sampled DC: {{count}}"
-    },
-    "messages": {
-      "selectAsset": "Select an asset first.",
-      "analysisFailed": "Draw call analysis failed"
+    "empty": {
+      "title": "Load an asset to inspect draw calls",
+      "hint": "Select an asset and click Load to begin live inspection"
     }
   },
   "atlasRepack": {
@@ -897,28 +903,23 @@
     "actions": {
       "openPicker": "Asset Picker",
       "close": "Close",
-      "import": "Import Files",
-      "addAll": "Add All",
-      "addSkeleton": "Add Skeleton",
-      "addAtlas": "Add Atlas",
-      "addImages": "Add Images",
-      "uploadBundle": "Upload Bundle",
-      "uploading": "Uploading...",
-      "clear": "Clear",
+      "import": "Import",
+      "importing": "Importing...",
+      "cancel": "Cancel",
       "loadSelected": "Load Selected",
       "loading": "Loading..."
     },
-    "dropHint": "Drop files here, then keep adding missing parts until the bundle is complete.",
-    "status": {
-      "filesAdded": "Files added: {{count}}",
-      "skeletonReady": "Skeleton: ready",
-      "skeletonMissing": "Skeleton: missing (.json/.skel)",
-      "atlasReady": "Atlas: ready",
-      "atlasMissing": "Atlas: missing (.atlas/.atlas.txt)",
-      "imagesReady": "Images: ready",
-      "imagesMissing": "Images: missing",
-      "atlasImagesResolved": "Atlas image references resolved: {{count}}",
-      "atlasImagesMissing": "Atlas image references missing: {{count}}"
+    "dropzone": {
+      "title": "Drag & drop your Spine files here",
+      "hint": "Skeleton (.json/.skel) + Atlas (.atlas) + Textures (.png)"
+    },
+    "fileSlots": {
+      "skeleton": "Skeleton",
+      "atlas": "Atlas",
+      "textures": "Textures",
+      "select": "Select",
+      "remove": "Remove",
+      "requiredByAtlas": "Required by atlas:"
     },
     "errors": {
       "incompleteBundle": "Bundle is incomplete. Add skeleton, atlas, and required images.",
