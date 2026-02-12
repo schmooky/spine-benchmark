@@ -649,7 +649,8 @@
       "meshOptimizer": "Mesh Optimizer",
       "physicsBaker": "Physics Baker",
       "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor"
+      "atlasRepack": "Atlas Repack Advisor",
+      "comparison": "Comparison"
     },
     "actions": {
       "import": "Import",
@@ -947,6 +948,9 @@
       "restart": "Restart Animation",
       "next": "Next Animation"
     }
+  },
+  "comparison": {
+    "selectAsset": "Select asset..."
   },
   "toolRouteControls": {
     "title": "Tool Inputs",

@@ -677,6 +677,9 @@ const App: React.FC = () => {
             <Link to="/tools/atlas-repack" className={`tool-chip ${pathname.startsWith('/tools/atlas-repack') ? 'active' : ''}`}>
               {t('dashboard.tools.atlasRepack')}
             </Link>
+            <Link to="/tools/comparison" className={`tool-chip ${pathname.startsWith('/tools/comparison') ? 'active' : ''}`}>
+              {t('dashboard.tools.comparison')}
+            </Link>
           </div>
         </section>
 

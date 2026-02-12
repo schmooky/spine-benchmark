@@ -646,7 +646,8 @@
       "meshOptimizer": "Mesh Optimizer",
       "physicsBaker": "Physics Baker",
       "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor"
+      "atlasRepack": "Atlas Repack Advisor",
+      "comparison": "Порівняння"
     },
     "actions": {
       "import": "Import",
@@ -951,6 +952,9 @@
       "title": "Завантажте ассет для перегляду сторінок атласу",
       "hint": "Виберіть ассет та натисніть Завантажити, щоб побачити регіони атласу та вплив на draw calls"
     }
+  },
+  "comparison": {
+    "selectAsset": "Виберіть ассет..."
   },
   "toolRouteControls": {
     "title": "Tool Inputs",

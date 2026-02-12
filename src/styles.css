@@ -286,10 +286,32 @@ body {
   position: relative;
   display: grid;
   grid-template-columns: var(--sb-sidebar-width) minmax(0, 1fr);
+  grid-template-rows: 1fr;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
   background: var(--sb-bg-0);
+}
+
+.app-sidebar {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.workspace-main {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+/* Overlays (modals, panels, toasts) must not create implicit grid rows */
+.app-shell > :not(.app-sidebar):not(.workspace-main) {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  pointer-events: none;
+}
+
+.app-shell > :not(.app-sidebar):not(.workspace-main) > * {
+  pointer-events: auto;
 }
 
 
@@ -3834,4 +3856,82 @@ input[type="color"]::-webkit-color-swatch {
   .welcome-card h2 {
     font-size: 18px;
   }
+}
+
+/* ── 42. Comparison Route ──────────────────────────────────────────── */
+.comparison-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.comparison-canvases {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  min-height: 0;
+  gap: 1px;
+  background: var(--sb-border);
+}
+
+.comparison-pane {
+  position: relative;
+  overflow: hidden;
+  background: var(--sb-bg-0);
+}
+
+.comparison-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison-pane .pixi-host {
+  flex: 1;
+  min-height: 0;
+}
+
+.comparison-pane-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--sb-bg-1);
+  border-bottom: 1px solid var(--sb-border);
+  z-index: 10;
+}
+
+.comparison-pane-pick-btn {
+  background: var(--sb-bg-2);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-sm);
+  color: var(--sb-text);
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comparison-pane-pick-btn:hover {
+  background: var(--sb-bg-3);
+  border-color: var(--sb-border-strong);
+}
+
+.comparison-pane-badge {
+  font-size: 11px;
+  color: var(--sb-text-muted);
+}
+
+.comparison-controls {
+  border-top: 1px solid var(--sb-border);
+  background: var(--sb-bg-1);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }

@@ -4,6 +4,7 @@ export interface MeshPreviewInput {
   vertexCount: number;
   deformOffsets: Float32Array;
   meshPixelArea: number;
+  textureCanvas?: HTMLCanvasElement;
 }
 
 export interface MeshProblem {
@@ -117,6 +118,17 @@ export function renderMeshPreview(input: MeshPreviewInput): MeshPreviewResult {
   // Background
   ctx.fillStyle = BG_COLOR;
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+  // Draw texture background if available
+  // Flip X to match the Y-flipped wireframe (toCanvasY inverts Y, changing handedness)
+  if (input.textureCanvas) {
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.translate(offsetX + scaledW, offsetY);
+    ctx.scale(-1, 1);
+    ctx.drawImage(input.textureCanvas, 0, 0, scaledW, scaledH);
+    ctx.restore();
+  }
 
   // Draw triangles
   for (let t = 0; t < triangleCount; t++) {

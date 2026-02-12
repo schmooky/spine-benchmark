@@ -646,7 +646,8 @@
       "meshOptimizer": "Mesh Optimizer",
       "physicsBaker": "Physics Baker",
       "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor"
+      "atlasRepack": "Atlas Repack Advisor",
+      "comparison": "對比"
     },
     "actions": {
       "import": "Import",
@@ -951,6 +952,9 @@
       "title": "加载资源以检查图集页面",
       "hint": "选择资源并点击加载，查看图集区域及其对 draw calls 的影响"
     }
+  },
+  "comparison": {
+    "selectAsset": "选择资源..."
   },
   "toolRouteControls": {
     "title": "Tool Inputs",

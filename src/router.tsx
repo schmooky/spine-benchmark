@@ -15,6 +15,7 @@ import { DocumentationRouteView } from './routes/DocumentationRouteView';
 import { PartnersRouteView } from './routes/PartnersRouteView';
 import { DrawCallInspectorRouteView } from './routes/DrawCallInspectorRouteView';
 import { AtlasRepackRouteView } from './routes/AtlasRepackRouteView';
+import { ComparisonRouteView } from './routes/ComparisonRouteView';
 
 const rootRoute = createRootRoute({
   component: () => <App />,
@@ -69,6 +70,12 @@ const atlasRepackRoute = createRoute({
   component: AtlasRepackRouteView,
 });
 
+const comparisonRoute = createRoute({
+  getParentRoute: () => toolsLayoutRoute,
+  path: '/comparison',
+  component: ComparisonRouteView,
+});
+
 const assetsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/assets',
@@ -95,6 +102,7 @@ const routeTree = rootRoute.addChildren([
     physicsBakerRoute,
     drawCallInspectorRoute,
     atlasRepackRoute,
+    comparisonRoute,
   ]),
   assetsRoute,
   documentationRoute,

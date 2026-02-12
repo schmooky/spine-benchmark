@@ -646,7 +646,8 @@
       "meshOptimizer": "Mesh Optimizer",
       "physicsBaker": "Physics Baker",
       "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor"
+      "atlasRepack": "Atlas Repack Advisor",
+      "comparison": "Comparaison"
     },
     "actions": {
       "import": "Import",
@@ -951,6 +952,9 @@
       "title": "Chargez un asset pour inspecter les pages de l'atlas",
       "hint": "Sélectionnez un asset et cliquez sur Charger pour voir les régions de l'atlas et l'impact sur les draw calls"
     }
+  },
+  "comparison": {
+    "selectAsset": "Sélectionner un asset..."
   },
   "toolRouteControls": {
     "title": "Tool Inputs",

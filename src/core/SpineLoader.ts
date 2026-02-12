@@ -289,8 +289,9 @@ export class SpineLoader {
       }
       
       // Load textures
-      Assets.addBundle('spineAssets', assetBundle);
-      const textures = await Assets.loadBundle('spineAssets');
+      const bundleName = `spineAssets-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      Assets.addBundle(bundleName, assetBundle);
+      const textures = await Assets.loadBundle(bundleName);
       
       // Create spine asset
       return await this.createSpineAsset(skeletonData, atlasText, textures, isBinary);

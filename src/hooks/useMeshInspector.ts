@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
-import { MeshAttachment } from '@esotericsoftware/spine-core';
+import { MeshAttachment, TextureAtlasRegion } from '@esotericsoftware/spine-core';
 import { MeshPreviewInput } from '../core/meshPreviewRenderer';
 
 export interface MeshSlotInfo {
@@ -76,6 +76,52 @@ function collectMeshSnapshot(skeleton: { drawOrder: any[] }): MeshSnapshot {
   };
 }
 
+function getDrawableImage(page: { texture?: { getImage?: () => any } | null }): CanvasImageSource | null {
+  try {
+    const texture = page.texture;
+    if (!texture) return null;
+    const img = texture.getImage?.();
+    if (!img) return null;
+    if (img instanceof HTMLImageElement) return img;
+    if (img.resource) {
+      if (img.resource instanceof HTMLImageElement) return img.resource;
+      if (typeof ImageBitmap !== 'undefined' && img.resource instanceof ImageBitmap) return img.resource;
+    }
+    if (typeof ImageBitmap !== 'undefined' && img instanceof ImageBitmap) return img;
+  } catch {
+    // texture may not be ready
+  }
+  return null;
+}
+
+function cropRegionTexture(attachment: MeshAttachment): HTMLCanvasElement | undefined {
+  const region = attachment.region as TextureAtlasRegion | null;
+  if (!region?.page) return undefined;
+
+  const pageImg = getDrawableImage(region.page);
+  if (!pageImg) return undefined;
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return undefined;
+
+  if (region.degrees === 90) {
+    const atlasW = region.height;
+    const atlasH = region.width;
+    canvas.width = region.width;
+    canvas.height = region.height;
+    ctx.translate(0, canvas.height);
+    ctx.rotate(-Math.PI / 2);
+    ctx.drawImage(pageImg, region.x, region.y, atlasW, atlasH, 0, 0, atlasW, atlasH);
+  } else {
+    canvas.width = region.width;
+    canvas.height = region.height;
+    ctx.drawImage(pageImg, region.x, region.y, region.width, region.height, 0, 0, region.width, region.height);
+  }
+
+  return canvas;
+}
+
 export function captureMeshData(
   spineInstance: Spine,
   slotIndex: number,
@@ -112,12 +158,15 @@ export function captureMeshData(
   }
   const meshPixelArea = (maxX - minX) * (maxY - minY);
 
+  const textureCanvas = cropRegionTexture(attachment);
+
   return {
     worldVertices,
     triangles: Array.from(attachment.triangles),
     vertexCount,
     deformOffsets,
     meshPixelArea,
+    textureCanvas,
   };
 }
 
