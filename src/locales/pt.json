@@ -179,6 +179,16 @@
       "skeletonTreeTitle": "Árvore do esqueleto",
       "noData": "Nenhum dado de {0} disponível",
       "selectTab": "Selecione uma aba para ver informações do benchmark"
+    },
+    "stats": {
+      "bones": "Ossos",
+      "anims": "Anims"
+    }
+  },
+  "benchmark": {
+    "empty": {
+      "title": "Carregue um asset para benchmark",
+      "hint": "Selecione um asset e clique em Carregar para iniciar a análise de desempenho"
     }
   },
   "warnings": {
@@ -632,22 +642,23 @@
       "subtitle": "Analyze, optimize, and manage Spine assets in one workspace."
     },
     "sections": {
-      "tools": "Tools",
-      "assetLibrary": "Asset Library",
-      "partnerTools": "Partner Tools",
-      "guides": "Guides",
-      "community": "Community",
-      "documentation": "Documentation",
-      "partners": "Partners",
-      "navigation": "Navigation"
+      "tools": "Ferramentas",
+      "assetLibrary": "Biblioteca de assets",
+      "partnerTools": "Ferramentas parceiras",
+      "guides": "Guias",
+      "community": "Comunidade",
+      "documentation": "Documentação",
+      "partners": "Parceiros",
+      "navigation": "Navegação"
     },
     "tools": {
       "benchmark": "Benchmark",
-      "meshOptimizer": "Mesh Optimizer",
-      "physicsBaker": "Physics Baker",
-      "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor",
-      "comparison": "Comparação"
+      "meshOptimizer": "Otimizador de malha",
+      "physicsBaker": "Gravação de física",
+      "drawCallInspector": "Inspetor de draw calls",
+      "atlasRepack": "Análise de atlas",
+      "comparison": "Comparação",
+      "animationHeatmap": "Mapa de calor de animações"
     },
     "actions": {
       "import": "Import",

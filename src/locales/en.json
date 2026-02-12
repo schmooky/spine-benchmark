@@ -179,6 +179,16 @@
       "skeletonTreeTitle": "Skeleton Tree",
       "noData": "No {0} data available",
       "selectTab": "Select a tab to view benchmark information"
+    },
+    "stats": {
+      "bones": "Bones",
+      "anims": "Anims"
+    }
+  },
+  "benchmark": {
+    "empty": {
+      "title": "Load an asset to benchmark",
+      "hint": "Select an asset and click Load to begin performance analysis"
     }
   },
   "warnings": {
@@ -650,7 +660,8 @@
       "physicsBaker": "Physics Baker",
       "drawCallInspector": "Draw Call Inspector",
       "atlasRepack": "Atlas Repack Advisor",
-      "comparison": "Comparison"
+      "comparison": "Comparison",
+      "animationHeatmap": "Animation Heatmap"
     },
     "actions": {
       "import": "Import",

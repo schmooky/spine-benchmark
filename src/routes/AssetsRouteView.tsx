@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
 import { AnimationControls } from '../components/AnimationControls';
+import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
 
 export function AssetsRouteView() {
@@ -114,7 +115,7 @@ export function AssetsRouteView() {
       </div>
 
       {/* Right panel — live spine preview */}
-      <div className="assets-canvas">
+      <div className="tool-canvas assets-canvas">
         <div
           className="canvas-container"
           data-tour="canvas-dropzone"
@@ -124,6 +125,7 @@ export function AssetsRouteView() {
         >
           <div ref={pixiContainerRef} className="pixi-host" />
           <div className="canvas-grid-overlay" />
+          <CanvasStatsOverlay spineInstance={spineInstance} />
 
           {!spineInstance && urlLoadStatus !== 'loading' && (
             <div className="drop-area">

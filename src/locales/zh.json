@@ -179,6 +179,16 @@
       "skeletonTreeTitle": "骨架樹",
       "noData": "沒有 {0} 資料可用",
       "selectTab": "選擇標籤以檢視基準測試資訊"
+    },
+    "stats": {
+      "bones": "骨骼",
+      "anims": "動畫"
+    }
+  },
+  "benchmark": {
+    "empty": {
+      "title": "載入資產以進行基準測試",
+      "hint": "選擇資產並點擊「載入」以開始效能分析"
     }
   },
   "warnings": {
@@ -632,22 +642,23 @@
       "subtitle": "Analyze, optimize, and manage Spine assets in one workspace."
     },
     "sections": {
-      "tools": "Tools",
-      "assetLibrary": "Asset Library",
-      "partnerTools": "Partner Tools",
-      "guides": "Guides",
-      "community": "Community",
-      "documentation": "Documentation",
-      "partners": "Partners",
-      "navigation": "Navigation"
+      "tools": "工具",
+      "assetLibrary": "資產庫",
+      "partnerTools": "合作工具",
+      "guides": "指南",
+      "community": "社群",
+      "documentation": "文檔",
+      "partners": "合作夥伴",
+      "navigation": "導航"
     },
     "tools": {
-      "benchmark": "Benchmark",
-      "meshOptimizer": "Mesh Optimizer",
-      "physicsBaker": "Physics Baker",
-      "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor",
-      "comparison": "對比"
+      "benchmark": "效能基準",
+      "meshOptimizer": "網格優化器",
+      "physicsBaker": "物理烘焙",
+      "drawCallInspector": "繪製呼叫檢視器",
+      "atlasRepack": "圖集重組分析",
+      "comparison": "對比",
+      "animationHeatmap": "動畫熱力圖"
     },
     "actions": {
       "import": "Import",

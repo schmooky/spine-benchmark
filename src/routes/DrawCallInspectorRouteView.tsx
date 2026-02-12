@@ -4,7 +4,9 @@ import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
 import { useDrawCallInspector, LiveSlotInfo } from '../hooks/useDrawCallInspector';
+import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
+import { getStatColor } from '../core/utils/colorUtils';
 
 const PAGE_COLORS = [
   '#2DD4A8', '#60A5FA', '#FBBF24', '#F472B6', '#A78BFA',
@@ -16,13 +18,6 @@ function getPageColor(pageName: string, colorMap: Map<string, string>): string {
   const color = PAGE_COLORS[colorMap.size % PAGE_COLORS.length];
   colorMap.set(pageName, color);
   return color;
-}
-
-/** Lower value = greener (better), higher = redder (worse). */
-function getStatColor(value: number, low: number, high: number): string {
-  if (value <= low) return '#34D399';   // green — excellent
-  if (value <= high) return '#FBBF24';  // yellow — moderate
-  return '#F87171';                     // red — bad
 }
 
 export function DrawCallInspectorRouteView() {
@@ -80,10 +75,10 @@ export function DrawCallInspectorRouteView() {
 
       <div className="dc-inspector-layout">
         {/* Left panel — live slot list */}
-        <div className="dc-inspector-panel">
+        <div className="tool-panel dc-inspector-panel">
           {spineInstance && snapshot.slots.length > 0 ? (
             <>
-              <div className="dc-inspector-summary">
+              <div className="tool-summary">
                 <div className="dc-inspector-stat">
                   <span
                     className="dc-inspector-stat-value"
@@ -144,7 +139,7 @@ export function DrawCallInspectorRouteView() {
               </div>
             </>
           ) : (
-            <div className="dc-inspector-empty">
+            <div className="tool-empty">
               <h3>{t('drawCallInspector.empty.title')}</h3>
               <p>{t('drawCallInspector.empty.hint')}</p>
             </div>
@@ -152,7 +147,7 @@ export function DrawCallInspectorRouteView() {
         </div>
 
         {/* Right side — canvas + animation controls */}
-        <div className="dc-inspector-canvas">
+        <div className="tool-canvas">
           <div
             className="canvas-container"
             data-tour="canvas-dropzone"
@@ -162,6 +157,7 @@ export function DrawCallInspectorRouteView() {
           >
             <div ref={pixiContainerRef} className="pixi-host" />
             <div className="canvas-grid-overlay" />
+            <CanvasStatsOverlay spineInstance={spineInstance} />
 
             {!spineInstance && urlLoadStatus !== 'loading' && (
               <div className="drop-area">

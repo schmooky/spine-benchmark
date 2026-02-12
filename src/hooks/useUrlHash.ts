@@ -36,10 +36,9 @@ export function useUrlHash(): UseUrlHashReturn {
       if (part === 'command-palette') {
         state.commandPalette = true;
       } else if (part === 'benchmark-info') {
-        state.benchmarkInfo = true;
+        // Legacy hash param — ignored, kept for backward compat
       } else if (part.startsWith('benchmark-tab=')) {
         state.benchmarkTab = part.split('=')[1];
-        state.benchmarkInfo = true; // If tab is specified, panel should be open
       }
     });
     
@@ -53,12 +52,8 @@ export function useUrlHash(): UseUrlHashReturn {
       hashParts.push('command-palette');
     }
     
-    if (state.benchmarkInfo) {
-      if (state.benchmarkTab) {
-        hashParts.push(`benchmark-tab=${state.benchmarkTab}`);
-      } else {
-        hashParts.push('benchmark-info');
-      }
+    if (state.benchmarkTab) {
+      hashParts.push(`benchmark-tab=${state.benchmarkTab}`);
     }
     
     return hashParts.length > 0 ? `#${hashParts.join('&')}` : '';
@@ -67,12 +62,7 @@ export function useUrlHash(): UseUrlHashReturn {
   const updateHash = useCallback((newState: Partial<WindowState>) => {
     const currentState = parseHashToState(window.location.hash);
     const updatedState = { ...currentState, ...newState };
-    
-    // Clean up state - if benchmarkInfo is false, remove benchmarkTab
-    if (!updatedState.benchmarkInfo) {
-      delete updatedState.benchmarkTab;
-    }
-    
+
     const newHash = stateToHash(updatedState);
     
     // Only update if hash actually changed

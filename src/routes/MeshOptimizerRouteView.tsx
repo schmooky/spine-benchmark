@@ -3,17 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
+import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { useMeshInspector, captureMeshData } from '../hooks/useMeshInspector';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
 import { assetToFiles } from '../core/storage/assetStore';
 import { optimizeJson, OptimizationReport } from '../core/meshOptimizer';
 import { renderMeshPreview, MeshPreviewResult } from '../core/meshPreviewRenderer';
-
-function getStatColor(value: number, low: number, high: number): string {
-  if (value <= low) return '#34D399';
-  if (value <= high) return '#FBBF24';
-  return '#F87171';
-}
+import { getStatColor } from '../core/utils/colorUtils';
 
 export function MeshOptimizerRouteView() {
   const { t } = useTranslation();
@@ -172,10 +168,10 @@ export function MeshOptimizerRouteView() {
 
       <div className="mesh-inspector-layout">
         {/* Left panel — mesh list with stats */}
-        <div className="mesh-inspector-panel">
+        <div className="tool-panel mesh-inspector-panel">
           {spineInstance && snapshot.meshes.length > 0 ? (
             <>
-              <div className="mesh-inspector-summary">
+              <div className="tool-summary">
                 <div className="dc-inspector-stat">
                   <span
                     className="dc-inspector-stat-value"
@@ -297,7 +293,7 @@ export function MeshOptimizerRouteView() {
               )}
             </>
           ) : (
-            <div className="mesh-inspector-empty">
+            <div className="tool-empty">
               <h3>{t('meshOptimizer.empty.title')}</h3>
               <p>{t('meshOptimizer.empty.hint')}</p>
             </div>
@@ -360,7 +356,7 @@ export function MeshOptimizerRouteView() {
         </div>
 
         {/* Right side — canvas + animation controls */}
-        <div className="mesh-inspector-canvas">
+        <div className="tool-canvas">
           <div
             className="canvas-container"
             data-tour="canvas-dropzone"
@@ -370,6 +366,7 @@ export function MeshOptimizerRouteView() {
           >
             <div ref={pixiContainerRef} className="pixi-host" />
             <div className="canvas-grid-overlay" />
+            <CanvasStatsOverlay spineInstance={spineInstance} />
 
             {!spineInstance && urlLoadStatus !== 'loading' && (
               <div className="drop-area">

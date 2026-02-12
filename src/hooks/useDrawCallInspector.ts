@@ -43,7 +43,7 @@ function getAtlasPageName(attachment: RegionAttachment | MeshAttachment): string
   }
 }
 
-function collectSnapshot(skeleton: { drawOrder: any[] }): DrawCallSnapshot {
+export function collectSnapshot(skeleton: { drawOrder: any[] }): DrawCallSnapshot {
   const slots: LiveSlotInfo[] = [];
   let drawCallCount = 0;
   let pageBreaks = 0;

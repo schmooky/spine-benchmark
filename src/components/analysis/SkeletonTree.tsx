@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
 import { BoneNode } from '../../core/analyzers/skeletonAnalyzer';
-import { getScoreColor } from '../../core/utils/scoreCalculator';
 import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
 
 interface SkeletonTreeProps {
@@ -20,20 +19,7 @@ export const SkeletonTree: React.FC<SkeletonTreeProps> = ({ data }) => {
       <p>{t('analysis.skeleton.statistics.totalBones', { count: metrics.totalBones })}</p>
       <p>{t('analysis.skeleton.statistics.rootBones', { count: metrics.rootBones })}</p>
       <p>{t('analysis.skeleton.statistics.maxDepth', { depth: metrics.maxDepth })}</p>
-      
-      <div className="performance-score">
-        <h4>{t('analysis.skeleton.performanceScore.title', { score: metrics.score.toFixed(1) })}</h4>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ 
-              width: `${metrics.score}%`, 
-              backgroundColor: getScoreColor(metrics.score) 
-            }}
-          />
-        </div>
-      </div>
-      
+
       <div className="analysis-metrics">
         <p><strong>{t('analysis.skeleton.formula.title')}</strong></p>
         <code>

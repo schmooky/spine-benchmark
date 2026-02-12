@@ -1,5 +1,6 @@
 import { PERFORMANCE_FACTORS } from "../constants/performanceFactors";
 import i18n from "../../i18n";
+import type { AnimationAnalysis } from "../SpineAnalyzer";
 
 /**
  * Calculates the mesh performance score
@@ -272,4 +273,26 @@ export function getImpactBadgeClass(level: string): string {
     case 'veryHigh': return 'impact-very-high';
     default: return 'impact-minimal';
   }
+}
+
+/**
+ * Computes worst-case rendering impact across all animations.
+ * Considers blend modes, clipping masks, and mesh vertices.
+ */
+export function worstRenderingImpact(animations: AnimationAnalysis[]): ImpactResult {
+  return animations.reduce((worst, a) => {
+    const cost = (a.blendModeMetrics.activeNonNormalCount * 3) + (a.clippingMetrics.activeMaskCount * 5) + (a.meshMetrics.totalVertices / 200);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
+}
+
+/**
+ * Computes worst-case computational impact across all animations.
+ * Considers physics, IK, transform/path constraints, and mesh deformation.
+ */
+export function worstComputationalImpact(animations: AnimationAnalysis[]): ImpactResult {
+  return animations.reduce((worst, a) => {
+    const cost = (a.constraintMetrics.activePhysicsCount * 4) + (a.constraintMetrics.activeIkCount * 2) + (a.constraintMetrics.activeTransformCount * 1.5) + (a.constraintMetrics.activePathCount * 2.5) + (a.meshMetrics.deformedMeshCount * 1.5) + (a.meshMetrics.weightedMeshCount * 2);
+    return cost > worst.cost ? getImpactFromCost(cost) : worst;
+  }, getImpactFromCost(0));
 }

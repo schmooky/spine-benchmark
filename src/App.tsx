@@ -4,12 +4,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
-import { InfoPanel } from './components/InfoPanel';
 import { CommandPalette } from './components/CommandPalette';
 import { VersionDisplay } from './components/VersionDisplay';
 import { LanguageModal } from './components/LanguageModal';
 import { UrlInputModal } from './components/UrlInputModal';
-import { BenchmarkPanel } from './components/BenchmarkPanel';
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
 import { useToast } from './hooks/ToastContext';
 import { useSafeLocalStorage } from './hooks/useSafeLocalStorage';
@@ -645,8 +643,6 @@ const App: React.FC = () => {
     saveAndLoadOptimizedAsset
   ]);
 
-  const inBenchmarkRoute = pathname.startsWith('/tools/benchmark');
-
   return (
     <WorkbenchProvider value={workbenchContextValue}>
     <div className="app-shell">
@@ -680,6 +676,9 @@ const App: React.FC = () => {
             <Link to="/tools/comparison" className={`tool-chip ${pathname.startsWith('/tools/comparison') ? 'active' : ''}`}>
               {t('dashboard.tools.comparison')}
             </Link>
+            <Link to="/tools/animation-heatmap" className={`tool-chip ${pathname.startsWith('/tools/animation-heatmap') ? 'active' : ''}`}>
+              {t('dashboard.tools.animationHeatmap')}
+            </Link>
           </div>
         </section>
 
@@ -707,21 +706,6 @@ const App: React.FC = () => {
       <main className="workspace-main">
         <Outlet />
       </main>
-
-      {inBenchmarkRoute && (
-        <BenchmarkPanel
-          benchmarkData={benchmarkData}
-          showBenchmark={showBenchmark}
-          setShowBenchmark={setShowBenchmarkWithHash}
-        />
-      )}
-
-      {showBenchmark && benchmarkData && inBenchmarkRoute && (
-        <InfoPanel
-          data={benchmarkData}
-          onClose={() => setShowBenchmarkWithHash(false)}
-        />
-      )}
 
       {showWelcome && (
         <div className="welcome-backdrop">

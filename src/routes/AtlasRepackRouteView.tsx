@@ -3,15 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
+import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { useDrawCallInspector } from '../hooks/useDrawCallInspector';
 import { useAtlasData } from '../hooks/useAtlasData';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
-
-function getStatColor(value: number, low: number, high: number): string {
-  if (value <= low) return '#34D399';
-  if (value <= high) return '#FBBF24';
-  return '#F87171';
-}
+import { getStatColor } from '../core/utils/colorUtils';
 
 export function AtlasRepackRouteView() {
   const { t } = useTranslation();
@@ -79,10 +75,10 @@ export function AtlasRepackRouteView() {
 
       <div className="atlas-repack-layout">
         {/* Left panel — atlas page images with region overlays */}
-        <div className="atlas-repack-panel">
+        <div className="tool-panel atlas-repack-panel">
           {spineInstance && atlasData.pages.length > 0 ? (
             <>
-              <div className="atlas-repack-summary">
+              <div className="tool-summary">
                 <div className="dc-inspector-stat">
                   <span
                     className="dc-inspector-stat-value"
@@ -167,7 +163,7 @@ export function AtlasRepackRouteView() {
               </div>
             </>
           ) : (
-            <div className="atlas-repack-empty">
+            <div className="tool-empty">
               <h3>{t('atlasRepack.empty.title')}</h3>
               <p>{t('atlasRepack.empty.hint')}</p>
             </div>
@@ -175,7 +171,7 @@ export function AtlasRepackRouteView() {
         </div>
 
         {/* Right side — canvas + animation controls */}
-        <div className="atlas-repack-canvas">
+        <div className="tool-canvas">
           <div
             className="canvas-container"
             data-tour="canvas-dropzone"
@@ -185,6 +181,7 @@ export function AtlasRepackRouteView() {
           >
             <div ref={pixiContainerRef} className="pixi-host" />
             <div className="canvas-grid-overlay" />
+            <CanvasStatsOverlay spineInstance={spineInstance} />
 
             {!spineInstance && urlLoadStatus !== 'loading' && (
               <div className="drop-area">

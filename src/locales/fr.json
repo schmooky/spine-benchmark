@@ -179,6 +179,16 @@
       "skeletonTreeTitle": "Arbre du squelette",
       "noData": "Aucune donnée {0} disponible",
       "selectTab": "Sélectionnez un onglet pour voir les informations de benchmark"
+    },
+    "stats": {
+      "bones": "Os",
+      "anims": "Anims"
+    }
+  },
+  "benchmark": {
+    "empty": {
+      "title": "Chargez un asset pour le benchmark",
+      "hint": "Sélectionnez un asset et cliquez sur Charger pour lancer l'analyse de performance"
     }
   },
   "warnings": {
@@ -632,22 +642,23 @@
       "subtitle": "Analyze, optimize, and manage Spine assets in one workspace."
     },
     "sections": {
-      "tools": "Tools",
-      "assetLibrary": "Asset Library",
-      "partnerTools": "Partner Tools",
+      "tools": "Outils",
+      "assetLibrary": "Bibliothèque d'assets",
+      "partnerTools": "Outils partenaires",
       "guides": "Guides",
-      "community": "Community",
+      "community": "Communauté",
       "documentation": "Documentation",
-      "partners": "Partners",
+      "partners": "Partenaires",
       "navigation": "Navigation"
     },
     "tools": {
       "benchmark": "Benchmark",
-      "meshOptimizer": "Mesh Optimizer",
-      "physicsBaker": "Physics Baker",
-      "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor",
-      "comparison": "Comparaison"
+      "meshOptimizer": "Optimiseur de maillage",
+      "physicsBaker": "Enregistrement physique",
+      "drawCallInspector": "Inspecteur de draw calls",
+      "atlasRepack": "Analyse d'atlas",
+      "comparison": "Comparaison",
+      "animationHeatmap": "Carte thermique des animations"
     },
     "actions": {
       "import": "Import",

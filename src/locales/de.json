@@ -179,6 +179,16 @@
       "skeletonTreeTitle": "Skelett-Baum",
       "noData": "Keine {0}-Daten verfügbar",
       "selectTab": "Wählen Sie einen Tab, um Benchmark-Informationen anzuzeigen"
+    },
+    "stats": {
+      "bones": "Knochen",
+      "anims": "Anims"
+    }
+  },
+  "benchmark": {
+    "empty": {
+      "title": "Laden Sie ein Asset für den Benchmark",
+      "hint": "Wählen Sie ein Asset und klicken Sie auf Laden, um die Leistungsanalyse zu starten"
     }
   },
   "warnings": {
@@ -632,22 +642,23 @@
       "subtitle": "Analyze, optimize, and manage Spine assets in one workspace."
     },
     "sections": {
-      "tools": "Tools",
-      "assetLibrary": "Asset Library",
-      "partnerTools": "Partner Tools",
-      "guides": "Guides",
+      "tools": "Werkzeuge",
+      "assetLibrary": "Asset-Bibliothek",
+      "partnerTools": "Partner-Werkzeuge",
+      "guides": "Anleitungen",
       "community": "Community",
-      "documentation": "Documentation",
-      "partners": "Partners",
+      "documentation": "Dokumentation",
+      "partners": "Partner",
       "navigation": "Navigation"
     },
     "tools": {
       "benchmark": "Benchmark",
-      "meshOptimizer": "Mesh Optimizer",
-      "physicsBaker": "Physics Baker",
-      "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor",
-      "comparison": "Vergleich"
+      "meshOptimizer": "Mesh-Optimierer",
+      "physicsBaker": "Physik-Aufzeichnung",
+      "drawCallInspector": "Draw-Call-Inspektor",
+      "atlasRepack": "Atlas-Analyse",
+      "comparison": "Vergleich",
+      "animationHeatmap": "Animations-Heatmap"
     },
     "actions": {
       "import": "Import",

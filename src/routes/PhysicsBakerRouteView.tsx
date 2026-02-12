@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ToolRouteControls } from '../components/ToolRouteControls';
+import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { useConstraintInspector } from '../hooks/useConstraintInspector';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
 import { assetToFiles } from '../core/storage/assetStore';
@@ -179,11 +180,11 @@ export function PhysicsBakerRouteView() {
 
       <div className="mesh-inspector-layout">
         {/* Left panel — constraint list */}
-        <div className="mesh-inspector-panel">
+        <div className="tool-panel">
           {spineInstance && constraints.length > 0 ? (
             <>
               {/* Summary stats */}
-              <div className="constraint-baker-summary">
+              <div className="tool-summary">
                 <div className="dc-inspector-stat">
                   <span className="dc-inspector-stat-value" style={{ '--dc-stat-color': TYPE_COLORS.ik } as React.CSSProperties}>
                     {counts.ik}
@@ -240,11 +241,11 @@ export function PhysicsBakerRouteView() {
               </div>
             </>
           ) : spineInstance ? (
-            <div className="mesh-inspector-empty">
+            <div className="tool-empty">
               <h3>{t('constraintBaker.noConstraints')}</h3>
             </div>
           ) : (
-            <div className="mesh-inspector-empty">
+            <div className="tool-empty">
               <h3>{t('constraintBaker.empty.title')}</h3>
               <p>{t('constraintBaker.empty.hint')}</p>
             </div>
@@ -319,7 +320,7 @@ export function PhysicsBakerRouteView() {
         </div>
 
         {/* Right side — canvas + animation controls */}
-        <div className="mesh-inspector-canvas">
+        <div className="tool-canvas">
           <div
             className="canvas-container"
             data-tour="canvas-dropzone"
@@ -329,6 +330,7 @@ export function PhysicsBakerRouteView() {
           >
             <div ref={pixiContainerRef} className="pixi-host" />
             <div className="canvas-grid-overlay" />
+            <CanvasStatsOverlay spineInstance={spineInstance} />
 
             {!spineInstance && urlLoadStatus !== 'loading' && (
               <div className="drop-area">

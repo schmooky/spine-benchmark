@@ -179,6 +179,16 @@
       "skeletonTreeTitle": "Дерево скелета",
       "noData": "Данные {0} недоступны",
       "selectTab": "Выберите вкладку для просмотра информации о бенчмарке"
+    },
+    "stats": {
+      "bones": "Кости",
+      "anims": "Анимации"
+    }
+  },
+  "benchmark": {
+    "empty": {
+      "title": "Загрузите ассет для бенчмарка",
+      "hint": "Выберите ассет и нажмите «Загрузить» для анализа производительности"
     }
   },
   "warnings": {
@@ -632,22 +642,23 @@
       "subtitle": "Analyze, optimize, and manage Spine assets in one workspace."
     },
     "sections": {
-      "tools": "Tools",
-      "assetLibrary": "Asset Library",
-      "partnerTools": "Partner Tools",
-      "guides": "Guides",
-      "community": "Community",
-      "documentation": "Documentation",
-      "partners": "Partners",
-      "navigation": "Navigation"
+      "tools": "Инструменты",
+      "assetLibrary": "Библиотека ассетов",
+      "partnerTools": "Партнёрские инструменты",
+      "guides": "Руководства",
+      "community": "Сообщество",
+      "documentation": "Документация",
+      "partners": "Партнёры",
+      "navigation": "Навигация"
     },
     "tools": {
-      "benchmark": "Benchmark",
-      "meshOptimizer": "Mesh Optimizer",
-      "physicsBaker": "Physics Baker",
-      "drawCallInspector": "Draw Call Inspector",
-      "atlasRepack": "Atlas Repack Advisor",
-      "comparison": "Сравнение"
+      "benchmark": "Бенчмарк",
+      "meshOptimizer": "Оптимизатор сетки",
+      "physicsBaker": "Запись физики",
+      "drawCallInspector": "Инспектор отрисовки",
+      "atlasRepack": "Анализ атласа",
+      "comparison": "Сравнение",
+      "animationHeatmap": "Тепловая карта анимаций"
     },
     "actions": {
       "import": "Import",
