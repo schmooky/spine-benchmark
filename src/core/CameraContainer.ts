@@ -1,8 +1,13 @@
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
+import { RegionAttachment, MeshAttachment } from "@esotericsoftware/spine-core";
 import gsap from "gsap";
-import { Application, Container } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { DebugFlags } from './debug/DebugFlagsManager';
 import { DebugRendererManager } from './debug/DebugRendererManager';
+
+const HIGHLIGHT_BOX_COLOR = 0x60A5FA;
+const HIGHLIGHT_BOX_ALPHA = 0.9;
+const HIGHLIGHT_BOX_WIDTH = 2;
 
 export class CameraContainer extends Container {
   originalWidth: number;
@@ -14,6 +19,8 @@ export class CameraContainer extends Container {
   private debugRenderer: DebugRendererManager;
   private currentSpine: Spine | null = null;
   private debugContainer: Container;
+  private slotHighlightGraphics: Graphics;
+  private highlightedSlotIndex: number | null = null;
 
   constructor(options: { width: number; height: number; app: Application }) {
     super();
@@ -23,9 +30,12 @@ export class CameraContainer extends Container {
 
     // Create debug renderer
     this.debugRenderer = new DebugRendererManager(this.app);
-    
+
     // Create a container for debug graphics that will be added to the spine
     this.debugContainer = new Container();
+
+    // Create slot highlight overlay
+    this.slotHighlightGraphics = new Graphics();
 
     this.setupEventListeners();
 
@@ -41,6 +51,7 @@ export class CameraContainer extends Container {
     this.app.ticker.add(() => {
       if (this.currentSpine) {
         this.debugRenderer.update();
+        this.updateSlotHighlight();
       }
     });
   }
@@ -106,6 +117,11 @@ export class CameraContainer extends Container {
       existingParent.removeChild(this.debugRenderer.getContainer());
     }
     
+    // Remove slot highlight from previous parent
+    if (this.slotHighlightGraphics.parent) {
+      this.slotHighlightGraphics.parent.removeChild(this.slotHighlightGraphics);
+    }
+
     // Add debug container AFTER the spine to ensure it renders on top
     if (this.currentSpine) {
       // Get the index of the spine in this container
@@ -113,6 +129,8 @@ export class CameraContainer extends Container {
       // Add debug container right after the spine
       this.addChildAt(this.debugRenderer.getContainer(), spineIndex + 1);
       this.debugRenderer.setSpine(this.currentSpine);
+      // Add slot highlight on top of everything
+      this.addChild(this.slotHighlightGraphics);
     }
 
     // Fit & center view around the spine
@@ -171,6 +189,66 @@ export class CameraContainer extends Container {
     this.debugRenderer.toggleIkConstraints(visible);
   }
 
+  public setHighlightedMeshSlot(slotName: string | null): void {
+    this.debugRenderer.setHighlightedMeshSlot(slotName);
+  }
+
+  public setSlotHighlight(slotIndex: number | null): void {
+    this.highlightedSlotIndex = slotIndex;
+    if (slotIndex === null) {
+      this.slotHighlightGraphics.clear();
+    }
+  }
+
+  private updateSlotHighlight(): void {
+    this.slotHighlightGraphics.clear();
+    if (this.highlightedSlotIndex === null || !this.currentSpine) return;
+
+    const skeleton = this.currentSpine.skeleton;
+    const slot = skeleton.drawOrder[this.highlightedSlotIndex];
+    if (!slot) return;
+
+    const attachment = slot.getAttachment();
+    if (!attachment) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    if (attachment instanceof RegionAttachment) {
+      const verts = new Float32Array(8);
+      attachment.computeWorldVertices(slot, verts, 0, 2);
+      for (let i = 0; i < 8; i += 2) {
+        const x = verts[i], y = verts[i + 1];
+        if (!isFinite(x) || !isFinite(y)) continue;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    } else if (attachment instanceof MeshAttachment) {
+      const len = attachment.worldVerticesLength;
+      if (len === 0) return;
+      const verts = new Float32Array(len);
+      attachment.computeWorldVertices(slot, 0, len, verts, 0, 2);
+      for (let i = 0; i < len; i += 2) {
+        const x = verts[i], y = verts[i + 1];
+        if (!isFinite(x) || !isFinite(y)) continue;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    } else {
+      return;
+    }
+
+    if (!isFinite(minX) || !isFinite(minY)) return;
+
+    const pad = 4;
+    this.slotHighlightGraphics
+      .rect(minX - pad, minY - pad, (maxX - minX) + pad * 2, (maxY - minY) + pad * 2)
+      .stroke({ width: HIGHLIGHT_BOX_WIDTH, color: HIGHLIGHT_BOX_COLOR, alpha: HIGHLIGHT_BOX_ALPHA, pixelLine: true });
+  }
+
   public forceResetDebugGraphics(): void {
     this.debugRenderer.clearAll();
     if (this.currentSpine) {
@@ -190,6 +268,7 @@ export class CameraContainer extends Container {
     if (existingParent) {
       existingParent.removeChild(this.debugRenderer.getContainer());
     }
+    this.slotHighlightGraphics.destroy();
     this.debugRenderer.destroy();
     super.destroy();
   }

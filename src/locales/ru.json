@@ -823,7 +823,8 @@
       "pixelArea": "Площадь меша",
       "overclustered": "Перегруженные треугольники",
       "invisibleDeform": "Невидимая деформация",
-      "noProblems": "Проблем не обнаружено"
+      "noProblems": "Проблем не обнаружено",
+      "liveHint": "Выделено на канвасе — красные треугольники перегружены"
     }
   },
   "appErrorBoundary": {
@@ -911,7 +912,8 @@
     "labels": {
       "loop": "Loop",
       "loopHint": "Toggle animation looping",
-      "selectAnimation": "Select Animation"
+      "selectAnimation": "Select Animation",
+      "selectSkin": "Select Skin"
     },
     "actions": {
       "previous": "Previous Animation",
@@ -938,6 +940,7 @@
         "blend": "Blend"
       }
     },
+    "hideInvisible": "Скрыть невидимые вложения",
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"

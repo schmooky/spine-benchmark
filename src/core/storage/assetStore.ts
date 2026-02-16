@@ -57,7 +57,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 function isImageName(name: string): boolean {
-  return /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(name);
+  return /\.(png|jpg|jpeg|webp|gif|avif|ktx2|basis)$/i.test(name);
 }
 
 export function getAssetBundleCompleteness(files: BasicAssetFile[]): {

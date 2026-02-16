@@ -87,7 +87,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".json,.skel,.atlas,.png,.jpg,.jpeg"
+        accept=".json,.skel,.atlas,.png,.jpg,.jpeg,.webp,.ktx2,.basis"
         onChange={handleFileInput}
         style={{ display: 'none' }}
       />

@@ -823,7 +823,8 @@
       "pixelArea": "网格面积",
       "overclustered": "过密三角形",
       "invisibleDeform": "不可见变形",
-      "noProblems": "未检测到问题"
+      "noProblems": "未检测到问题",
+      "liveHint": "在画布上高亮显示 — 红色三角形为过密区域"
     }
   },
   "appErrorBoundary": {
@@ -911,7 +912,8 @@
     "labels": {
       "loop": "Loop",
       "loopHint": "Toggle animation looping",
-      "selectAnimation": "Select Animation"
+      "selectAnimation": "Select Animation",
+      "selectSkin": "Select Skin"
     },
     "actions": {
       "previous": "Previous Animation",
@@ -938,6 +940,7 @@
         "blend": "Blend"
       }
     },
+    "hideInvisible": "隐藏不可见附件",
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"

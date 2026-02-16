@@ -28,22 +28,25 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const [currentAnimation, setCurrentAnimation] = useState<string>('');
   const [animations, setAnimations] = useState<string[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
-  
+  const [skins, setSkins] = useState<string[]>([]);
+  const [currentSkin, setCurrentSkin] = useState<string>('');
+
   // Initialize animations list and set default animation
   useEffect(() => {
     if (!spineInstance) return;
-    
+
     const animationNames = spineInstance.skeleton.data.animations.map(anim => anim.name);
     setAnimations(animationNames);
-    
+
     if (animationNames.length > 0) {
       setCurrentAnimation(animationNames[0]);
       playAnimation(animationNames[0], false);
     }
-    
-    return () => {
-      // Cleanup if needed
-    };
+
+    const skinNames = spineInstance.skeleton.data.skins.map(s => s.name);
+    setSkins(skinNames);
+    const activeSkin = spineInstance.skeleton.skin?.name || skinNames[0] || '';
+    setCurrentSkin(activeSkin);
   }, [spineInstance]);
   
   // Handle play/pause
@@ -97,6 +100,16 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     playAnimation(currentAnimation);
   };
   
+  const switchSkin = (skinName: string) => {
+    if (!spineInstance) return;
+    const skin = spineInstance.skeleton.data.findSkin(skinName);
+    if (skin) {
+      spineInstance.skeleton.setSkin(skin);
+      spineInstance.skeleton.setSlotsToSetupPose();
+      setCurrentSkin(skinName);
+    }
+  };
+
   const previousAnimation = () => {
     if (!spineInstance || animations.length === 0) return;
     
@@ -165,6 +178,18 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
           }))}
           placeholder={t('controls.labels.selectAnimation')}
         />
+
+        {skins.length > 1 && (
+          <ModernSelect
+            value={currentSkin}
+            onChange={switchSkin}
+            options={skins.map(name => ({
+              value: name,
+              label: name
+            }))}
+            placeholder={t('controls.labels.selectSkin')}
+          />
+        )}
       </div>
     </div>
   );

@@ -31,6 +31,7 @@ export function MeshOptimizerRouteView() {
     toggleMeshes,
     meshesVisible,
     saveAndLoadOptimizedAsset,
+    setHighlightedMeshSlot,
   } = useWorkbench();
 
   const [report, setReport] = useState<OptimizationReport | null>(null);
@@ -52,8 +53,9 @@ export function MeshOptimizerRouteView() {
     toggleMeshes(true);
     return () => {
       toggleMeshes(false);
+      setHighlightedMeshSlot(null);
     };
-  }, [toggleMeshes]);
+  }, [toggleMeshes, setHighlightedMeshSlot]);
 
   // Reset optimization state when selected asset changes
   useEffect(() => {
@@ -62,7 +64,8 @@ export function MeshOptimizerRouteView() {
     setError(null);
     setSelectedMeshIndex(null);
     setMeshPreview(null);
-  }, [selectedAssetId]);
+    setHighlightedMeshSlot(null);
+  }, [selectedAssetId, setHighlightedMeshSlot]);
 
   const snapshot = useMeshInspector(spineInstance);
 
@@ -129,10 +132,11 @@ export function MeshOptimizerRouteView() {
   };
 
   const handleMeshRowClick = useCallback(
-    (slotIndex: number) => {
+    (slotIndex: number, slotName: string) => {
       if (selectedMeshIndex === slotIndex) {
         setSelectedMeshIndex(null);
         setMeshPreview(null);
+        setHighlightedMeshSlot(null);
         return;
       }
       if (!spineInstance) return;
@@ -141,8 +145,9 @@ export function MeshOptimizerRouteView() {
       const result = renderMeshPreview(data);
       setSelectedMeshIndex(slotIndex);
       setMeshPreview(result);
+      setHighlightedMeshSlot(slotName);
     },
-    [spineInstance, selectedMeshIndex],
+    [spineInstance, selectedMeshIndex, setHighlightedMeshSlot],
   );
 
   const selectedMesh = selectedMeshIndex !== null
@@ -224,7 +229,7 @@ export function MeshOptimizerRouteView() {
                     key={`${mesh.index}-${mesh.slotName}`}
                     className={`mesh-inspector-row${mesh.isDeformed ? ' deformed' : ''}${selectedMeshIndex === mesh.index ? ' selected' : ''}`}
                     title={mesh.isDeformed ? t('meshOptimizer.row.deformed') : undefined}
-                    onClick={() => handleMeshRowClick(mesh.index)}
+                    onClick={() => handleMeshRowClick(mesh.index, mesh.slotName)}
                   >
                     <span className="mesh-inspector-row-index">{mesh.index}</span>
                     <span className="mesh-inspector-row-name" title={`${mesh.slotName} → ${mesh.attachmentName}`}>
@@ -245,18 +250,14 @@ export function MeshOptimizerRouteView() {
                     <button
                       type="button"
                       className="mesh-inspector-preview-close"
-                      onClick={() => { setSelectedMeshIndex(null); setMeshPreview(null); }}
+                      onClick={() => { setSelectedMeshIndex(null); setMeshPreview(null); setHighlightedMeshSlot(null); }}
                     >
                       &times;
                     </button>
                   </div>
-                  <img
-                    className="mesh-inspector-preview-image"
-                    src={meshPreview.dataUrl}
-                    alt={selectedMesh.attachmentName}
-                    width={500}
-                    height={500}
-                  />
+                  <div className="mesh-inspector-preview-hint">
+                    {t('meshOptimizer.preview.liveHint')}
+                  </div>
                   <div className="mesh-inspector-preview-badges">
                     {meshPreview.problems.length === 0 ? (
                       <span className="mesh-inspector-problem-badge ok">

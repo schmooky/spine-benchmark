@@ -206,11 +206,13 @@ export class SpineLoader {
         } else if (fileName.endsWith('.skel')) {
           skelFile = file;
           console.log("Skel file found:", fullPath);
-        } else if (file.type.startsWith('image/') || 
-                  fileName.endsWith('.png') || 
+        } else if (file.type.startsWith('image/') ||
+                  fileName.endsWith('.png') ||
                   fileName.endsWith('.jpg') ||
-                  fileName.endsWith('.jpeg') || 
-                  fileName.endsWith('.webp')) {
+                  fileName.endsWith('.jpeg') ||
+                  fileName.endsWith('.webp') ||
+                  fileName.endsWith('.ktx2') ||
+                  fileName.endsWith('.basis')) {
           imageFiles.push(file);
           console.log("Image file found:", fullPath);
         } else {
@@ -231,9 +233,11 @@ export class SpineLoader {
         throw new Error('Missing image files. Please include image files referenced by your atlas.');
       }
       
-      // Read atlas content
-      const atlasText = await this.readFileAsText(atlasFile);
-      
+      // Read atlas content and rewrite image references to match actual uploaded files
+      const rawAtlasText = await this.readFileAsText(atlasFile);
+      const imageFileNames = imageFiles.map(f => this.getFileName(f.name));
+      const atlasText = this.rewriteAtlasImageNames(rawAtlasText, imageFileNames);
+
       // Load skeleton data
       let skeletonData;
       const isBinary = !!skelFile;
@@ -268,23 +272,34 @@ export class SpineLoader {
       const assetBundle: Record<string, any> = {};
       
       // Process each image file
+      const blobUrls: string[] = [];
       for (const imageFile of imageFiles) {
-        const base64 = await this.fileToBase64(imageFile);
         const fileName = this.getFileName(imageFile.name);
-        
+        const isCompressed = fileName.endsWith('.ktx2') || fileName.endsWith('.basis');
+
+        let src: string;
+        let assetEntry: Record<string, any>;
+
+        if (isCompressed) {
+          // Compressed textures need blob URLs + parser hint for PixiJS loader detection
+          const blobUrl = URL.createObjectURL(imageFile);
+          blobUrls.push(blobUrl);
+          src = blobUrl;
+          const parser = fileName.endsWith('.ktx2') ? 'loadKTX2' : 'loadBasis';
+          assetEntry = { src, loadParser: parser };
+        } else {
+          const base64 = await this.fileToBase64(imageFile);
+          src = base64;
+          assetEntry = { src, data: { type: imageFile.type || 'image/png' } };
+        }
+
         // Store with filename as key
-        assetBundle[fileName] = {
-          src: base64,
-          data: { type: imageFile.type || 'image/png' }
-        };
-        
+        assetBundle[fileName] = assetEntry;
+
         // Also store without extension for better matching
         const fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
         if (fileNameWithoutExt) {
-          assetBundle[fileNameWithoutExt] = {
-            src: base64,
-            data: { type: imageFile.type || 'image/png' }
-          };
+          assetBundle[fileNameWithoutExt] = assetEntry;
         }
       }
       
@@ -292,10 +307,15 @@ export class SpineLoader {
       const bundleName = `spineAssets-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       Assets.addBundle(bundleName, assetBundle);
       const textures = await Assets.loadBundle(bundleName);
-      
+
+      // Revoke blob URLs after loading (textures are already uploaded to GPU)
+      for (const blobUrl of blobUrls) {
+        URL.revokeObjectURL(blobUrl);
+      }
+
       // Create spine asset
       return await this.createSpineAsset(skeletonData, atlasText, textures, isBinary);
-      
+
     } catch (error) {
       console.error('Error loading Spine files:', error);
       throw error;
@@ -307,6 +327,42 @@ export class SpineLoader {
     return path.split('/').pop() || path;
   }
   
+  /**
+   * Rewrite atlas image references to match actual uploaded filenames.
+   * Handles format substitution (e.g. atlas says "symbols.png" but file is "symbols.ktx2").
+   */
+  private rewriteAtlasImageNames(atlasText: string, availableFileNames: string[]): string {
+    const atlasImageNames = this.extractImageNamesFromAtlas(atlasText);
+    let rewritten = atlasText;
+
+    for (const atlasName of atlasImageNames) {
+      // Already have an exact match — no rewrite needed
+      if (availableFileNames.includes(atlasName)) continue;
+
+      const dotIdx = atlasName.lastIndexOf('.');
+      const baseName = dotIdx > 0 ? atlasName.substring(0, dotIdx) : atlasName;
+
+      // Find an uploaded file with the same base name but different extension
+      const match = availableFileNames.find(f => {
+        const fDot = f.lastIndexOf('.');
+        const fBase = fDot > 0 ? f.substring(0, fDot) : f;
+        return fBase === baseName;
+      });
+
+      if (match) {
+        console.log(`Atlas image substitution: "${atlasName}" → "${match}"`);
+        // Replace only the page-header line (the image filename line before "size:")
+        // Use a line-level replace to avoid accidentally replacing region names
+        rewritten = rewritten.split('\n').map(line => {
+          if (line.trim() === atlasName) return line.replace(atlasName, match);
+          return line;
+        }).join('\n');
+      }
+    }
+
+    return rewritten;
+  }
+
   private extractImageNamesFromAtlas(atlasText: string): string[] {
     const lines = atlasText.split('\n');
     const imageNames: string[] = [];

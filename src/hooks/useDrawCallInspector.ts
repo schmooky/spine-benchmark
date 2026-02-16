@@ -9,6 +9,7 @@ export interface LiveSlotInfo {
   atlasPage: string;
   blendMode: string;
   isBreak: boolean;
+  isInvisible: boolean;
 }
 
 export interface DrawCallSnapshot {
@@ -56,21 +57,30 @@ export function collectSnapshot(skeleton: { drawOrder: any[] }): DrawCallSnapsho
     const attachment = slot.getAttachment();
     if (!attachment) continue;
 
+    const isInvisible = slot.color.a <= 0 || (slot.bone && !slot.bone.active);
+
     const isRegionOrMesh =
       attachment instanceof RegionAttachment || attachment instanceof MeshAttachment;
     const atlasPage = isRegionOrMesh ? getAtlasPageName(attachment) : 'unknown';
     const blendMode = BLEND_MODE_NAMES[slot.data.blendMode] ?? 'Normal';
 
-    const pageChanged = prevPage !== null && atlasPage !== prevPage;
-    const blendChanged = prevBlend !== null && blendMode !== prevBlend;
-    const isBreak = pageChanged || blendChanged;
+    // Only visible slots contribute to draw call / break counting
+    let isBreak = false;
+    if (!isInvisible) {
+      const pageChanged = prevPage !== null && atlasPage !== prevPage;
+      const blendChanged = prevBlend !== null && blendMode !== prevBlend;
+      isBreak = pageChanged || blendChanged;
 
-    if (prevPage === null) {
-      drawCallCount = 1;
-    } else if (isBreak) {
-      drawCallCount += 1;
-      if (pageChanged) pageBreaks += 1;
-      if (blendChanged) blendBreaks += 1;
+      if (prevPage === null) {
+        drawCallCount = 1;
+      } else if (isBreak) {
+        drawCallCount += 1;
+        if (pageChanged) pageBreaks += 1;
+        if (blendChanged) blendBreaks += 1;
+      }
+
+      prevPage = atlasPage;
+      prevBlend = blendMode;
     }
 
     slots.push({
@@ -80,10 +90,8 @@ export function collectSnapshot(skeleton: { drawOrder: any[] }): DrawCallSnapsho
       atlasPage,
       blendMode,
       isBreak,
+      isInvisible: !!isInvisible,
     });
-
-    prevPage = atlasPage;
-    prevBlend = blendMode;
   }
 
   return { slots, drawCallCount, pageBreaks, blendBreaks };

@@ -823,7 +823,8 @@
       "pixelArea": "Mesh-Fläche",
       "overclustered": "Überdichte Dreiecke",
       "invisibleDeform": "Unsichtbare Deformation",
-      "noProblems": "Keine Probleme erkannt"
+      "noProblems": "Keine Probleme erkannt",
+      "liveHint": "Auf der Leinwand hervorgehoben — rote Dreiecke sind überladen"
     }
   },
   "appErrorBoundary": {
@@ -911,7 +912,8 @@
     "labels": {
       "loop": "Loop",
       "loopHint": "Toggle animation looping",
-      "selectAnimation": "Select Animation"
+      "selectAnimation": "Select Animation",
+      "selectSkin": "Select Skin"
     },
     "actions": {
       "previous": "Previous Animation",
@@ -938,6 +940,7 @@
         "blend": "Blend"
       }
     },
+    "hideInvisible": "Unsichtbare Anhänge ausblenden",
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"

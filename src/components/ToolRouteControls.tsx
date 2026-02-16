@@ -53,7 +53,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
     [pendingFiles]
   );
   const pendingTextureFiles = useMemo(
-    () => pendingFiles.filter((file) => (file.type || '').startsWith('image/') || /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(file.name)),
+    () => pendingFiles.filter((file) => (file.type || '').startsWith('image/') || /\.(png|jpg|jpeg|webp|gif|avif|ktx2|basis)$/i.test(file.name)),
     [pendingFiles]
   );
   const completeness = useMemo(() => getAssetBundleCompleteness(pendingFiles), [pendingFiles]);
@@ -61,9 +61,23 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
     () => new Set(pendingTextureFiles.map((file) => file.name.toLowerCase())),
     [pendingTextureFiles]
   );
+  const availableImageBaseNames = useMemo(
+    () => new Set(pendingTextureFiles.map((file) => {
+      const dot = file.name.lastIndexOf('.');
+      return (dot > 0 ? file.name.substring(0, dot) : file.name).toLowerCase();
+    })),
+    [pendingTextureFiles]
+  );
+  const isAtlasImageAvailable = (name: string): boolean => {
+    if (availableImageNames.has(name.toLowerCase())) return true;
+    // Allow extension substitution (atlas says .png, file is .ktx2 / .basis / .webp etc.)
+    const dot = name.lastIndexOf('.');
+    const baseName = (dot > 0 ? name.substring(0, dot) : name).toLowerCase();
+    return availableImageBaseNames.has(baseName);
+  };
   const missingAtlasImages = useMemo(
-    () => requiredAtlasImages.filter((name) => !availableImageNames.has(name.toLowerCase())),
-    [requiredAtlasImages, availableImageNames]
+    () => requiredAtlasImages.filter((name) => !isAtlasImageAvailable(name)),
+    [requiredAtlasImages, availableImageNames, availableImageBaseNames]
   );
   const isPendingBundleComplete = completeness.hasSkeleton && completeness.hasAtlas && completeness.hasImages && missingAtlasImages.length === 0;
 
@@ -368,19 +382,22 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                 <div className="spine-texture-badges-section">
                   <span className="spine-texture-badges-label">{t('toolRouteControls.fileSlots.requiredByAtlas')}</span>
                   <div className="spine-texture-badges">
-                    {requiredAtlasImages.map((name) => (
-                      <span
-                        key={name}
-                        className={`spine-texture-badge ${availableImageNames.has(name.toLowerCase()) ? 'found' : 'missing'}`}
-                      >
-                        {availableImageNames.has(name.toLowerCase()) ? (
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                        ) : (
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                        )}
-                        {name}
-                      </span>
-                    ))}
+                    {requiredAtlasImages.map((name) => {
+                      const found = isAtlasImageAvailable(name);
+                      return (
+                        <span
+                          key={name}
+                          className={`spine-texture-badge ${found ? 'found' : 'missing'}`}
+                        >
+                          {found ? (
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                          ) : (
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                          )}
+                          {name}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -403,7 +420,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
             {/* Hidden file inputs */}
             <input ref={skeletonInputRef} type="file" multiple className="hidden-input" accept=".json,.skel" onChange={handleInputFiles} />
             <input ref={atlasInputRef} type="file" multiple className="hidden-input" accept=".atlas,.txt" onChange={handleInputFiles} />
-            <input ref={imagesInputRef} type="file" multiple className="hidden-input" accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.avif" onChange={handleInputFiles} />
+            <input ref={imagesInputRef} type="file" multiple className="hidden-input" accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.avif,.ktx2,.basis" onChange={handleInputFiles} />
 
             {/* Error display */}
             {uploadError && (

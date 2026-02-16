@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
@@ -8,105 +8,231 @@ import { useAnimationHeatmap, FrameMetrics, AnimationHeatmapData } from '../hook
 import { LiveSlotInfo } from '../hooks/useDrawCallInspector';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
 
-function heatColor(value: number, min: number, max: number): string {
-  if (max === min) return '#34D399';
-  const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
-  if (t <= 0.5) {
-    // green -> yellow
-    const r = Math.round(52 + (251 - 52) * (t * 2));
-    const g = Math.round(211 + (191 - 211) * (t * 2));
-    const b = Math.round(153 + (36 - 153) * (t * 2));
-    return `rgb(${r},${g},${b})`;
-  }
-  // yellow -> red
-  const r = Math.round(251 + (248 - 251) * ((t - 0.5) * 2));
-  const g = Math.round(191 + (113 - 191) * ((t - 0.5) * 2));
-  const b = Math.round(36 + (113 - 36) * ((t - 0.5) * 2));
-  return `rgb(${r},${g},${b})`;
-}
-
-interface MetricRange {
-  min: number;
-  max: number;
-  avg: number;
-}
-
-function computeRange(frames: FrameMetrics[], key: keyof FrameMetrics): MetricRange {
-  if (frames.length === 0) return { min: 0, max: 0, avg: 0 };
-  const values = frames.map((f) => f[key] as number);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  return { min, max, avg: Math.round(avg * 10) / 10 };
-}
-
 type MetricKey = 'drawCalls' | 'textures' | 'blendBreaks';
 
-const METRIC_ROWS: { key: MetricKey; label: string }[] = [
-  { key: 'drawCalls', label: 'DC' },
-  { key: 'textures', label: 'TX' },
-  { key: 'blendBreaks', label: 'BB' },
+const METRICS: { key: MetricKey; label: string; color: string }[] = [
+  { key: 'drawCalls', label: 'DC', color: '#60A5FA' },
+  { key: 'textures', label: 'TX', color: '#FBBF24' },
+  { key: 'blendBreaks', label: 'BB', color: '#F87171' },
 ];
 
-function HeatmapRow({
+const CHART_HEIGHT = 120;
+const CHART_PADDING = { top: 8, right: 8, bottom: 20, left: 32 };
+
+function MetricChart({
   frames,
-  metricKey,
-  label,
-  range,
   hoveredFrame,
+  selectedFrame,
   onHoverFrame,
   onClickFrame,
-  selectedFrame,
 }: {
   frames: FrameMetrics[];
-  metricKey: MetricKey;
-  label: string;
-  range: MetricRange;
   hoveredFrame: number | null;
+  selectedFrame: number | null;
   onHoverFrame: (index: number | null) => void;
   onClickFrame: (index: number) => void;
-  selectedFrame: number | null;
 }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [svgWidth, setSvgWidth] = useState(360);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setSvgWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(svg);
+    return () => observer.disconnect();
+  }, []);
+
+  const plotW = svgWidth - CHART_PADDING.left - CHART_PADDING.right;
+  const plotH = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+
+  // Compute global max across all metrics so they share one Y scale
+  const globalMax = useMemo(() => {
+    let max = 1;
+    for (const frame of frames) {
+      for (const m of METRICS) {
+        const v = frame[m.key] as number;
+        if (v > max) max = v;
+      }
+    }
+    return max;
+  }, [frames]);
+
+  // Build SVG paths for each metric
+  const paths = useMemo(() => {
+    if (frames.length === 0 || plotW <= 0) return [];
+    const stepX = plotW / Math.max(frames.length - 1, 1);
+    return METRICS.map((m) => {
+      const points: string[] = [];
+      for (let i = 0; i < frames.length; i++) {
+        const x = CHART_PADDING.left + i * stepX;
+        const v = frames[i][m.key] as number;
+        const y = CHART_PADDING.top + plotH - (v / globalMax) * plotH;
+        points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      }
+      const line = `M${points.join('L')}`;
+      // Area: close path along bottom
+      const bottomY = CHART_PADDING.top + plotH;
+      const firstX = CHART_PADDING.left;
+      const lastX = CHART_PADDING.left + (frames.length - 1) * stepX;
+      const area = `${line}L${lastX.toFixed(1)},${bottomY}L${firstX.toFixed(1)},${bottomY}Z`;
+      return { ...m, line, area };
+    });
+  }, [frames, plotW, plotH, globalMax]);
+
+  // Y axis ticks (3-4 ticks)
+  const yTicks = useMemo(() => {
+    const ticks: number[] = [];
+    const step = globalMax <= 4 ? 1 : Math.ceil(globalMax / 4);
+    for (let v = 0; v <= globalMax; v += step) {
+      ticks.push(v);
+    }
+    if (ticks[ticks.length - 1] < globalMax) ticks.push(globalMax);
+    return ticks;
+  }, [globalMax]);
+
+  // X axis ticks (frame indices)
+  const xTicks = useMemo(() => {
+    const count = frames.length;
+    if (count <= 1) return [0];
+    const step = Math.max(1, Math.floor(count / 5));
+    const ticks: number[] = [];
+    for (let i = 0; i < count; i += step) ticks.push(i);
+    if (ticks[ticks.length - 1] !== count - 1) ticks.push(count - 1);
+    return ticks;
+  }, [frames.length]);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      const svg = svgRef.current;
+      if (!svg || frames.length === 0) return;
+      const rect = svg.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - CHART_PADDING.left;
+      const stepX = plotW / Math.max(frames.length - 1, 1);
+      const idx = Math.round(mouseX / stepX);
+      if (idx >= 0 && idx < frames.length) {
+        onHoverFrame(idx);
+      } else {
+        onHoverFrame(null);
+      }
+    },
+    [frames.length, plotW, onHoverFrame],
+  );
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      const svg = svgRef.current;
+      if (!svg || frames.length === 0) return;
+      const rect = svg.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left - CHART_PADDING.left;
+      const stepX = plotW / Math.max(frames.length - 1, 1);
+      const idx = Math.round(mouseX / stepX);
+      if (idx >= 0 && idx < frames.length) {
+        onClickFrame(idx);
+      }
+    },
+    [frames.length, plotW, onClickFrame],
+  );
+
+  const cursorFrameIndex = hoveredFrame ?? selectedFrame;
+  const stepX = plotW / Math.max(frames.length - 1, 1);
+  const cursorX = cursorFrameIndex !== null ? CHART_PADDING.left + cursorFrameIndex * stepX : null;
+
   return (
-    <div className="heatmap-row">
-      <span className="heatmap-row-label">{label}</span>
-      <div className="heatmap-strip">
-        {frames.map((frame, i) => {
-          const value = frame[metricKey] as number;
-          return (
-            <div
-              key={i}
-              className={`heatmap-cell${selectedFrame === i ? ' selected' : ''}${hoveredFrame === i ? ' hovered' : ''}`}
-              style={{ backgroundColor: heatColor(value, range.min, range.max) }}
-              onMouseEnter={() => onHoverFrame(i)}
-              onMouseLeave={() => onHoverFrame(null)}
-              onClick={() => onClickFrame(i)}
-              title={`Frame ${i} (${frame.time.toFixed(3)}s): ${label}=${value}`}
+    <svg
+      ref={svgRef}
+      className="perf-chart-svg"
+      width="100%"
+      height={CHART_HEIGHT}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => onHoverFrame(null)}
+      onClick={handleClick}
+    >
+      {/* Y axis gridlines */}
+      {yTicks.map((v) => {
+        const y = CHART_PADDING.top + plotH - (v / globalMax) * plotH;
+        return (
+          <g key={`y-${v}`}>
+            <line
+              x1={CHART_PADDING.left}
+              x2={svgWidth - CHART_PADDING.right}
+              y1={y}
+              y2={y}
+              className="perf-chart-gridline"
             />
+            <text x={CHART_PADDING.left - 4} y={y + 3} className="perf-chart-axis-label" textAnchor="end">
+              {v}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* X axis labels */}
+      {xTicks.map((i) => {
+        const x = CHART_PADDING.left + i * stepX;
+        return (
+          <text
+            key={`x-${i}`}
+            x={x}
+            y={CHART_HEIGHT - 4}
+            className="perf-chart-axis-label"
+            textAnchor="middle"
+          >
+            {i}
+          </text>
+        );
+      })}
+
+      {/* Area fills (drawn first, behind lines) */}
+      {paths.map((p) => (
+        <path key={`area-${p.key}`} d={p.area} fill={p.color} opacity={0.12} />
+      ))}
+
+      {/* Lines */}
+      {paths.map((p) => (
+        <path key={`line-${p.key}`} d={p.line} fill="none" stroke={p.color} strokeWidth={1.5} />
+      ))}
+
+      {/* Cursor line */}
+      {cursorX !== null && (
+        <line
+          x1={cursorX}
+          x2={cursorX}
+          y1={CHART_PADDING.top}
+          y2={CHART_PADDING.top + plotH}
+          className="perf-chart-cursor"
+        />
+      )}
+
+      {/* Cursor dots */}
+      {cursorFrameIndex !== null &&
+        frames[cursorFrameIndex] &&
+        METRICS.map((m) => {
+          const v = frames[cursorFrameIndex][m.key] as number;
+          const y = CHART_PADDING.top + plotH - (v / globalMax) * plotH;
+          return (
+            <circle key={`dot-${m.key}`} cx={cursorX!} cy={y} r={3} fill={m.color} stroke="var(--sb-bg-1)" strokeWidth={1.5} />
           );
         })}
-      </div>
-      <span className="heatmap-row-range">
-        {range.min}–{range.max}
-      </span>
-    </div>
+    </svg>
   );
 }
 
-function HeatmapTooltip({ frame, index }: { frame: FrameMetrics; index: number }) {
+function ChartTooltip({ frame, index }: { frame: FrameMetrics; index: number }) {
   return (
-    <div className="heatmap-tooltip">
-      <div className="heatmap-tooltip-header">
-        Frame #{index} — {frame.time.toFixed(3)}s
-      </div>
-      <div className="heatmap-tooltip-grid">
-        <span>DC</span><span>{frame.drawCalls}</span>
-        <span>TX</span><span>{frame.textures}</span>
-        <span>Page Breaks</span><span>{frame.pageBreaks}</span>
-        <span>Blend Breaks</span><span>{frame.blendBreaks}</span>
-        <span>Visible Slots</span><span>{frame.visibleSlots}</span>
-        <span>Non-Normal Blends</span><span>{frame.nonNormalBlends}</span>
-      </div>
+    <div className="perf-chart-tooltip">
+      <span className="perf-chart-tooltip-frame">#{index} ({frame.time.toFixed(3)}s)</span>
+      {METRICS.map((m) => (
+        <span key={m.key} className="perf-chart-tooltip-val" style={{ color: m.color }}>
+          {m.label}: {frame[m.key] as number}
+        </span>
+      ))}
+      <span className="perf-chart-tooltip-val">PB: {frame.pageBreaks}</span>
+      <span className="perf-chart-tooltip-val">Slots: {frame.visibleSlots}</span>
     </div>
   );
 }
@@ -151,6 +277,21 @@ function FrameDetail({ frame, index }: { frame: FrameMetrics; index: number }) {
   );
 }
 
+interface MetricRange {
+  min: number;
+  max: number;
+  avg: number;
+}
+
+function computeRange(frames: FrameMetrics[], key: keyof FrameMetrics): MetricRange {
+  if (frames.length === 0) return { min: 0, max: 0, avg: 0 };
+  const values = frames.map((f) => f[key] as number);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  return { min, max, avg: Math.round(avg * 10) / 10 };
+}
+
 function AnimationHeatmapPanel({ animData, isSelected, onSelect }: { animData: AnimationHeatmapData; isSelected: boolean; onSelect: () => void }) {
   const [hoveredFrame, setHoveredFrame] = useState<number | null>(null);
   const [selectedFrame, setSelectedFrame] = useState<number | null>(null);
@@ -175,32 +316,31 @@ function AnimationHeatmapPanel({ animData, isSelected, onSelect }: { animData: A
 
       {isSelected && (
         <div className="heatmap-animation-body">
-          <div className="heatmap-summary-row">
-            {METRIC_ROWS.map(({ key, label }) => (
-              <span key={key} className="heatmap-summary-stat">
-                {label}: {ranges[key].min}–{ranges[key].max} (avg {ranges[key].avg})
+          {/* Legend */}
+          <div className="perf-chart-legend">
+            {METRICS.map((m) => (
+              <span key={m.key} className="perf-chart-legend-item">
+                <span className="perf-chart-legend-swatch" style={{ background: m.color }} />
+                {m.label}: {ranges[m.key].min}–{ranges[m.key].max} (avg {ranges[m.key].avg})
               </span>
             ))}
           </div>
 
-          {METRIC_ROWS.map(({ key, label }) => (
-            <HeatmapRow
-              key={key}
-              frames={animData.frames}
-              metricKey={key}
-              label={label}
-              range={ranges[key]}
-              hoveredFrame={hoveredFrame}
-              onHoverFrame={setHoveredFrame}
-              onClickFrame={setSelectedFrame}
-              selectedFrame={selectedFrame}
-            />
-          ))}
+          {/* Chart */}
+          <MetricChart
+            frames={animData.frames}
+            hoveredFrame={hoveredFrame}
+            selectedFrame={selectedFrame}
+            onHoverFrame={setHoveredFrame}
+            onClickFrame={setSelectedFrame}
+          />
 
+          {/* Tooltip on hover */}
           {hoveredFrame !== null && animData.frames[hoveredFrame] && (
-            <HeatmapTooltip frame={animData.frames[hoveredFrame]} index={hoveredFrame} />
+            <ChartTooltip frame={animData.frames[hoveredFrame]} index={hoveredFrame} />
           )}
 
+          {/* Frame detail on click */}
           {selectedFrame !== null && animData.frames[selectedFrame] && (
             <FrameDetail frame={animData.frames[selectedFrame]} index={selectedFrame} />
           )}
@@ -263,7 +403,7 @@ export function AnimationHeatmapRouteView() {
       />
 
       <div className="heatmap-layout">
-        {/* Left panel — heatmap analysis */}
+        {/* Left panel — performance charts */}
         <div className="tool-panel heatmap-panel">
           {spineInstance ? (
             <>
@@ -291,14 +431,14 @@ export function AnimationHeatmapRouteView() {
                 </div>
               ) : !isAnalyzing ? (
                 <div className="tool-empty">
-                  <h3>Animation Heatmap</h3>
-                  <p>Click "Analyze All Animations" to sample every frame and generate heatmaps showing draw call, texture, and blend break costs over time.</p>
+                  <h3>Animation Performance</h3>
+                  <p>Click "Analyze All Animations" to sample every frame and generate performance charts showing draw call, texture, and blend break costs over time.</p>
                 </div>
               ) : null}
             </>
           ) : (
             <div className="tool-empty">
-              <h3>Animation Heatmap</h3>
+              <h3>Animation Performance</h3>
               <p>Load a Spine asset to analyze animation performance frame-by-frame.</p>
             </div>
           )}

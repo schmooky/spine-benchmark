@@ -823,7 +823,8 @@
       "pixelArea": "Площа меша",
       "overclustered": "Перевантажені трикутники",
       "invisibleDeform": "Невидима деформація",
-      "noProblems": "Проблем не виявлено"
+      "noProblems": "Проблем не виявлено",
+      "liveHint": "Виділено на канвасі — червоні трикутники перевантажені"
     }
   },
   "appErrorBoundary": {
@@ -911,7 +912,8 @@
     "labels": {
       "loop": "Loop",
       "loopHint": "Toggle animation looping",
-      "selectAnimation": "Select Animation"
+      "selectAnimation": "Select Animation",
+      "selectSkin": "Select Skin"
     },
     "actions": {
       "previous": "Previous Animation",
@@ -938,6 +940,7 @@
         "blend": "Blend"
       }
     },
+    "hideInvisible": "Сховати невидимі вкладення",
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"

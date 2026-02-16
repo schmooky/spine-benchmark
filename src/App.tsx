@@ -119,6 +119,8 @@ const App: React.FC = () => {
     toggleTransformConstraints,
     togglePathConstraints,
     getCameraContainer,
+    setHighlightedMeshSlot,
+    setSlotHighlight,
   } = useSpineApp(app);
 
   const { urlLoadStatus, handleUrlLoad } = useUrlLoad({ app, loadSpineFromUrls });
@@ -610,7 +612,9 @@ const App: React.FC = () => {
     setShowUrlModal,
     partnerTools,
     documentationLinks,
-    saveAndLoadOptimizedAsset
+    saveAndLoadOptimizedAsset,
+    setHighlightedMeshSlot,
+    setSlotHighlight
   }), [
     spineInstance,
     benchmarkData,
@@ -640,7 +644,9 @@ const App: React.FC = () => {
     meshesVisible,
     t,
     handleSpineFiles,
-    saveAndLoadOptimizedAsset
+    saveAndLoadOptimizedAsset,
+    setHighlightedMeshSlot,
+    setSlotHighlight
   ]);
 
   return (

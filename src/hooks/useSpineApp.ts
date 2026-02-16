@@ -50,6 +50,14 @@ export function useSpineApp(app: Application | null) {
     return cameraContainerRef.current;
   }, []);
 
+  const setHighlightedMeshSlot = useCallback((slotName: string | null) => {
+    cameraContainerRef.current?.setHighlightedMeshSlot(slotName);
+  }, []);
+
+  const setSlotHighlight = useCallback((slotIndex: number | null) => {
+    cameraContainerRef.current?.setSlotHighlight(slotIndex);
+  }, []);
+
   useEffect(() => {
     if (!app) return;
 
@@ -143,6 +151,8 @@ export function useSpineApp(app: Application | null) {
     ikVisible,
     transformConstraintsVisible,
     pathConstraintsVisible,
-    getCameraContainer
+    getCameraContainer,
+    setHighlightedMeshSlot,
+    setSlotHighlight
   };
 }

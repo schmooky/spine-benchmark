@@ -823,7 +823,8 @@
       "pixelArea": "Área do mesh",
       "overclustered": "Triângulos sobredensos",
       "invisibleDeform": "Deformação invisível",
-      "noProblems": "Nenhum problema detectado"
+      "noProblems": "Nenhum problema detectado",
+      "liveHint": "Destacado no canvas — triângulos vermelhos estão sobrecarregados"
     }
   },
   "appErrorBoundary": {
@@ -911,7 +912,8 @@
     "labels": {
       "loop": "Loop",
       "loopHint": "Toggle animation looping",
-      "selectAnimation": "Select Animation"
+      "selectAnimation": "Select Animation",
+      "selectSkin": "Select Skin"
     },
     "actions": {
       "previous": "Previous Animation",
@@ -938,6 +940,7 @@
         "blend": "Blend"
       }
     },
+    "hideInvisible": "Ocultar anexos invisíveis",
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"

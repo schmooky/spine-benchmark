@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
@@ -36,7 +36,11 @@ export function DrawCallInspectorRouteView() {
     selectedAssetId,
     setSelectedAssetId,
     loadCurrentAssetIntoBenchmark,
+    setSlotHighlight,
   } = useWorkbench();
+
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [hideInvisible, setHideInvisible] = useState(false);
 
   // Re-parent the singleton PIXI canvas into this route's pixi-host div
   useEffect(() => {
@@ -45,13 +49,41 @@ export function DrawCallInspectorRouteView() {
     }
   });
 
+  // Clear highlight on unmount
+  useEffect(() => {
+    return () => {
+      setSlotHighlight(null);
+    };
+  }, [setSlotHighlight]);
+
   const snapshot = useDrawCallInspector(spineInstance);
+
+  // Clear selection when asset changes
+  useEffect(() => {
+    setSelectedSlotIndex(null);
+    setSlotHighlight(null);
+  }, [spineInstance, setSlotHighlight]);
+
+  const displaySlots = useMemo(() => {
+    if (!hideInvisible) return snapshot.slots;
+    return snapshot.slots.filter((s) => !s.isInvisible);
+  }, [snapshot.slots, hideInvisible]);
 
   const pageColorMap = useMemo(() => {
     const map = new Map<string, string>();
-    snapshot.slots.forEach((slot) => getPageColor(slot.atlasPage, map));
+    displaySlots.forEach((slot) => getPageColor(slot.atlasPage, map));
     return map;
-  }, [snapshot.slots]);
+  }, [displaySlots]);
+
+  const handleSlotClick = useCallback((slotIndex: number) => {
+    if (selectedSlotIndex === slotIndex) {
+      setSelectedSlotIndex(null);
+      setSlotHighlight(null);
+    } else {
+      setSelectedSlotIndex(slotIndex);
+      setSlotHighlight(slotIndex);
+    }
+  }, [selectedSlotIndex, setSlotHighlight]);
 
   const handleLoadSelected = async () => {
     setIsLoadingSelected(true);
@@ -108,6 +140,15 @@ export function DrawCallInspectorRouteView() {
                 </div>
               </div>
 
+              <label className="dc-inspector-toggle">
+                <input
+                  type="checkbox"
+                  checked={hideInvisible}
+                  onChange={(e) => setHideInvisible(e.target.checked)}
+                />
+                {t('drawCallInspector.hideInvisible')}
+              </label>
+
               <div className="dc-inspector-list-header">
                 <span className="dc-inspector-row-index">{t('drawCallInspector.list.headers.index')}</span>
                 <span className="dc-inspector-row-attachment">{t('drawCallInspector.list.headers.attachment')}</span>
@@ -116,10 +157,11 @@ export function DrawCallInspectorRouteView() {
               </div>
 
               <div className="dc-inspector-list">
-                {snapshot.slots.map((slot: LiveSlotInfo) => (
+                {displaySlots.map((slot: LiveSlotInfo) => (
                   <div
                     key={`${slot.index}-${slot.slotName}`}
-                    className={`dc-inspector-row${slot.isBreak ? ' break' : ''}`}
+                    className={`dc-inspector-row${slot.isBreak ? ' break' : ''}${selectedSlotIndex === slot.index ? ' selected' : ''}${slot.isInvisible ? ' invisible' : ''}`}
+                    onClick={() => handleSlotClick(slot.index)}
                   >
                     <span className="dc-inspector-row-index">{slot.index}</span>
                     <span className="dc-inspector-row-attachment" title={`${slot.slotName} → ${slot.attachmentName}`}>

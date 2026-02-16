@@ -41,6 +41,8 @@ export interface WorkbenchContextValue {
   partnerTools: Array<{ labelKey: string; href: string }>;
   documentationLinks: Array<{ labelKey: string; href: string }>;
   saveAndLoadOptimizedAsset: (files: File[], name: string, description: string) => Promise<void>;
+  setHighlightedMeshSlot: (slotName: string | null) => void;
+  setSlotHighlight: (slotIndex: number | null) => void;
 }
 
 const WorkbenchContext = createContext<WorkbenchContextValue | null>(null);

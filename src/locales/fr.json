@@ -823,7 +823,8 @@
       "pixelArea": "Surface du mesh",
       "overclustered": "Triangles sur-densifiés",
       "invisibleDeform": "Déformation invisible",
-      "noProblems": "Aucun problème détecté"
+      "noProblems": "Aucun problème détecté",
+      "liveHint": "Surligné sur le canevas — les triangles rouges sont surchargés"
     }
   },
   "appErrorBoundary": {
@@ -911,7 +912,8 @@
     "labels": {
       "loop": "Loop",
       "loopHint": "Toggle animation looping",
-      "selectAnimation": "Select Animation"
+      "selectAnimation": "Select Animation",
+      "selectSkin": "Select Skin"
     },
     "actions": {
       "previous": "Previous Animation",
@@ -938,6 +940,7 @@
         "blend": "Blend"
       }
     },
+    "hideInvisible": "Masquer les attachements invisibles",
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"

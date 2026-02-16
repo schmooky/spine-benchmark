@@ -45,7 +45,7 @@
       "escape": "Esc"
     },
     "dropFilesHere": "Drop Spine files here",
-    "supportedFormats": "Supports .json, .skel, .atlas, and image files",
+    "supportedFormats": "Supports .json, .skel, .atlas, and image files (.png, .jpg, .webp, .ktx2, .basis)",
     "browseFiles": "Browse Files"
   },
   "commands": {
@@ -826,7 +826,8 @@
       "pixelArea": "Mesh area",
       "overclustered": "Overclustered triangles",
       "invisibleDeform": "Invisible deformation",
-      "noProblems": "No problems detected"
+      "noProblems": "No problems detected",
+      "liveHint": "Highlighted on canvas — red triangles are overclustered"
     }
   },
   "physicsBaker": {
@@ -918,6 +919,7 @@
         "blend": "Blend"
       }
     },
+    "hideInvisible": "Hide invisible attachments",
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"
@@ -949,7 +951,8 @@
     "labels": {
       "loop": "Loop",
       "loopHint": "Toggle animation looping",
-      "selectAnimation": "Select Animation"
+      "selectAnimation": "Select Animation",
+      "selectSkin": "Select Skin"
     },
     "actions": {
       "previous": "Previous Animation",

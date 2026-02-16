@@ -3,6 +3,7 @@ import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer } from './DebugLayer';
 import { DebugLayerFactory, DebugLayerType } from './DebugLayerFactory';
 import { DebugFlagsManager, DebugFlags } from './DebugFlagsManager';
+import { MeshDebugLayer } from './layers/MeshDebugLayer';
 
 export class DebugRendererManager {
   private app: Application;
@@ -146,5 +147,12 @@ export class DebugRendererManager {
   public toggleTransformConstraints(visible?: boolean): void {
     this.flagsManager.toggleTransformConstraints(visible);
     this.setDebugFlags(this.flagsManager.getDebugFlags());
+  }
+
+  public setHighlightedMeshSlot(slotName: string | null): void {
+    const meshLayer = this.layers.get('meshes') as MeshDebugLayer | undefined;
+    if (meshLayer) {
+      meshLayer.setHighlightedSlot(slotName);
+    }
   }
 }

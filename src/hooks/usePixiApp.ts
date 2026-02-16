@@ -1,4 +1,6 @@
 import { Application } from 'pixi.js';
+import 'pixi.js/basis';
+import 'pixi.js/ktx2';
 import { useEffect, useState } from 'react';
 import { useToast } from './ToastContext';
 import { useTranslation } from 'react-i18next';
