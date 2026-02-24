@@ -736,11 +736,11 @@
       "import": "Import",
       "load": "Load",
       "delete": "Delete",
-      "startTour": "Start Guided Tour",
+      "startTour": "開始導覽",
       "loadFromUrl": "Load From URL",
       "reloadSelected": "Reload Selected Asset",
-      "continue": "Continue",
-      "skipForNow": "Skip For Now",
+      "continue": "繼續",
+      "skipForNow": "稍後再說",
       "collapseSidebar": "Collapse Sidebar",
       "expandSidebar": "Expand Sidebar"
     },
@@ -773,10 +773,10 @@
       "summary": "{{count}} files • {{size}}"
     },
     "onboarding": {
-      "languageTitle": "Choose Your Language",
-      "languageDescription": "Set your preferred language first, then we will guide you around the workspace.",
-      "welcomeTitle": "Welcome to Spine Workbench",
-      "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
+      "languageTitle": "選擇你的語言",
+      "languageDescription": "請先設定偏好語言，接著我們會帶你熟悉工作區。",
+      "welcomeTitle": "歡迎使用 Spine Workbench",
+      "welcomeDescription": "預設示範 Spine 資產已載入至 IndexedDB。開始導覽以了解上傳、檢視、基準測試與最佳化流程。"
     },
     "tour": {
       "next": "下一步",

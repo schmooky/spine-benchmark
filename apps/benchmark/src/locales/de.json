@@ -736,11 +736,11 @@
       "import": "Import",
       "load": "Load",
       "delete": "Delete",
-      "startTour": "Start Guided Tour",
+      "startTour": "Geführte Tour starten",
       "loadFromUrl": "Load From URL",
       "reloadSelected": "Reload Selected Asset",
-      "continue": "Continue",
-      "skipForNow": "Skip For Now",
+      "continue": "Weiter",
+      "skipForNow": "Vorerst überspringen",
       "collapseSidebar": "Collapse Sidebar",
       "expandSidebar": "Expand Sidebar"
     },
@@ -773,10 +773,10 @@
       "summary": "{{count}} files • {{size}}"
     },
     "onboarding": {
-      "languageTitle": "Choose Your Language",
-      "languageDescription": "Set your preferred language first, then we will guide you around the workspace.",
-      "welcomeTitle": "Welcome to Spine Workbench",
-      "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
+      "languageTitle": "Sprache auswählen",
+      "languageDescription": "Lege zuerst deine bevorzugte Sprache fest, danach führen wir dich durch den Workspace.",
+      "welcomeTitle": "Willkommen bei Spine Workbench",
+      "welcomeDescription": "Ein Standard-Demo-Asset ist bereits in IndexedDB geladen. Starte die Tour, um Upload-, Prüf-, Benchmark- und Optimierungsabläufe kennenzulernen."
     },
     "tour": {
       "next": "Weiter",

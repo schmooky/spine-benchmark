@@ -736,11 +736,11 @@
       "import": "Import",
       "load": "Load",
       "delete": "Delete",
-      "startTour": "Start Guided Tour",
+      "startTour": "Почати тур",
       "loadFromUrl": "Load From URL",
       "reloadSelected": "Reload Selected Asset",
-      "continue": "Continue",
-      "skipForNow": "Skip For Now",
+      "continue": "Продовжити",
+      "skipForNow": "Пропустити зараз",
       "collapseSidebar": "Collapse Sidebar",
       "expandSidebar": "Expand Sidebar"
     },
@@ -773,10 +773,10 @@
       "summary": "{{count}} files • {{size}}"
     },
     "onboarding": {
-      "languageTitle": "Choose Your Language",
-      "languageDescription": "Set your preferred language first, then we will guide you around the workspace.",
-      "welcomeTitle": "Welcome to Spine Workbench",
-      "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
+      "languageTitle": "Оберіть мову",
+      "languageDescription": "Спочатку виберіть бажану мову, після цього ми проведемо вас робочим простором.",
+      "welcomeTitle": "Ласкаво просимо до Spine Workbench",
+      "welcomeDescription": "У вас уже завантажено демонстраційний Spine-асет в IndexedDB. Запустіть тур, щоб пройти етапи імпорту, перегляду, бенчмарку та оптимізації."
     },
     "tour": {
       "next": "Далі",
