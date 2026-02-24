@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
@@ -368,6 +369,7 @@ export function AnimationHeatmapRouteView() {
   const { t } = useTranslation();
   const [isLoadingSelected, setIsLoadingSelected] = useState(false);
   const [selectedAnimIndex, setSelectedAnimIndex] = useState<number>(0);
+  const autoAnalyzedSpineRef = useRef<Spine | null>(null);
   const {
     spineInstance,
     urlLoadStatus,
@@ -389,7 +391,7 @@ export function AnimationHeatmapRouteView() {
     if (pixiContainerRef.current) {
       reparentPixiCanvas(pixiContainerRef.current);
     }
-  });
+  }, [pixiContainerRef]);
 
   const { data, isAnalyzing, analyze } = useAnimationHeatmap(spineInstance);
 
@@ -398,11 +400,16 @@ export function AnimationHeatmapRouteView() {
     setSelectedAnimIndex(0);
   }, [data]);
 
-  // Auto-run heatmap analysis whenever a spine is available.
+  // Auto-run heatmap analysis once per loaded spine.
   useEffect(() => {
-    if (!spineInstance || isAnalyzing) return;
+    if (!spineInstance) {
+      autoAnalyzedSpineRef.current = null;
+      return;
+    }
+    if (autoAnalyzedSpineRef.current === spineInstance) return;
+    autoAnalyzedSpineRef.current = spineInstance;
     analyze();
-  }, [spineInstance, isAnalyzing, analyze]);
+  }, [spineInstance, analyze]);
 
   const handlePickAsset = async (assetId: string) => {
     const asset = assets.find((entry) => entry.id === assetId);
@@ -438,17 +445,6 @@ export function AnimationHeatmapRouteView() {
         <div className="tool-panel heatmap-panel">
           {spineInstance ? (
             <>
-              <div className="heatmap-controls">
-                <button
-                  type="button"
-                  className="primary-btn"
-                  onClick={analyze}
-                  disabled={isAnalyzing}
-                >
-                  {isAnalyzing ? t('animationHeatmap.actions.analyzing') : t('animationHeatmap.actions.analyzeAll')}
-                </button>
-              </div>
-
               {data.length > 0 ? (
                 <div className="heatmap-results">
                   {data.map((animData, i) => (
@@ -460,12 +456,17 @@ export function AnimationHeatmapRouteView() {
                     />
                   ))}
                 </div>
-              ) : !isAnalyzing ? (
+              ) : isAnalyzing ? (
                 <div className="tool-empty">
                   <h3>{t('animationHeatmap.empty.title')}</h3>
-                  <p>{t('animationHeatmap.empty.hint')}</p>
+                  <p>{t('animationHeatmap.empty.analyzing')}</p>
                 </div>
-              ) : null}
+              ) : (
+                <div className="tool-empty">
+                  <h3>{t('animationHeatmap.empty.title')}</h3>
+                  <p>{t('animationHeatmap.empty.noData')}</p>
+                </div>
+              )}
             </>
           ) : (
             <div className="tool-empty">

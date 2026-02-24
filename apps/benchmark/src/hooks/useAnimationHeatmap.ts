@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { AnimationSampler } from '../core/utils/animationSampler';
 import { collectSnapshot, LiveSlotInfo } from './useDrawCallInspector';
@@ -29,29 +29,41 @@ export interface UseAnimationHeatmapResult {
 export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHeatmapResult {
   const [data, setData] = useState<AnimationHeatmapData[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const isAnalyzingRef = useRef(false);
+  const analysisRunRef = useRef(0);
 
   // New spine means old heatmap data is stale.
   useEffect(() => {
+    analysisRunRef.current += 1;
     setData([]);
     setIsAnalyzing(false);
+    isAnalyzingRef.current = false;
   }, [spineInstance]);
 
   const analyze = useCallback(() => {
-    if (!spineInstance) return;
+    if (!spineInstance || isAnalyzingRef.current) return;
 
+    const runId = ++analysisRunRef.current;
+    const targetSpine = spineInstance;
+    isAnalyzingRef.current = true;
     setIsAnalyzing(true);
 
     // Use setTimeout to allow React to render the analyzing state before blocking
     setTimeout(() => {
+      if (runId !== analysisRunRef.current) {
+        isAnalyzingRef.current = false;
+        return;
+      }
+
       try {
-        const animations = spineInstance.skeleton.data.animations;
+        const animations = targetSpine.skeleton.data.animations;
         const results: AnimationHeatmapData[] = [];
 
         for (const animation of animations) {
           const frames: FrameMetrics[] = [];
 
           AnimationSampler.sampleAnimation(
-            spineInstance,
+            targetSpine,
             animation,
             (time, skeleton) => {
               const snapshot = collectSnapshot(skeleton);
@@ -92,7 +104,10 @@ export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHe
         console.error('Animation heatmap analysis failed:', err);
         setData([]);
       } finally {
-        setIsAnalyzing(false);
+        isAnalyzingRef.current = false;
+        if (runId === analysisRunRef.current) {
+          setIsAnalyzing(false);
+        }
       }
     }, 16);
   }, [spineInstance]);

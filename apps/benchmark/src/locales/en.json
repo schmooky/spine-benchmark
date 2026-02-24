@@ -1400,7 +1400,9 @@
     "empty": {
       "title": "Animation Performance",
       "hint": "Click \"Analyze All Animations\" to sample every frame and generate performance charts showing draw call, texture, and blend break costs over time.",
-      "loadHint": "Load a Spine asset to analyze animation performance frame-by-frame."
+      "loadHint": "Load a Spine asset to analyze animation performance frame-by-frame.",
+      "analyzing": "Analyzing all animations automatically...",
+      "noData": "No animation heatmap data is available for this asset."
     },
     "frameDetail": {
       "frameTitle": "Frame #{{index}}",
