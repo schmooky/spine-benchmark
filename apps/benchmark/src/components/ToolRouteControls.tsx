@@ -5,6 +5,7 @@ import { assertCompleteAssetBundle, getAssetBundleCompleteness } from '../core/s
 import { FolderOpenIcon, RabbitIcon } from './Icons';
 import { buildSmartAssetLink } from '../utils/smartLink';
 import { parseImageUrlList } from '../utils/remoteAssetBundle';
+import { useToast } from '../hooks/ToastContext';
 
 interface ToolRouteControlsProps {
   assets: StoredAsset[];
@@ -34,6 +35,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
   minimal = false,
 }) => {
   const { t } = useTranslation();
+  const { addToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
   const [jsonUrl, setJsonUrl] = useState('');
   const [atlasUrl, setAtlasUrl] = useState('');
   const [imageUrlsText, setImageUrlsText] = useState('');
+  const [generatedSmartLink, setGeneratedSmartLink] = useState('');
   const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(false);
   const [smartLinkState, setSmartLinkState] = useState<'idle' | 'copied' | 'error'>('idle');
   const skeletonInputRef = useRef<HTMLInputElement>(null);
@@ -117,12 +120,40 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
       setJsonUrl('');
       setAtlasUrl('');
       setImageUrlsText('');
+      setGeneratedSmartLink('');
       setSmartLinkState('idle');
       setIsOpen(false);
     } catch (error) {
       console.error('Failed to load from URL', error);
     } finally {
       setIsLoadingFromUrl(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // Fall through to legacy copy.
+      }
+    }
+
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.setAttribute('readonly', '');
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return ok;
+    } catch {
+      return false;
     }
   };
 
@@ -138,11 +169,20 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
         },
         window.location.href,
       );
-      await navigator.clipboard.writeText(link);
-      setSmartLinkState('copied');
+      setGeneratedSmartLink(link);
+      const copied = await copyToClipboard(link);
+      if (copied) {
+        setSmartLinkState('copied');
+        addToast(t('toolRouteControls.status.smartLinkCopied'), 'success');
+      } else {
+        setSmartLinkState('error');
+        addToast(t('toolRouteControls.status.smartLinkCopyFailedManual'), 'warning');
+      }
     } catch (error) {
       console.error('Failed to copy smart link', error);
       setSmartLinkState('error');
+      setGeneratedSmartLink('');
+      addToast(t('toolRouteControls.status.smartLinkGenerateFailed'), 'error');
     }
   };
 
@@ -426,6 +466,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                               setJsonUrl('');
                               setAtlasUrl('');
                               setImageUrlsText('');
+                              setGeneratedSmartLink('');
                               setSmartLinkState('idle');
                             }}
                             disabled={isLoadingFromUrl || (!jsonUrl && !atlasUrl && !imageUrlsText)}
@@ -449,6 +490,18 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                             {isLoadingFromUrl ? t('toolRouteControls.actions.loading') : t('ui.load')}
                           </button>
                         </div>
+                        {generatedSmartLink && (
+                          <div className="tool-smart-link-preview">
+                            <label htmlFor="tool-smart-link">{t('toolRouteControls.url.smartLinkLabel')}</label>
+                            <input
+                              id="tool-smart-link"
+                              type="text"
+                              value={generatedSmartLink}
+                              readOnly
+                              onFocus={(event) => event.currentTarget.select()}
+                            />
+                          </div>
+                        )}
                         {smartLinkState !== 'idle' && (
                           <p className={`tool-url-status ${smartLinkState}`}>
                             {smartLinkState === 'copied'

@@ -86,6 +86,11 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  height: 100%;
+}
+
+#root {
+  height: 100%;
 }
 
 body {
@@ -96,7 +101,9 @@ body {
   background: var(--sb-bg-0);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   overflow: hidden;
 }
@@ -292,6 +299,7 @@ body {
   grid-template-rows: 1fr;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--sb-bg-0);
 }
@@ -1633,6 +1641,15 @@ input[type="color"]::-webkit-color-swatch {
 
 .tool-url-status.error {
   color: var(--sb-error);
+}
+
+.tool-smart-link-preview {
+  display: grid;
+  gap: 6px;
+}
+
+.tool-smart-link-preview input {
+  width: 100%;
 }
 
 .tool-asset-list {
@@ -5181,8 +5198,10 @@ select:focus,
   gap: 16px;
   height: 100%;
   min-height: 0;
+  min-width: 0;
   padding: 18px 20px;
   background: #faf8f5;
+  overflow: auto;
 }
 
 .route-header-card {
@@ -5484,6 +5503,9 @@ select:focus,
 .route-workspace > .route-static-layout {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
 }
 
 .route-workspace > .benchmark-inspector-layout,
@@ -5494,25 +5516,21 @@ select:focus,
 .route-workspace > .physics-baker-layout,
 .route-workspace > .assets-layout {
   display: grid;
-  grid-template-columns: 520px minmax(0, 1fr);
+  grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
   gap: 16px;
-  width: 1108px;
-  max-width: 100%;
-  justify-content: flex-start;
-  align-self: flex-start;
   overflow: hidden;
+  min-width: 0;
 }
 
 .route-workspace > .mesh-inspector-layout.with-side-insight,
 .route-workspace > .dc-inspector-layout.with-side-insight,
 .route-workspace > .atlas-repack-layout.with-side-insight {
-  grid-template-columns: 500px minmax(0, 1fr) 332px;
-  width: 1456px;
+  grid-template-columns: minmax(340px, 500px) minmax(0, 1fr) minmax(280px, 332px);
 }
 
 .route-workspace > .benchmark-inspector-layout {
-  height: 648px;
-  min-height: 648px;
+  height: 100%;
+  min-height: 0;
 }
 
 .route-workspace > .mesh-inspector-layout,
@@ -5521,16 +5539,14 @@ select:focus,
 .route-workspace > .heatmap-layout,
 .route-workspace > .physics-baker-layout,
 .route-workspace > .assets-layout {
-  height: 732px;
-  min-height: 732px;
+  height: 100%;
+  min-height: 0;
 }
 
 .route-workspace > .comparison-layout.comparison-layout-editorial {
-  width: 1108px;
-  max-width: 100%;
-  height: 732px;
-  min-height: 732px;
-  align-self: flex-start;
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
 }
 
 .route-workspace .tool-panel,
@@ -5538,6 +5554,8 @@ select:focus,
 .route-workspace .tool-info-panel {
   margin: 0;
   height: 100%;
+  min-height: 0;
+  min-width: 0;
 }
 
 .route-workspace .tool-panel {
@@ -5627,6 +5645,8 @@ select:focus,
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
+  min-width: 0;
   border-radius: 0;
   border: 0;
   background: transparent;
@@ -5646,14 +5666,16 @@ select:focus,
   left: auto;
   bottom: auto;
   width: 100%;
-  min-height: 132px;
+  height: clamp(104px, 17vh, 132px);
+  min-height: 104px;
   max-height: 132px;
-  flex: 0 0 132px;
+  flex: 0 0 auto;
   padding: 14px;
   border-radius: 20px;
   border: 1px solid #e8e4df;
   background: #ffffff;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .route-workspace .tool-canvas .controls-container.hidden {
@@ -5948,11 +5970,11 @@ select:focus,
 /* ── 101. MCP Geometry Parity: Comparison Route ───────────────────── */
 .comparison-layout-editorial {
   display: grid;
-  grid-template-columns: 520px 572px;
+  grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
   gap: 16px;
-  width: 1108px;
+  width: 100%;
   max-width: 100%;
-  justify-content: flex-start;
+  justify-content: stretch;
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -5962,11 +5984,11 @@ select:focus,
 }
 
 .comparison-analysis-panel {
-  width: 520px;
-  min-width: 520px;
-  height: 732px;
-  min-height: 732px;
-  overflow: hidden;
+  width: auto;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -5976,7 +5998,7 @@ select:focus,
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  height: 106px;
+  min-height: 106px;
 }
 
 .comparison-stat-card {
@@ -6005,11 +6027,11 @@ select:focus,
 }
 
 .comparison-action-row {
-  height: 72px;
+  min-height: 72px;
   border: 1px solid #e8e4df;
   border-radius: 20px;
   background: #ffffff;
-  padding: 0 14px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -6071,11 +6093,11 @@ select:focus,
 }
 
 .comparison-status-card {
-  height: 234px;
+  min-height: 234px;
 }
 
 .comparison-diff-card {
-  height: 198px;
+  min-height: 198px;
 }
 
 .comparison-status-card h3,
@@ -6151,12 +6173,12 @@ select:focus,
 }
 
 .comparison-viewer-panel {
-  width: 572px;
-  min-width: 572px;
-  height: 732px;
-  min-height: 732px;
-  display: flex;
-  flex-direction: column;
+  width: auto;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 12px;
 }
 
@@ -6164,7 +6186,8 @@ select:focus,
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  height: 588px;
+  height: auto;
+  min-height: 0;
   background: transparent;
 }
 
@@ -6177,6 +6200,7 @@ select:focus,
   flex-direction: column;
   gap: 8px;
   overflow: hidden;
+  min-height: 0;
 }
 
 .comparison-editorial-pane-top {
@@ -6202,8 +6226,8 @@ select:focus,
 
 .comparison-editorial-pane-body {
   position: relative;
-  flex: 0 0 528px;
-  min-height: 528px;
+  flex: 1 1 auto;
+  min-height: 0;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -6287,7 +6311,7 @@ select:focus,
 }
 
 .comparison-shared-controls {
-  height: 132px;
+  min-height: 112px;
   border: 1px solid #e8e4df;
   border-radius: 20px;
   background: #ffffff;
@@ -6414,29 +6438,51 @@ select:focus,
   color: #7c9082;
 }
 
+@media (max-width: 1580px) {
+  .route-workspace > .mesh-inspector-layout.with-side-insight,
+  .route-workspace > .dc-inspector-layout.with-side-insight,
+  .route-workspace > .atlas-repack-layout.with-side-insight {
+    grid-template-columns: minmax(320px, 460px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(200px, 34vh);
+  }
+
+  .route-workspace > .with-side-insight > .tool-panel {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .route-workspace > .with-side-insight > .tool-canvas {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .route-workspace > .with-side-insight > .tool-info-panel {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 200px;
+    max-height: 34vh;
+  }
+}
+
 @media (max-width: 1320px) {
   .comparison-layout-editorial {
-    width: 100%;
     grid-template-columns: 1fr;
   }
 
   .comparison-analysis-panel {
-    width: 100%;
-    min-width: 0;
     height: auto;
     min-height: 0;
     overflow: visible;
   }
 
   .comparison-viewer-panel {
-    width: 100%;
-    min-width: 0;
     height: auto;
     min-height: 0;
   }
 
   .comparison-pane-grid {
-    height: 440px;
+    height: min(56vh, 560px);
+    min-height: 340px;
   }
 }
 
@@ -6453,7 +6499,8 @@ select:focus,
 
   .comparison-pane-grid {
     grid-template-columns: 1fr;
-    height: 520px;
+    height: min(68vh, 620px);
+    min-height: 420px;
   }
 
   .comparison-shared-row-top {
@@ -6481,14 +6528,25 @@ select:focus,
   .route-workspace > .heatmap-layout,
   .route-workspace > .physics-baker-layout,
   .route-workspace > .assets-layout {
-    width: 100%;
     grid-template-columns: 1fr;
     height: auto;
     min-height: 0;
   }
 
+  .route-workspace > .with-side-insight {
+    grid-template-rows: none;
+  }
+
+  .route-workspace > .with-side-insight > .tool-panel,
+  .route-workspace > .with-side-insight > .tool-canvas,
+  .route-workspace > .with-side-insight > .tool-info-panel {
+    grid-column: auto;
+    grid-row: auto;
+    max-height: none;
+  }
+
   .route-workspace > .comparison-layout.comparison-layout-editorial {
-    width: 100%;
+    grid-template-columns: 1fr;
     height: auto;
     min-height: 0;
   }

@@ -1383,11 +1383,14 @@
     },
     "url": {
       "imageUrlsLabel": "Image URLs (one per line, optional)",
-      "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png"
+      "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png",
+      "smartLinkLabel": "Smart link"
     },
     "status": {
       "smartLinkCopied": "Smart link copied.",
-      "smartLinkCopyFailed": "Could not copy smart link."
+      "smartLinkCopyFailed": "Could not copy smart link.",
+      "smartLinkGenerateFailed": "Could not create smart link.",
+      "smartLinkCopyFailedManual": "Smart link created, but auto-copy failed. Copy it manually from the field below."
     }
   },
   "animationHeatmap": {
