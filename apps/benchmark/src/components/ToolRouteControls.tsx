@@ -5,6 +5,7 @@ import { assertCompleteAssetBundle, getAssetBundleCompleteness } from '../core/s
 import { FolderOpenIcon, RabbitIcon } from './Icons';
 import { buildSmartAssetLink } from '../utils/smartLink';
 import { parseImageUrlList } from '../utils/remoteAssetBundle';
+import { copyTextToClipboard } from '../utils/clipboard';
 import { useToast } from '../hooks/ToastContext';
 
 interface ToolRouteControlsProps {
@@ -130,33 +131,6 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
     }
   };
 
-  const copyToClipboard = async (text: string): Promise<boolean> => {
-    if (navigator.clipboard && window.isSecureContext) {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch {
-        // Fall through to legacy copy.
-      }
-    }
-
-    try {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.setAttribute('readonly', '');
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      const ok = document.execCommand('copy');
-      document.body.removeChild(textArea);
-      return ok;
-    } catch {
-      return false;
-    }
-  };
-
   const handleCopySmartLink = async () => {
     if (!jsonUrl.trim() || !atlasUrl.trim()) return;
     try {
@@ -170,7 +144,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
         window.location.href,
       );
       setGeneratedSmartLink(link);
-      const copied = await copyToClipboard(link);
+      const copied = await copyTextToClipboard(link);
       if (copied) {
         setSmartLinkState('copied');
         addToast(t('toolRouteControls.status.smartLinkCopied'), 'success');

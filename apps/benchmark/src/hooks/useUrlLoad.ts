@@ -6,6 +6,7 @@ import {
   decodeRemoteAssetToken,
   RemoteAssetTokenPayload,
 } from '../utils/smartLink';
+import { copyTextToClipboard } from '../utils/clipboard';
 
 export type UrlLoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -57,6 +58,7 @@ export function useUrlLoad({ app, loadAssetFromRemoteBundle }: UseUrlLoadOptions
     async (payload: RemoteAssetTokenPayload) => {
       const nextUrl = await buildSmartAssetLink(payload, window.location.href);
       window.history.replaceState({}, '', nextUrl);
+      return nextUrl;
     },
     [],
   );
@@ -76,9 +78,14 @@ export function useUrlLoad({ app, loadAssetFromRemoteBundle }: UseUrlLoadOptions
         if (options?.imageUrls?.length) {
           payload.i = options.imageUrls;
         }
-        await replaceLocationWithSmartToken(payload);
-
+        const smartLink = await replaceLocationWithSmartToken(payload);
+        const copied = await copyTextToClipboard(smartLink);
         addToast(t('success.loadedFromUrl'), 'success');
+        if (copied) {
+          addToast(t('toolRouteControls.status.smartLinkCopied'), 'success');
+        } else {
+          addToast(t('toolRouteControls.status.smartLinkCopyFailedManual'), 'warning');
+        }
       } catch (error) {
         if (error instanceof Error && error.message === STALE_LOAD_RESULT) {
           return;
