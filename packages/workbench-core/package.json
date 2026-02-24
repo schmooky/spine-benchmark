@@ -1,0 +1,39 @@
+{
+  "name": "@spine-benchmark/workbench-core",
+  "version": "0.1.0",
+  "description": "Compatibility aggregator for spine benchmark workbench packages",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run build --workspace @spine-benchmark/metrics && npm run build --workspace @spine-benchmark/asset-store && npm run build --workspace @spine-benchmark/mesh-tools && npm run build --workspace @spine-benchmark/constraint-tools && npm run build --workspace @spine-benchmark/drawcall-tools && npm run build --workspace @spine-benchmark/render-tools && npm run build --workspace @spine-benchmark/spine-loader && npm run build --workspace @spine-benchmark/file-tools",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@spine-benchmark/asset-store": "file:../asset-store",
+    "@spine-benchmark/constraint-tools": "file:../constraint-tools",
+    "@spine-benchmark/drawcall-tools": "file:../drawcall-tools",
+    "@spine-benchmark/file-tools": "file:../file-tools",
+    "@spine-benchmark/mesh-tools": "file:../mesh-tools",
+    "@spine-benchmark/metrics-analyzers": "file:../metrics-analyzers",
+    "@spine-benchmark/metrics-factors": "file:../metrics-factors",
+    "@spine-benchmark/metrics": "file:../metrics",
+    "@spine-benchmark/metrics-sampling": "file:../metrics-sampling",
+    "@spine-benchmark/metrics-scoring": "file:../metrics-scoring",
+    "@spine-benchmark/render-tools": "file:../render-tools",
+    "@spine-benchmark/spine-loader": "file:../spine-loader"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@spine-benchmark/metrics-scoring",
+  "version": "0.1.0",
+  "description": "Score and impact calculation helpers for Spine metrics",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run build --workspace @spine-benchmark/metrics-factors",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@spine-benchmark/metrics-factors": "file:../metrics-factors"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

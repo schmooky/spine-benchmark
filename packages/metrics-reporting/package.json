@@ -1,0 +1,28 @@
+{
+  "name": "@spine-benchmark/metrics-reporting",
+  "version": "0.1.0",
+  "description": "Reporting and export helpers for Spine metrics",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run build --workspace @spine-benchmark/metrics-pipeline",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@spine-benchmark/metrics-pipeline": "file:../metrics-pipeline"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

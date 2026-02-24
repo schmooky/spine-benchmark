@@ -1,0 +1,28 @@
+{
+  "name": "@spine-benchmark/spine-loader",
+  "version": "0.1.0",
+  "description": "Spine file/url loader utilities",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101",
+    "pixi.js": "^8.16.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

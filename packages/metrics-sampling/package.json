@@ -1,0 +1,27 @@
+{
+  "name": "@spine-benchmark/metrics-sampling",
+  "version": "0.1.0",
+  "description": "Animation sampling and active component detection for Spine metrics",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

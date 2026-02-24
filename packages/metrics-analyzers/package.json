@@ -1,0 +1,33 @@
+{
+  "name": "@spine-benchmark/metrics-analyzers",
+  "version": "0.1.0",
+  "description": "Low-level Spine metrics analyzers for meshes, clipping, blend modes, skeleton, and constraints",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run build --workspace @spine-benchmark/metrics-factors && npm run build --workspace @spine-benchmark/metrics-scoring && npm run build --workspace @spine-benchmark/metrics-sampling",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@spine-benchmark/metrics-factors": "file:../metrics-factors",
+    "@spine-benchmark/metrics-scoring": "file:../metrics-scoring",
+    "@spine-benchmark/metrics-sampling": "file:../metrics-sampling"
+  },
+  "peerDependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

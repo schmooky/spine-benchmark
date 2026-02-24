@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  apps/benchmark:
     dependencies:
       '@ark-ui/react':
         specifier: ^5.31.0
@@ -20,6 +22,42 @@ importers:
       '@esotericsoftware/spine-ts':
         specifier: ^4.2.13
         version: 4.2.13
+      '@spine-benchmark/asset-store':
+        specifier: file:../../packages/asset-store
+        version: link:../../packages/asset-store
+      '@spine-benchmark/constraint-tools':
+        specifier: file:../../packages/constraint-tools
+        version: link:../../packages/constraint-tools
+      '@spine-benchmark/drawcall-tools':
+        specifier: file:../../packages/drawcall-tools
+        version: link:../../packages/drawcall-tools
+      '@spine-benchmark/file-tools':
+        specifier: file:../../packages/file-tools
+        version: link:../../packages/file-tools
+      '@spine-benchmark/mesh-tools':
+        specifier: file:../../packages/mesh-tools
+        version: link:../../packages/mesh-tools
+      '@spine-benchmark/metrics':
+        specifier: file:../../packages/metrics
+        version: link:../../packages/metrics
+      '@spine-benchmark/metrics-analyzers':
+        specifier: file:../../packages/metrics-analyzers
+        version: link:../../packages/metrics-analyzers
+      '@spine-benchmark/metrics-factors':
+        specifier: file:../../packages/metrics-factors
+        version: link:../../packages/metrics-factors
+      '@spine-benchmark/metrics-sampling':
+        specifier: file:../../packages/metrics-sampling
+        version: link:../../packages/metrics-sampling
+      '@spine-benchmark/metrics-scoring':
+        specifier: file:../../packages/metrics-scoring
+        version: link:../../packages/metrics-scoring
+      '@spine-benchmark/render-tools':
+        specifier: file:../../packages/render-tools
+        version: link:../../packages/render-tools
+      '@spine-benchmark/spine-loader':
+        specifier: file:../../packages/spine-loader
+        version: link:../../packages/spine-loader
       '@tanstack/react-router':
         specifier: ^1.159.5
         version: 1.159.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -75,6 +113,220 @@ importers:
       vite:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.2.3)
+
+  packages/asset-store:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/constraint-tools:
+    dependencies:
+      '@esotericsoftware/spine-pixi-v8':
+        specifier: ^4.2.101
+        version: 4.2.101(pixi.js@8.16.0)
+    devDependencies:
+      '@spine-benchmark/metrics-sampling':
+        specifier: file:../metrics-sampling
+        version: link:../metrics-sampling
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/drawcall-tools:
+    devDependencies:
+      '@spine-benchmark/asset-store':
+        specifier: file:../asset-store
+        version: link:../asset-store
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/file-tools:
+    dependencies:
+      '@spine-benchmark/asset-store':
+        specifier: file:../asset-store
+        version: link:../asset-store
+      '@spine-benchmark/spine-loader':
+        specifier: file:../spine-loader
+        version: link:../spine-loader
+      pixi.js:
+        specifier: ^8.16.0
+        version: 8.16.0
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/mesh-tools:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/metrics:
+    dependencies:
+      '@esotericsoftware/spine-pixi-v8':
+        specifier: ^4.2.101
+        version: 4.2.101(pixi.js@8.16.0)
+      '@spine-benchmark/metrics-analyzers':
+        specifier: file:../metrics-analyzers
+        version: link:../metrics-analyzers
+      '@spine-benchmark/metrics-factors':
+        specifier: file:../metrics-factors
+        version: link:../metrics-factors
+      '@spine-benchmark/metrics-pipeline':
+        specifier: file:../metrics-pipeline
+        version: link:../metrics-pipeline
+      '@spine-benchmark/metrics-sampling':
+        specifier: file:../metrics-sampling
+        version: link:../metrics-sampling
+      '@spine-benchmark/metrics-scoring':
+        specifier: file:../metrics-scoring
+        version: link:../metrics-scoring
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/metrics-analyzers:
+    dependencies:
+      '@esotericsoftware/spine-pixi-v8':
+        specifier: ^4.2.101
+        version: 4.2.101(pixi.js@8.16.0)
+      '@spine-benchmark/metrics-factors':
+        specifier: file:../metrics-factors
+        version: link:../metrics-factors
+      '@spine-benchmark/metrics-sampling':
+        specifier: file:../metrics-sampling
+        version: link:../metrics-sampling
+      '@spine-benchmark/metrics-scoring':
+        specifier: file:../metrics-scoring
+        version: link:../metrics-scoring
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/metrics-factors:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/metrics-pipeline:
+    dependencies:
+      '@esotericsoftware/spine-pixi-v8':
+        specifier: ^4.2.101
+        version: 4.2.101(pixi.js@8.16.0)
+      '@spine-benchmark/metrics-analyzers':
+        specifier: file:../metrics-analyzers
+        version: link:../metrics-analyzers
+      '@spine-benchmark/metrics-sampling':
+        specifier: file:../metrics-sampling
+        version: link:../metrics-sampling
+      '@spine-benchmark/metrics-scoring':
+        specifier: file:../metrics-scoring
+        version: link:../metrics-scoring
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/metrics-sampling:
+    dependencies:
+      '@esotericsoftware/spine-pixi-v8':
+        specifier: ^4.2.101
+        version: 4.2.101(pixi.js@8.16.0)
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/metrics-scoring:
+    dependencies:
+      '@spine-benchmark/metrics-factors':
+        specifier: file:../metrics-factors
+        version: link:../metrics-factors
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/render-tools:
+    dependencies:
+      '@esotericsoftware/spine-core':
+        specifier: ^4.2.101
+        version: 4.2.101
+      '@esotericsoftware/spine-pixi-v8':
+        specifier: ^4.2.101
+        version: 4.2.101(pixi.js@8.16.0)
+      gsap:
+        specifier: ^3.14.2
+        version: 3.14.2
+      pixi.js:
+        specifier: ^8.16.0
+        version: 8.16.0
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/spine-loader:
+    dependencies:
+      '@esotericsoftware/spine-pixi-v8':
+        specifier: ^4.2.101
+        version: 4.2.101(pixi.js@8.16.0)
+      pixi.js:
+        specifier: ^8.16.0
+        version: 8.16.0
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/workbench-core:
+    dependencies:
+      '@spine-benchmark/asset-store':
+        specifier: file:../asset-store
+        version: link:../asset-store
+      '@spine-benchmark/constraint-tools':
+        specifier: file:../constraint-tools
+        version: link:../constraint-tools
+      '@spine-benchmark/drawcall-tools':
+        specifier: file:../drawcall-tools
+        version: link:../drawcall-tools
+      '@spine-benchmark/file-tools':
+        specifier: file:../file-tools
+        version: link:../file-tools
+      '@spine-benchmark/mesh-tools':
+        specifier: file:../mesh-tools
+        version: link:../mesh-tools
+      '@spine-benchmark/metrics':
+        specifier: file:../metrics
+        version: link:../metrics
+      '@spine-benchmark/metrics-analyzers':
+        specifier: file:../metrics-analyzers
+        version: link:../metrics-analyzers
+      '@spine-benchmark/metrics-factors':
+        specifier: file:../metrics-factors
+        version: link:../metrics-factors
+      '@spine-benchmark/metrics-sampling':
+        specifier: file:../metrics-sampling
+        version: link:../metrics-sampling
+      '@spine-benchmark/metrics-scoring':
+        specifier: file:../metrics-scoring
+        version: link:../metrics-scoring
+      '@spine-benchmark/render-tools':
+        specifier: file:../render-tools
+        version: link:../render-tools
+      '@spine-benchmark/spine-loader':
+        specifier: file:../spine-loader
+        version: link:../spine-loader
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 

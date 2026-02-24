@@ -1,0 +1,33 @@
+{
+  "name": "@spine-benchmark/metrics-pipeline",
+  "version": "0.1.0",
+  "description": "Analysis orchestration pipeline for Spine metrics",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run build --workspace @spine-benchmark/metrics-analyzers",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@spine-benchmark/metrics-analyzers": "file:../metrics-analyzers",
+    "@spine-benchmark/metrics-scoring": "file:../metrics-scoring",
+    "@spine-benchmark/metrics-sampling": "file:../metrics-sampling"
+  },
+  "peerDependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@spine-benchmark/render-tools",
+  "version": "0.1.0",
+  "description": "Rendering camera and debug visualization tools for Spine Benchmark",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@esotericsoftware/spine-core": "^4.2.101",
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101",
+    "gsap": "^3.14.2",
+    "pixi.js": "^8.16.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -22,6 +22,24 @@ Performance analysis tool for Spine animations.
 
 Spine Benchmark analyzes Spine animation performance through quantitative metrics and visual debugging tools. The application performs frame-by-frame analysis to identify performance bottlenecks in Spine 4.2.x animations.
 
+The repository is organized as a monorepo:
+- `apps/benchmark` - benchmark website/workbench UI
+- `packages/metrics` - compatibility facade for metrics ecosystem packages
+- `packages/metrics-pipeline` - high-level orchestration pipeline for full analysis
+- `packages/metrics-factors` - shared performance constants
+- `packages/metrics-scoring` - score and impact calculators
+- `packages/metrics-reporting` - JSON/report export helpers
+- `packages/metrics-sampling` - animation sampling and active component detection
+- `packages/metrics-analyzers` - low-level analyzers for skeleton/mesh/clipping/blend/constraints
+- `packages/asset-store` - asset persistence and validation
+- `packages/mesh-tools` - mesh optimization and preview helpers
+- `packages/constraint-tools` - constraint bake and inspection helpers
+- `packages/drawcall-tools` - draw call and atlas planning helpers
+- `packages/render-tools` - camera/background/debug visualization helpers
+- `packages/spine-loader` - Spine JSON/SKEL + atlas loading flows
+- `packages/file-tools` - file and folder processing helpers
+- `packages/workbench-core` - compatibility aggregator over the packages above
+
 ### Core Functionality
 
 - Frame-by-frame performance analysis at 60 FPS
@@ -187,6 +205,127 @@ npm run build
 npm run preview
 ```
 
+### Workspace Scripts
+
+```bash
+# Build only metrics package
+npm run build:metrics
+
+# Build only metrics-factors package
+npm run build:metrics-factors
+
+# Build only metrics-scoring package
+npm run build:metrics-scoring
+
+# Build only metrics-sampling package
+npm run build:metrics-sampling
+
+# Build only metrics-analyzers package
+npm run build:metrics-analyzers
+
+# Build only metrics-pipeline package
+npm run build:metrics-pipeline
+
+# Build only metrics-reporting package
+npm run build:metrics-reporting
+
+# Build only asset-store package
+npm run build:asset-store
+
+# Build only mesh-tools package
+npm run build:mesh-tools
+
+# Build only constraint-tools package
+npm run build:constraint-tools
+
+# Build only drawcall-tools package
+npm run build:drawcall-tools
+
+# Build only render-tools package
+npm run build:render-tools
+
+# Build only spine-loader package
+npm run build:spine-loader
+
+# Build only file-tools package
+npm run build:file-tools
+
+# Build only benchmark site
+npm run build:site
+```
+
+### Reusing Metrics In Another Project
+
+Until npm publishing is enabled, use one of these options:
+
+```bash
+# Option 1: from local clone
+npm install ../spine-benchmark/packages/metrics
+npm install ../spine-benchmark/packages/metrics-factors
+npm install ../spine-benchmark/packages/metrics-scoring
+npm install ../spine-benchmark/packages/metrics-reporting
+npm install ../spine-benchmark/packages/metrics-sampling
+npm install ../spine-benchmark/packages/metrics-analyzers
+npm install ../spine-benchmark/packages/metrics-pipeline
+
+# Option 2: via git submodule in your project
+git submodule add https://github.com/schmooky/spine-benchmark.git vendor/spine-benchmark
+npm install ./vendor/spine-benchmark/packages/metrics
+npm install ./vendor/spine-benchmark/packages/metrics-factors
+npm install ./vendor/spine-benchmark/packages/metrics-scoring
+npm install ./vendor/spine-benchmark/packages/metrics-reporting
+npm install ./vendor/spine-benchmark/packages/metrics-sampling
+npm install ./vendor/spine-benchmark/packages/metrics-analyzers
+npm install ./vendor/spine-benchmark/packages/metrics-pipeline
+```
+
+Usage example:
+
+```typescript
+import { SpineAnalyzer } from '@spine-benchmark/metrics';
+
+const result = SpineAnalyzer.analyze(spineInstance);
+console.log(result.medianScore);
+```
+
+### Reusing Atomic Core Packages In Another Project
+
+```bash
+# Option 1: from local clone
+npm install ../spine-benchmark/packages/asset-store
+npm install ../spine-benchmark/packages/mesh-tools
+npm install ../spine-benchmark/packages/constraint-tools
+npm install ../spine-benchmark/packages/drawcall-tools
+npm install ../spine-benchmark/packages/render-tools
+npm install ../spine-benchmark/packages/spine-loader
+npm install ../spine-benchmark/packages/file-tools
+
+# Option 2: via git submodule in your project
+git submodule add https://github.com/schmooky/spine-benchmark.git vendor/spine-benchmark
+npm install ./vendor/spine-benchmark/packages/asset-store
+npm install ./vendor/spine-benchmark/packages/mesh-tools
+npm install ./vendor/spine-benchmark/packages/constraint-tools
+npm install ./vendor/spine-benchmark/packages/drawcall-tools
+npm install ./vendor/spine-benchmark/packages/render-tools
+npm install ./vendor/spine-benchmark/packages/spine-loader
+npm install ./vendor/spine-benchmark/packages/file-tools
+```
+
+Usage example:
+
+```typescript
+import { optimizeJson } from '@spine-benchmark/mesh-tools';
+import { bakeConstraints } from '@spine-benchmark/constraint-tools';
+import { SpineLoader } from '@spine-benchmark/spine-loader';
+
+const { optimizedText } = optimizeJson(rawSkeletonJson);
+const { bakedText, report } = bakeConstraints(spineInstance, optimizedText, { sampleRate: 30 });
+const loader = new SpineLoader(app);
+const loaded = await loader.loadSpineFiles(files);
+console.log(report.totalKeyframesGenerated);
+console.log(loaded?.skeleton?.data?.name);
+```
+
 ### Environment Variables
 
 ```env
@@ -248,6 +387,8 @@ const spineInstance = await loader.loadSpineFromUrls(jsonUrl, atlasUrl);
 #### SpineAnalyzer
 
 ```typescript
+import { SpineAnalyzer } from '@spine-benchmark/metrics';
+
 class SpineAnalyzer {
   static analyze(spineInstance: Spine): SpineAnalysisResult
   static exportJSON(analysisResult: SpineAnalysisResult): object
@@ -319,68 +460,109 @@ interface AnimationAnalysis {
 ### Directory Structure
 
 ```
-src/
-├── components/
-│   ├── analysis/
-│   │   ├── Summary.tsx
-│   │   ├── MeshAnalysis.tsx
-│   │   ├── ClippingAnalysis.tsx
-│   │   ├── BlendModeAnalysis.tsx
-│   │   ├── PhysicsAnalysis.tsx
-│   │   └── SkeletonTree.tsx
-│   ├── AnimationControls.tsx
-│   ├── BenchmarkPanel.tsx
-│   ├── CommandPalette.tsx
-│   ├── InfoPanel.tsx
-│   ├── LanguageModal.tsx
-│   ├── UrlInputModal.tsx
-│   └── VersionDisplay.tsx
-├── core/
-│   ├── analysis/
-│   │   └── animationAnalysis.ts
-│   ├── analyzers/
+apps/
+└── benchmark/
+    ├── src/
+    │   ├── components/
+    │   ├── hooks/
+    │   ├── routes/
+    │   ├── workbench/
+    │   └── core/
+    │       ├── debug/
+    │       ├── tools/
+    │       ├── storage/
+    │       ├── SpineLoader.ts (shim re-export from spine-loader package)
+    │       ├── CameraContainer.ts (shim re-export from render-tools package)
+    │       ├── BackgroundManager.ts (shim re-export from render-tools package)
+    │       ├── utils/fileProcessor.ts (shim re-export from file-tools package)
+    │       └── SpineAnalyzer.ts (shim re-export from metrics package)
+    ├── scripts/
+    ├── vite.config.ts
+    └── package.json
+packages/
+├── metrics/
+│   ├── src/
+│   │   ├── analysis/
+│   │   ├── SpineAnalyzer.ts
+│   │   └── index.ts
+│   └── package.json
+├── metrics-pipeline/
+│   ├── src/
+│   │   ├── animationPipeline.ts
+│   │   └── index.ts
+│   └── package.json
+├── metrics-factors/
+│   ├── src/
+│   │   ├── performanceFactors.ts
+│   │   └── index.ts
+│   └── package.json
+├── metrics-scoring/
+│   ├── src/
+│   │   ├── scoreCalculator.ts
+│   │   └── index.ts
+│   └── package.json
+├── metrics-reporting/
+│   ├── src/
+│   │   ├── exportJson.ts
+│   │   └── index.ts
+│   └── package.json
+├── metrics-sampling/
+│   ├── src/
+│   │   ├── animationSampler.ts
+│   │   ├── animationUtils.ts
+│   │   └── index.ts
+│   └── package.json
+├── metrics-analyzers/
+│   ├── src/
+│   │   ├── skeletonAnalyzer.ts
 │   │   ├── meshAnalyzer.ts
 │   │   ├── clippingAnalyzer.ts
 │   │   ├── blendModeAnalyzer.ts
 │   │   ├── physicsAnalyzer.ts
-│   │   └── skeletonAnalyzer.ts
-│   ├── constants/
-│   │   └── performanceFactors.ts
-│   ├── debug/
-│   │   ├── DebugFlagsManager.ts
-│   │   ├── DebugRendererManager.ts
-│   │   ├── DebugLayerFactory.ts
-│   │   └── layers/
-│   ├── utils/
-│   │   ├── scoreCalculator.ts
-│   │   ├── animationUtils.ts
-│   │   ├── animationSampler.ts
-│   │   ├── analysisUtils.ts
-│   │   └── fileProcessor.ts
-│   ├── SpineAnalyzer.ts
-│   ├── SpineLoader.ts
-│   ├── CameraContainer.ts
-│   └── BackgroundManager.ts
-├── hooks/
-│   ├── useSpineApp.ts
-│   ├── useSpineLoader.ts
-│   ├── usePixiApp.ts
-│   ├── useUrlLoad.ts
-│   ├── useLoadingState.ts
-│   ├── useCommandPalette.ts
-│   ├── useCommandRegistration.ts
-│   ├── useUrlHash.ts
-│   ├── useBenchmarkPanel.ts
-│   ├── useDebugVisualizer.ts
-│   ├── useBackgroundManager.ts
-│   ├── useAppEventHandlers.ts
-│   ├── useFileProcessor.ts
-│   └── useSafeLocalStorage.ts
-├── locales/
-│   └── [language].json
-├── utils/
-│   └── commandRegistry.ts
-└── App.tsx
+│   │   └── index.ts
+│   └── package.json
+├── asset-store/
+│   ├── src/
+│   │   ├── assetStore.ts
+│   │   └── index.ts
+│   └── package.json
+├── mesh-tools/
+│   ├── src/
+│   │   ├── meshOptimizer.ts
+│   │   ├── meshPreviewRenderer.ts
+│   │   └── index.ts
+│   └── package.json
+├── constraint-tools/
+│   ├── src/
+│   │   ├── constraintBaker.ts
+│   │   └── index.ts
+│   └── package.json
+├── drawcall-tools/
+│   ├── src/
+│   │   ├── drawCallUtils.ts
+│   │   └── index.ts
+│   └── package.json
+├── render-tools/
+│   ├── src/
+│   │   ├── CameraContainer.ts
+│   │   ├── BackgroundManager.ts
+│   │   ├── debug/
+│   │   └── index.ts
+│   └── package.json
+├── spine-loader/
+│   ├── src/
+│   │   ├── SpineLoader.ts
+│   │   └── index.ts
+│   └── package.json
+├── file-tools/
+│   ├── src/
+│   │   ├── fileProcessor.ts
+│   │   └── index.ts
+│   └── package.json
+└── workbench-core/
+    ├── src/
+    │   └── index.ts
+    └── package.json
 ```
 
 ### Technology Stack
@@ -390,8 +572,8 @@ src/
 | UI Framework | React | 19.x |
 | Rendering | Pixi.js | 8.x |
 | Spine Runtime | @esotericsoftware/spine-pixi-v8 | 4.2.* |
-| Build Tool | Vite | 6.x |
-| Language | TypeScript | 5.7.x |
+| Build Tool | Vite | 7.x |
+| Language | TypeScript | 5.9.x |
 | Internationalization | i18next | 25.x |
 
 ### Performance Characteristics

@@ -1,0 +1,28 @@
+{
+  "name": "@spine-benchmark/drawcall-tools",
+  "version": "0.1.0",
+  "description": "Draw call analysis and atlas repack planning tools",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@spine-benchmark/asset-store": "^0.1.0"
+  },
+  "devDependencies": {
+    "@spine-benchmark/asset-store": "file:../asset-store",
+    "typescript": "^5.9.3"
+  }
+}

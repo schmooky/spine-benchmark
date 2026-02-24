@@ -1,39 +1,39 @@
 {
-  "name": "spine-benchmark",
+  "name": "spine-benchmark-monorepo",
+  "private": true,
   "version": "1.2.0",
-  "description": "A tool for benchmarking and analyzing Spine animations",
-  "type": "module",
+  "description": "Spine Benchmark monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "check:i18n": "node scripts/check-i18n.mjs",
-    "sync:locales": "node scripts/sync-locales.mjs",
-    "dev": "vite",
-    "build": "npm run check:i18n && tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@ark-ui/react": "^5.31.0",
-    "@esotericsoftware/spine-core": "^4.2.101",
-    "@esotericsoftware/spine-pixi-v8": "^4.2.101",
-    "@esotericsoftware/spine-ts": "^4.2.13",
-    "@tanstack/react-router": "^1.159.5",
-    "@vitejs/plugin-react": "^5.1.4",
-    "driver.js": "^1.4.0",
-    "gsap": "^3.14.2",
-    "i18next": "^25.8.4",
-    "i18next-browser-languagedetector": "^8.2.0",
-    "pixi.js": "^8.16.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-hotkeys-hook": "^5.2.4",
-    "react-i18next": "^16.5.4",
-    "react-toastify": "^11.0.5",
-    "vite-plugin-static-copy": "^3.2.0"
+    "dev": "npm run dev --workspace @spine-benchmark/site",
+    "build": "npm run build --workspace @spine-benchmark/site",
+    "build:site": "npm run build --workspace @spine-benchmark/site",
+    "build:metrics-factors": "npm run build --workspace @spine-benchmark/metrics-factors",
+    "build:metrics-scoring": "npm run build --workspace @spine-benchmark/metrics-scoring",
+    "build:metrics-sampling": "npm run build --workspace @spine-benchmark/metrics-sampling",
+    "build:metrics-analyzers": "npm run build --workspace @spine-benchmark/metrics-analyzers",
+    "build:metrics-pipeline": "npm run build --workspace @spine-benchmark/metrics-pipeline",
+    "build:metrics-reporting": "npm run build --workspace @spine-benchmark/metrics-reporting",
+    "build:metrics": "npm run build --workspace @spine-benchmark/metrics",
+    "build:asset-store": "npm run build --workspace @spine-benchmark/asset-store",
+    "build:mesh-tools": "npm run build --workspace @spine-benchmark/mesh-tools",
+    "build:constraint-tools": "npm run build --workspace @spine-benchmark/constraint-tools",
+    "build:drawcall-tools": "npm run build --workspace @spine-benchmark/drawcall-tools",
+    "build:render-tools": "npm run build --workspace @spine-benchmark/render-tools",
+    "build:spine-loader": "npm run build --workspace @spine-benchmark/spine-loader",
+    "build:file-tools": "npm run build --workspace @spine-benchmark/file-tools",
+    "build:workbench-core": "npm run build --workspace @spine-benchmark/workbench-core",
+    "preview": "npm run preview --workspace @spine-benchmark/site",
+    "check:i18n": "npm run check:i18n --workspace @spine-benchmark/site",
+    "sync:locales": "npm run sync:locales --workspace @spine-benchmark/site",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@types/node": "^25.2.3",
-    "@types/react": "^19.2.13",
-    "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3.2.4"
   }
 }

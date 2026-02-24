@@ -1,0 +1,30 @@
+{
+  "name": "@spine-benchmark/constraint-tools",
+  "version": "0.1.0",
+  "description": "Constraint bake and inspection tools for Spine Benchmark",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run build --workspace @spine-benchmark/metrics-sampling",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101",
+    "@spine-benchmark/metrics-sampling": "^0.1.0"
+  },
+  "devDependencies": {
+    "@spine-benchmark/metrics-sampling": "file:../metrics-sampling",
+    "typescript": "^5.9.3"
+  }
+}
