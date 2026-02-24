@@ -281,8 +281,9 @@ const PathConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints })
                 <td>{p.target}</td>
                 <td>{p.bones.join(', ')}</td>
                 <td>
-                  {t('analysis.physics.properties.rotate')}: {getRotateModeName(p.rotateMode)}, 
-                  Spacing: {getSpacingModeName(p.spacingMode)}
+                  {t('analysis.physics.properties.rotate')}: {getRotateModeName(p.rotateMode)},
+                  {' '}
+                  {t('analysis.physics.properties.spacing')}: {getSpacingModeName(p.spacingMode)}
                 </td>
                 <td>{p.isActive ? t('analysis.physics.status.active') : t('analysis.physics.status.inactive')}</td>
               </tr>

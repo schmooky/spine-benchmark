@@ -17,12 +17,12 @@ export function RouteHeaderCard({ title, subtitle, version = 'v1.2.0' }: RouteHe
         <h2>{title}</h2>
         <p>{subtitle}</p>
       </div>
-      <div className="route-header-actions" aria-label="Route utilities">
+      <div className="route-header-actions" aria-label={t('ui.routeUtilities')}>
         <span className="route-header-chip">
           {languageLabel}
         </span>
         <span className="route-header-chip route-header-chip-kbd">
-          ⌘K
+          {t('ui.shortcuts.commandPalette')}
         </span>
         <span className="route-header-chip route-header-chip-version">
           {version}

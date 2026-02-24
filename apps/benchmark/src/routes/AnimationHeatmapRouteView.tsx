@@ -11,10 +11,10 @@ import { RouteHeaderCard } from '../components/RouteHeaderCard';
 
 type MetricKey = 'drawCalls' | 'textures' | 'blendBreaks';
 
-const METRICS: { key: MetricKey; label: string; color: string }[] = [
-  { key: 'drawCalls', label: 'DC', color: '#60A5FA' },
-  { key: 'textures', label: 'TX', color: '#FBBF24' },
-  { key: 'blendBreaks', label: 'BB', color: '#F87171' },
+const METRICS: { key: MetricKey; labelKey: string; color: string }[] = [
+  { key: 'drawCalls', labelKey: 'ui.canvasStats.drawCalls', color: '#60A5FA' },
+  { key: 'textures', labelKey: 'ui.canvasStats.textures', color: '#FBBF24' },
+  { key: 'blendBreaks', labelKey: 'ui.canvasStats.blendBreaks', color: '#F87171' },
 ];
 
 const CHART_HEIGHT = 120;
@@ -224,37 +224,41 @@ function MetricChart({
 }
 
 function ChartTooltip({ frame, index }: { frame: FrameMetrics; index: number }) {
+  const { t } = useTranslation();
+
   return (
     <div className="perf-chart-tooltip">
-      <span className="perf-chart-tooltip-frame">#{index} ({frame.time.toFixed(3)}s)</span>
+      <span className="perf-chart-tooltip-frame">{t('animationHeatmap.tooltip.frame', { index, time: frame.time.toFixed(3) })}</span>
       {METRICS.map((m) => (
         <span key={m.key} className="perf-chart-tooltip-val" style={{ color: m.color }}>
-          {m.label}: {frame[m.key] as number}
+          {t('animationHeatmap.tooltip.metric', { label: t(m.labelKey), value: frame[m.key] as number })}
         </span>
       ))}
-      <span className="perf-chart-tooltip-val">PB: {frame.pageBreaks}</span>
-      <span className="perf-chart-tooltip-val">Slots: {frame.visibleSlots}</span>
+      <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.pageBreaks', { value: frame.pageBreaks })}</span>
+      <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.visibleSlots', { value: frame.visibleSlots })}</span>
     </div>
   );
 }
 
 function FrameDetail({ frame, index }: { frame: FrameMetrics; index: number }) {
+  const { t } = useTranslation();
+
   return (
     <div className="heatmap-frame-detail">
       <div className="heatmap-frame-detail-header">
-        <strong>Frame #{index}</strong>
-        <span>{frame.time.toFixed(3)}s</span>
-        <span>DC: {frame.drawCalls}</span>
-        <span>TX: {frame.textures}</span>
-        <span>BB: {frame.blendBreaks}</span>
-        <span>PB: {frame.pageBreaks}</span>
+        <strong>{t('animationHeatmap.frameDetail.frameTitle', { index })}</strong>
+        <span>{t('animationHeatmap.frameDetail.time', { time: frame.time.toFixed(3) })}</span>
+        <span>{t('animationHeatmap.frameDetail.drawCalls', { value: frame.drawCalls })}</span>
+        <span>{t('animationHeatmap.frameDetail.textures', { value: frame.textures })}</span>
+        <span>{t('animationHeatmap.frameDetail.blendBreaks', { value: frame.blendBreaks })}</span>
+        <span>{t('animationHeatmap.frameDetail.pageBreaks', { value: frame.pageBreaks })}</span>
       </div>
       <div className="heatmap-slot-list-header">
-        <span className="heatmap-slot-idx">#</span>
-        <span className="heatmap-slot-name">Slot</span>
-        <span className="heatmap-slot-page">Page</span>
-        <span className="heatmap-slot-blend">Blend</span>
-        <span className="heatmap-slot-break">Break</span>
+        <span className="heatmap-slot-idx">{t('drawCallInspector.list.headers.index')}</span>
+        <span className="heatmap-slot-name">{t('animationHeatmap.frameDetail.slot')}</span>
+        <span className="heatmap-slot-page">{t('animationHeatmap.frameDetail.page')}</span>
+        <span className="heatmap-slot-blend">{t('animationHeatmap.frameDetail.blend')}</span>
+        <span className="heatmap-slot-break">{t('animationHeatmap.frameDetail.break')}</span>
       </div>
       <div className="heatmap-slot-list">
         {frame.slots.map((slot: LiveSlotInfo) => (
@@ -270,7 +274,7 @@ function FrameDetail({ frame, index }: { frame: FrameMetrics; index: number }) {
             <span className={`heatmap-slot-blend${slot.blendMode !== 'Normal' ? ' non-normal' : ''}`}>
               {slot.blendMode}
             </span>
-            <span className="heatmap-slot-break">{slot.isBreak ? 'YES' : ''}</span>
+            <span className="heatmap-slot-break">{slot.isBreak ? t('ui.yes') : ''}</span>
           </div>
         ))}
       </div>
@@ -294,6 +298,7 @@ function computeRange(frames: FrameMetrics[], key: keyof FrameMetrics): MetricRa
 }
 
 function AnimationHeatmapPanel({ animData, isSelected, onSelect }: { animData: AnimationHeatmapData; isSelected: boolean; onSelect: () => void }) {
+  const { t } = useTranslation();
   const [hoveredFrame, setHoveredFrame] = useState<number | null>(null);
   const [selectedFrame, setSelectedFrame] = useState<number | null>(null);
 
@@ -311,7 +316,10 @@ function AnimationHeatmapPanel({ animData, isSelected, onSelect }: { animData: A
       <button type="button" className="heatmap-animation-header" onClick={onSelect}>
         <span className="heatmap-animation-name">{animData.animationName}</span>
         <span className="heatmap-animation-meta">
-          {animData.duration.toFixed(2)}s / {animData.frames.length} frames
+          {t('animationHeatmap.animationMeta', {
+            duration: animData.duration.toFixed(2),
+            frames: animData.frames.length,
+          })}
         </span>
       </button>
 
@@ -322,7 +330,12 @@ function AnimationHeatmapPanel({ animData, isSelected, onSelect }: { animData: A
             {METRICS.map((m) => (
               <span key={m.key} className="perf-chart-legend-item">
                 <span className="perf-chart-legend-swatch" style={{ background: m.color }} />
-                {m.label}: {ranges[m.key].min}–{ranges[m.key].max} (avg {ranges[m.key].avg})
+                {t('animationHeatmap.legend.metricRange', {
+                  label: t(m.labelKey),
+                  min: ranges[m.key].min,
+                  max: ranges[m.key].max,
+                  avg: ranges[m.key].avg,
+                })}
               </span>
             ))}
           </div>
@@ -407,7 +420,7 @@ export function AnimationHeatmapRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.tools.animationHeatmap')}
-        subtitle="Analyze all frames to find spikes in draw calls, textures, and blend breaks."
+        subtitle={t('animationHeatmap.subtitle')}
       />
       <ToolRouteControls
         minimal
@@ -432,7 +445,7 @@ export function AnimationHeatmapRouteView() {
                   onClick={analyze}
                   disabled={isAnalyzing}
                 >
-                  {isAnalyzing ? 'Analyzing...' : 'Analyze All Animations'}
+                  {isAnalyzing ? t('animationHeatmap.actions.analyzing') : t('animationHeatmap.actions.analyzeAll')}
                 </button>
               </div>
 
@@ -449,15 +462,15 @@ export function AnimationHeatmapRouteView() {
                 </div>
               ) : !isAnalyzing ? (
                 <div className="tool-empty">
-                  <h3>Animation Performance</h3>
-                  <p>Click "Analyze All Animations" to sample every frame and generate performance charts showing draw call, texture, and blend break costs over time.</p>
+                  <h3>{t('animationHeatmap.empty.title')}</h3>
+                  <p>{t('animationHeatmap.empty.hint')}</p>
                 </div>
               ) : null}
             </>
           ) : (
             <div className="tool-empty">
-              <h3>Animation Performance</h3>
-              <p>Load a Spine asset to analyze animation performance frame-by-frame.</p>
+              <h3>{t('animationHeatmap.empty.title')}</h3>
+              <p>{t('animationHeatmap.empty.loadHint')}</p>
             </div>
           )}
         </div>

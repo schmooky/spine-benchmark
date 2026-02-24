@@ -1,5 +1,6 @@
 import React from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
+import { useTranslation } from 'react-i18next';
 import { useCanvasStats } from '../hooks/useCanvasStats';
 
 interface CanvasStatsOverlayProps {
@@ -7,6 +8,7 @@ interface CanvasStatsOverlayProps {
 }
 
 export const CanvasStatsOverlay: React.FC<CanvasStatsOverlayProps> = ({ spineInstance }) => {
+  const { t } = useTranslation();
   const stats = useCanvasStats(spineInstance);
 
   if (!spineInstance) return null;
@@ -14,15 +16,15 @@ export const CanvasStatsOverlay: React.FC<CanvasStatsOverlayProps> = ({ spineIns
   return (
     <div className="canvas-stats-overlay">
       <span className="canvas-stats-item">
-        <span className="canvas-stats-label">FPS</span>
+        <span className="canvas-stats-label">{t('ui.canvasStats.fps')}</span>
         <span className="canvas-stats-value">{stats.fps}</span>
       </span>
       <span className="canvas-stats-item">
-        <span className="canvas-stats-label">DC</span>
+        <span className="canvas-stats-label">{t('ui.canvasStats.drawCalls')}</span>
         <span className="canvas-stats-value">{stats.drawCalls}</span>
       </span>
       <span className="canvas-stats-item">
-        <span className="canvas-stats-label">TX</span>
+        <span className="canvas-stats-label">{t('ui.canvasStats.textures')}</span>
         <span className="canvas-stats-value">{stats.textures}</span>
       </span>
     </div>

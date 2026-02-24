@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { animate } from 'animejs';
+import { useTranslation } from 'react-i18next';
 
 export type InsightTone = 'neutral' | 'info' | 'positive' | 'warning' | 'danger';
 
@@ -98,8 +99,10 @@ function getToneClass(tone: InsightTone | undefined): string {
 }
 
 export function RouteJumpStrip({ chips, selectionHint }: RouteJumpStripProps) {
+  const { t } = useTranslation();
+
   return (
-    <div className="route-jump-strip" aria-label="Cross-route navigation">
+    <div className="route-jump-strip" aria-label={t('ui.insights.crossRouteNavigation')}>
       <div className="route-jump-strip-row">
         {chips.map((chip) => (
           <button
@@ -151,6 +154,7 @@ export function MetricInsightPopout({
   onOpenExplainer,
   onRequestClose,
 }: MetricInsightPopoutProps) {
+  const { t } = useTranslation();
   const popoutRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -251,7 +255,7 @@ export function MetricInsightPopout({
             ))}
           </div>
 
-          <div className="metric-proof-grid" aria-label="Before and after proof">
+          <div className="metric-proof-grid" aria-label={t('ui.insights.beforeAfterProof')}>
             {insight.proofBlocks.map((proof) => (
               <div key={proof.id} className={`metric-proof-card ${getToneClass(proof.tone)}`}>
                 <span>{proof.label}</span>
@@ -282,7 +286,7 @@ export function MetricInsightPopout({
           className={isPinned ? 'secondary-btn' : 'primary-btn'}
           onClick={isPinned ? onUnpin : onPin}
         >
-          {isPinned ? 'Unpin' : 'Pin'}
+          {isPinned ? t('ui.insights.actions.unpin') : t('ui.insights.actions.pin')}
         </button>
         <button
           type="button"
@@ -290,13 +294,13 @@ export function MetricInsightPopout({
           onClick={() => setIsExpanded((prev) => !prev)}
           aria-expanded={isExpanded}
         >
-          {isExpanded ? 'Collapse' : 'Expand'}
+          {isExpanded ? t('ui.insights.actions.collapse') : t('ui.insights.actions.expand')}
         </button>
         <button type="button" className="secondary-btn" onClick={onOpenExplainer}>
-          Explain
+          {t('ui.insights.actions.explain')}
         </button>
         <button type="button" className="secondary-btn" onClick={onRequestClose}>
-          Close
+          {t('ui.close')}
         </button>
       </footer>
     </aside>
@@ -304,18 +308,19 @@ export function MetricInsightPopout({
 }
 
 export function MetricExplainerModal({ isOpen, insight, onClose }: MetricExplainerModalProps) {
+  const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
   const sectionRows = useMemo(() => {
     if (!insight) return null;
     return [
-      { id: 'what', title: 'What', body: insight.explainer.what },
-      { id: 'why-now', title: 'Why now', body: insight.explainer.whyNow },
-      { id: 'how-to-fix', title: 'How to fix', body: insight.explainer.howToFix },
-      { id: 'how-to-verify', title: 'How to verify', body: insight.explainer.howToVerify },
+      { id: 'what', title: t('ui.insights.explainer.what'), body: insight.explainer.what },
+      { id: 'why-now', title: t('ui.insights.explainer.whyNow'), body: insight.explainer.whyNow },
+      { id: 'how-to-fix', title: t('ui.insights.explainer.howToFix'), body: insight.explainer.howToFix },
+      { id: 'how-to-verify', title: t('ui.insights.explainer.howToVerify'), body: insight.explainer.howToVerify },
     ];
-  }, [insight]);
+  }, [insight, t]);
 
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
@@ -361,7 +366,7 @@ export function MetricExplainerModal({ isOpen, insight, onClose }: MetricExplain
             <p>{insight.subtitle}</p>
           </div>
           <button type="button" className="secondary-btn" onClick={onClose}>
-            Close
+            {t('ui.close')}
           </button>
         </header>
 
@@ -374,7 +379,7 @@ export function MetricExplainerModal({ isOpen, insight, onClose }: MetricExplain
           ))}
 
           <section className="metric-explainer-section">
-            <h3>Fix now</h3>
+            <h3>{t('ui.insights.fixNow')}</h3>
             <div className="metric-insight-quick-actions">
               {insight.quickActions.map((action) => (
                 <button
@@ -391,7 +396,7 @@ export function MetricExplainerModal({ isOpen, insight, onClose }: MetricExplain
           </section>
 
           <section className="metric-explainer-section">
-            <h3>Before / after</h3>
+            <h3>{t('ui.insights.beforeAfter')}</h3>
             <div className="metric-proof-grid">
               {insight.proofBlocks.map((proof) => (
                 <div key={proof.id} className={`metric-proof-card ${getToneClass(proof.tone)}`}>

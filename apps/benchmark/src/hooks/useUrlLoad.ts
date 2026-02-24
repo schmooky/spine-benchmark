@@ -22,20 +22,22 @@ export interface UseUrlLoadOptions {
   ) => Promise<unknown>;
 }
 
-function getUrlLoadErrorMessage(error: unknown): string {
+const STALE_LOAD_RESULT = '__stale_load_result__';
+
+function getUrlLoadErrorMessage(
+  error: unknown,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
   const raw =
     error instanceof Error
       ? error.message
       : typeof error === 'string'
         ? error
-        : 'Unknown URL loading error';
+        : t('error.urlLoadUnknown');
 
   const lower = raw.toLowerCase();
   if (lower.includes('cors') || lower.includes('failed to fetch') || lower.includes('networkerror')) {
-    return (
-      'Remote asset is blocked by CORS. ' +
-      'Use a CORS-enabled URL (or same-origin/proxy), then try again.'
-    );
+    return t('error.urlLoadCors');
   }
 
   return raw;
@@ -78,11 +80,11 @@ export function useUrlLoad({ app, loadAssetFromRemoteBundle }: UseUrlLoadOptions
 
         addToast(t('success.loadedFromUrl'), 'success');
       } catch (error) {
-        if (error instanceof Error && error.message === 'Stale load result') {
+        if (error instanceof Error && error.message === STALE_LOAD_RESULT) {
           return;
         }
         setUrlLoadStatus('error');
-        const message = getUrlLoadErrorMessage(error);
+        const message = getUrlLoadErrorMessage(error, t);
         addToast(
           t('error.failedToLoadFromUrls', { error: message }),
           'error'
@@ -118,11 +120,11 @@ export function useUrlLoad({ app, loadAssetFromRemoteBundle }: UseUrlLoadOptions
           addToast(t('success.loadedFromUrl'), 'success');
           return;
         } catch (error) {
-          if (error instanceof Error && error.message === 'Stale load result') {
+          if (error instanceof Error && error.message === STALE_LOAD_RESULT) {
             return;
           }
           setUrlLoadStatus('error');
-          const message = getUrlLoadErrorMessage(error);
+          const message = getUrlLoadErrorMessage(error, t);
           addToast(
             t('error.failedToLoadFromUrls', { error: message }),
             'error'
@@ -139,11 +141,11 @@ export function useUrlLoad({ app, loadAssetFromRemoteBundle }: UseUrlLoadOptions
           setUrlLoadStatus('success');
           addToast(t('success.loadedFromUrl'), 'success');
         } catch (error) {
-          if (error instanceof Error && error.message === 'Stale load result') {
+          if (error instanceof Error && error.message === STALE_LOAD_RESULT) {
             return;
           }
           setUrlLoadStatus('error');
-          const message = getUrlLoadErrorMessage(error);
+          const message = getUrlLoadErrorMessage(error, t);
           addToast(
             t('error.failedToLoadFromUrls', { error: message }),
             'error'

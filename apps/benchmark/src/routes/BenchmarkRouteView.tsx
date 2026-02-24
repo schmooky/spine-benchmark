@@ -69,14 +69,14 @@ export function BenchmarkRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.tools.benchmark')}
-        subtitle="Track rendering and computational pressure before runtime regressions."
+        subtitle={t('benchmark.subtitle')}
       />
       <section className="route-welcome-card">
         <div className="route-welcome-copy">
-          <strong>Animator workspace ready</strong>
-          <span>Load a rig and inspect rendering, meshes, clipping, blend, and physics in one pass.</span>
+          <strong>{t('benchmark.welcome.title')}</strong>
+          <span>{t('benchmark.welcome.description')}</span>
         </div>
-        <span className="route-welcome-chip">Live diagnostics</span>
+        <span className="route-welcome-chip">{t('benchmark.welcome.chip')}</span>
       </section>
       <ToolRouteControls
         minimal
@@ -102,7 +102,7 @@ export function BenchmarkRouteView() {
                   >
                     {rendering ? Math.round(rendering.cost) : '–'}
                   </span>
-                  <span className="dc-inspector-stat-label">RI</span>
+                  <span className="dc-inspector-stat-label">{t('benchmark.summary.renderingImpact')}</span>
                 </div>
                 <div className="dc-inspector-stat">
                   <span
@@ -111,7 +111,7 @@ export function BenchmarkRouteView() {
                   >
                     {computational ? Math.round(computational.cost) : '–'}
                   </span>
-                  <span className="dc-inspector-stat-label">CI</span>
+                  <span className="dc-inspector-stat-label">{t('benchmark.summary.computationalImpact')}</span>
                 </div>
                 <div className="dc-inspector-stat">
                   <span

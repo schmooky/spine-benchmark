@@ -254,7 +254,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
       
       <div className="animation-controls-row animation-controls-row-selects">
         <label className="animation-select-chip">
-          <span className="animation-select-prefix">Animation:</span>
+          <span className="animation-select-prefix">{t('controls.labels.selectAnimation')}:</span>
           <select
             className="animation-select-native"
             value={currentAnimation}
@@ -267,7 +267,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
         </label>
 
         <label className="animation-select-chip animation-select-chip-skin">
-          <span className="animation-select-prefix">Skin:</span>
+          <span className="animation-select-prefix">{t('controls.labels.selectSkin')}:</span>
           <select
             className="animation-select-native"
             value={skinSelectValue}
@@ -279,7 +279,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
                 <option key={name} value={name}>{name}</option>
               ))
             ) : (
-              <option value="default">Default</option>
+              <option value="default">{t('ui.default')}</option>
             )}
           </select>
         </label>

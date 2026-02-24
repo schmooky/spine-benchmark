@@ -158,7 +158,7 @@ const AnimationImpactTable: React.FC<{ animations: AnimationAnalysis[] }> = ({ a
             return (
               <tr key={animation.name} className={rowClass}>
                 <td>{animation.name}</td>
-                <td>{animation.duration.toFixed(2)}s</td>
+                <td>{t('analysis.summary.durationSeconds', { value: animation.duration.toFixed(2) })}</td>
                 <td>
                   <span className={`performance-impact ${getImpactBadgeClass(render.level)}`}>
                     {t(getImpactLabelKey(render.level))}

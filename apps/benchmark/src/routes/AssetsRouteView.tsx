@@ -51,7 +51,7 @@ export function AssetsRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.sections.assetLibrary')}
-        subtitle="Import, validate, and manage reusable Spine bundles."
+        subtitle={t('assets.subtitle')}
       />
 
       <ToolRouteControls

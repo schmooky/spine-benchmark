@@ -6,6 +6,8 @@ import { SpineLoader } from '../core/SpineLoader';
 import { useToast } from './ToastContext';
 import { tIndexed } from '../utils/indexedMessage';
 
+const STALE_LOAD_RESULT = '__stale_load_result__';
+
 /**
  * useSpineLoader - Custom hook for handling Spine file loading operations
  * 
@@ -80,13 +82,13 @@ export function useSpineLoader(app: Application | null) {
       const newSpineInstance = await loaderRef.current.loadSpineFromUrls(jsonUrl, atlasUrl);
       
       if (!newSpineInstance) {
-        throw new Error('Failed to load Spine instance from URLs');
+        throw new Error(t('error.failedToLoadSpineFromUrls'));
       }
 
       // Ignore stale async result if another load started later.
       if (loadId !== loadSequenceRef.current) {
         disposeSpine(newSpineInstance);
-        throw new Error('Stale load result');
+        throw new Error(STALE_LOAD_RESULT);
       }
 
       spineInstanceRef.current = newSpineInstance;
@@ -96,7 +98,7 @@ export function useSpineLoader(app: Application | null) {
       return newSpineInstance;
       
     } catch (error) {
-      if (loadId !== loadSequenceRef.current && error instanceof Error && error.message === 'Stale load result') {
+      if (loadId !== loadSequenceRef.current && error instanceof Error && error.message === STALE_LOAD_RESULT) {
         throw error;
       }
       console.error('Error loading Spine files from URLs:', error);
@@ -137,13 +139,13 @@ export function useSpineLoader(app: Application | null) {
       const newSpineInstance = await loaderRef.current.loadSpineFiles(files);
       
       if (!newSpineInstance) {
-        throw new Error('Failed to load Spine instance');
+        throw new Error(t('error.failedToLoadSpineInstance'));
       }
 
       // Ignore stale async result if another load started later.
       if (loadId !== loadSequenceRef.current) {
         disposeSpine(newSpineInstance);
-        throw new Error('Stale load result');
+        throw new Error(STALE_LOAD_RESULT);
       }
 
       spineInstanceRef.current = newSpineInstance;
@@ -153,7 +155,7 @@ export function useSpineLoader(app: Application | null) {
       return newSpineInstance;
       
     } catch (error) {
-      if (loadId !== loadSequenceRef.current && error instanceof Error && error.message === 'Stale load result') {
+      if (loadId !== loadSequenceRef.current && error instanceof Error && error.message === STALE_LOAD_RESULT) {
         throw error;
       }
       console.error('Error loading Spine files:', error);

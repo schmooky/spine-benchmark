@@ -259,32 +259,37 @@ export function ComparisonRouteView() {
   }, [applyCamera]);
 
   const bothLoaded = Boolean(leftPane.spine && rightPane.spine);
-  const paneAStatus = leftPane.isLoading ? 'Loading' : leftPane.spine ? 'Loaded' : 'Empty';
-  const paneBStatus = rightPane.isLoading ? 'Loading' : rightPane.spine ? 'Loaded' : 'Empty';
+  const paneAStatusKey = leftPane.isLoading ? 'loading' : leftPane.spine ? 'loaded' : 'empty';
+  const paneBStatusKey = rightPane.isLoading ? 'loading' : rightPane.spine ? 'loaded' : 'empty';
+  const paneAStatus = t(`comparison.statusValues.${paneAStatusKey}`);
+  const paneBStatus = t(`comparison.statusValues.${paneBStatusKey}`);
   const drawDelta = rightStats.drawCalls - leftStats.drawCalls;
-  const textureDelta = rightStats.textures - leftStats.textures;
 
   const nextActions = useMemo(() => {
     if (!bothLoaded) {
       return [
-        'Load both panes with related assets',
-        'Enable shared playback and pick a common animation',
-        'Use Draw Calls and Atlas routes for retained selection follow-up',
+        t('comparison.nextActions.loadBothPanes'),
+        t('comparison.nextActions.enableSharedPlayback'),
+        t('comparison.nextActions.useFollowUpRoutes'),
       ];
     }
     return [
-      `Switch to ${currentAnimation || animations[0] || 'a shared animation'}`,
-      drawDelta > 0 ? 'Inspect high-cost layer on pane B for break sources' : 'Inspect high-cost layer on pane A for break sources',
-      'Use atlas repack suggestion to reduce page transitions',
+      t('comparison.nextActions.switchToAnimation', {
+        animation: currentAnimation || animations[0] || t('comparison.nextActions.sharedAnimationFallback'),
+      }),
+      drawDelta > 0
+        ? t('comparison.nextActions.inspectPaneB')
+        : t('comparison.nextActions.inspectPaneA'),
+      t('comparison.nextActions.useAtlasSuggestion'),
     ];
-  }, [animations, bothLoaded, currentAnimation, drawDelta]);
+  }, [animations, bothLoaded, currentAnimation, drawDelta, t]);
 
   const paneBadge = useCallback((pane: ComparisonPane, label: 'A' | 'B') => {
     const width = Math.round(pane.app?.screen.width ?? 0);
     const height = Math.round(pane.app?.screen.height ?? 0);
-    if (width <= 0 || height <= 0) return `${label} --`;
-    return `${label} ${width}×${height}`;
-  }, []);
+    if (width <= 0 || height <= 0) return t('comparison.badges.unavailable', { pane: label });
+    return t('comparison.badges.resolution', { pane: label, width, height });
+  }, [t]);
 
   useEffect(() => {
     if (!comparisonRootRef.current) return;
@@ -303,7 +308,7 @@ export function ComparisonRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.tools.comparison')}
-        subtitle="Load two assets and compare behavior with synchronized camera and playback."
+        subtitle={t('comparison.subtitle')}
       />
       <ToolRouteControls
         minimal
@@ -320,66 +325,69 @@ export function ComparisonRouteView() {
         <aside className="comparison-analysis-panel">
           <div className="comparison-stat-grid comparison-animate">
             <article className="comparison-stat-card">
-              <span>Pane A</span>
+              <span>{t('comparison.summary.paneA')}</span>
               <strong>{paneAStatus}</strong>
             </article>
             <article className="comparison-stat-card">
-              <span>Pane B</span>
+              <span>{t('comparison.summary.paneB')}</span>
               <strong>{paneBStatus}</strong>
             </article>
             <article className="comparison-stat-card">
-              <span>Shared Anims</span>
+              <span>{t('comparison.summary.sharedAnimations')}</span>
               <strong>{animations.length}</strong>
             </article>
             <article className="comparison-stat-card">
-              <span>Sync</span>
-              <strong>{bothLoaded ? 'On' : 'Off'}</strong>
+              <span>{t('comparison.summary.sync')}</span>
+              <strong>{bothLoaded ? t('comparison.statusValues.on') : t('comparison.statusValues.off')}</strong>
             </article>
           </div>
 
           <div className="comparison-action-row comparison-animate">
             <div className="comparison-action-copy">
-              <strong>Side-by-side comparison</strong>
-              <span>Pane A and B are camera-synced with a shared animation selector.</span>
+              <strong>{t('comparison.actionRow.title')}</strong>
+              <span>{t('comparison.actionRow.description')}</span>
             </div>
             <div className="comparison-action-buttons">
               <button type="button" className="secondary-btn" onClick={() => setPickerSide('left')}>
-                Pick Left
+                {t('comparison.actions.pickLeft')}
               </button>
               <button type="button" className="secondary-btn" onClick={() => setPickerSide('right')}>
-                Pick Right
+                {t('comparison.actions.pickRight')}
               </button>
             </div>
           </div>
 
           <section className="comparison-status-card comparison-animate">
-            <h3>Comparison status</h3>
+            <h3>{t('comparison.status.title')}</h3>
             <div className="comparison-status-head">
-              <span>Check</span>
-              <span>Result</span>
+              <span>{t('comparison.status.headers.check')}</span>
+              <span>{t('comparison.status.headers.result')}</span>
             </div>
             <div className="comparison-status-row">
-              <span>animation intersection</span>
-              <span>{animations.length} names</span>
+              <span>{t('comparison.status.animationIntersection')}</span>
+              <span>{t('comparison.status.nameCount', { count: animations.length })}</span>
             </div>
             <div className="comparison-status-row highlighted">
-              <span>camera sync</span>
-              <span>{bothLoaded ? 'zoom + pan shared' : 'load both panes'}</span>
+              <span>{t('comparison.status.cameraSync')}</span>
+              <span>{bothLoaded ? t('comparison.status.cameraSyncEnabled') : t('comparison.status.cameraSyncNeedsBoth')}</span>
             </div>
             <div className="comparison-status-row">
-              <span>playback lock</span>
-              <span>{isPlaying ? 'enabled' : 'paused'}</span>
+              <span>{t('comparison.status.playbackLock')}</span>
+              <span>{isPlaying ? t('comparison.status.playbackEnabled') : t('comparison.status.playbackPaused')}</span>
             </div>
           </section>
 
           <section className="comparison-diff-card comparison-animate">
-            <h3>Differences detected</h3>
+            <h3>{t('comparison.differences.title')}</h3>
             <p>
-              Draw calls: A {leftStats.drawCalls} vs B {rightStats.drawCalls}
-              {' • '}
-              Texture pages: A {leftStats.textures} vs B {rightStats.textures}
+              {t('comparison.differences.summary', {
+                drawCallsA: leftStats.drawCalls,
+                drawCallsB: rightStats.drawCalls,
+                texturesA: leftStats.textures,
+                texturesB: rightStats.textures,
+              })}
             </p>
-            <h4>Next action</h4>
+            <h4>{t('comparison.differences.nextAction')}</h4>
             <pre>{nextActions.join('\n')}</pre>
           </section>
         </aside>
@@ -388,7 +396,7 @@ export function ComparisonRouteView() {
           <div className="comparison-pane-grid" ref={wrapperRef}>
             <section className="comparison-editorial-pane comparison-animate">
               <div className="comparison-editorial-pane-top">
-                <span className="comparison-pane-chip">Pane A</span>
+                <span className="comparison-pane-chip">{t('comparison.summary.paneA')}</span>
                 <span className="comparison-pane-chip">{paneAStatus}</span>
               </div>
               <div className="comparison-editorial-pane-body">
@@ -397,8 +405,8 @@ export function ComparisonRouteView() {
                 <span className="comparison-pane-res-badge">{paneBadge(leftPane, 'A')}</span>
                 {!leftPane.spine && (
                   <div className="comparison-pane-empty">
-                    <span className="comparison-pane-empty-glyph">SB</span>
-                    <strong>Asset A</strong>
+                    <span className="comparison-pane-empty-glyph" aria-hidden="true" />
+                    <strong>{t('comparison.panes.assetA')}</strong>
                     <p>{leftPane.isLoading ? t('ui.loading') : t('comparison.selectAsset')}</p>
                   </div>
                 )}
@@ -407,7 +415,7 @@ export function ComparisonRouteView() {
 
             <section className="comparison-editorial-pane comparison-animate">
               <div className="comparison-editorial-pane-top">
-                <span className="comparison-pane-chip">Pane B</span>
+                <span className="comparison-pane-chip">{t('comparison.summary.paneB')}</span>
                 <span className="comparison-pane-chip">{paneBStatus}</span>
               </div>
               <div className="comparison-editorial-pane-body">
@@ -416,8 +424,8 @@ export function ComparisonRouteView() {
                 <span className="comparison-pane-res-badge">{paneBadge(rightPane, 'B')}</span>
                 {!rightPane.spine && (
                   <div className="comparison-pane-empty">
-                    <span className="comparison-pane-empty-glyph">SB</span>
-                    <strong>Asset B</strong>
+                    <span className="comparison-pane-empty-glyph" aria-hidden="true" />
+                    <strong>{t('comparison.panes.assetB')}</strong>
                     <p>{rightPane.isLoading ? t('ui.loading') : t('comparison.selectAsset')}</p>
                   </div>
                 )}
@@ -432,28 +440,28 @@ export function ComparisonRouteView() {
                 className="comparison-shared-pill accent toggle"
                 onClick={togglePlay}
               >
-                {isPlaying ? 'Shared playback' : 'Playback paused'}
+                {isPlaying ? t('comparison.shared.sharedPlayback') : t('comparison.shared.playbackPaused')}
               </button>
               <button
                 type="button"
                 className={`comparison-shared-pill toggle${isLooping ? ' active' : ''}`}
                 onClick={() => setIsLooping((loop) => !loop)}
               >
-                Loop {isLooping ? 'On' : 'Off'}
+                {t('comparison.shared.loop', { value: isLooping ? t('comparison.statusValues.on') : t('comparison.statusValues.off') })}
               </button>
               <span className="comparison-shared-divider" />
-              <span className="comparison-shared-pill">Camera Sync</span>
+              <span className="comparison-shared-pill">{t('comparison.shared.cameraSync')}</span>
             </div>
             <div className="comparison-shared-row comparison-shared-row-bottom">
               <div className="comparison-shared-select">
-                <span>Animation:</span>
+                <span>{t('controls.labels.selectAnimation')}:</span>
                 <select
                   value={currentAnimation}
                   onChange={(event) => setCurrentAnimation(event.target.value)}
                   disabled={animations.length === 0}
                 >
                   {animations.length === 0 ? (
-                    <option value="">No shared animations</option>
+                    <option value="">{t('comparison.shared.noSharedAnimations')}</option>
                   ) : (
                     animations.map((name) => (
                       <option key={name} value={name}>
@@ -465,7 +473,7 @@ export function ComparisonRouteView() {
                 <ChevronDownIcon className="comparison-shared-select-icon" size={14} />
               </div>
               <div className="comparison-shared-select comparison-shared-select-skin">
-                <span>Skin:</span>
+                <span>{t('controls.labels.selectSkin')}:</span>
                 <select
                   value={skins.length > 0 ? currentSkin : 'default'}
                   onChange={(event) => setCurrentSkin(event.target.value)}
@@ -478,13 +486,13 @@ export function ComparisonRouteView() {
                       </option>
                     ))
                   ) : (
-                    <option value="default">Default</option>
+                    <option value="default">{t('ui.default')}</option>
                   )}
                 </select>
                 <ChevronDownIcon className="comparison-shared-select-icon" size={14} />
               </div>
               <div className="comparison-shared-count">
-                <span>Common anims: {animations.length}</span>
+                <span>{t('comparison.shared.commonAnimations', { count: animations.length })}</span>
                 <CheckIcon className="comparison-shared-count-icon" size={14} />
               </div>
             </div>
@@ -496,7 +504,10 @@ export function ComparisonRouteView() {
             <section className="tool-picker-modal" onClick={(event) => event.stopPropagation()}>
               <div className="route-section-header">
                 <h3>
-                  {t('comparison.selectAsset')} — {pickerSide === 'left' ? 'A' : 'B'}
+                  {t('comparison.selectAssetForPane', {
+                    selectAsset: t('comparison.selectAsset'),
+                    pane: pickerSide === 'left' ? 'A' : 'B',
+                  })}
                 </h3>
                 <button type="button" className="secondary-btn" onClick={() => setPickerSide(null)}>
                   {t('ui.close')}
@@ -525,7 +536,12 @@ export function ComparisonRouteView() {
                       </div>
                       <div className="tool-asset-card-copy">
                         <h3>{asset.name}</h3>
-                        <p>{asset.fileCount} files &middot; {formatBytes(asset.totalBytes)}</p>
+                        <p>
+                          {t('comparison.assetCard.summary', {
+                            count: asset.fileCount,
+                            size: formatBytes(asset.totalBytes),
+                          })}
+                        </p>
                       </div>
                     </button>
                   );

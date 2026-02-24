@@ -12,19 +12,19 @@ export function PartnersRouteView() {
     <div className="route-workspace" data-tour="partner-links">
       <RouteHeaderCard
         title={t('dashboard.sections.partners')}
-        subtitle="Trusted tools and ecosystems that help Spine teams ship faster."
+        subtitle={t('partners.subtitle')}
       />
 
       <section className="route-static-actions">
-        <p>Partner links open in a new tab.</p>
+        <p>{t('partners.actions.externalHint')}</p>
         <a className="route-static-action-chip" href={primaryLink} target="_blank" rel="noreferrer">
-          View Partners
+          {t('partners.actions.viewPartners')}
         </a>
       </section>
 
       <div className="route-static-layout">
         <section className="route-static-card">
-          <h3>Ecosystem links</h3>
+          <h3>{t('partners.cards.ecosystemLinks')}</h3>
           <div className="route-links route-links-editorial">
             {partnerTools.map((item) => (
               <a key={item.labelKey} href={item.href} target="_blank" rel="noreferrer">
@@ -32,14 +32,14 @@ export function PartnersRouteView() {
               </a>
             ))}
             <a href="https://pixijs.com/" target="_blank" rel="noreferrer">
-              PixiJS
+              {t('partners.links.pixi')}
             </a>
           </div>
         </section>
 
         <section className="route-static-card route-static-note">
-          <h4>If partner config is unavailable</h4>
-          <p>Partner links are currently unavailable. Please check back soon.</p>
+          <h4>{t('partners.cards.unavailableTitle')}</h4>
+          <p>{t('partners.cards.unavailableDescription')}</p>
         </section>
       </div>
     </div>

@@ -176,7 +176,7 @@ export function AtlasRepackRouteView() {
   const jumpChips = useMemo(() => [
     {
       id: 'draw-route',
-      label: 'Draw Calls',
+      label: t('ui.routeJumps.drawCalls'),
       active: false,
       onSelect: () => {
         void navigate({ to: '/tools/draw-call-inspector' });
@@ -184,7 +184,7 @@ export function AtlasRepackRouteView() {
     },
     {
       id: 'mesh-route',
-      label: 'Mesh',
+      label: t('ui.routeJumps.mesh'),
       active: false,
       onSelect: () => {
         void navigate({ to: '/tools/mesh-optimizer' });
@@ -192,15 +192,15 @@ export function AtlasRepackRouteView() {
     },
     {
       id: 'atlas-route',
-      label: 'Atlas',
+      label: t('ui.routeJumps.atlas'),
       active: true,
       onSelect: () => {},
     },
-  ], [navigate]);
+  ], [navigate, t]);
 
   const selectionHint = routeSelection.attachmentName
-    ? `Selection retained: ${routeSelection.attachmentName}`
-    : 'Selection retained across Draw, Mesh, and Atlas routes.';
+    ? t('ui.routeJumps.selectionRetainedNamed', { name: routeSelection.attachmentName })
+    : t('ui.routeJumps.selectionRetained');
 
   const atlasInsight = useMemo<MetricInsightModel | null>(() => {
     if (!activeRegion) return null;
@@ -210,53 +210,61 @@ export function AtlasRepackRouteView() {
 
     return {
       id: `atlas-${activeRegion.id}`,
-      title: `${activeRegion.regionName}`,
-      subtitle: `${activeRegion.pageName} • ${activeRegion.width}×${activeRegion.height}`,
-      sample: `${activeRegion.regionName} is now driving this explainer. Hover previews, click to pin, and Esc closes.`,
+      title: t('atlasRepack.insight.title', { regionName: activeRegion.regionName }),
+      subtitle: t('atlasRepack.insight.subtitle', {
+        pageName: activeRegion.pageName,
+        width: activeRegion.width,
+        height: activeRegion.height,
+      }),
+      sample: t('atlasRepack.insight.sample', { regionName: activeRegion.regionName }),
       metrics: [
         {
           id: 'page',
-          label: 'Atlas Page',
+          label: t('atlasRepack.insight.metrics.page.label'),
           value: activeRegion.pageName,
-          note: `Region occupies approximately ${pageShare}% of this page footprint.`,
+          note: t('atlasRepack.insight.metrics.page.note', { pageShare }),
           tone: 'info',
         },
         {
           id: 'problem',
-          label: 'Break Risk',
-          value: activeRegion.isProblematic ? 'High' : 'Low',
-          note: activeRegion.isProblematic ? 'Current region is involved in draw call breaks.' : 'Current region is currently batching safely.',
+          label: t('atlasRepack.insight.metrics.breakRisk.label'),
+          value: activeRegion.isProblematic
+            ? t('atlasRepack.insight.metrics.breakRisk.high')
+            : t('atlasRepack.insight.metrics.breakRisk.low'),
+          note: activeRegion.isProblematic
+            ? t('atlasRepack.insight.metrics.breakRisk.problematicNote')
+            : t('atlasRepack.insight.metrics.breakRisk.stableNote'),
           tone: activeRegion.isProblematic ? 'danger' : 'positive',
         },
         {
           id: 'size',
-          label: 'Region Size',
+          label: t('atlasRepack.insight.metrics.regionSize.label'),
           value: `${activeRegion.width}×${activeRegion.height}`,
-          note: 'Use this to evaluate whether grouping opportunities are realistic.',
+          note: t('atlasRepack.insight.metrics.regionSize.note'),
           tone: 'neutral',
         },
       ],
       quickActions: [
         {
           id: 'filter-problematic',
-          label: 'Fix now: filter problematic regions',
-          impact: 'Expected impact: isolate break-causing regions first.',
+          label: t('atlasRepack.insight.quickActions.filterProblematic.label'),
+          impact: t('atlasRepack.insight.quickActions.filterProblematic.impact'),
           onRun: () => {
             setShowOnlyProblematic(true);
           },
         },
         {
           id: 'isolate-page',
-          label: `Fix now: isolate page ${activeRegion.pageName}`,
-          impact: 'Expected impact: tighter packing decisions with less visual noise.',
+          label: t('atlasRepack.insight.quickActions.isolatePage.label', { pageName: activeRegion.pageName }),
+          impact: t('atlasRepack.insight.quickActions.isolatePage.impact'),
           onRun: () => {
             setPageFilter(activeRegion.pageName);
           },
         },
         {
           id: 'jump-draw',
-          label: 'Fix now: jump to Draw Calls',
-          impact: 'Expected impact: validate page break reduction on slot order.',
+          label: t('atlasRepack.insight.quickActions.jumpDrawCalls.label'),
+          impact: t('atlasRepack.insight.quickActions.jumpDrawCalls.impact'),
           onRun: () => {
             setRouteSelection((current) => ({
               ...current,
@@ -270,42 +278,45 @@ export function AtlasRepackRouteView() {
         },
       ],
       proofBlocks: [
-        { id: 'proof-calls', label: 'calls', delta: expectedCallDelta, tone: 'positive' },
-        { id: 'proof-verts', label: 'verts', delta: '-6%', tone: 'info' },
-        { id: 'proof-breaks', label: 'breaks', delta: expectedBreakDelta, tone: 'positive' },
+        { id: 'proof-calls', label: t('ui.insights.proof.calls'), delta: expectedCallDelta, tone: 'positive' },
+        { id: 'proof-verts', label: t('ui.insights.proof.verts'), delta: '-6%', tone: 'info' },
+        { id: 'proof-breaks', label: t('ui.insights.proof.breaks'), delta: expectedBreakDelta, tone: 'positive' },
       ],
       jumpChips: [
         {
           id: 'jump-draw',
-          label: 'Draw Calls',
+          label: t('ui.routeJumps.drawCalls'),
           onJump: () => {
             void navigate({ to: '/tools/draw-call-inspector' });
           },
         },
         {
           id: 'jump-mesh',
-          label: 'Mesh',
+          label: t('ui.routeJumps.mesh'),
           onJump: () => {
             void navigate({ to: '/tools/mesh-optimizer' });
           },
         },
         {
           id: 'jump-atlas',
-          label: 'Atlas',
+          label: t('ui.routeJumps.atlas'),
           active: true,
           onJump: () => {},
         },
       ],
       explainer: {
-        what: `This region "${activeRegion.regionName}" is packed on atlas page "${activeRegion.pageName}".`,
+        what: t('atlasRepack.insight.explainer.what', {
+          regionName: activeRegion.regionName,
+          pageName: activeRegion.pageName,
+        }),
         whyNow: activeRegion.isProblematic
-          ? 'It aligns with current draw-call break points and is a prime target for immediate batching wins.'
-          : 'It is currently stable but still useful for validating future packing changes.',
-        howToFix: 'Group regions that render sequentially onto the same page, prioritize high-frequency slots, and repack to reduce cross-page transitions.',
-        howToVerify: 'Return to Draw Calls route and confirm lower page-break count while the retained selection stays focused on this region.',
+          ? t('atlasRepack.insight.explainer.whyNowProblematic')
+          : t('atlasRepack.insight.explainer.whyNowStable'),
+        howToFix: t('atlasRepack.insight.explainer.howToFix'),
+        howToVerify: t('atlasRepack.insight.explainer.howToVerify'),
       },
     };
-  }, [activeRegion, navigate, setRouteSelection]);
+  }, [activeRegion, navigate, setRouteSelection, t]);
 
   const filteredPages = useMemo(() => {
     return atlasData.pages
@@ -327,7 +338,7 @@ export function AtlasRepackRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.tools.atlasRepack')}
-        subtitle="Map page breaks to atlas regions and repack with fewer draw interruptions."
+        subtitle={t('atlasRepack.subtitle')}
       />
       <ToolRouteControls
         minimal
@@ -347,11 +358,11 @@ export function AtlasRepackRouteView() {
           {lastLoadError && (
             <RouteStateCallout
               kind="error"
-              title="Could not load current asset"
+              title={t('atlasRepack.states.loadError.title')}
               description={lastLoadError}
               actions={[
-                { id: 'retry', label: 'Retry load', onClick: () => void handleLoadSelected(), variant: 'primary' },
-                { id: 'dismiss', label: 'Dismiss', onClick: clearLastLoadError, variant: 'secondary' },
+                { id: 'retry', label: t('atlasRepack.states.loadError.actions.retry'), onClick: () => void handleLoadSelected(), variant: 'primary' },
+                { id: 'dismiss', label: t('atlasRepack.states.loadError.actions.dismiss'), onClick: clearLastLoadError, variant: 'secondary' },
               ]}
             />
           )}
@@ -359,8 +370,8 @@ export function AtlasRepackRouteView() {
           {!lastLoadError && isAnyLoading && (
             <RouteStateCallout
               kind="loading"
-              title="Loading atlas metrics"
-              description="Scanning pages, regions, and draw-call break hotspots."
+              title={t('atlasRepack.states.loading.title')}
+              description={t('atlasRepack.states.loading.description')}
             />
           )}
 
@@ -403,12 +414,17 @@ export function AtlasRepackRouteView() {
               {isPartialParse && (
                 <RouteStateCallout
                   kind="partial"
-                  title="Partial parse detected"
+                  title={t('atlasRepack.states.partial.title')}
                   description={pagesMissingImages > 0
-                    ? `${pagesMissingImages} atlas page image(s) could not be decoded. Region overlays still work.`
-                    : 'No atlas pages were extracted. Confirm atlas references and retry load.'}
+                    ? t('atlasRepack.states.partial.missingImages', { count: pagesMissingImages })
+                    : t('atlasRepack.states.partial.noPages')}
                   actions={[
-                    { id: 'reload', label: 'Reload selected asset', onClick: () => void handleLoadSelected(), variant: 'secondary' },
+                    {
+                      id: 'reload',
+                      label: t('atlasRepack.states.partial.actions.reloadSelectedAsset'),
+                      onClick: () => void handleLoadSelected(),
+                      variant: 'secondary',
+                    },
                   ]}
                 />
               )}
@@ -419,7 +435,7 @@ export function AtlasRepackRouteView() {
                   className={`route-jump-chip${showOnlyProblematic ? ' active' : ''}`}
                   onClick={() => setShowOnlyProblematic((value) => !value)}
                 >
-                  Problematic only
+                  {t('atlasRepack.actions.problematicOnly')}
                 </button>
                 {pageFilter && (
                   <button
@@ -427,7 +443,7 @@ export function AtlasRepackRouteView() {
                     className="secondary-btn"
                     onClick={() => setPageFilter(null)}
                   >
-                    Clear page filter
+                    {t('atlasRepack.actions.clearPageFilter')}
                   </button>
                 )}
               </div>
@@ -569,8 +585,8 @@ export function AtlasRepackRouteView() {
               />
             ) : (
               <div className="tool-info-empty">
-                <h3>Select an atlas region</h3>
-                <p>Hover or click a region to inspect packing and break-risk details here.</p>
+                <h3>{t('atlasRepack.infoPanel.emptyTitle')}</h3>
+                <p>{t('atlasRepack.infoPanel.emptyDescription')}</p>
               </div>
             )}
           </div>

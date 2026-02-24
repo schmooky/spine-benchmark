@@ -154,7 +154,7 @@ export function PhysicsBakerRouteView() {
     setIsSaving(true);
     try {
       const newName = `${selectedAsset.name} (Baked)`;
-      const description = 'Constraint-baked skeleton';
+      const description = t('constraintBaker.bake.description');
       await saveAndLoadOptimizedAsset(bakedFiles, newName, description);
       setReport(null);
       setBakedFiles(null);
@@ -164,7 +164,7 @@ export function PhysicsBakerRouteView() {
     } finally {
       setIsSaving(false);
     }
-  }, [bakedFiles, selectedAsset, saveAndLoadOptimizedAsset]);
+  }, [bakedFiles, selectedAsset, saveAndLoadOptimizedAsset, t]);
 
   // Summary counts
   const counts = useMemo(() => {
@@ -177,7 +177,7 @@ export function PhysicsBakerRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.tools.physicsBaker')}
-        subtitle="Bake constraints into stable keyframes for runtime-friendly playback."
+        subtitle={t('physicsBaker.subtitle')}
       />
       <ToolRouteControls
         minimal
@@ -246,7 +246,7 @@ export function PhysicsBakerRouteView() {
                     <span className="constraint-baker-row-target" title={c.target}>{c.target}</span>
                     <span className="constraint-baker-row-bones">{c.bones.length}</span>
                     <span className={`constraint-baker-row-active ${c.isActive ? 'on' : 'off'}`}>
-                      {c.isActive ? 'ON' : 'OFF'}
+                      {c.isActive ? t('ui.on') : t('ui.off')}
                     </span>
                   </div>
                 ))}
@@ -313,7 +313,7 @@ export function PhysicsBakerRouteView() {
                 </div>
                 <div className="mesh-inspector-report-row">
                   <span>{t('constraintBaker.bake.report.sampleRate')}</span>
-                  <span>{report.sampleRate} fps</span>
+                  <span>{t('constraintBaker.bake.report.sampleRateValue', { value: report.sampleRate })}</span>
                 </div>
               </div>
             )}

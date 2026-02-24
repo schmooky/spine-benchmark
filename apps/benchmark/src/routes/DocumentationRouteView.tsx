@@ -12,19 +12,19 @@ export function DocumentationRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.sections.documentation')}
-        subtitle="Quick links to guides and references used by animators and game teams."
+        subtitle={t('documentation.subtitle')}
       />
 
       <section className="route-static-actions">
-        <p>Resources are external links and open in a new tab.</p>
+        <p>{t('documentation.actions.externalHint')}</p>
         <a className="route-static-action-chip" href={primaryLink} target="_blank" rel="noreferrer">
-          Open Docs
+          {t('documentation.actions.openDocs')}
         </a>
       </section>
 
       <div className="route-static-layout">
         <section className="route-static-card">
-          <h3>Official resources</h3>
+          <h3>{t('documentation.cards.officialResources')}</h3>
           <div className="route-links route-links-editorial">
             {documentationLinks.map((item) => (
               <a key={item.labelKey} href={item.href} target="_blank" rel="noreferrer">
@@ -35,8 +35,8 @@ export function DocumentationRouteView() {
         </section>
 
         <section className="route-static-card route-static-note">
-          <h4>If links are unavailable</h4>
-          <p>Documentation links are currently unavailable. Please try again later.</p>
+          <h4>{t('documentation.cards.unavailableTitle')}</h4>
+          <p>{t('documentation.cards.unavailableDescription')}</p>
         </section>
       </div>
     </div>

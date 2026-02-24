@@ -46,6 +46,7 @@ import { RouteSelectionState, WorkbenchProvider } from './workbench/WorkbenchCon
 type OnboardingStep = 'language' | 'intro';
 
 const ONBOARDING_KEY = 'spine-workbench-onboarding-done-v1';
+const STALE_LOAD_RESULT = '__stale_load_result__';
 const DEFAULT_ROUTE_SELECTION: RouteSelectionState = {
   sourceRoute: null,
   slotIndex: null,
@@ -393,7 +394,7 @@ const App: React.FC = () => {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : t('dashboard.messages.unknownError');
-        if (message === 'Stale load result') {
+        if (message === STALE_LOAD_RESULT) {
           return;
         }
         setLastLoadError(message);

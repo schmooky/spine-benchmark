@@ -13,6 +13,7 @@ import { optimizeJson, OptimizationReport } from '../core/meshOptimizer';
 import { renderMeshPreview, MeshPreviewResult } from '../core/meshPreviewRenderer';
 import { getStatColor } from '../core/utils/colorUtils';
 import { RouteHeaderCard } from '../components/RouteHeaderCard';
+import { XMarkIcon } from '../components/Icons';
 import {
   MetricExplainerModal,
   MetricInsightModel,
@@ -250,7 +251,7 @@ export function MeshOptimizerRouteView() {
   const jumpChips = useMemo(() => [
     {
       id: 'draw-route',
-      label: 'Draw Calls',
+      label: t('ui.routeJumps.drawCalls'),
       active: false,
       onSelect: () => {
         void navigate({ to: '/tools/draw-call-inspector' });
@@ -258,23 +259,23 @@ export function MeshOptimizerRouteView() {
     },
     {
       id: 'mesh-route',
-      label: 'Mesh',
+      label: t('ui.routeJumps.mesh'),
       active: true,
       onSelect: () => {},
     },
     {
       id: 'atlas-route',
-      label: 'Atlas',
+      label: t('ui.routeJumps.atlas'),
       active: false,
       onSelect: () => {
         void navigate({ to: '/tools/atlas-repack' });
       },
     },
-  ], [navigate]);
+  ], [navigate, t]);
 
   const selectionHint = routeSelection.attachmentName
-    ? `Selection retained: ${routeSelection.attachmentName}`
-    : 'Selection retained across Draw, Mesh, and Atlas routes.';
+    ? t('ui.routeJumps.selectionRetainedNamed', { name: routeSelection.attachmentName })
+    : t('ui.routeJumps.selectionRetained');
 
   const meshInsight = useMemo<MetricInsightModel | null>(() => {
     if (!activeMesh) return null;
@@ -285,45 +286,51 @@ export function MeshOptimizerRouteView() {
 
     return {
       id: `mesh-${activeMesh.index}`,
-      title: `Mesh #${activeMesh.index}: ${activeMesh.attachmentName}`,
-      subtitle: `${atlasPage} • ${activeMesh.slotName}`,
-      sample: `${activeMesh.slotName} is now driving this explainer. Hover previews, click to pin, and Esc closes.`,
+      title: t('meshOptimizer.insight.title', { index: activeMesh.index, attachment: activeMesh.attachmentName }),
+      subtitle: t('meshOptimizer.insight.subtitle', { atlasPage, slotName: activeMesh.slotName }),
+      sample: t('meshOptimizer.insight.sample', { slotName: activeMesh.slotName }),
       metrics: [
         {
           id: 'vertices',
-          label: 'Vertices',
+          label: t('meshOptimizer.insight.metrics.vertices.label'),
           value: `${activeMesh.vertexCount}`,
-          note: activeMesh.vertexCount > 180 ? 'High vertex density for this mesh.' : 'Vertex density is moderate.',
+          note: activeMesh.vertexCount > 180
+            ? t('meshOptimizer.insight.metrics.vertices.highNote')
+            : t('meshOptimizer.insight.metrics.vertices.moderateNote'),
           tone: activeMesh.vertexCount > 180 ? 'warning' : 'positive',
         },
         {
           id: 'triangles',
-          label: 'Triangles',
+          label: t('meshOptimizer.insight.metrics.triangles.label'),
           value: `${activeMesh.triangleCount}`,
-          note: activeMesh.triangleCount > 120 ? 'Consider reduction where silhouette allows.' : 'Triangle count is stable.',
+          note: activeMesh.triangleCount > 120
+            ? t('meshOptimizer.insight.metrics.triangles.highNote')
+            : t('meshOptimizer.insight.metrics.triangles.stableNote'),
           tone: activeMesh.triangleCount > 120 ? 'warning' : 'neutral',
         },
         {
           id: 'weights',
-          label: 'Weights',
+          label: t('meshOptimizer.insight.metrics.weights.label'),
           value: `${activeMesh.boneCount > 0 ? activeMesh.boneCount : 0}`,
-          note: activeMesh.boneCount > 0 ? 'Weighted mesh can increase update cost.' : 'Unweighted mesh.',
+          note: activeMesh.boneCount > 0
+            ? t('meshOptimizer.insight.metrics.weights.weightedNote')
+            : t('meshOptimizer.insight.metrics.weights.unweightedNote'),
           tone: activeMesh.boneCount > 0 ? 'info' : 'neutral',
         },
       ],
       quickActions: [
         {
           id: 'filter-deformed',
-          label: 'Fix now: filter deformed meshes',
-          impact: 'Expected impact: isolate expensive deformation tracks.',
+          label: t('meshOptimizer.insight.quickActions.filterDeformed.label'),
+          impact: t('meshOptimizer.insight.quickActions.filterDeformed.impact'),
           onRun: () => {
             setFilterMode('deformed');
           },
         },
         {
           id: 'isolate-mesh',
-          label: 'Fix now: isolate selected mesh',
-          impact: 'Expected impact: immediate canvas confirmation of highlighted mesh.',
+          label: t('meshOptimizer.insight.quickActions.isolateMesh.label'),
+          impact: t('meshOptimizer.insight.quickActions.isolateMesh.impact'),
           onRun: () => {
             setSelectedMeshIndex(activeMesh.index);
             setHighlightedMeshSlot(activeMesh.slotName);
@@ -331,8 +338,8 @@ export function MeshOptimizerRouteView() {
         },
         {
           id: 'atlas-grouping',
-          label: 'Fix now: send atlas grouping hint',
-          impact: 'Expected impact: reduced page transitions near this mesh.',
+          label: t('meshOptimizer.insight.quickActions.sendAtlasHint.label'),
+          impact: t('meshOptimizer.insight.quickActions.sendAtlasHint.impact'),
           onRun: () => {
             setRouteSelection({
               sourceRoute: 'mesh-optimizer',
@@ -347,42 +354,46 @@ export function MeshOptimizerRouteView() {
         },
       ],
       proofBlocks: [
-        { id: 'proof-calls', label: 'calls', delta: expectedCallDelta, tone: 'positive' },
-        { id: 'proof-verts', label: 'verts', delta: `-${vertexDropPercent}%`, tone: 'info' },
-        { id: 'proof-breaks', label: 'breaks', delta: expectedBreakDelta, tone: 'positive' },
+        { id: 'proof-calls', label: t('ui.insights.proof.calls'), delta: expectedCallDelta, tone: 'positive' },
+        { id: 'proof-verts', label: t('ui.insights.proof.verts'), delta: `-${vertexDropPercent}%`, tone: 'info' },
+        { id: 'proof-breaks', label: t('ui.insights.proof.breaks'), delta: expectedBreakDelta, tone: 'positive' },
       ],
       jumpChips: [
         {
           id: 'jump-draw',
-          label: 'Draw Calls',
+          label: t('ui.routeJumps.drawCalls'),
           onJump: () => {
             void navigate({ to: '/tools/draw-call-inspector' });
           },
         },
         {
           id: 'jump-mesh',
-          label: 'Mesh',
+          label: t('ui.routeJumps.mesh'),
           active: true,
           onJump: () => {},
         },
         {
           id: 'jump-atlas',
-          label: 'Atlas',
+          label: t('ui.routeJumps.atlas'),
           onJump: () => {
             void navigate({ to: '/tools/atlas-repack' });
           },
         },
       ],
       explainer: {
-        what: `This mesh uses ${activeMesh.vertexCount} vertices and ${activeMesh.triangleCount} triangles on atlas page "${atlasPage}".`,
+        what: t('meshOptimizer.insight.explainer.what', {
+          vertices: activeMesh.vertexCount,
+          triangles: activeMesh.triangleCount,
+          atlasPage,
+        }),
         whyNow: activeMesh.vertexCount > 180
-          ? 'Vertex count is high enough to create avoidable cost spikes on dense animation frames.'
-          : 'Optimization headroom exists and can help stabilize worst-case playback.',
-        howToFix: 'Reduce overclustered regions, trim hidden deformation keys, and simplify weighted areas where fidelity is not visible.',
-        howToVerify: 'Run optimization preview, compare proof cards, and confirm visual quality in the highlighted mesh overlay.',
+          ? t('meshOptimizer.insight.explainer.whyNowHigh')
+          : t('meshOptimizer.insight.explainer.whyNowHeadroom'),
+        howToFix: t('meshOptimizer.insight.explainer.howToFix'),
+        howToVerify: t('meshOptimizer.insight.explainer.howToVerify'),
       },
     };
-  }, [activeMesh, atlasPageBySlotIndex, navigate, setHighlightedMeshSlot, setRouteSelection]);
+  }, [activeMesh, atlasPageBySlotIndex, navigate, setHighlightedMeshSlot, setRouteSelection, t]);
 
   const selectedMesh = selectedMeshIndex !== null
     ? snapshot.meshes.find((mesh) => mesh.index === selectedMeshIndex)
@@ -400,7 +411,7 @@ export function MeshOptimizerRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.tools.meshOptimizer')}
-        subtitle="Clean deforms, reduce weighted mesh cost, and reload instantly."
+        subtitle={t('meshOptimizer.subtitle')}
       />
       <ToolRouteControls
         minimal
@@ -420,11 +431,21 @@ export function MeshOptimizerRouteView() {
           {lastLoadError && (
             <RouteStateCallout
               kind="error"
-              title="Could not load current asset"
+              title={t('meshOptimizer.states.loadError.title')}
               description={lastLoadError}
               actions={[
-                { id: 'retry-load', label: 'Retry load', onClick: () => void handleLoadSelected(), variant: 'primary' },
-                { id: 'dismiss-error', label: 'Dismiss', onClick: clearLastLoadError, variant: 'secondary' },
+                {
+                  id: 'retry-load',
+                  label: t('meshOptimizer.states.loadError.actions.retry'),
+                  onClick: () => void handleLoadSelected(),
+                  variant: 'primary',
+                },
+                {
+                  id: 'dismiss-error',
+                  label: t('meshOptimizer.states.loadError.actions.dismiss'),
+                  onClick: clearLastLoadError,
+                  variant: 'secondary',
+                },
               ]}
             />
           )}
@@ -432,8 +453,8 @@ export function MeshOptimizerRouteView() {
           {!lastLoadError && isAnyLoading && (
             <RouteStateCallout
               kind="loading"
-              title="Loading mesh metrics"
-              description="Scanning mesh attachments, vertices, and deformation ranges."
+              title={t('meshOptimizer.states.loading.title')}
+              description={t('meshOptimizer.states.loading.description')}
             />
           )}
 
@@ -484,29 +505,29 @@ export function MeshOptimizerRouteView() {
                   className={`route-jump-chip${filterMode === 'all' ? ' active' : ''}`}
                   onClick={() => setFilterMode('all')}
                 >
-                  All
+                  {t('meshOptimizer.filters.all')}
                 </button>
                 <button
                   type="button"
                   className={`route-jump-chip${filterMode === 'deformed' ? ' active' : ''}`}
                   onClick={() => setFilterMode('deformed')}
                 >
-                  Deformed
+                  {t('meshOptimizer.filters.deformed')}
                 </button>
                 <button
                   type="button"
                   className={`route-jump-chip${filterMode === 'weighted' ? ' active' : ''}`}
                   onClick={() => setFilterMode('weighted')}
                 >
-                  Weighted
+                  {t('meshOptimizer.filters.weighted')}
                 </button>
               </div>
 
               {!jsonFile && (
                 <RouteStateCallout
                   kind="partial"
-                  title="Partial parse: no JSON source"
-                  description="Optimization actions are limited because this asset has no JSON skeleton file."
+                  title={t('meshOptimizer.states.partialNoJson.title')}
+                  description={t('meshOptimizer.states.partialNoJson.description')}
                 />
               )}
 
@@ -558,7 +579,7 @@ export function MeshOptimizerRouteView() {
                         setHighlightedMeshSlot(null);
                       }}
                     >
-                      &times;
+                      <XMarkIcon size={14} />
                     </button>
                   </div>
                   <div className="mesh-inspector-preview-hint">
@@ -589,11 +610,11 @@ export function MeshOptimizerRouteView() {
                     </div>
                     <div className="mesh-inspector-preview-stat-row">
                       <span>{t('meshOptimizer.preview.deformMagnitude')}</span>
-                      <span>{meshPreview.maxDeformPx.toFixed(1)} px</span>
+                      <span>{t('meshOptimizer.preview.deformMagnitudeValue', { value: meshPreview.maxDeformPx.toFixed(1) })}</span>
                     </div>
                     <div className="mesh-inspector-preview-stat-row">
                       <span>{t('meshOptimizer.preview.pixelArea')}</span>
-                      <span>{Math.round(meshPreview.meshPixelArea)} px&sup2;</span>
+                      <span>{t('meshOptimizer.preview.pixelAreaValue', { value: Math.round(meshPreview.meshPixelArea) })}</span>
                     </div>
                   </div>
                 </div>
@@ -669,12 +690,12 @@ export function MeshOptimizerRouteView() {
           {!lastLoadError && !isAnyLoading && spineInstance && snapshot.meshes.length === 0 && (
             <RouteStateCallout
               kind="partial"
-              title="No mesh attachments detected"
-              description="This skeleton currently has no mesh attachments in draw order. You can still inspect Draw Calls and Atlas routes."
+              title={t('meshOptimizer.states.noMeshes.title')}
+              description={t('meshOptimizer.states.noMeshes.description')}
               actions={[
                 {
                   id: 'jump-draw',
-                  label: 'Open Draw Calls',
+                  label: t('meshOptimizer.states.noMeshes.actions.openDrawCalls'),
                   onClick: () => {
                     void navigate({ to: '/tools/draw-call-inspector' });
                   },
@@ -728,8 +749,8 @@ export function MeshOptimizerRouteView() {
               />
             ) : (
               <div className="tool-info-empty">
-                <h3>Select a mesh row</h3>
-                <p>Hover or click a mesh to inspect details here while keeping the mesh list fully visible.</p>
+                <h3>{t('meshOptimizer.infoPanel.emptyTitle')}</h3>
+                <p>{t('meshOptimizer.infoPanel.emptyDescription')}</p>
               </div>
             )}
           </div>

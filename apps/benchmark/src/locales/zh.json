@@ -22,7 +22,12 @@
     "noValidFiles": "在拖放的項目中找不到有效檔案",
     "processingError": "處理拖放檔案錯誤：{0}",
     "loadingError": "載入 Spine 檔案錯誤：{0}",
-    "failedToLoadFromUrls": "Failed to load from URLs: {{error}}"
+    "failedToLoadFromUrls": "Failed to load from URLs: {{error}}",
+    "urlLoadUnknown": "Unknown URL loading error",
+    "urlLoadCors": "Remote asset is blocked by CORS. Use a CORS-enabled URL (or same-origin/proxy), then try again.",
+    "failedToLoadSpineFromUrls": "Failed to load Spine instance from URLs",
+    "failedToLoadSpineInstance": "Failed to load Spine instance",
+    "readDirectoryFailed": "Failed to read directory contents"
   },
   "ui": {
     "dropArea": "將 Spine 檔案或資料夾拖放到此處（JSON、Atlas 和圖片）",
@@ -46,7 +51,62 @@
     },
     "dropFilesHere": "Drop Spine files here",
     "supportedFormats": "Supports .json, .skel, .atlas, and image files",
-    "browseFiles": "Browse Files"
+    "browseFiles": "Browse Files",
+    "default": "Default",
+    "on": "On",
+    "off": "Off",
+    "yes": "YES",
+    "routeUtilities": "Route utilities",
+    "version": {
+      "app": "v{{version}}",
+      "spine": "Spine {{version}}"
+    },
+    "canvasStats": {
+      "fps": "FPS",
+      "drawCalls": "DC",
+      "textures": "TX",
+      "blendBreaks": "BB"
+    },
+    "insights": {
+      "crossRouteNavigation": "Cross-route navigation",
+      "beforeAfterProof": "Before and after proof",
+      "fixNow": "Fix now",
+      "beforeAfter": "Before / after",
+      "actions": {
+        "pin": "Pin",
+        "unpin": "Unpin",
+        "expand": "Expand",
+        "collapse": "Collapse",
+        "explain": "Explain"
+      },
+      "explainer": {
+        "what": "What",
+        "whyNow": "Why now",
+        "howToFix": "How to fix",
+        "howToVerify": "How to verify"
+      },
+      "proof": {
+        "calls": "calls",
+        "verts": "verts",
+        "breaks": "breaks"
+      }
+    },
+    "routeJumps": {
+      "drawCalls": "Draw Calls",
+      "mesh": "Mesh",
+      "atlas": "Atlas",
+      "selectionRetained": "Selection retained across Draw, Mesh, and Atlas routes.",
+      "selectionRetainedNamed": "Selection retained: {{name}}"
+    },
+    "background": {
+      "notInitialized": "Background manager not initialized",
+      "setSuccess": "Background image set successfully",
+      "setFailed": "Error setting background image: {{error}}",
+      "removed": "Background image removed"
+    },
+    "shortcuts": {
+      "commandPalette": "⌘K"
+    }
   },
   "commands": {
     "categories": {
@@ -189,6 +249,16 @@
     "empty": {
       "title": "載入資產以進行基準測試",
       "hint": "選擇資產並點擊「載入」以開始效能分析"
+    },
+    "subtitle": "Track rendering and computational pressure before runtime regressions.",
+    "summary": {
+      "renderingImpact": "RI",
+      "computationalImpact": "CI"
+    },
+    "welcome": {
+      "title": "Animator workspace ready",
+      "description": "Load a rig and inspect rendering, meshes, clipping, blend, and physics in one pass.",
+      "chip": "Live diagnostics"
     }
   },
   "warnings": {
@@ -313,7 +383,8 @@
         "veryHigh": "Very High"
       },
       "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
-      "medianPerformanceLabel": "{{rating}} Performance"
+      "medianPerformanceLabel": "{{rating}} Performance",
+      "durationSeconds": "{{value}}s"
     },
     "impact": {
       "rendering": "渲染影響",
@@ -576,7 +647,8 @@
         "rotate": "旋轉",
         "scaleX": "縮放X",
         "scaleY": "縮放Y",
-        "shearY": "剪切Y"
+        "shearY": "剪切Y",
+        "spacing": "Spacing"
       },
       "modes": {
         "rotate": {
@@ -825,7 +897,85 @@
       "overclustered": "过密三角形",
       "invisibleDeform": "不可见变形",
       "noProblems": "未检测到问题",
-      "liveHint": "在画布上高亮显示 — 红色三角形为过密区域"
+      "liveHint": "在画布上高亮显示 — 红色三角形为过密区域",
+      "deformMagnitudeValue": "{{value}} px",
+      "pixelAreaValue": "{{value}} px²"
+    },
+    "filters": {
+      "all": "All",
+      "deformed": "Deformed",
+      "weighted": "Weighted"
+    },
+    "infoPanel": {
+      "emptyTitle": "Select a mesh row",
+      "emptyDescription": "Hover or click a mesh to inspect details here while keeping the mesh list fully visible."
+    },
+    "insight": {
+      "title": "Mesh #{{index}}: {{attachment}}",
+      "subtitle": "{{atlasPage}} • {{slotName}}",
+      "sample": "{{slotName}} is now driving this explainer. Hover previews, click to pin, and Esc closes.",
+      "metrics": {
+        "vertices": {
+          "label": "Vertices",
+          "highNote": "High vertex density for this mesh.",
+          "moderateNote": "Vertex density is moderate."
+        },
+        "triangles": {
+          "label": "Triangles",
+          "highNote": "Consider reduction where silhouette allows.",
+          "stableNote": "Triangle count is stable."
+        },
+        "weights": {
+          "label": "Weights",
+          "weightedNote": "Weighted mesh can increase update cost.",
+          "unweightedNote": "Unweighted mesh."
+        }
+      },
+      "quickActions": {
+        "filterDeformed": {
+          "label": "Fix now: filter deformed meshes",
+          "impact": "Expected impact: isolate expensive deformation tracks."
+        },
+        "isolateMesh": {
+          "label": "Fix now: isolate selected mesh",
+          "impact": "Expected impact: immediate canvas confirmation of highlighted mesh."
+        },
+        "sendAtlasHint": {
+          "label": "Fix now: send atlas grouping hint",
+          "impact": "Expected impact: reduced page transitions near this mesh."
+        }
+      },
+      "explainer": {
+        "what": "This mesh uses {{vertices}} vertices and {{triangles}} triangles on atlas page \"{{atlasPage}}\".",
+        "whyNowHigh": "Vertex count is high enough to create avoidable cost spikes on dense animation frames.",
+        "whyNowHeadroom": "Optimization headroom exists and can help stabilize worst-case playback.",
+        "howToFix": "Reduce overclustered regions, trim hidden deformation keys, and simplify weighted areas where fidelity is not visible.",
+        "howToVerify": "Run optimization preview, compare proof cards, and confirm visual quality in the highlighted mesh overlay."
+      }
+    },
+    "states": {
+      "loadError": {
+        "title": "Could not load current asset",
+        "actions": {
+          "retry": "Retry load",
+          "dismiss": "Dismiss"
+        }
+      },
+      "loading": {
+        "title": "Loading mesh metrics",
+        "description": "Scanning mesh attachments, vertices, and deformation ranges."
+      },
+      "partialNoJson": {
+        "title": "Partial parse: no JSON source",
+        "description": "Optimization actions are limited because this asset has no JSON skeleton file."
+      },
+      "noMeshes": {
+        "title": "No mesh attachments detected",
+        "description": "This skeleton currently has no mesh attachments in draw order. You can still inspect Draw Calls and Atlas routes.",
+        "actions": {
+          "openDrawCalls": "Open Draw Calls"
+        }
+      }
     }
   },
   "appErrorBoundary": {
@@ -904,8 +1054,10 @@
         "pathRemoved": "Path constraints removed",
         "physicsRemoved": "Physics constraints removed",
         "affectedBones": "Affected bones",
-        "sampleRate": "Sample rate"
-      }
+        "sampleRate": "Sample rate",
+        "sampleRateValue": "{{value}} fps"
+      },
+      "description": "Constraint-baked skeleton"
     }
   },
   "controls": {
@@ -945,6 +1097,79 @@
     "empty": {
       "title": "Load an asset to inspect draw calls",
       "hint": "Select an asset and click Load to begin live inspection"
+    },
+    "actions": {
+      "clearPageFilter": "Clear page filter"
+    },
+    "infoPanel": {
+      "emptyTitle": "Select a draw-call row",
+      "emptyDescription": "Hover or click a row to inspect attachment details here without covering the list."
+    },
+    "insight": {
+      "title": "Slot #{{index}}: {{attachment}}",
+      "subtitle": "{{atlasPage}} • {{blendMode}}",
+      "sample": "{{slotName}} is now driving this explainer. Hover previews, click to pin, and Esc closes.",
+      "metrics": {
+        "drawCalls": {
+          "label": "Draw Calls",
+          "note": "Total calls in current draw order"
+        },
+        "pageBreaks": {
+          "label": "Page Breaks",
+          "breakNote": "Current row introduces a break",
+          "stableNote": "Current row keeps batching stable"
+        },
+        "blendBreaks": {
+          "label": "Blend Breaks",
+          "normalNote": "Normal blend batching path",
+          "riskNote": "Non-normal blend mode split risk"
+        }
+      },
+      "quickActions": {
+        "filterPage": {
+          "label": "Fix now: filter page {{page}}",
+          "impact": "Expected impact: isolate contiguous runs to reveal merge opportunities."
+        },
+        "isolate": {
+          "label": "Fix now: isolate selected draw call",
+          "impact": "Expected impact: immediate visual verification on canvas."
+        },
+        "atlasSuggestion": {
+          "label": "Fix now: atlas grouping suggestion",
+          "impact": "Expected impact: reduce page transitions with grouped pack targets."
+        }
+      },
+      "explainer": {
+        "what": "This row draws \"{{attachment}}\" from \"{{atlasPage}}\" with \"{{blendMode}}\" blend.",
+        "whyNowBreak": "It currently causes a batch break, so the frame is paying an extra draw call.",
+        "whyNowStable": "It is part of a stable batch, so changes here should preserve existing ordering and blend behavior.",
+        "howToFix": "Group adjacent regions onto the same atlas page and normalize blend mode where artist intent allows. Keep draw order blocks contiguous for shared materials.",
+        "howToVerify": "Re-run this route and confirm lower page/blend break counts. Keep the selected row pinned and compare before/after proof cards."
+      }
+    },
+    "states": {
+      "loadError": {
+        "title": "Could not load current asset",
+        "actions": {
+          "retry": "Retry load",
+          "dismiss": "Dismiss"
+        }
+      },
+      "loading": {
+        "title": "Loading draw-call metrics",
+        "description": "Parsing slots, blend modes, and atlas-page transitions."
+      },
+      "partial": {
+        "title": "Partial parse detected",
+        "description": "Some rows resolve to unknown atlas pages. You can still inspect order and blend breaks.",
+        "actions": {
+          "reloadSelectedAsset": "Reload selected asset"
+        }
+      },
+      "noDrawableRows": {
+        "title": "No drawable rows found",
+        "description": "The skeleton loaded, but no drawable region/mesh attachments are currently active."
+      }
     }
   },
   "atlasRepack": {
@@ -966,10 +1191,154 @@
     "empty": {
       "title": "加载资源以检查图集页面",
       "hint": "选择资源并点击加载，查看图集区域及其对 draw calls 的影响"
+    },
+    "actions": {
+      "clearPageFilter": "Clear page filter",
+      "problematicOnly": "Problematic only"
+    },
+    "infoPanel": {
+      "emptyTitle": "Select an atlas region",
+      "emptyDescription": "Hover or click a region to inspect packing and break-risk details here."
+    },
+    "insight": {
+      "title": "{{regionName}}",
+      "subtitle": "{{pageName}} • {{width}}×{{height}}",
+      "sample": "{{regionName}} is now driving this explainer. Hover previews, click to pin, and Esc closes.",
+      "metrics": {
+        "page": {
+          "label": "Atlas Page",
+          "note": "Region occupies approximately {{pageShare}}% of this page footprint."
+        },
+        "breakRisk": {
+          "label": "Break Risk",
+          "high": "High",
+          "low": "Low",
+          "problematicNote": "Current region is involved in draw call breaks.",
+          "stableNote": "Current region is currently batching safely."
+        },
+        "regionSize": {
+          "label": "Region Size",
+          "note": "Use this to evaluate whether grouping opportunities are realistic."
+        }
+      },
+      "quickActions": {
+        "filterProblematic": {
+          "label": "Fix now: filter problematic regions",
+          "impact": "Expected impact: isolate break-causing regions first."
+        },
+        "isolatePage": {
+          "label": "Fix now: isolate page {{pageName}}",
+          "impact": "Expected impact: tighter packing decisions with less visual noise."
+        },
+        "jumpDrawCalls": {
+          "label": "Fix now: jump to Draw Calls",
+          "impact": "Expected impact: validate page break reduction on slot order."
+        }
+      },
+      "explainer": {
+        "what": "This region \"{{regionName}}\" is packed on atlas page \"{{pageName}}\".",
+        "whyNowProblematic": "It aligns with current draw-call break points and is a prime target for immediate batching wins.",
+        "whyNowStable": "It is currently stable but still useful for validating future packing changes.",
+        "howToFix": "Group regions that render sequentially onto the same page, prioritize high-frequency slots, and repack to reduce cross-page transitions.",
+        "howToVerify": "Return to Draw Calls route and confirm lower page-break count while the retained selection stays focused on this region."
+      }
+    },
+    "states": {
+      "loadError": {
+        "title": "Could not load current asset",
+        "actions": {
+          "retry": "Retry load",
+          "dismiss": "Dismiss"
+        }
+      },
+      "loading": {
+        "title": "Loading atlas metrics",
+        "description": "Scanning pages, regions, and draw-call break hotspots."
+      },
+      "partial": {
+        "title": "Partial parse detected",
+        "missingImages": "{{count}} atlas page image(s) could not be decoded. Region overlays still work.",
+        "noPages": "No atlas pages were extracted. Confirm atlas references and retry load.",
+        "actions": {
+          "reloadSelectedAsset": "Reload selected asset"
+        }
+      }
     }
   },
   "comparison": {
-    "selectAsset": "选择资源..."
+    "selectAsset": "选择资源...",
+    "subtitle": "Load two assets and compare behavior with synchronized camera and playback.",
+    "summary": {
+      "paneA": "Pane A",
+      "paneB": "Pane B",
+      "sharedAnimations": "Shared Anims",
+      "sync": "Sync"
+    },
+    "actionRow": {
+      "title": "Side-by-side comparison",
+      "description": "Pane A and B are camera-synced with a shared animation selector."
+    },
+    "actions": {
+      "pickLeft": "Pick Left",
+      "pickRight": "Pick Right"
+    },
+    "status": {
+      "title": "Comparison status",
+      "headers": {
+        "check": "Check",
+        "result": "Result"
+      },
+      "animationIntersection": "animation intersection",
+      "nameCount": "{{count}} names",
+      "cameraSync": "camera sync",
+      "cameraSyncEnabled": "zoom + pan shared",
+      "cameraSyncNeedsBoth": "load both panes",
+      "playbackLock": "playback lock",
+      "playbackEnabled": "enabled",
+      "playbackPaused": "paused"
+    },
+    "differences": {
+      "title": "Differences detected",
+      "summary": "Draw calls: A {{drawCallsA}} vs B {{drawCallsB}} • Texture pages: A {{texturesA}} vs B {{texturesB}}",
+      "nextAction": "Next action"
+    },
+    "nextActions": {
+      "loadBothPanes": "Load both panes with related assets",
+      "enableSharedPlayback": "Enable shared playback and pick a common animation",
+      "useFollowUpRoutes": "Use Draw Calls and Atlas routes for retained selection follow-up",
+      "switchToAnimation": "Switch to {{animation}}",
+      "sharedAnimationFallback": "a shared animation",
+      "inspectPaneA": "Inspect high-cost layer on pane A for break sources",
+      "inspectPaneB": "Inspect high-cost layer on pane B for break sources",
+      "useAtlasSuggestion": "Use atlas repack suggestion to reduce page transitions"
+    },
+    "panes": {
+      "assetA": "Asset A",
+      "assetB": "Asset B"
+    },
+    "shared": {
+      "sharedPlayback": "Shared playback",
+      "playbackPaused": "Playback paused",
+      "loop": "Loop {{value}}",
+      "cameraSync": "Camera Sync",
+      "noSharedAnimations": "No shared animations",
+      "commonAnimations": "Common anims: {{count}}"
+    },
+    "badges": {
+      "unavailable": "{{pane}} --",
+      "resolution": "{{pane}} {{width}}×{{height}}"
+    },
+    "statusValues": {
+      "loading": "Loading",
+      "loaded": "Loaded",
+      "empty": "Empty",
+      "on": "On",
+      "off": "Off"
+    },
+    "selectAssetForPane": "{{selectAsset}} — {{pane}}",
+    "assetCard": {
+      "summary": "{{count}} files · {{size}}"
+    }
   },
   "toolRouteControls": {
     "title": "Tool Inputs",
@@ -980,7 +1349,8 @@
     },
     "values": {
       "noAssets": "No assets available",
-      "noAtlas": "No atlas in asset"
+      "noAtlas": "No atlas in asset",
+      "assetFileCount": "{{count}} files"
     },
     "actions": {
       "openPicker": "Asset Picker",
@@ -989,7 +1359,8 @@
       "importing": "Importing...",
       "cancel": "Cancel",
       "loadSelected": "Load Selected",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "copySmartLink": "Copy smart link"
     },
     "dropzone": {
       "title": "Drag & drop your Spine files here",
@@ -1007,6 +1378,84 @@
       "incompleteBundle": "Bundle is incomplete. Add skeleton, atlas, and required images.",
       "missingAtlasImages": "Missing {{count}} atlas-referenced images.",
       "uploadFailed": "Bundle upload failed."
+    },
+    "tabs": {
+      "assetOptions": "Asset options",
+      "importSource": "Import source",
+      "fromFile": "From File",
+      "fromUrl": "From URL"
+    },
+    "url": {
+      "imageUrlsLabel": "Image URLs (one per line, optional)",
+      "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png"
+    },
+    "status": {
+      "smartLinkCopied": "Smart link copied.",
+      "smartLinkCopyFailed": "Could not copy smart link."
+    }
+  },
+  "animationHeatmap": {
+    "subtitle": "Analyze all frames to find spikes in draw calls, textures, and blend breaks.",
+    "actions": {
+      "analyzeAll": "Analyze All Animations",
+      "analyzing": "Analyzing..."
+    },
+    "animationMeta": "{{duration}}s / {{frames}} frames",
+    "empty": {
+      "title": "Animation Performance",
+      "hint": "Click \"Analyze All Animations\" to sample every frame and generate performance charts showing draw call, texture, and blend break costs over time.",
+      "loadHint": "Load a Spine asset to analyze animation performance frame-by-frame."
+    },
+    "frameDetail": {
+      "frameTitle": "Frame #{{index}}",
+      "time": "{{time}}s",
+      "drawCalls": "DC: {{value}}",
+      "textures": "TX: {{value}}",
+      "blendBreaks": "BB: {{value}}",
+      "pageBreaks": "PB: {{value}}",
+      "slot": "Slot",
+      "page": "Page",
+      "blend": "Blend",
+      "break": "Break"
+    },
+    "legend": {
+      "metricRange": "{{label}}: {{min}}-{{max}} (avg {{avg}})"
+    },
+    "tooltip": {
+      "frame": "#{{index}} ({{time}}s)",
+      "metric": "{{label}}: {{value}}",
+      "pageBreaks": "PB: {{value}}",
+      "visibleSlots": "Slots: {{value}}"
+    }
+  },
+  "assets": {
+    "subtitle": "Import, validate, and manage reusable Spine bundles."
+  },
+  "documentation": {
+    "subtitle": "Quick links to guides and references used by animators and game teams.",
+    "actions": {
+      "externalHint": "Resources are external links and open in a new tab.",
+      "openDocs": "Open Docs"
+    },
+    "cards": {
+      "officialResources": "Official resources",
+      "unavailableTitle": "If links are unavailable",
+      "unavailableDescription": "Documentation links are currently unavailable. Please try again later."
+    }
+  },
+  "partners": {
+    "subtitle": "Trusted tools and ecosystems that help Spine teams ship faster.",
+    "actions": {
+      "externalHint": "Partner links open in a new tab.",
+      "viewPartners": "View Partners"
+    },
+    "cards": {
+      "ecosystemLinks": "Ecosystem links",
+      "unavailableTitle": "If partner config is unavailable",
+      "unavailableDescription": "Partner links are currently unavailable. Please check back soon."
+    },
+    "links": {
+      "pixi": "PixiJS"
     }
   }
 }

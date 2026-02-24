@@ -127,13 +127,13 @@ export function DrawCallInspectorRouteView() {
   const jumpChips = useMemo(() => [
     {
       id: 'draw-route',
-      label: 'Draw Calls',
+      label: t('ui.routeJumps.drawCalls'),
       active: true,
       onSelect: () => {},
     },
     {
       id: 'mesh-route',
-      label: 'Mesh',
+      label: t('ui.routeJumps.mesh'),
       active: false,
       onSelect: () => {
         void navigate({ to: '/tools/mesh-optimizer' });
@@ -141,17 +141,17 @@ export function DrawCallInspectorRouteView() {
     },
     {
       id: 'atlas-route',
-      label: 'Atlas',
+      label: t('ui.routeJumps.atlas'),
       active: false,
       onSelect: () => {
         void navigate({ to: '/tools/atlas-repack' });
       },
     },
-  ], [navigate]);
+  ], [navigate, t]);
 
   const selectionHint = routeSelection.attachmentName
-    ? `Selection retained: ${routeSelection.attachmentName}`
-    : 'Selection retained across Draw, Mesh, and Atlas routes.';
+    ? t('ui.routeJumps.selectionRetainedNamed', { name: routeSelection.attachmentName })
+    : t('ui.routeJumps.selectionRetained');
 
   const handleSlotClick = useCallback((slot: LiveSlotInfo) => {
     if (selectedSlotIndex === slot.index) {
@@ -193,45 +193,49 @@ export function DrawCallInspectorRouteView() {
 
     return {
       id: `draw-${activeSlot.index}`,
-      title: `Slot #${activeSlot.index}: ${activeSlot.attachmentName}`,
-      subtitle: `${activeSlot.atlasPage} • ${activeSlot.blendMode}`,
-      sample: `${activeSlot.slotName} is now driving this explainer. Hover previews, click to pin, and Esc closes.`,
+      title: t('drawCallInspector.insight.title', { index: activeSlot.index, attachment: activeSlot.attachmentName }),
+      subtitle: t('drawCallInspector.insight.subtitle', { atlasPage: activeSlot.atlasPage, blendMode: activeSlot.blendMode }),
+      sample: t('drawCallInspector.insight.sample', { slotName: activeSlot.slotName }),
       metrics: [
         {
           id: 'draw-calls',
-          label: 'Draw Calls',
+          label: t('drawCallInspector.insight.metrics.drawCalls.label'),
           value: `${snapshot.drawCallCount}`,
-          note: 'Total calls in current draw order',
+          note: t('drawCallInspector.insight.metrics.drawCalls.note'),
           tone: snapshot.drawCallCount > 8 ? 'warning' : 'positive',
         },
         {
           id: 'page-breaks',
-          label: 'Page Breaks',
+          label: t('drawCallInspector.insight.metrics.pageBreaks.label'),
           value: `${snapshot.pageBreaks}`,
-          note: activeSlot.isBreak ? 'Current row introduces a break' : 'Current row keeps batching stable',
+          note: activeSlot.isBreak
+            ? t('drawCallInspector.insight.metrics.pageBreaks.breakNote')
+            : t('drawCallInspector.insight.metrics.pageBreaks.stableNote'),
           tone: activeSlot.isBreak ? 'danger' : 'positive',
         },
         {
           id: 'blend-breaks',
-          label: 'Blend Breaks',
+          label: t('drawCallInspector.insight.metrics.blendBreaks.label'),
           value: `${snapshot.blendBreaks}`,
-          note: activeSlot.blendMode === 'Normal' ? 'Normal blend batching path' : 'Non-normal blend mode split risk',
+          note: activeSlot.blendMode === 'Normal'
+            ? t('drawCallInspector.insight.metrics.blendBreaks.normalNote')
+            : t('drawCallInspector.insight.metrics.blendBreaks.riskNote'),
           tone: activeSlot.blendMode === 'Normal' ? 'neutral' : 'warning',
         },
       ],
       quickActions: [
         {
           id: 'filter-page',
-          label: `Fix now: filter page ${activeSlot.atlasPage}`,
-          impact: 'Expected impact: isolate contiguous runs to reveal merge opportunities.',
+          label: t('drawCallInspector.insight.quickActions.filterPage.label', { page: activeSlot.atlasPage }),
+          impact: t('drawCallInspector.insight.quickActions.filterPage.impact'),
           onRun: () => {
             setAtlasPageFilter(activeSlot.atlasPage);
           },
         },
         {
           id: 'isolate-slot',
-          label: 'Fix now: isolate selected draw call',
-          impact: 'Expected impact: immediate visual verification on canvas.',
+          label: t('drawCallInspector.insight.quickActions.isolate.label'),
+          impact: t('drawCallInspector.insight.quickActions.isolate.impact'),
           onRun: () => {
             setSelectedSlotIndex(activeSlot.index);
             setSlotHighlight(activeSlot.index);
@@ -239,8 +243,8 @@ export function DrawCallInspectorRouteView() {
         },
         {
           id: 'atlas-suggest',
-          label: 'Fix now: atlas grouping suggestion',
-          impact: 'Expected impact: reduce page transitions with grouped pack targets.',
+          label: t('drawCallInspector.insight.quickActions.atlasSuggestion.label'),
+          impact: t('drawCallInspector.insight.quickActions.atlasSuggestion.impact'),
           onRun: () => {
             setRouteSelection({
               sourceRoute: 'draw-call-inspector',
@@ -255,42 +259,56 @@ export function DrawCallInspectorRouteView() {
         },
       ],
       proofBlocks: [
-        { id: 'calls', label: 'calls', delta: expectedCallDelta, tone: activeSlot.isBreak ? 'positive' : 'neutral' },
-        { id: 'verts', label: 'verts', delta: expectedVertexDrop, tone: 'info' },
-        { id: 'breaks', label: 'breaks', delta: expectedBreakDelta, tone: activeSlot.isBreak ? 'positive' : 'neutral' },
+        {
+          id: 'calls',
+          label: t('ui.insights.proof.calls'),
+          delta: expectedCallDelta,
+          tone: activeSlot.isBreak ? 'positive' : 'neutral',
+        },
+        { id: 'verts', label: t('ui.insights.proof.verts'), delta: expectedVertexDrop, tone: 'info' },
+        {
+          id: 'breaks',
+          label: t('ui.insights.proof.breaks'),
+          delta: expectedBreakDelta,
+          tone: activeSlot.isBreak ? 'positive' : 'neutral',
+        },
       ],
       jumpChips: [
         {
           id: 'jump-draw',
-          label: 'Draw Calls',
+          label: t('ui.routeJumps.drawCalls'),
           active: true,
           onJump: () => {},
         },
         {
           id: 'jump-mesh',
-          label: 'Mesh',
+          label: t('ui.routeJumps.mesh'),
           onJump: () => {
             void navigate({ to: '/tools/mesh-optimizer' });
           },
         },
         {
           id: 'jump-atlas',
-          label: 'Atlas',
+          label: t('ui.routeJumps.atlas'),
           onJump: () => {
             void navigate({ to: '/tools/atlas-repack' });
           },
         },
       ],
       explainer: {
-        what: `This row draws "${activeSlot.attachmentName}" from "${activeSlot.atlasPage}" with "${activeSlot.blendMode}" blend.`,
+        what: t('drawCallInspector.insight.explainer.what', {
+          attachment: activeSlot.attachmentName,
+          atlasPage: activeSlot.atlasPage,
+          blendMode: activeSlot.blendMode,
+        }),
         whyNow: activeSlot.isBreak
-          ? 'It currently causes a batch break, so the frame is paying an extra draw call.'
-          : 'It is part of a stable batch, so changes here should preserve existing ordering and blend behavior.',
-        howToFix: 'Group adjacent regions onto the same atlas page and normalize blend mode where artist intent allows. Keep draw order blocks contiguous for shared materials.',
-        howToVerify: 'Re-run this route and confirm lower page/blend break counts. Keep the selected row pinned and compare before/after proof cards.',
+          ? t('drawCallInspector.insight.explainer.whyNowBreak')
+          : t('drawCallInspector.insight.explainer.whyNowStable'),
+        howToFix: t('drawCallInspector.insight.explainer.howToFix'),
+        howToVerify: t('drawCallInspector.insight.explainer.howToVerify'),
       },
     };
-  }, [activeSlot, snapshot.drawCallCount, snapshot.pageBreaks, snapshot.blendBreaks, navigate, setRouteSelection, setSlotHighlight]);
+  }, [activeSlot, snapshot.drawCallCount, snapshot.pageBreaks, snapshot.blendBreaks, navigate, setRouteSelection, setSlotHighlight, t]);
 
   const handleLoadSelected = async () => {
     setIsLoadingSelected(true);
@@ -321,7 +339,7 @@ export function DrawCallInspectorRouteView() {
     <div className="route-workspace">
       <RouteHeaderCard
         title={t('dashboard.tools.drawCallInspector')}
-        subtitle="Find slot ordering and blend/page breaks that increase draw calls."
+        subtitle={t('drawCallInspector.subtitle')}
       />
       <ToolRouteControls
         minimal
@@ -341,11 +359,11 @@ export function DrawCallInspectorRouteView() {
           {lastLoadError && (
             <RouteStateCallout
               kind="error"
-              title="Could not load current asset"
+              title={t('drawCallInspector.states.loadError.title')}
               description={lastLoadError}
               actions={[
-                { id: 'retry', label: 'Retry load', onClick: () => void handleLoadSelected(), variant: 'primary' },
-                { id: 'dismiss', label: 'Dismiss', onClick: clearLastLoadError, variant: 'secondary' },
+                { id: 'retry', label: t('drawCallInspector.states.loadError.actions.retry'), onClick: () => void handleLoadSelected(), variant: 'primary' },
+                { id: 'dismiss', label: t('drawCallInspector.states.loadError.actions.dismiss'), onClick: clearLastLoadError, variant: 'secondary' },
               ]}
             />
           )}
@@ -353,8 +371,8 @@ export function DrawCallInspectorRouteView() {
           {!lastLoadError && isAnyLoading && (
             <RouteStateCallout
               kind="loading"
-              title="Loading draw-call metrics"
-              description="Parsing slots, blend modes, and atlas-page transitions."
+              title={t('drawCallInspector.states.loading.title')}
+              description={t('drawCallInspector.states.loading.description')}
             />
           )}
 
@@ -393,12 +411,12 @@ export function DrawCallInspectorRouteView() {
               {isPartialParse && (
                 <RouteStateCallout
                   kind="partial"
-                  title="Partial parse detected"
-                  description="Some rows resolve to unknown atlas pages. You can still inspect order and blend breaks."
+                  title={t('drawCallInspector.states.partial.title')}
+                  description={t('drawCallInspector.states.partial.description')}
                   actions={[
                     {
                       id: 'partial-reload',
-                      label: 'Reload selected asset',
+                      label: t('drawCallInspector.states.partial.actions.reloadSelectedAsset'),
                       onClick: () => void handleLoadSelected(),
                       variant: 'secondary',
                     },
@@ -421,7 +439,7 @@ export function DrawCallInspectorRouteView() {
                     className="secondary-btn"
                     onClick={() => setAtlasPageFilter(null)}
                   >
-                    Clear page filter
+                    {t('drawCallInspector.actions.clearPageFilter')}
                   </button>
                 )}
               </div>
@@ -480,10 +498,15 @@ export function DrawCallInspectorRouteView() {
           {!lastLoadError && !isAnyLoading && spineInstance && hasEmptyData && (
             <RouteStateCallout
               kind="partial"
-              title="No drawable rows found"
-              description="The skeleton loaded, but no drawable region/mesh attachments are currently active."
+              title={t('drawCallInspector.states.noDrawableRows.title')}
+              description={t('drawCallInspector.states.noDrawableRows.description')}
               actions={[
-                { id: 'reload-empty', label: 'Reload selected asset', onClick: () => void handleLoadSelected(), variant: 'secondary' },
+                {
+                  id: 'reload-empty',
+                  label: t('drawCallInspector.states.partial.actions.reloadSelectedAsset'),
+                  onClick: () => void handleLoadSelected(),
+                  variant: 'secondary',
+                },
               ]}
             />
           )}
@@ -532,8 +555,8 @@ export function DrawCallInspectorRouteView() {
               />
             ) : (
               <div className="tool-info-empty">
-                <h3>Select a draw-call row</h3>
-                <p>Hover or click a row to inspect attachment details here without covering the list.</p>
+                <h3>{t('drawCallInspector.infoPanel.emptyTitle')}</h3>
+                <p>{t('drawCallInspector.infoPanel.emptyDescription')}</p>
               </div>
             )}
           </div>

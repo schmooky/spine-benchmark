@@ -91,7 +91,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
   );
   const isPendingBundleComplete = completeness.hasSkeleton && completeness.hasAtlas && completeness.hasImages && missingAtlasImages.length === 0;
   const selectedAssetMeta = selectedAsset
-    ? `${selectedAsset.fileCount} files`
+    ? t('toolRouteControls.values.assetFileCount', { count: selectedAsset.fileCount })
     : t('toolRouteControls.values.noAssets');
   const parsedImageUrls = useMemo(() => parseImageUrlList(imageUrlsText), [imageUrlsText]);
 
@@ -292,7 +292,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
               </button>
             </div>
 
-            <div className="tool-modal-tabs" role="tablist" aria-label="Asset options">
+            <div className="tool-modal-tabs" role="tablist" aria-label={t('toolRouteControls.tabs.assetOptions')}>
               <button
                 type="button"
                 role="tab"
@@ -335,7 +335,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                         </div>
                         <div className="tool-asset-card-copy">
                           <h3>{asset.name}</h3>
-                          <p>{asset.fileCount} files</p>
+                          <p>{t('toolRouteControls.values.assetFileCount', { count: asset.fileCount })}</p>
                         </div>
                       </button>
                     ))}
@@ -359,7 +359,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
 
               {activeTab === 'import' && (
                 <>
-                  <div className="tool-import-tabs" role="tablist" aria-label="Import source">
+                  <div className="tool-import-tabs" role="tablist" aria-label={t('toolRouteControls.tabs.importSource')}>
                     <button
                       type="button"
                       role="tab"
@@ -367,7 +367,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                       aria-selected={importSource === 'file'}
                       onClick={() => setImportSource('file')}
                     >
-                      From File
+                      {t('toolRouteControls.tabs.fromFile')}
                     </button>
                     {onLoadFromUrl && (
                       <button
@@ -377,7 +377,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                         aria-selected={importSource === 'url'}
                         onClick={() => setImportSource('url')}
                       >
-                        From URL
+                        {t('toolRouteControls.tabs.fromUrl')}
                       </button>
                     )}
                   </div>
@@ -409,13 +409,13 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                           />
                         </div>
                         <div className="form-group">
-                          <label htmlFor="tool-image-urls">Image URLs (one per line, optional)</label>
+                          <label htmlFor="tool-image-urls">{t('toolRouteControls.url.imageUrlsLabel')}</label>
                           <textarea
                             id="tool-image-urls"
                             className="tool-url-textarea"
                             value={imageUrlsText}
                             onChange={(event) => setImageUrlsText(event.target.value)}
-                            placeholder={`https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png`}
+                            placeholder={t('toolRouteControls.url.imageUrlsPlaceholder')}
                           />
                         </div>
                         <div className="tool-url-actions">
@@ -438,7 +438,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                             onClick={() => void handleCopySmartLink()}
                             disabled={isLoadingFromUrl || !jsonUrl.trim() || !atlasUrl.trim()}
                           >
-                            Copy smart link
+                            {t('toolRouteControls.actions.copySmartLink')}
                           </button>
                           <button
                             type="button"
@@ -451,7 +451,9 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
                         </div>
                         {smartLinkState !== 'idle' && (
                           <p className={`tool-url-status ${smartLinkState}`}>
-                            {smartLinkState === 'copied' ? 'Smart link copied.' : 'Could not copy smart link.'}
+                            {smartLinkState === 'copied'
+                              ? t('toolRouteControls.status.smartLinkCopied')
+                              : t('toolRouteControls.status.smartLinkCopyFailed')}
                           </p>
                         )}
                       </div>

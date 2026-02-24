@@ -1,8 +1,10 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from './ToastContext';
 
 export const useFileProcessor = () => {
   const { addToast } = useToast();
+  const { t } = useTranslation();
 
   const processDroppedFiles = useCallback(async (items: DataTransferItemList): Promise<File[]> => {
     const fileList: File[] = [];
@@ -59,14 +61,14 @@ export const useFileProcessor = () => {
             fileList.push(...dirFiles);
           } catch (error) {
             console.error('Error reading directory:', error);
-            addToast('Failed to read directory contents', 'error');
+            addToast(t('error.readDirectoryFailed'), 'error');
           }
         }
       }
     }
     
     return fileList;
-  }, [addToast]);
+  }, [addToast, t]);
 
   const collectFilesFromDataTransfer = useCallback(async (dataTransfer: DataTransfer): Promise<File[]> => {
     const items = dataTransfer.items;

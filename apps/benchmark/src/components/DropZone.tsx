@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useToast } from '../hooks/ToastContext';
+import { FolderOpenIcon } from './Icons';
 
 interface DropZoneProps {
   onFilesDrop: (files: FileList) => void;
@@ -8,7 +8,6 @@ interface DropZoneProps {
 
 export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
   const { t } = useTranslation();
-  const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -92,7 +91,9 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesDrop }) => {
         style={{ display: 'none' }}
       />
       <div className="drop-zone-content">
-        <div className="drop-zone-icon">📁</div>
+        <div className="drop-zone-icon">
+          <FolderOpenIcon />
+        </div>
         <p>{t('ui.dropFilesHere')}</p>
         <p className="drop-zone-subtext">
           {t('ui.supportedFormats')}

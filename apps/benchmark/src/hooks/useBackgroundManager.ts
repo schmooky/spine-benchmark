@@ -1,5 +1,6 @@
 import { Application } from 'pixi.js';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BackgroundManager } from '../core/BackgroundManager';
 import { useToast } from './ToastContext';
 
@@ -13,6 +14,7 @@ export function useBackgroundManager(app: Application | null) {
   const backgroundManagerRef = useRef<BackgroundManager | null>(null);
   const [hasBackground, setHasBackground] = useState(false);
   const { addToast } = useToast();
+  const { t } = useTranslation();
 
   // Initialize background manager when app changes
   useEffect(() => {
@@ -36,17 +38,20 @@ export function useBackgroundManager(app: Application | null) {
    */
   const setBackgroundImage = async (base64Data: string) => {
     if (!backgroundManagerRef.current) {
-      addToast('Background manager not initialized', 'error');
+      addToast(t('ui.background.notInitialized'), 'error');
       return;
     }
     
     try {
       await backgroundManagerRef.current.setBackgroundImage(base64Data);
       setHasBackground(true);
-      addToast('Background image set successfully', 'success');
+      addToast(t('ui.background.setSuccess'), 'success');
     } catch (error) {
       console.error('Error setting background image:', error);
-      addToast(`Error setting background image: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      addToast(
+        t('ui.background.setFailed', { error: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }),
+        'error',
+      );
     }
   };
 
@@ -60,7 +65,7 @@ export function useBackgroundManager(app: Application | null) {
     
     backgroundManagerRef.current.clearBackground();
     setHasBackground(false);
-    addToast('Background image removed', 'info');
+    addToast(t('ui.background.removed'), 'info');
   };
 
   return {

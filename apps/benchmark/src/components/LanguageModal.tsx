@@ -2,16 +2,17 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import './LanguageModal.css';
 import { tIndexed } from '../utils/indexedMessage';
+import { XMarkIcon } from './Icons';
 
 const languages = [
-  { code: 'en', name: 'English' },
-  { code: 'ru', name: 'Русский' },
-  { code: 'zh', name: '繁體中文' },
-  { code: 'uk', name: 'Українська' },
-  { code: 'fr', name: 'Français' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'pt', name: 'Português (Brasil)' },
-  { code: 'es', name: 'Español' },
+  { code: 'en', labelKey: 'dashboard.languages.en' },
+  { code: 'ru', labelKey: 'dashboard.languages.ru' },
+  { code: 'zh', labelKey: 'dashboard.languages.zh' },
+  { code: 'uk', labelKey: 'dashboard.languages.uk' },
+  { code: 'fr', labelKey: 'dashboard.languages.fr' },
+  { code: 'de', labelKey: 'dashboard.languages.de' },
+  { code: 'pt', labelKey: 'dashboard.languages.pt' },
+  { code: 'es', labelKey: 'dashboard.languages.es' },
 ];
 
 interface LanguageModalProps {
@@ -94,7 +95,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
             onClick={onClose}
             aria-label={t('ui.close')}
           >
-            ×
+            <XMarkIcon size={16} />
           </button>
         </div>
         <div className="language-modal-body">
@@ -105,9 +106,9 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
                 ref={index === 0 ? firstLanguageRef : undefined}
                 className={`language-option ${i18n.language === language.code ? 'current' : ''}`}
                 onClick={() => handleLanguageChange(language.code)}
-                aria-label={tIndexed(t, 'commands.language.switchTo', [language.name])}
+                aria-label={tIndexed(t, 'commands.language.switchTo', [t(language.labelKey)])}
               >
-                <span className="language-name">{language.name}</span>
+                <span className="language-name">{t(language.labelKey)}</span>
                 {i18n.language === language.code && (
                   <span className="language-current-indicator">✓</span>
                 )}
