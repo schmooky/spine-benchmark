@@ -41,7 +41,11 @@ export interface WorkbenchContextValue {
   onLoadOptimizedFiles: (files: File[]) => Promise<void>;
   uploadBundleFiles: (files: File[]) => Promise<void>;
   setShowUrlModal: React.Dispatch<React.SetStateAction<boolean>>;
-  loadFromUrls: (jsonUrl: string, atlasUrl: string) => Promise<void>;
+  loadFromUrls: (
+    jsonUrl: string,
+    atlasUrl: string,
+    options?: { imageUrls?: string[] },
+  ) => Promise<void>;
   toggleMeshes: (visible?: boolean) => void;
   togglePhysics: (visible?: boolean) => void;
   toggleIk: (visible?: boolean) => void;

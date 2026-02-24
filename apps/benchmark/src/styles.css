@@ -1456,12 +1456,92 @@ input[type="color"]::-webkit-color-swatch {
 
 .tool-picker-modal {
   width: min(780px, 100%);
+  max-height: min(90vh, 860px);
   border: 1px solid var(--sb-border-strong);
   border-radius: var(--sb-radius-md);
   background: var(--sb-bg-1);
   padding: 16px;
   box-shadow: var(--sb-shadow-overlay);
   animation: sb-scale-in 0.2s var(--sb-ease);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tool-modal-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tool-modal-tab {
+  min-height: 32px;
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-sm);
+  background: var(--sb-bg-0);
+  color: var(--sb-text-secondary);
+  font-family: var(--sb-font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--sb-duration) var(--sb-ease);
+}
+
+.tool-modal-tab:hover {
+  border-color: var(--sb-border-strong);
+  color: var(--sb-text);
+}
+
+.tool-modal-tab.active {
+  border-color: var(--sb-accent);
+  background: var(--sb-accent-dim);
+  color: var(--sb-accent);
+}
+
+.tool-import-tabs {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tool-import-tab {
+  min-height: 30px;
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-sm);
+  background: var(--sb-bg-0);
+  color: var(--sb-text-secondary);
+  font-family: var(--sb-font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--sb-duration) var(--sb-ease);
+}
+
+.tool-import-tab:hover {
+  border-color: var(--sb-border-strong);
+  color: var(--sb-text);
+}
+
+.tool-import-tab.active {
+  border-color: var(--sb-accent);
+  background: var(--sb-accent-dim);
+  color: var(--sb-accent);
+}
+
+.tool-picker-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.tool-library-empty-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .tool-asset-grid {
@@ -1527,10 +1607,32 @@ input[type="color"]::-webkit-color-swatch {
   margin-bottom: 0;
 }
 
+.tool-url-textarea {
+  width: 100%;
+  min-height: 74px;
+  resize: vertical;
+  font-family: var(--sb-font-ui);
+  font-size: 12px;
+}
+
 .tool-url-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.tool-url-status {
+  margin: 0;
+  font-size: 11px;
+  color: var(--sb-text-secondary);
+}
+
+.tool-url-status.copied {
+  color: var(--sb-success);
+}
+
+.tool-url-status.error {
+  color: var(--sb-error);
 }
 
 .tool-asset-list {

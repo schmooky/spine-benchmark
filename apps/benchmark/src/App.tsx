@@ -20,6 +20,7 @@ import { useAppEventHandlers } from './hooks/useAppEventHandlers';
 import { commandRegistry } from './utils/commandRegistry';
 import { tIndexed } from './utils/indexedMessage';
 import { FileProcessor } from './core/utils/fileProcessor';
+import { fetchRemoteAssetBundleFiles } from './utils/remoteAssetBundle';
 import {
   FolderOpen,
   Gauge,
@@ -35,6 +36,7 @@ import {
   StoredAsset,
   assetToFiles,
   saveAsset,
+  getAsset,
   listAssets,
   deleteAsset,
   deriveAssetName
@@ -125,7 +127,6 @@ const App: React.FC = () => {
   const {
     spineInstance,
     loadSpineFiles,
-    loadSpineFromUrls,
     isLoading: spineLoading,
     benchmarkData,
     meshesVisible,
@@ -143,7 +144,34 @@ const App: React.FC = () => {
     setSlotHighlight,
   } = useSpineApp(app);
 
-  const { urlLoadStatus, handleUrlLoad } = useUrlLoad({ app, loadSpineFromUrls });
+  const loadAssetFromRemoteBundle = useCallback(
+    async (
+      jsonUrl: string,
+      atlasUrl: string,
+      options?: { imageUrls?: string[] },
+    ) => {
+      const files = await fetchRemoteAssetBundleFiles(jsonUrl, atlasUrl, {
+        imageUrls: options?.imageUrls,
+      });
+      const assetName = deriveAssetName(files);
+      const savedAsset = await saveAsset(files, assetName);
+      const persisted = await getAsset(savedAsset.id);
+      if (!persisted) {
+        throw new Error('Failed to load persisted remote asset from IndexedDB');
+      }
+
+      const storedAssets = await listAssets();
+      setAssets(storedAssets);
+
+      setSelectedAssetId(persisted.id);
+      setLastLoadError(null);
+      setRouteSelection(DEFAULT_ROUTE_SELECTION);
+      await loadSpineFiles(filesToFileList(assetToFiles(persisted)));
+    },
+    [loadSpineFiles],
+  );
+
+  const { urlLoadStatus, handleUrlLoad } = useUrlLoad({ app, loadAssetFromRemoteBundle });
   const { isAnyLoading, loadingMessage } = useLoadingState(isDropLoading, spineLoading, urlLoadStatus);
 
   const selectedAsset = useMemo(() => {
@@ -595,8 +623,12 @@ const App: React.FC = () => {
     uploadBundleFiles: async (files: File[]) => {
       await handleSpineFiles(filesToFileList(files));
     },
-    loadFromUrls: async (jsonUrl: string, atlasUrl: string) => {
-      await handleUrlLoad(jsonUrl, atlasUrl);
+    loadFromUrls: async (
+      jsonUrl: string,
+      atlasUrl: string,
+      options?: { imageUrls?: string[] },
+    ) => {
+      await handleUrlLoad(jsonUrl, atlasUrl, options);
     },
     toggleMeshes,
     togglePhysics,
