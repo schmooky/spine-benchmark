@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StoredAsset } from '../core/storage/assetStore';
 import { assertCompleteAssetBundle, getAssetBundleCompleteness } from '../core/storage/assetStore';
+import { FolderOpenIcon, LinkIcon, PlayIcon, RabbitIcon } from './Icons';
 
 interface ToolRouteControlsProps {
   assets: StoredAsset[];
@@ -13,6 +14,7 @@ interface ToolRouteControlsProps {
   onUploadBundle?: (files: File[]) => Promise<void>;
   onLoadSelected?: () => Promise<void> | void;
   isLoadingSelected?: boolean;
+  onOpenUrl?: () => void;
   triggerLabel?: string;
   minimal?: boolean;
 }
@@ -27,6 +29,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
   onUploadBundle,
   onLoadSelected,
   isLoadingSelected = false,
+  onOpenUrl,
   triggerLabel,
   minimal = false,
 }) => {
@@ -80,6 +83,7 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
     [requiredAtlasImages, availableImageNames, availableImageBaseNames]
   );
   const isPendingBundleComplete = completeness.hasSkeleton && completeness.hasAtlas && completeness.hasImages && missingAtlasImages.length === 0;
+  const selectedAtlasLabel = selectedAtlasName || atlasOptions[0] || t('toolRouteControls.values.noAtlas');
 
   const mergeFiles = (files: File[]) => {
     if (!files.length) return;
@@ -181,49 +185,55 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
     }
   };
 
-  if (minimal) {
-    return (
-      <section className="tool-route-inline tool-route-minimal">
-        <select
-          className="modern-select"
-          value={selectedAssetId ?? ''}
-          onChange={(event) => setSelectedAssetId(event.target.value)}
-        >
-          {assets.length === 0 ? (
-            <option value="">{t('toolRouteControls.values.noAssets')}</option>
-          ) : (
-            assets.map((asset) => (
-              <option key={asset.id} value={asset.id}>{asset.name}</option>
-            ))
-          )}
-        </select>
-        {onLoadSelected && (
-          <button type="button" className="primary-btn" onClick={() => void onLoadSelected()} disabled={isLoadingSelected}>
-            {isLoadingSelected ? t('toolRouteControls.actions.loading') : t('toolRouteControls.actions.loadSelected')}
-          </button>
-        )}
-      </section>
-    );
-  }
-
   return (
     <>
-      <section className="tool-route-inline">
+      <section className={`tool-route-inline${minimal ? ' tool-route-minimal tool-route-inline-editorial' : ''}`}>
         <div className="tool-route-actions">
-          <button type="button" className="secondary-btn" onClick={() => setIsOpen(true)}>
-            {triggerLabel || t('toolRouteControls.actions.openPicker')}
+          <button
+            type="button"
+            className="secondary-btn tool-route-btn tool-route-btn-open"
+            onClick={() => setIsOpen(true)}
+          >
+            {minimal && <FolderOpenIcon className="tool-route-btn-icon" size={14} />}
+            <span>{triggerLabel || t('toolRouteControls.actions.openPicker')}</span>
           </button>
           {onLoadSelected && (
-            <button type="button" className="primary-btn" onClick={() => void onLoadSelected()} disabled={isLoadingSelected}>
-              {isLoadingSelected ? t('toolRouteControls.actions.loading') : t('toolRouteControls.actions.loadSelected')}
+            <button
+              type="button"
+              className="primary-btn tool-route-btn tool-route-btn-load"
+              onClick={() => void onLoadSelected()}
+              disabled={isLoadingSelected}
+            >
+              {minimal && <PlayIcon className="tool-route-btn-icon" size={14} />}
+              <span>{isLoadingSelected ? t('toolRouteControls.actions.loading') : t('toolRouteControls.actions.loadSelected')}</span>
+            </button>
+          )}
+          {onOpenUrl && (
+            <button
+              type="button"
+              className="secondary-btn tool-route-btn tool-route-btn-url"
+              onClick={onOpenUrl}
+            >
+              {minimal && <LinkIcon className="tool-route-btn-icon" size={14} />}
+              <span>{t('dashboard.actions.loadFromUrl')}</span>
             </button>
           )}
         </div>
-        <p className="subtle-text">
-          {selectedAsset
-            ? t('toolRouteControls.summary', { asset: selectedAsset.name, atlas: selectedAtlasName || t('toolRouteControls.values.noAtlas') })
-            : t('toolRouteControls.values.noAssets')}
-        </p>
+        <div className="tool-route-inline-meta">
+          <span className="tool-route-pill tool-route-pill-asset">
+            {minimal && (
+              <span className="tool-route-pill-icon" aria-hidden="true">
+                <RabbitIcon size={14} />
+              </span>
+            )}
+            <span className="tool-route-pill-label">
+              {selectedAsset ? selectedAsset.name : t('toolRouteControls.values.noAssets')}
+            </span>
+          </span>
+          <span className="tool-route-pill subtle tool-route-pill-atlas">
+            <span className="tool-route-pill-label">{selectedAtlasLabel}</span>
+          </span>
+        </div>
       </section>
 
       {isOpen && (

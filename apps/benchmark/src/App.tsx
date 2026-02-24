@@ -28,12 +28,20 @@ import {
   deleteAsset,
   deriveAssetName
 } from './core/storage/assetStore';
-import { WorkbenchProvider } from './workbench/WorkbenchContext';
+import { RouteSelectionState, WorkbenchProvider } from './workbench/WorkbenchContext';
 
 type OnboardingStep = 'language' | 'intro';
 
 const ONBOARDING_KEY = 'spine-workbench-onboarding-done-v1';
 const DEFAULT_ASSET_KEY = 'spine-workbench-default-seeded-v1';
+const DEFAULT_ROUTE_SELECTION: RouteSelectionState = {
+  sourceRoute: null,
+  slotIndex: null,
+  slotName: null,
+  attachmentName: null,
+  atlasPage: null,
+  updatedAt: 0,
+};
 
 const languageOptions = [
   { code: 'en', labelKey: 'dashboard.languages.en' },
@@ -95,6 +103,8 @@ const App: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('language');
   const [pixelFootprint, setPixelFootprint] = useState<{ width: number; height: number; coverage: number } | null>(null);
+  const [routeSelection, setRouteSelection] = useState<RouteSelectionState>(DEFAULT_ROUTE_SELECTION);
+  const [lastLoadError, setLastLoadError] = useState<string | null>(null);
 
   const { addToast } = useToast();
   const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
@@ -364,7 +374,9 @@ const App: React.FC = () => {
   const handleSpineFiles = useCallback(
     async (files: FileList, options?: { persist?: boolean; assetName?: string; skipNavigate?: boolean }) => {
       if (!fileProcessorRef.current) {
-        addToast(t('error.failedToInitialize', { 0: t('dashboard.messages.notInitialized') }), 'error');
+        const message = t('error.failedToInitialize', { 0: t('dashboard.messages.notInitialized') });
+        addToast(message, 'error');
+        setLastLoadError(message);
         return;
       }
 
@@ -372,6 +384,8 @@ const App: React.FC = () => {
         const processedFiles = await fileProcessorRef.current.handleSpineFiles(files);
         fileProcessorRef.current.validateFiles(processedFiles);
         await loadSpineFiles(processedFiles);
+        setLastLoadError(null);
+        setRouteSelection(DEFAULT_ROUTE_SELECTION);
 
         if (options?.persist !== false) {
           await persistAsset(processedFiles, options?.assetName);
@@ -381,8 +395,10 @@ const App: React.FC = () => {
           void navigate({ to: '/tools/benchmark' });
         }
       } catch (error) {
+        const message = error instanceof Error ? error.message : t('dashboard.messages.unknownError');
+        setLastLoadError(message);
         addToast(
-          t('error.loadingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }),
+          t('error.loadingError', { 0: message }),
           'error'
         );
       }
@@ -461,7 +477,9 @@ const App: React.FC = () => {
       e.currentTarget.classList.remove('highlight');
 
       if (!fileProcessorRef.current) {
-        addToast(t('error.failedToInitialize', { 0: t('dashboard.messages.notInitialized') }), 'error');
+        const message = t('error.failedToInitialize', { 0: t('dashboard.messages.notInitialized') });
+        addToast(message, 'error');
+        setLastLoadError(message);
         return;
       }
 
@@ -486,8 +504,10 @@ const App: React.FC = () => {
         const files = fileProcessorRef.current.convertToFileList(fileList);
         await handleSpineFiles(files);
       } catch (error) {
+        const message = error instanceof Error ? error.message : t('dashboard.messages.unknownError');
+        setLastLoadError(message);
         addToast(
-          t('error.processingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }),
+          t('error.processingError', { 0: message }),
           'error'
         );
       } finally {
@@ -614,7 +634,11 @@ const App: React.FC = () => {
     documentationLinks,
     saveAndLoadOptimizedAsset,
     setHighlightedMeshSlot,
-    setSlotHighlight
+    setSlotHighlight,
+    routeSelection,
+    setRouteSelection,
+    lastLoadError,
+    clearLastLoadError: () => setLastLoadError(null)
   }), [
     spineInstance,
     benchmarkData,
@@ -646,7 +670,9 @@ const App: React.FC = () => {
     handleSpineFiles,
     saveAndLoadOptimizedAsset,
     setHighlightedMeshSlot,
-    setSlotHighlight
+    setSlotHighlight,
+    routeSelection,
+    lastLoadError
   ]);
 
   return (

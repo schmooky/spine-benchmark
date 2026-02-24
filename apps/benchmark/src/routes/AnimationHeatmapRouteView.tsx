@@ -7,6 +7,7 @@ import { ToolRouteControls } from '../components/ToolRouteControls';
 import { useAnimationHeatmap, FrameMetrics, AnimationHeatmapData } from '../hooks/useAnimationHeatmap';
 import { LiveSlotInfo } from '../hooks/useDrawCallInspector';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
+import { RouteHeaderCard } from '../components/RouteHeaderCard';
 
 type MetricKey = 'drawCalls' | 'textures' | 'blendBreaks';
 
@@ -367,6 +368,8 @@ export function AnimationHeatmapRouteView() {
     selectedAssetId,
     setSelectedAssetId,
     loadCurrentAssetIntoBenchmark,
+    setShowUrlModal,
+    uploadBundleFiles,
   } = useWorkbench();
 
   useEffect(() => {
@@ -392,14 +395,20 @@ export function AnimationHeatmapRouteView() {
   };
 
   return (
-    <>
+    <div className="route-workspace">
+      <RouteHeaderCard
+        title={t('dashboard.tools.animationHeatmap')}
+        subtitle="Analyze all frames to find spikes in draw calls, textures, and blend breaks."
+      />
       <ToolRouteControls
         minimal
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
+        onUploadBundle={uploadBundleFiles}
         onLoadSelected={handleLoadSelected}
         isLoadingSelected={isLoadingSelected}
+        onOpenUrl={() => setShowUrlModal(true)}
       />
 
       <div className="heatmap-layout">
@@ -475,6 +484,6 @@ export function AnimationHeatmapRouteView() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

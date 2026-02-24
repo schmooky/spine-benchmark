@@ -5,6 +5,7 @@ import { ToolRouteControls } from '../components/ToolRouteControls';
 import { AnimationControls } from '../components/AnimationControls';
 import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
+import { RouteHeaderCard } from '../components/RouteHeaderCard';
 
 export function AssetsRouteView() {
   const { t } = useTranslation();
@@ -47,7 +48,27 @@ export function AssetsRouteView() {
   };
 
   return (
-    <div className="assets-layout">
+    <div className="route-workspace">
+      <RouteHeaderCard
+        title={t('dashboard.sections.assetLibrary')}
+        subtitle="Import, validate, and manage reusable Spine bundles."
+      />
+
+      <ToolRouteControls
+        minimal
+        assets={assets}
+        selectedAssetId={selectedAssetId}
+        setSelectedAssetId={setSelectedAssetId}
+        atlasOptions={atlasOptions}
+        selectedAtlasName={selectedAtlasName}
+        setSelectedAtlasName={setSelectedAtlasName}
+        onUploadBundle={uploadBundleFiles}
+        onLoadSelected={handleLoadSelected}
+        isLoadingSelected={isLoadingSelected}
+        onOpenUrl={() => setShowUrlModal(true)}
+      />
+
+      <div className="assets-layout">
       {/* Left panel — asset management */}
       <div className="assets-panel" data-tour="asset-library">
         <div className="route-section-header">
@@ -144,6 +165,7 @@ export function AssetsRouteView() {
           {spineInstance && <AnimationControls spineInstance={spineInstance} />}
         </div>
       </div>
+    </div>
     </div>
   );
 }

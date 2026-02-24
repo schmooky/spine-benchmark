@@ -8,6 +8,7 @@ import { useConstraintInspector } from '../hooks/useConstraintInspector';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
 import { assetToFiles } from '../core/storage/assetStore';
 import { bakeConstraints, BakeReport, ConstraintInfo } from '../core/constraintBaker';
+import { RouteHeaderCard } from '../components/RouteHeaderCard';
 
 const TYPE_COLORS: Record<ConstraintInfo['type'], string> = {
   ik: '#22D3EE',
@@ -37,6 +38,8 @@ export function PhysicsBakerRouteView() {
     toggleTransformConstraints,
     togglePathConstraints,
     saveAndLoadOptimizedAsset,
+    setShowUrlModal,
+    uploadBundleFiles,
   } = useWorkbench();
 
   const [selectedConstraintType, setSelectedConstraintType] = useState<ConstraintInfo['type'] | null>(null);
@@ -168,14 +171,20 @@ export function PhysicsBakerRouteView() {
   }, [constraints]);
 
   return (
-    <>
+    <div className="route-workspace">
+      <RouteHeaderCard
+        title={t('dashboard.tools.physicsBaker')}
+        subtitle="Bake constraints into stable keyframes for runtime-friendly playback."
+      />
       <ToolRouteControls
         minimal
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
+        onUploadBundle={uploadBundleFiles}
         onLoadSelected={handleLoadSelected}
         isLoadingSelected={isLoadingSelected}
+        onOpenUrl={() => setShowUrlModal(true)}
       />
 
       <div className="mesh-inspector-layout">
@@ -350,6 +359,6 @@ export function PhysicsBakerRouteView() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

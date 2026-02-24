@@ -10,8 +10,6 @@ import {
   ArrowPathIcon
 } from './Icons';
 import { IconButton } from './IconButton';
-import { ToggleSwitch } from './ToggleSwitch';
-import { ModernSelect } from './ModernSelect';
 
 interface AnimationControlsProps {
   spineInstance: Spine;
@@ -27,7 +25,6 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const [isLooping, setIsLooping] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState<string>('');
   const [animations, setAnimations] = useState<string[]>([]);
-  const [currentTrack, setCurrentTrack] = useState(0);
   const [skins, setSkins] = useState<string[]>([]);
   const [currentSkin, setCurrentSkin] = useState<string>('');
 
@@ -63,7 +60,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const playAnimation = (name: string, loop: boolean = isLooping) => {
     if (!spineInstance) return;
     
-    spineInstance.state.setAnimation(currentTrack, name, loop);
+    spineInstance.state.setAnimation(0, name, loop);
     setCurrentAnimation(name);
     setIsPlaying(true);
     
@@ -89,7 +86,7 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const stopAnimation = () => {
     if (!spineInstance) return;
     
-    spineInstance.state.clearTrack(currentTrack);
+    spineInstance.state.clearTrack(0);
     setIsPlaying(false);
   };
   
@@ -128,67 +125,81 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   
   return (
     <div className="animation-controls">
-      <div className="controls-label">{t('controls.title')}</div>
-      <div className="playback-controls">
+      <div className="animation-controls-row animation-controls-row-playback">
         <IconButton
           icon={<RewindIcon className='flipped'/>}
           onClick={previousAnimation}
           tooltip={t('controls.actions.previous')}
+          className="animation-icon-btn"
         />
         
         <IconButton
           icon={<StopIcon />}
           onClick={stopAnimation}
           tooltip={t('controls.actions.stop')}
+          className="animation-icon-btn"
         />
         
         <IconButton
           icon={isPlaying ? <PauseIcon /> : <PlayIcon />}
           onClick={togglePlay}
           tooltip={isPlaying ? t('controls.actions.pause') : t('controls.actions.play')}
+          className="animation-icon-btn animation-icon-btn-primary"
         />
         
         <IconButton
           icon={<ArrowPathIcon />}
           onClick={rewindAnimation}
           tooltip={t('controls.actions.restart')}
+          className="animation-icon-btn"
         />
         
         <IconButton
           icon={<ForwardIcon />}
           onClick={nextAnimation}
           tooltip={t('controls.actions.next')}
-        />
-      </div>
-      
-      <div className="animation-settings">
-        <ToggleSwitch
-          checked={isLooping}
-          onChange={toggleLoop}
-          label={t('controls.labels.loop')}
-          tooltip={t('controls.labels.loopHint')}
-        />
-        
-        <ModernSelect
-          value={currentAnimation}
-          onChange={(value) => playAnimation(value)}
-          options={animations.map(name => ({
-            value: name,
-            label: name
-          }))}
-          placeholder={t('controls.labels.selectAnimation')}
+          className="animation-icon-btn"
         />
 
+        <div className="animation-controls-spacer" />
+
+        <button
+          type="button"
+          className={`animation-loop-chip${isLooping ? ' active' : ''}`}
+          onClick={toggleLoop}
+          aria-pressed={isLooping}
+        >
+          {t('controls.labels.loop')}
+        </button>
+      </div>
+      
+      <div className="animation-controls-row animation-controls-row-selects">
+        <label className="animation-select-chip">
+          <span className="animation-select-prefix">Animation:</span>
+          <select
+            className="animation-select-native"
+            value={currentAnimation}
+            onChange={(event) => playAnimation(event.target.value)}
+          >
+            {animations.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </label>
+
         {skins.length > 1 && (
-          <ModernSelect
-            value={currentSkin}
-            onChange={switchSkin}
-            options={skins.map(name => ({
-              value: name,
-              label: name
-            }))}
-            placeholder={t('controls.labels.selectSkin')}
-          />
+          <label className="animation-select-chip animation-select-chip-skin">
+            <span className="animation-select-prefix">Skin:</span>
+            <select
+              className="animation-select-native"
+              value={currentSkin}
+              onChange={(event) => switchSkin(event.target.value)}
+            >
+              {skins.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </label>
         )}
       </div>
     </div>

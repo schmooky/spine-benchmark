@@ -117,6 +117,38 @@ export const CogIcon = createIcon(
   </>
 );
 
+export const FolderOpenIcon = createIcon(
+  <>
+    <path d="M3 7a2 2 0 0 1 2-2h4.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <path d="M3 10h18" />
+  </>
+);
+
+export const LinkIcon = createIcon(
+  <>
+    <path d="M10 13a5 5 0 0 1 0-7l1.5-1.5a5 5 0 1 1 7 7L17 13" />
+    <path d="M14 11a5 5 0 0 1 0 7L12.5 19.5a5 5 0 1 1-7-7L7 11" />
+  </>
+);
+
+export const RabbitIcon = createIcon(
+  <>
+    <path d="M9 7c0-2.2.8-4 1.8-4S13 4.8 13 7" />
+    <path d="M12 7c0-2.2.8-4 1.8-4S16 4.8 16 7" />
+    <path d="M5.5 14a6.5 6.5 0 0 1 13 0v2a4.5 4.5 0 0 1-4.5 4.5h-4A4.5 4.5 0 0 1 5.5 16z" />
+    <circle cx="10" cy="14" r=".5" />
+    <circle cx="14" cy="14" r=".5" />
+  </>
+);
+
+export const ChevronDownIcon = createIcon(
+  <path d="M6 9l6 6 6-6" />
+);
+
+export const CheckIcon = createIcon(
+  <path d="M20 6L9 17l-5-5" />
+);
+
 export const TimelineIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />

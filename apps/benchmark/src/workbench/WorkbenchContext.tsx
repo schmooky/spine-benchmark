@@ -3,6 +3,15 @@ import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { SpineAnalysisResult } from '../core/SpineAnalyzer';
 import { StoredAsset } from '../core/storage/assetStore';
 
+export interface RouteSelectionState {
+  sourceRoute: 'benchmark' | 'mesh-optimizer' | 'draw-call-inspector' | 'atlas-repack' | 'physics-baker' | 'comparison' | 'animation-heatmap' | null;
+  slotIndex: number | null;
+  slotName: string | null;
+  attachmentName: string | null;
+  atlasPage: string | null;
+  updatedAt: number;
+}
+
 export interface WorkbenchContextValue {
   spineInstance: Spine | null;
   benchmarkData: SpineAnalysisResult | null;
@@ -43,6 +52,10 @@ export interface WorkbenchContextValue {
   saveAndLoadOptimizedAsset: (files: File[], name: string, description: string) => Promise<void>;
   setHighlightedMeshSlot: (slotName: string | null) => void;
   setSlotHighlight: (slotIndex: number | null) => void;
+  routeSelection: RouteSelectionState;
+  setRouteSelection: React.Dispatch<React.SetStateAction<RouteSelectionState>>;
+  lastLoadError: string | null;
+  clearLastLoadError: () => void;
 }
 
 const WorkbenchContext = createContext<WorkbenchContextValue | null>(null);

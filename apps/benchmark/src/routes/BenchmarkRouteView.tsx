@@ -7,6 +7,7 @@ import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
 import { getStatColor } from '../core/utils/colorUtils';
 import { worstRenderingImpact, worstComputationalImpact } from '../core/utils/scoreCalculator';
+import { RouteHeaderCard } from '../components/RouteHeaderCard';
 
 // Analysis components
 import { Summary } from '../components/analysis/Summary';
@@ -34,6 +35,8 @@ export function BenchmarkRouteView() {
     selectedAssetId,
     setSelectedAssetId,
     loadCurrentAssetIntoBenchmark,
+    setShowUrlModal,
+    uploadBundleFiles,
   } = useWorkbench();
 
   // Re-parent the singleton PIXI canvas into this route's pixi-host div
@@ -61,14 +64,20 @@ export function BenchmarkRouteView() {
     : null;
 
   return (
-    <>
+    <div className="route-workspace">
+      <RouteHeaderCard
+        title={t('dashboard.tools.benchmark')}
+        subtitle="Track rendering and computational pressure before runtime regressions."
+      />
       <ToolRouteControls
         minimal
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
+        onUploadBundle={uploadBundleFiles}
         onLoadSelected={handleLoadSelected}
         isLoadingSelected={isLoadingSelected}
+        onOpenUrl={() => setShowUrlModal(true)}
       />
 
       <div className="benchmark-inspector-layout">
@@ -174,6 +183,6 @@ export function BenchmarkRouteView() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
