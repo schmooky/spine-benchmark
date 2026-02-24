@@ -22,14 +22,11 @@ export function AssetsRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
-    atlasOptions,
-    selectedAtlasName,
-    setSelectedAtlasName,
     handleDeleteAsset,
-    loadCurrentAssetIntoBenchmark,
+    loadStoredAsset,
     uploadBundleFiles,
     formatBytes,
-    setShowUrlModal,
+    loadFromUrls,
   } = useWorkbench();
 
   useEffect(() => {
@@ -38,10 +35,13 @@ export function AssetsRouteView() {
     }
   });
 
-  const handleLoadSelected = async () => {
+  const handlePickAsset = async (assetId: string) => {
+    const asset = assets.find((entry) => entry.id === assetId);
+    if (!asset) return;
     setIsLoadingSelected(true);
     try {
-      await loadCurrentAssetIntoBenchmark();
+      setSelectedAssetId(assetId);
+      await loadStoredAsset(asset);
     } finally {
       setIsLoadingSelected(false);
     }
@@ -59,38 +59,18 @@ export function AssetsRouteView() {
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={setSelectedAssetId}
-        atlasOptions={atlasOptions}
-        selectedAtlasName={selectedAtlasName}
-        setSelectedAtlasName={setSelectedAtlasName}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handlePickAsset}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
       <div className="assets-layout">
       {/* Left panel — asset management */}
-      <div className="assets-panel" data-tour="asset-library">
+      <div className="tool-panel assets-panel" data-tour="asset-library">
         <div className="route-section-header">
           <h3>{t('dashboard.sections.assetLibrary')}</h3>
         </div>
-
-        <ToolRouteControls
-          assets={assets}
-          selectedAssetId={selectedAssetId}
-          setSelectedAssetId={setSelectedAssetId}
-          atlasOptions={atlasOptions}
-          selectedAtlasName={selectedAtlasName}
-          setSelectedAtlasName={setSelectedAtlasName}
-          onUploadBundle={uploadBundleFiles}
-          onLoadSelected={handleLoadSelected}
-          isLoadingSelected={isLoadingSelected}
-          triggerLabel={t('dashboard.actions.import')}
-        />
-
-        <button className="secondary-btn" type="button" onClick={() => setShowUrlModal(true)}>
-          {t('dashboard.actions.loadFromUrl')}
-        </button>
 
         <div className="asset-grid route-asset-grid">
           {assets.length === 0 && <p className="subtle-text">{t('dashboard.messages.noAssets')}</p>}
@@ -114,7 +94,7 @@ export function AssetsRouteView() {
                   className="mini-btn"
                   onClick={(event) => {
                     event.stopPropagation();
-                    void handleLoadSelected();
+                    void handlePickAsset(asset.id);
                   }}
                 >
                   {t('dashboard.actions.load')}

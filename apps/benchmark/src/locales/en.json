@@ -713,6 +713,7 @@
       "next": "Next",
       "back": "Back",
       "done": "Done",
+      "progress": "{{current}} of {{total}}",
       "steps": {
         "welcome": {
           "title": "Welcome to Spine Workbench",
@@ -732,7 +733,7 @@
         },
         "viewer": {
           "title": "Viewer and Dropzone",
-          "description": "Preview and inspect loaded Spine content here. The default demo asset is preloaded."
+          "description": "Preview and inspect loaded Spine content here. Load an asset to get started."
         },
         "assetReview": {
           "title": "Asset Review",

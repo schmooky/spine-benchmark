@@ -367,8 +367,8 @@ export function AnimationHeatmapRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
-    loadCurrentAssetIntoBenchmark,
-    setShowUrlModal,
+    loadStoredAsset,
+    loadFromUrls,
     uploadBundleFiles,
   } = useWorkbench();
 
@@ -385,10 +385,19 @@ export function AnimationHeatmapRouteView() {
     setSelectedAnimIndex(0);
   }, [data]);
 
-  const handleLoadSelected = async () => {
+  // Auto-run heatmap analysis whenever a spine is available.
+  useEffect(() => {
+    if (!spineInstance || isAnalyzing) return;
+    analyze();
+  }, [spineInstance, isAnalyzing, analyze]);
+
+  const handlePickAsset = async (assetId: string) => {
+    const asset = assets.find((entry) => entry.id === assetId);
+    if (!asset) return;
     setIsLoadingSelected(true);
     try {
-      await loadCurrentAssetIntoBenchmark();
+      setSelectedAssetId(assetId);
+      await loadStoredAsset(asset);
     } finally {
       setIsLoadingSelected(false);
     }
@@ -406,9 +415,9 @@ export function AnimationHeatmapRouteView() {
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handlePickAsset}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
       <div className="heatmap-layout">

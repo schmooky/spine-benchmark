@@ -152,16 +152,19 @@ export function MetricInsightPopout({
   onRequestClose,
 }: MetricInsightPopoutProps) {
   const popoutRef = useRef<HTMLDivElement>(null);
-  const metricRef = useRef<HTMLDivElement>(null);
-  const [metricIndex, setMetricIndex] = useState(0);
+  const metricsRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    setMetricIndex(0);
-  }, [insight?.id]);
+    setIsExpanded(isPinned);
+  }, [insight?.id, isPinned]);
 
-  const metricCount = insight?.metrics.length ?? 0;
-  const clampedIndex = metricCount === 0 ? 0 : ((metricIndex % metricCount) + metricCount) % metricCount;
-  const activeMetric = insight?.metrics[clampedIndex] ?? null;
+  useEffect(() => {
+    if (isPinned) {
+      setIsExpanded(true);
+    }
+  }, [isPinned]);
 
   useEffect(() => {
     if (!insight || !popoutRef.current) return;
@@ -175,113 +178,103 @@ export function MetricInsightPopout({
   }, [insight?.id, isPinned]);
 
   useEffect(() => {
-    if (!activeMetric || !metricRef.current) return;
-    animate(metricRef.current, {
+    if (!insight || !metricsRef.current) return;
+    animate(metricsRef.current, {
       opacity: [0, 1],
-      translateX: [6, 0],
+      translateY: [6, 0],
       duration: 180,
       ease: 'outQuad',
     });
-  }, [activeMetric?.id]);
+  }, [insight?.id]);
+
+  useEffect(() => {
+    if (!isExpanded || !bodyRef.current) return;
+    animate(bodyRef.current, {
+      opacity: [0, 1],
+      translateY: [6, 0],
+      duration: 180,
+      ease: 'outQuad',
+    });
+  }, [isExpanded, insight?.id]);
 
   useEffect(() => {
     if (!insight) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onRequestClose();
-        return;
-      }
-      if (event.key === 'ArrowLeft' && metricCount > 1) {
-        event.preventDefault();
-        setMetricIndex((prev) => prev - 1);
-      }
-      if (event.key === 'ArrowRight' && metricCount > 1) {
-        event.preventDefault();
-        setMetricIndex((prev) => prev + 1);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [insight, metricCount, onRequestClose]);
+  }, [insight, onRequestClose]);
 
   if (!insight) return null;
 
   return (
-    <aside className={`metric-insight-popout${isPinned ? ' pinned' : ''}`} ref={popoutRef} aria-live="polite">
+    <aside
+      className={`metric-insight-popout${isPinned ? ' pinned' : ''}${isExpanded ? ' expanded' : ' collapsed'}`}
+      ref={popoutRef}
+      aria-live="polite"
+    >
       <header className="metric-insight-header">
         <div className="metric-insight-title-block">
           <h3>{insight.title}</h3>
           <p>{insight.subtitle}</p>
         </div>
-        <div className="metric-insight-nav">
-          <button
-            type="button"
-            className="icon-btn metric-insight-arrow"
-            onClick={() => setMetricIndex((prev) => prev - 1)}
-            disabled={metricCount <= 1}
-            aria-label="Previous metric"
-          >
-            &#8249;
-          </button>
-          <span>{metricCount === 0 ? '0/0' : `${clampedIndex + 1}/${metricCount}`}</span>
-          <button
-            type="button"
-            className="icon-btn metric-insight-arrow"
-            onClick={() => setMetricIndex((prev) => prev + 1)}
-            disabled={metricCount <= 1}
-            aria-label="Next metric"
-          >
-            &#8250;
-          </button>
-        </div>
       </header>
 
-      {activeMetric && (
-        <div ref={metricRef} className={`metric-insight-metric ${getToneClass(activeMetric.tone)}`}>
-          <span className="metric-insight-metric-label">{activeMetric.label}</span>
-          <strong>{activeMetric.value}</strong>
-          {activeMetric.note && <small>{activeMetric.note}</small>}
-        </div>
-      )}
-
-      <p className="metric-insight-sample">{insight.sample}</p>
-
-      <div className="metric-insight-quick-actions">
-        {insight.quickActions.map((action) => (
-          <button
-            key={action.id}
-            type="button"
-            className="metric-insight-action"
-            onClick={action.onRun}
-          >
-            <span>{action.label}</span>
-            <small>{action.impact}</small>
-          </button>
-        ))}
-      </div>
-
-      <div className="metric-proof-grid" aria-label="Before and after proof">
-        {insight.proofBlocks.map((proof) => (
-          <div key={proof.id} className={`metric-proof-card ${getToneClass(proof.tone)}`}>
-            <span>{proof.label}</span>
-            <strong>{proof.delta}</strong>
+      <div className="metric-insight-metrics" ref={metricsRef}>
+        {insight.metrics.map((metric) => (
+          <div key={metric.id} className={`metric-insight-metric ${getToneClass(metric.tone)}`}>
+            <span className="metric-insight-metric-label">{metric.label}</span>
+            <strong>{metric.value}</strong>
+            {metric.note && <small>{metric.note}</small>}
           </div>
         ))}
       </div>
 
-      <div className="metric-jump-chips">
-        {insight.jumpChips.map((chip) => (
-          <button
-            key={chip.id}
-            type="button"
-            className={`route-jump-chip${chip.active ? ' active' : ''}`}
-            onClick={chip.onJump}
-            aria-current={chip.active ? 'page' : undefined}
-          >
-            {chip.label}
-          </button>
-        ))}
-      </div>
+      <p className="metric-insight-sample">{insight.sample}</p>
+
+      {isExpanded && (
+        <div className="metric-insight-body" ref={bodyRef}>
+          <div className="metric-insight-quick-actions">
+            {insight.quickActions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                className="metric-insight-action"
+                onClick={action.onRun}
+              >
+                <span>{action.label}</span>
+                <small>{action.impact}</small>
+              </button>
+            ))}
+          </div>
+
+          <div className="metric-proof-grid" aria-label="Before and after proof">
+            {insight.proofBlocks.map((proof) => (
+              <div key={proof.id} className={`metric-proof-card ${getToneClass(proof.tone)}`}>
+                <span>{proof.label}</span>
+                <strong>{proof.delta}</strong>
+              </div>
+            ))}
+          </div>
+
+          <div className="metric-jump-chips">
+            {insight.jumpChips.map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                className={`route-jump-chip${chip.active ? ' active' : ''}`}
+                onClick={chip.onJump}
+                aria-current={chip.active ? 'page' : undefined}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <footer className="metric-insight-footer">
         <button
@@ -290,6 +283,14 @@ export function MetricInsightPopout({
           onClick={isPinned ? onUnpin : onPin}
         >
           {isPinned ? 'Unpin' : 'Pin'}
+        </button>
+        <button
+          type="button"
+          className="secondary-btn"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          aria-expanded={isExpanded}
+        >
+          {isExpanded ? 'Collapse' : 'Expand'}
         </button>
         <button type="button" className="secondary-btn" onClick={onOpenExplainer}>
           Explain

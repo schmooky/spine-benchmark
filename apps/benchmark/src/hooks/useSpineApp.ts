@@ -1,10 +1,8 @@
-import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Application } from 'pixi.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CameraContainer } from '../core/CameraContainer';
 import { SpineAnalyzer, SpineAnalysisResult } from '../core/SpineAnalyzer';
-import { useToast } from './ToastContext';
 import { useSpineLoader } from './useSpineLoader';
 import { useDebugVisualizer } from './useDebugVisualizer';
 import { useBackgroundManager } from './useBackgroundManager';
@@ -16,15 +14,12 @@ export function useSpineApp(app: Application | null) {
   const [benchmarkData, setBenchmarkData] = useState<SpineAnalysisResult | null>(null);
   
   const cameraContainerRef = useRef<CameraContainer | null>(null);
-  const previousSpineInstanceRef = useRef<Spine | null>(null);
-  const { addToast } = useToast();
   
   const { 
     spineInstance, 
     isLoading, 
     loadSpineFiles, 
-    loadSpineFromUrls,
-    clearSpineInstance
+    loadSpineFromUrls
   } = useSpineLoader(app);
   
   const {
@@ -79,25 +74,20 @@ export function useSpineApp(app: Application | null) {
   }, [app]);
 
   useEffect(() => {
-    if (!spineInstance || !cameraContainerRef.current) {
-      if (!spineInstance) {
-        setBenchmarkData(null);
-      }
-      previousSpineInstanceRef.current = null;
+    const cameraContainer = cameraContainerRef.current;
+    if (!cameraContainer) return;
+
+    if (!spineInstance) {
+      setBenchmarkData(null);
+      cameraContainer.clearSpine();
       return;
     }
 
-    if (previousSpineInstanceRef.current && cameraContainerRef.current) {
-      if (previousSpineInstanceRef.current.parent === cameraContainerRef.current) {
-        cameraContainerRef.current.removeChild(previousSpineInstanceRef.current);
-      }
-    }
+    cameraContainer.clearSpine();
+    cameraContainer.addChild(spineInstance);
+    cameraContainer.lookAtChild(spineInstance);
 
-    previousSpineInstanceRef.current = spineInstance;
-    cameraContainerRef.current.addChild(spineInstance);
-    cameraContainerRef.current.lookAtChild(spineInstance);
-
-    cameraContainerRef.current.setDebugFlags({
+    cameraContainer.setDebugFlags({
       showBones: false,
       showMeshTriangles: false,
       showMeshHull: false,

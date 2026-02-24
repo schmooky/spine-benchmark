@@ -4,6 +4,7 @@ import 'pixi.js/ktx2';
 import { useEffect, useState } from 'react';
 import { useToast } from './ToastContext';
 import { useTranslation } from 'react-i18next';
+import { tIndexed } from '../utils/indexedMessage';
 
 export interface UsePixiAppOptions {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -84,25 +85,37 @@ export function usePixiApp({ containerRef, backgroundColor }: UsePixiAppOptions)
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (!containerRef.current) return;
     let cancelled = false;
+    let rafId: number | null = null;
 
-    const initApp = async () => {
+    const initWhenReady = async () => {
+      if (cancelled) return;
+      const container = containerRef.current;
+      if (!container) {
+        rafId = window.requestAnimationFrame(() => {
+          void initWhenReady();
+        });
+        return;
+      }
+
       try {
-        const pixiApp = await getOrCreateApp(containerRef.current!, backgroundColor);
+        const pixiApp = await getOrCreateApp(container, backgroundColor);
         if (!cancelled) setApp(pixiApp);
       } catch (error) {
         addToast(
-          t('error.failedToInitialize', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }),
+          tIndexed(t, 'error.failedToInitialize', [error instanceof Error ? error.message : t('dashboard.messages.unknownError')]),
           'error'
         );
       }
     };
 
-    initApp();
+    void initWhenReady();
 
     return () => {
       cancelled = true;
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
       setApp(null);
     };
   }, [addToast, containerRef, t]);

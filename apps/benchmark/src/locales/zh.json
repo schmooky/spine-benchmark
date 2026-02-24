@@ -707,37 +707,38 @@
       "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
     },
     "tour": {
-      "next": "Next",
-      "back": "Back",
-      "done": "Done",
+      "next": "下一步",
+      "back": "上一步",
+      "done": "完成",
+      "progress": "{{current}} / {{total}}",
       "steps": {
         "welcome": {
-          "title": "Welcome to Spine Workbench",
-          "description": "You can benchmark, optimize, and manage Spine assets in one place."
+          "title": "歡迎使用 Spine Workbench",
+          "description": "你可以在同一處進行 Spine 資產的效能基準測試、最佳化與管理。"
         },
         "toolCollection": {
-          "title": "Tool Collection",
-          "description": "Switch between Benchmark and Mesh Optimizer at any time."
+          "title": "工具集合",
+          "description": "可隨時在 Benchmark 與 Mesh Optimizer 之間切換。"
         },
         "assetLibrary": {
-          "title": "Asset Library",
-          "description": "Your uploaded assets are stored in IndexedDB and available on next visit."
+          "title": "資產庫",
+          "description": "你上傳的資產會儲存在 IndexedDB，並在下次造訪時可直接使用。"
         },
         "importAssets": {
-          "title": "Import Assets",
-          "description": "Use Import for files, or drag and drop directly onto the canvas area."
+          "title": "匯入資產",
+          "description": "可使用匯入按鈕載入檔案，或直接拖放到畫布區域。"
         },
         "viewer": {
-          "title": "Viewer and Dropzone",
-          "description": "Preview and inspect loaded Spine content here. The default demo asset is preloaded."
+          "title": "檢視器與拖放區",
+          "description": "在這裡預覽並檢查已載入的 Spine 內容。先載入一個資產即可開始。"
         },
         "assetReview": {
-          "title": "Asset Review",
-          "description": "See the exact files included in the selected asset and quickly reload it."
+          "title": "資產檢視",
+          "description": "查看所選資產包含的完整檔案，並可快速重新載入。"
         },
         "guidesCommunity": {
-          "title": "Guides and Community",
-          "description": "Jump to partner tools, docs, and community channels from this sidebar."
+          "title": "指南與社群",
+          "description": "從此側邊欄快速前往夥伴工具、文件與社群頻道。"
         }
       }
     },

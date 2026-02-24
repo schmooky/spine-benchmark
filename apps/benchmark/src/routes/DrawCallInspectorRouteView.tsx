@@ -59,13 +59,14 @@ export function DrawCallInspectorRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
+    loadStoredAsset,
     loadCurrentAssetIntoBenchmark,
     setSlotHighlight,
     routeSelection,
     setRouteSelection,
     lastLoadError,
     clearLastLoadError,
-    setShowUrlModal,
+    loadFromUrls,
     uploadBundleFiles,
   } = useWorkbench();
 
@@ -301,6 +302,19 @@ export function DrawCallInspectorRouteView() {
     }
   };
 
+  const handlePickAsset = async (assetId: string) => {
+    const asset = assets.find((entry) => entry.id === assetId);
+    if (!asset) return;
+    setIsLoadingSelected(true);
+    try {
+      setSelectedAssetId(assetId);
+      await loadStoredAsset(asset);
+      clearLastLoadError();
+    } finally {
+      setIsLoadingSelected(false);
+    }
+  };
+
   const showFallback = !spineInstance || hasEmptyData || !!lastLoadError;
 
   return (
@@ -315,12 +329,12 @@ export function DrawCallInspectorRouteView() {
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handlePickAsset}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
-      <div className="dc-inspector-layout">
+      <div className="dc-inspector-layout with-side-insight">
         <div className="tool-panel dc-inspector-panel">
           <RouteJumpStrip chips={jumpChips} selectionHint={selectionHint} />
 
@@ -449,14 +463,6 @@ export function DrawCallInspectorRouteView() {
                 ))}
               </div>
 
-              <MetricInsightPopout
-                insight={drawInsight}
-                isPinned={selectedSlotIndex !== null}
-                onPin={pinActiveInsight}
-                onUnpin={closeInsight}
-                onOpenExplainer={() => setShowExplainer(true)}
-                onRequestClose={closeInsight}
-              />
             </>
           )}
 
@@ -512,6 +518,26 @@ export function DrawCallInspectorRouteView() {
             {spineInstance && <AnimationControls spineInstance={spineInstance} />}
           </div>
         </div>
+
+        <aside className="tool-info-panel">
+          <div className="tool-info-scroll">
+            {drawInsight ? (
+              <MetricInsightPopout
+                insight={drawInsight}
+                isPinned={selectedSlotIndex !== null}
+                onPin={pinActiveInsight}
+                onUnpin={closeInsight}
+                onOpenExplainer={() => setShowExplainer(true)}
+                onRequestClose={closeInsight}
+              />
+            ) : (
+              <div className="tool-info-empty">
+                <h3>Select a draw-call row</h3>
+                <p>Hover or click a row to inspect attachment details here without covering the list.</p>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
 
       <MetricExplainerModal

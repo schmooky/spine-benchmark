@@ -707,37 +707,38 @@
       "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
     },
     "tour": {
-      "next": "Next",
-      "back": "Back",
-      "done": "Done",
+      "next": "Weiter",
+      "back": "Zurück",
+      "done": "Fertig",
+      "progress": "{{current}} von {{total}}",
       "steps": {
         "welcome": {
-          "title": "Welcome to Spine Workbench",
-          "description": "You can benchmark, optimize, and manage Spine assets in one place."
+          "title": "Willkommen bei Spine Workbench",
+          "description": "Hier kannst du Spine-Assets an einem Ort benchmarken, optimieren und verwalten."
         },
         "toolCollection": {
-          "title": "Tool Collection",
-          "description": "Switch between Benchmark and Mesh Optimizer at any time."
+          "title": "Tool-Sammlung",
+          "description": "Wechsle jederzeit zwischen Benchmark und Mesh-Optimierer."
         },
         "assetLibrary": {
-          "title": "Asset Library",
-          "description": "Your uploaded assets are stored in IndexedDB and available on next visit."
+          "title": "Asset-Bibliothek",
+          "description": "Deine hochgeladenen Assets werden in IndexedDB gespeichert und sind beim nächsten Besuch verfügbar."
         },
         "importAssets": {
-          "title": "Import Assets",
-          "description": "Use Import for files, or drag and drop directly onto the canvas area."
+          "title": "Assets importieren",
+          "description": "Nutze Import für Dateien oder ziehe sie direkt in den Canvas-Bereich."
         },
         "viewer": {
-          "title": "Viewer and Dropzone",
-          "description": "Preview and inspect loaded Spine content here. The default demo asset is preloaded."
+          "title": "Viewer und Dropzone",
+          "description": "Hier kannst du geladene Spine-Inhalte ansehen und prüfen. Lade ein Asset, um zu starten."
         },
         "assetReview": {
-          "title": "Asset Review",
-          "description": "See the exact files included in the selected asset and quickly reload it."
+          "title": "Asset-Überprüfung",
+          "description": "Sieh dir die genauen Dateien des ausgewählten Assets an und lade es schnell neu."
         },
         "guidesCommunity": {
-          "title": "Guides and Community",
-          "description": "Jump to partner tools, docs, and community channels from this sidebar."
+          "title": "Guides und Community",
+          "description": "Öffne Partner-Tools, Dokumentation und Community-Kanäle über diese Seitenleiste."
         }
       }
     },

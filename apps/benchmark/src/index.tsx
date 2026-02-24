@@ -4,6 +4,7 @@ import { ToastProvider } from './hooks/ToastContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router';
+import 'driver.js/dist/driver.css';
 import './styles.css';
 // Import the custom toastify styles
 import './toastify.css'; // Make sure to create this file with the custom styles

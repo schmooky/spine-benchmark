@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,6 +27,21 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const [animations, setAnimations] = useState<string[]>([]);
   const [skins, setSkins] = useState<string[]>([]);
   const [currentSkin, setCurrentSkin] = useState<string>('');
+  const stateRef = useRef({
+    isPlaying,
+    isLooping,
+    currentAnimation,
+    currentSkin,
+  });
+
+  useEffect(() => {
+    stateRef.current = {
+      isPlaying,
+      isLooping,
+      currentAnimation,
+      currentSkin,
+    };
+  }, [isPlaying, isLooping, currentAnimation, currentSkin]);
 
   // Initialize animations list and set default animation
   useEffect(() => {
@@ -45,6 +60,44 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     const activeSkin = spineInstance.skeleton.skin?.name || skinNames[0] || '';
     setCurrentSkin(activeSkin);
   }, [spineInstance]);
+
+  // Keep UI controls synchronized with external Spine state changes.
+  useEffect(() => {
+    if (!spineInstance) return;
+
+    let rafId = 0;
+    const syncFromSpine = () => {
+      const entry = spineInstance.state.getCurrent(0);
+      const activeAnimation = entry?.animation?.name ?? '';
+      const activeSkin = spineInstance.skeleton.skin?.name ?? '';
+      const hasTrack = Boolean(entry?.animation);
+      const finishedNonLoop = Boolean(entry && !entry.loop && entry.isComplete());
+      const playing = hasTrack && spineInstance.state.timeScale > 0 && !finishedNonLoop;
+
+      if (activeAnimation && activeAnimation !== stateRef.current.currentAnimation) {
+        setCurrentAnimation(activeAnimation);
+      }
+
+      if (entry && entry.loop !== stateRef.current.isLooping) {
+        setIsLooping(entry.loop);
+      }
+
+      if (activeSkin && activeSkin !== stateRef.current.currentSkin) {
+        setCurrentSkin(activeSkin);
+      }
+
+      if (playing !== stateRef.current.isPlaying) {
+        setIsPlaying(playing);
+      }
+
+      rafId = window.requestAnimationFrame(syncFromSpine);
+    };
+
+    syncFromSpine();
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [spineInstance]);
   
   // Handle play/pause
   useEffect(() => {
@@ -61,7 +114,9 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     if (!spineInstance) return;
     
     spineInstance.state.setAnimation(0, name, loop);
+    spineInstance.state.timeScale = 1;
     setCurrentAnimation(name);
+    setIsLooping(loop);
     setIsPlaying(true);
     
     // Notify parent component about animation change
@@ -71,7 +126,28 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   };
   
   const togglePlay = () => {
-    setIsPlaying(!isPlaying);
+    if (!spineInstance) return;
+
+    const currentEntry = spineInstance.state.getCurrent(0);
+    const entryCompleted = Boolean(currentEntry && !currentEntry.loop && currentEntry.isComplete());
+    const hasTrack = Boolean(currentEntry?.animation);
+
+    if (entryCompleted || !hasTrack) {
+      const animationToPlay = currentAnimation || animations[0];
+      if (animationToPlay) {
+        playAnimation(animationToPlay, currentEntry?.loop ?? isLooping);
+      }
+      return;
+    }
+
+    if (isPlaying) {
+      spineInstance.state.timeScale = 0;
+      setIsPlaying(false);
+      return;
+    }
+
+    spineInstance.state.timeScale = 1;
+    setIsPlaying(true);
   };
   
   const toggleLoop = () => {
@@ -122,6 +198,9 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     const newIndex = currentIndex < animations.length - 1 ? currentIndex + 1 : 0;
     playAnimation(animations[newIndex]);
   };
+
+  const hasSkins = skins.length > 0;
+  const skinSelectValue = hasSkins ? currentSkin : 'default';
   
   return (
     <div className="animation-controls">
@@ -187,20 +266,23 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
           </select>
         </label>
 
-        {skins.length > 1 && (
-          <label className="animation-select-chip animation-select-chip-skin">
-            <span className="animation-select-prefix">Skin:</span>
-            <select
-              className="animation-select-native"
-              value={currentSkin}
-              onChange={(event) => switchSkin(event.target.value)}
-            >
-              {skins.map((name) => (
+        <label className="animation-select-chip animation-select-chip-skin">
+          <span className="animation-select-prefix">Skin:</span>
+          <select
+            className="animation-select-native"
+            value={skinSelectValue}
+            onChange={(event) => switchSkin(event.target.value)}
+            disabled={skins.length <= 1}
+          >
+            {hasSkins ? (
+              skins.map((name) => (
                 <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-          </label>
-        )}
+              ))
+            ) : (
+              <option value="default">Default</option>
+            )}
+          </select>
+        </label>
       </div>
     </div>
   );

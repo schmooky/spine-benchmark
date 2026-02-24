@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import './LanguageModal.css';
+import { tIndexed } from '../utils/indexedMessage';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -104,7 +105,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
                 ref={index === 0 ? firstLanguageRef : undefined}
                 className={`language-option ${i18n.language === language.code ? 'current' : ''}`}
                 onClick={() => handleLanguageChange(language.code)}
-                aria-label={t('commands.language.switchTo', { 0: language.name })}
+                aria-label={tIndexed(t, 'commands.language.switchTo', [language.name])}
               >
                 <span className="language-name">{language.name}</span>
                 {i18n.language === language.code && (

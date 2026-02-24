@@ -32,13 +32,13 @@ export function PhysicsBakerRouteView() {
     selectedAssetId,
     setSelectedAssetId,
     selectedAsset,
-    loadCurrentAssetIntoBenchmark,
+    loadStoredAsset,
     togglePhysics,
     toggleIk,
     toggleTransformConstraints,
     togglePathConstraints,
     saveAndLoadOptimizedAsset,
-    setShowUrlModal,
+    loadFromUrls,
     uploadBundleFiles,
   } = useWorkbench();
 
@@ -105,10 +105,13 @@ export function PhysicsBakerRouteView() {
     return selectedAsset.files.find((f) => f.name.endsWith('.json')) ?? null;
   }, [selectedAsset]);
 
-  const handleLoadSelected = async () => {
+  const handlePickAsset = async (assetId: string) => {
+    const asset = assets.find((entry) => entry.id === assetId);
+    if (!asset) return;
     setIsLoadingSelected(true);
     try {
-      await loadCurrentAssetIntoBenchmark();
+      setSelectedAssetId(assetId);
+      await loadStoredAsset(asset);
     } finally {
       setIsLoadingSelected(false);
     }
@@ -182,12 +185,12 @@ export function PhysicsBakerRouteView() {
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handlePickAsset}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
-      <div className="mesh-inspector-layout">
+      <div className="physics-baker-layout">
         {/* Left panel — constraint list */}
         <div className="tool-panel">
           {spineInstance && constraints.length > 0 ? (

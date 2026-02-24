@@ -47,12 +47,13 @@ export function AtlasRepackRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
+    loadStoredAsset,
     loadCurrentAssetIntoBenchmark,
     routeSelection,
     setRouteSelection,
     lastLoadError,
     clearLastLoadError,
-    setShowUrlModal,
+    loadFromUrls,
     uploadBundleFiles,
   } = useWorkbench();
 
@@ -137,6 +138,19 @@ export function AtlasRepackRouteView() {
     setIsLoadingSelected(true);
     try {
       await loadCurrentAssetIntoBenchmark();
+      clearLastLoadError();
+    } finally {
+      setIsLoadingSelected(false);
+    }
+  };
+
+  const handlePickAsset = async (assetId: string) => {
+    const asset = assets.find((entry) => entry.id === assetId);
+    if (!asset) return;
+    setIsLoadingSelected(true);
+    try {
+      setSelectedAssetId(assetId);
+      await loadStoredAsset(asset);
       clearLastLoadError();
     } finally {
       setIsLoadingSelected(false);
@@ -321,12 +335,12 @@ export function AtlasRepackRouteView() {
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handlePickAsset}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
-      <div className="atlas-repack-layout">
+      <div className="atlas-repack-layout with-side-insight">
         <div className="tool-panel atlas-repack-panel">
           <RouteJumpStrip chips={jumpChips} selectionHint={selectionHint} />
 
@@ -486,25 +500,6 @@ export function AtlasRepackRouteView() {
                 ))}
               </div>
 
-              <MetricInsightPopout
-                insight={atlasInsight}
-                isPinned={selectedRegionId !== null}
-                onPin={() => {
-                  if (!activeRegion) return;
-                  setSelectedRegionId(activeRegion.id);
-                }}
-                onUnpin={() => {
-                  setSelectedRegionId(null);
-                  setHoveredRegionId(null);
-                  setShowExplainer(false);
-                }}
-                onOpenExplainer={() => setShowExplainer(true)}
-                onRequestClose={() => {
-                  setSelectedRegionId(null);
-                  setHoveredRegionId(null);
-                  setShowExplainer(false);
-                }}
-              />
             </>
           )}
 
@@ -549,6 +544,37 @@ export function AtlasRepackRouteView() {
             {spineInstance && <AnimationControls spineInstance={spineInstance} />}
           </div>
         </div>
+
+        <aside className="tool-info-panel">
+          <div className="tool-info-scroll">
+            {atlasInsight ? (
+              <MetricInsightPopout
+                insight={atlasInsight}
+                isPinned={selectedRegionId !== null}
+                onPin={() => {
+                  if (!activeRegion) return;
+                  setSelectedRegionId(activeRegion.id);
+                }}
+                onUnpin={() => {
+                  setSelectedRegionId(null);
+                  setHoveredRegionId(null);
+                  setShowExplainer(false);
+                }}
+                onOpenExplainer={() => setShowExplainer(true)}
+                onRequestClose={() => {
+                  setSelectedRegionId(null);
+                  setHoveredRegionId(null);
+                  setShowExplainer(false);
+                }}
+              />
+            ) : (
+              <div className="tool-info-empty">
+                <h3>Select an atlas region</h3>
+                <p>Hover or click a region to inspect packing and break-risk details here.</p>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
 
       <MetricExplainerModal

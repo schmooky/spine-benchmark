@@ -3,7 +3,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
 import { driver } from 'driver.js';
-import 'driver.js/dist/driver.css';
 import { CommandPalette } from './components/CommandPalette';
 import { VersionDisplay } from './components/VersionDisplay';
 import { LanguageModal } from './components/LanguageModal';
@@ -19,7 +18,19 @@ import { useCommandRegistration } from './hooks/useCommandRegistration';
 import { useUrlHash } from './hooks/useUrlHash';
 import { useAppEventHandlers } from './hooks/useAppEventHandlers';
 import { commandRegistry } from './utils/commandRegistry';
+import { tIndexed } from './utils/indexedMessage';
 import { FileProcessor } from './core/utils/fileProcessor';
+import {
+  FolderOpen,
+  Gauge,
+  Languages,
+  Link as LinkGlyph,
+  Play,
+  Rabbit,
+  RotateCcw,
+  Sparkles,
+  Square,
+} from 'lucide-react';
 import {
   StoredAsset,
   assetToFiles,
@@ -33,7 +44,6 @@ import { RouteSelectionState, WorkbenchProvider } from './workbench/WorkbenchCon
 type OnboardingStep = 'language' | 'intro';
 
 const ONBOARDING_KEY = 'spine-workbench-onboarding-done-v1';
-const DEFAULT_ASSET_KEY = 'spine-workbench-default-seeded-v1';
 const DEFAULT_ROUTE_SELECTION: RouteSelectionState = {
   sourceRoute: null,
   slotIndex: null,
@@ -159,6 +169,7 @@ const App: React.FC = () => {
         nextBtnText: t('dashboard.tour.next'),
         prevBtnText: t('dashboard.tour.back'),
         doneBtnText: t('dashboard.tour.done'),
+        progressText: t('dashboard.tour.progress'),
         steps: [
           {
             popover: {
@@ -220,7 +231,7 @@ const App: React.FC = () => {
       setAssets(stored);
       setSelectedAssetId((current) => current ?? stored[0]?.id ?? null);
     } catch (error) {
-      addToast(t('error.loadingError', { 0: t('dashboard.messages.loadAssetsFailed') }), 'error');
+      addToast(tIndexed(t, 'error.loadingError', [t('dashboard.messages.loadAssetsFailed')]), 'error');
     }
   }, [addToast, t]);
 
@@ -235,48 +246,6 @@ const App: React.FC = () => {
       setOnboardingStep('language');
     }
   }, []);
-
-  const seedDefaultAsset = useCallback(async () => {
-    const alreadySeeded = localStorage.getItem(DEFAULT_ASSET_KEY) === '1';
-    if (alreadySeeded) {
-      return;
-    }
-
-    try {
-      const existing = await listAssets();
-      if (existing.length > 0) {
-        localStorage.setItem(DEFAULT_ASSET_KEY, '1');
-        return;
-      }
-
-      const paths = [
-        '/examples/test/skeleton.json',
-        '/examples/test/skeletons.atlas',
-        '/examples/test/skeletons.webp'
-      ];
-
-      const files: File[] = [];
-      for (const path of paths) {
-        const response = await fetch(path);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${path}`);
-        }
-        const blob = await response.blob();
-        const fileName = path.split('/').pop() || 'asset.bin';
-        files.push(new File([blob], fileName, { type: blob.type }));
-      }
-
-      await saveAsset(files, t('dashboard.defaultAssetName'));
-      localStorage.setItem(DEFAULT_ASSET_KEY, '1');
-      await refreshAssets();
-    } catch (error) {
-      addToast(t('dashboard.messages.seedDefaultFailed'), 'warning');
-    }
-  }, [addToast, refreshAssets, t]);
-
-  useEffect(() => {
-    void seedDefaultAsset();
-  }, [seedDefaultAsset]);
 
   useEffect(() => {
     const hashState = getStateFromHash();
@@ -374,7 +343,7 @@ const App: React.FC = () => {
   const handleSpineFiles = useCallback(
     async (files: FileList, options?: { persist?: boolean; assetName?: string; skipNavigate?: boolean }) => {
       if (!fileProcessorRef.current) {
-        const message = t('error.failedToInitialize', { 0: t('dashboard.messages.notInitialized') });
+        const message = tIndexed(t, 'error.failedToInitialize', [t('dashboard.messages.notInitialized')]);
         addToast(message, 'error');
         setLastLoadError(message);
         return;
@@ -396,9 +365,12 @@ const App: React.FC = () => {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : t('dashboard.messages.unknownError');
+        if (message === 'Stale load result') {
+          return;
+        }
         setLastLoadError(message);
         addToast(
-          t('error.loadingError', { 0: message }),
+          tIndexed(t, 'error.loadingError', [message]),
           'error'
         );
       }
@@ -453,7 +425,7 @@ const App: React.FC = () => {
           setSelectedAssetId(next[0]?.id ?? null);
         }
       } catch (error) {
-        addToast(t('error.loadingError', { 0: t('dashboard.messages.deleteAssetFailed') }), 'error');
+        addToast(tIndexed(t, 'error.loadingError', [t('dashboard.messages.deleteAssetFailed')]), 'error');
       }
     },
     [assets, selectedAssetId, addToast, t]
@@ -477,7 +449,7 @@ const App: React.FC = () => {
       e.currentTarget.classList.remove('highlight');
 
       if (!fileProcessorRef.current) {
-        const message = t('error.failedToInitialize', { 0: t('dashboard.messages.notInitialized') });
+        const message = tIndexed(t, 'error.failedToInitialize', [t('dashboard.messages.notInitialized')]);
         addToast(message, 'error');
         setLastLoadError(message);
         return;
@@ -507,7 +479,7 @@ const App: React.FC = () => {
         const message = error instanceof Error ? error.message : t('dashboard.messages.unknownError');
         setLastLoadError(message);
         addToast(
-          t('error.processingError', { 0: message }),
+          tIndexed(t, 'error.processingError', [message]),
           'error'
         );
       } finally {
@@ -623,6 +595,9 @@ const App: React.FC = () => {
     uploadBundleFiles: async (files: File[]) => {
       await handleSpineFiles(filesToFileList(files));
     },
+    loadFromUrls: async (jsonUrl: string, atlasUrl: string) => {
+      await handleUrlLoad(jsonUrl, atlasUrl);
+    },
     toggleMeshes,
     togglePhysics,
     toggleIk,
@@ -668,6 +643,7 @@ const App: React.FC = () => {
     meshesVisible,
     t,
     handleSpineFiles,
+    handleUrlLoad,
     saveAndLoadOptimizedAsset,
     setHighlightedMeshSlot,
     setSlotHighlight,
@@ -691,25 +667,32 @@ const App: React.FC = () => {
           <h2>{t('dashboard.sections.tools')}</h2>
           <div className="tool-switcher nav-list">
             <Link to="/tools/benchmark" className={`tool-chip ${pathname.startsWith('/tools/benchmark') ? 'active' : ''}`}>
-              {t('dashboard.tools.benchmark')}
+              <span className="tool-chip-icon" aria-hidden="true"><Gauge className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.benchmark')}</span>
             </Link>
             <Link to="/tools/mesh-optimizer" className={`tool-chip ${pathname.startsWith('/tools/mesh-optimizer') ? 'active' : ''}`}>
-              {t('dashboard.tools.meshOptimizer')}
+              <span className="tool-chip-icon" aria-hidden="true"><Rabbit className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.meshOptimizer')}</span>
             </Link>
             <Link to="/tools/physics-baker" className={`tool-chip ${pathname.startsWith('/tools/physics-baker') ? 'active' : ''}`}>
-              {t('dashboard.tools.physicsBaker')}
+              <span className="tool-chip-icon" aria-hidden="true"><RotateCcw className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.physicsBaker')}</span>
             </Link>
             <Link to="/tools/draw-call-inspector" className={`tool-chip ${pathname.startsWith('/tools/draw-call-inspector') ? 'active' : ''}`}>
-              {t('dashboard.tools.drawCallInspector')}
+              <span className="tool-chip-icon" aria-hidden="true"><Square className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.drawCallInspector')}</span>
             </Link>
             <Link to="/tools/atlas-repack" className={`tool-chip ${pathname.startsWith('/tools/atlas-repack') ? 'active' : ''}`}>
-              {t('dashboard.tools.atlasRepack')}
+              <span className="tool-chip-icon" aria-hidden="true"><LinkGlyph className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.atlasRepack')}</span>
             </Link>
             <Link to="/tools/comparison" className={`tool-chip ${pathname.startsWith('/tools/comparison') ? 'active' : ''}`}>
-              {t('dashboard.tools.comparison')}
+              <span className="tool-chip-icon" aria-hidden="true"><Play className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.comparison')}</span>
             </Link>
             <Link to="/tools/animation-heatmap" className={`tool-chip ${pathname.startsWith('/tools/animation-heatmap') ? 'active' : ''}`}>
-              {t('dashboard.tools.animationHeatmap')}
+              <span className="tool-chip-icon" aria-hidden="true"><Sparkles className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.animationHeatmap')}</span>
             </Link>
           </div>
         </section>
@@ -718,13 +701,16 @@ const App: React.FC = () => {
           <h2>{t('dashboard.sections.navigation')}</h2>
           <div className="tool-switcher nav-list">
             <Link to="/assets" className={`tool-chip ${pathname.startsWith('/assets') ? 'active' : ''}`}>
-              {t('dashboard.sections.assetLibrary')}
+              <span className="tool-chip-icon" aria-hidden="true"><FolderOpen className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.sections.assetLibrary')}</span>
             </Link>
             <Link to="/documentation" className={`tool-chip ${pathname.startsWith('/documentation') ? 'active' : ''}`}>
-              {t('dashboard.sections.documentation')}
+              <span className="tool-chip-icon" aria-hidden="true"><Languages className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.sections.documentation')}</span>
             </Link>
             <Link to="/partners" className={`tool-chip ${pathname.startsWith('/partners') ? 'active' : ''}`}>
-              {t('dashboard.sections.partners')}
+              <span className="tool-chip-icon" aria-hidden="true"><Sparkles className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.sections.partners')}</span>
             </Link>
           </div>
         </section>

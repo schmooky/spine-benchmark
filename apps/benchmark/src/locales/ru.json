@@ -707,37 +707,38 @@
       "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
     },
     "tour": {
-      "next": "Next",
-      "back": "Back",
-      "done": "Done",
+      "next": "Далее",
+      "back": "Назад",
+      "done": "Готово",
+      "progress": "{{current}} из {{total}}",
       "steps": {
         "welcome": {
-          "title": "Welcome to Spine Workbench",
-          "description": "You can benchmark, optimize, and manage Spine assets in one place."
+          "title": "Добро пожаловать в Spine Workbench",
+          "description": "Здесь можно запускать бенчмарк, оптимизировать и управлять Spine-ассетами в одном месте."
         },
         "toolCollection": {
-          "title": "Tool Collection",
-          "description": "Switch between Benchmark and Mesh Optimizer at any time."
+          "title": "Набор инструментов",
+          "description": "В любой момент переключайтесь между Benchmark и Оптимизатором мешей."
         },
         "assetLibrary": {
-          "title": "Asset Library",
-          "description": "Your uploaded assets are stored in IndexedDB and available on next visit."
+          "title": "Библиотека ассетов",
+          "description": "Загруженные ассеты сохраняются в IndexedDB и будут доступны при следующем посещении."
         },
         "importAssets": {
-          "title": "Import Assets",
-          "description": "Use Import for files, or drag and drop directly onto the canvas area."
+          "title": "Импорт ассетов",
+          "description": "Используйте «Импорт» для файлов или перетаскивайте их прямо в область холста."
         },
         "viewer": {
-          "title": "Viewer and Dropzone",
-          "description": "Preview and inspect loaded Spine content here. The default demo asset is preloaded."
+          "title": "Просмотр и зона загрузки",
+          "description": "Здесь можно просматривать и анализировать загруженный Spine-контент. Загрузите ассет, чтобы начать."
         },
         "assetReview": {
-          "title": "Asset Review",
-          "description": "See the exact files included in the selected asset and quickly reload it."
+          "title": "Проверка ассета",
+          "description": "Смотрите точный состав файлов выбранного ассета и быстро перезагружайте его."
         },
         "guidesCommunity": {
-          "title": "Guides and Community",
-          "description": "Jump to partner tools, docs, and community channels from this sidebar."
+          "title": "Гайды и сообщество",
+          "description": "Переходите к партнёрским инструментам, документации и каналам сообщества из этой боковой панели."
         }
       }
     },

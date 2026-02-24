@@ -149,8 +149,18 @@ export const CheckIcon = createIcon(
   <path d="M20 6L9 17l-5-5" />
 );
 
-export const TimelineIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+export const TimelineIcon = ({ className = '', size = 24 }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={`icon ${className}`}
+    aria-hidden="true"
+  >
     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
     <circle cx="9" cy="9" r="1.5" fill="currentColor" />
     <circle cx="15" cy="15.75" r="1.5" fill="currentColor" />
@@ -158,4 +168,36 @@ export const TimelineIcon = () => (
     <rect x="12" y="7.5" width="1" height="9" rx="0.5" fill="currentColor" />
     <rect x="18" y="7.5" width="1" height="9" rx="0.5" fill="currentColor" />
   </svg>
+);
+
+export const MeshIcon = createIcon(
+  <>
+    <rect x="4" y="5" width="16" height="14" rx="2" />
+    <path d="M4 10H20M10 5V19M14 5V19" />
+  </>
+);
+
+export const LayersIcon = createIcon(
+  <>
+    <path d="M12 4L20 8L12 12L4 8L12 4Z" />
+    <path d="M4 12L12 16L20 12" />
+    <path d="M4 16L12 20L20 16" />
+  </>
+);
+
+export const CompareIcon = createIcon(
+  <>
+    <rect x="3.5" y="5" width="7.5" height="14" rx="1.6" />
+    <rect x="13" y="5" width="7.5" height="14" rx="1.6" />
+    <path d="M11 8H13M11 12H13M11 16H13" />
+  </>
+);
+
+export const HeatmapIcon = createIcon(
+  <>
+    <path d="M4 20H20" />
+    <rect x="4.5" y="13" width="3.5" height="7" rx="1" />
+    <rect x="10.25" y="9" width="3.5" height="11" rx="1" />
+    <rect x="16" y="5" width="3.5" height="15" rx="1" />
+  </>
 );

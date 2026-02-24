@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { commandRegistry } from '../utils/commandRegistry';
 import { CameraContainer } from '../core/CameraContainer';
+import { tIndexed } from '../utils/indexedMessage';
 
 interface UseCommandRegistrationProps {
   spineInstance: Spine | null;
@@ -76,9 +77,9 @@ export function useCommandRegistration({
       skins.forEach((skin: { name: string }) => {
         commandRegistry.register({
           id: `skin.${skin.name}`,
-          title: t('commands.skin.switchTo', { 0: skin.name }),
+          title: tIndexed(t, 'commands.skin.switchTo', [skin.name]),
           category: 'skin',
-          description: t('commands.skin.switchToDescription', { 0: skin.name }),
+          description: tIndexed(t, 'commands.skin.switchToDescription', [skin.name]),
           keywords: [t('commands.keywords.skin'), skin.name.toLowerCase()],
           execute: () => {
             const targetSkin = spineInstance.skeleton.data.skins.find((entry: any) => entry.name === skin.name);

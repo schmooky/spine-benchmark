@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { AnimationSampler } from '../core/utils/animationSampler';
 import { collectSnapshot, LiveSlotInfo } from './useDrawCallInspector';
@@ -29,6 +29,12 @@ export interface UseAnimationHeatmapResult {
 export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHeatmapResult {
   const [data, setData] = useState<AnimationHeatmapData[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // New spine means old heatmap data is stale.
+  useEffect(() => {
+    setData([]);
+    setIsAnalyzing(false);
+  }, [spineInstance]);
 
   const analyze = useCallback(() => {
     if (!spineInstance) return;

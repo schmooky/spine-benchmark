@@ -707,37 +707,38 @@
       "welcomeDescription": "You already have a default demo Spine asset loaded into IndexedDB. Start a guided tour to learn upload, review, benchmark, and optimization flows."
     },
     "tour": {
-      "next": "Next",
-      "back": "Back",
-      "done": "Done",
+      "next": "Suivant",
+      "back": "Retour",
+      "done": "Terminer",
+      "progress": "{{current}} sur {{total}}",
       "steps": {
         "welcome": {
-          "title": "Welcome to Spine Workbench",
-          "description": "You can benchmark, optimize, and manage Spine assets in one place."
+          "title": "Bienvenue dans Spine Workbench",
+          "description": "Vous pouvez benchmarker, optimiser et gérer vos assets Spine au même endroit."
         },
         "toolCollection": {
-          "title": "Tool Collection",
-          "description": "Switch between Benchmark and Mesh Optimizer at any time."
+          "title": "Collection d’outils",
+          "description": "Basculez entre Benchmark et Optimiseur de maillage à tout moment."
         },
         "assetLibrary": {
-          "title": "Asset Library",
-          "description": "Your uploaded assets are stored in IndexedDB and available on next visit."
+          "title": "Bibliothèque d’assets",
+          "description": "Vos assets importés sont stockés dans IndexedDB et disponibles lors de votre prochaine visite."
         },
         "importAssets": {
-          "title": "Import Assets",
-          "description": "Use Import for files, or drag and drop directly onto the canvas area."
+          "title": "Importer des assets",
+          "description": "Utilisez Importer pour les fichiers ou glissez-déposez-les directement dans la zone du canvas."
         },
         "viewer": {
-          "title": "Viewer and Dropzone",
-          "description": "Preview and inspect loaded Spine content here. The default demo asset is preloaded."
+          "title": "Viewer et zone de dépôt",
+          "description": "Prévisualisez et inspectez ici le contenu Spine chargé. Chargez un asset pour commencer."
         },
         "assetReview": {
-          "title": "Asset Review",
-          "description": "See the exact files included in the selected asset and quickly reload it."
+          "title": "Vérification de l’asset",
+          "description": "Consultez les fichiers exacts inclus dans l’asset sélectionné et rechargez-le rapidement."
         },
         "guidesCommunity": {
-          "title": "Guides and Community",
-          "description": "Jump to partner tools, docs, and community channels from this sidebar."
+          "title": "Guides et communauté",
+          "description": "Accédez aux outils partenaires, à la documentation et aux canaux communautaires depuis cette barre latérale."
         }
       }
     },

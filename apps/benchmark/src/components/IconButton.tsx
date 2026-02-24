@@ -19,6 +19,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
 }) => {
   return (
     <button
+      type="button"
       className={`icon-button ${active ? 'active' : ''} ${disabled ? 'disabled' : ''} ${className}`}
       onClick={onClick}
       disabled={disabled}

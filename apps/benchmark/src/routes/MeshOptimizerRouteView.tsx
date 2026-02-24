@@ -54,6 +54,7 @@ export function MeshOptimizerRouteView() {
     selectedAssetId,
     setSelectedAssetId,
     selectedAsset,
+    loadStoredAsset,
     loadCurrentAssetIntoBenchmark,
     toggleMeshes,
     saveAndLoadOptimizedAsset,
@@ -62,7 +63,7 @@ export function MeshOptimizerRouteView() {
     setRouteSelection,
     lastLoadError,
     clearLastLoadError,
-    setShowUrlModal,
+    loadFromUrls,
     uploadBundleFiles,
   } = useWorkbench();
 
@@ -139,6 +140,19 @@ export function MeshOptimizerRouteView() {
     setIsLoadingSelected(true);
     try {
       await loadCurrentAssetIntoBenchmark();
+      clearLastLoadError();
+    } finally {
+      setIsLoadingSelected(false);
+    }
+  };
+
+  const handlePickAsset = async (assetId: string) => {
+    const asset = assets.find((entry) => entry.id === assetId);
+    if (!asset) return;
+    setIsLoadingSelected(true);
+    try {
+      setSelectedAssetId(assetId);
+      await loadStoredAsset(asset);
       clearLastLoadError();
     } finally {
       setIsLoadingSelected(false);
@@ -394,12 +408,12 @@ export function MeshOptimizerRouteView() {
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handlePickAsset}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
-      <div className="mesh-inspector-layout">
+      <div className="mesh-inspector-layout with-side-insight">
         <div className="tool-panel mesh-inspector-panel">
           <RouteJumpStrip chips={jumpChips} selectionHint={selectionHint} />
 
@@ -585,15 +599,6 @@ export function MeshOptimizerRouteView() {
                 </div>
               )}
 
-              <MetricInsightPopout
-                insight={meshInsight}
-                isPinned={selectedMeshIndex !== null}
-                onPin={pinActiveInsight}
-                onUnpin={closeInsight}
-                onOpenExplainer={() => setShowExplainer(true)}
-                onRequestClose={closeInsight}
-              />
-
               <div className="mesh-inspector-footer">
                 <button
                   className="primary-btn"
@@ -709,6 +714,26 @@ export function MeshOptimizerRouteView() {
             {spineInstance && <AnimationControls spineInstance={spineInstance} />}
           </div>
         </div>
+
+        <aside className="tool-info-panel">
+          <div className="tool-info-scroll">
+            {meshInsight ? (
+              <MetricInsightPopout
+                insight={meshInsight}
+                isPinned={selectedMeshIndex !== null}
+                onPin={pinActiveInsight}
+                onUnpin={closeInsight}
+                onOpenExplainer={() => setShowExplainer(true)}
+                onRequestClose={closeInsight}
+              />
+            ) : (
+              <div className="tool-info-empty">
+                <h3>Select a mesh row</h3>
+                <p>Hover or click a mesh to inspect details here while keeping the mesh list fully visible.</p>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
 
       <MetricExplainerModal

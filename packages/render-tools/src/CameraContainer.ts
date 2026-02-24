@@ -158,6 +158,30 @@ export class CameraContainer extends Container {
     this.setCanvasScaleDebugInfo(scale);
   }
 
+  public clearSpine(): void {
+    this.currentSpine = null;
+    this.debugRenderer.setSpine(null);
+
+    const debugParent = this.debugRenderer.getContainer().parent;
+    if (debugParent) {
+      debugParent.removeChild(this.debugRenderer.getContainer());
+    }
+
+    if (this.slotHighlightGraphics.parent) {
+      this.slotHighlightGraphics.parent.removeChild(this.slotHighlightGraphics);
+    }
+
+    this.slotHighlightGraphics.clear();
+    this.highlightedSlotIndex = null;
+
+    for (let i = this.children.length - 1; i >= 0; i -= 1) {
+      const child = this.children[i];
+      if (child instanceof Spine) {
+        this.removeChild(child);
+      }
+    }
+  }
+
   private setCanvasScaleDebugInfo(scale: number): void {
     const el = document.getElementById("scale-info");
     if (el) el.innerText = `Scale: x${scale.toFixed(2)}`;

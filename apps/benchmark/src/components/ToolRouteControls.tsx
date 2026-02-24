@@ -2,19 +2,16 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StoredAsset } from '../core/storage/assetStore';
 import { assertCompleteAssetBundle, getAssetBundleCompleteness } from '../core/storage/assetStore';
-import { FolderOpenIcon, LinkIcon, PlayIcon, RabbitIcon } from './Icons';
+import { FolderOpenIcon, RabbitIcon } from './Icons';
 
 interface ToolRouteControlsProps {
   assets: StoredAsset[];
   selectedAssetId: string | null;
   setSelectedAssetId: (id: string) => void;
-  atlasOptions?: string[];
-  selectedAtlasName?: string | null;
-  setSelectedAtlasName?: (name: string) => void;
   onUploadBundle?: (files: File[]) => Promise<void>;
-  onLoadSelected?: () => Promise<void> | void;
+  onPickAsset?: (assetId: string) => Promise<void> | void;
+  onLoadFromUrl?: (jsonUrl: string, atlasUrl: string) => Promise<void> | void;
   isLoadingSelected?: boolean;
-  onOpenUrl?: () => void;
   triggerLabel?: string;
   minimal?: boolean;
 }
@@ -23,13 +20,10 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
   assets,
   selectedAssetId,
   setSelectedAssetId,
-  atlasOptions = [],
-  selectedAtlasName = null,
-  setSelectedAtlasName,
   onUploadBundle,
-  onLoadSelected,
+  onPickAsset,
+  onLoadFromUrl,
   isLoadingSelected = false,
-  onOpenUrl,
   triggerLabel,
   minimal = false,
 }) => {
@@ -40,6 +34,9 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
   const [requiredAtlasImages, setRequiredAtlasImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [jsonUrl, setJsonUrl] = useState('');
+  const [atlasUrl, setAtlasUrl] = useState('');
+  const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(false);
   const skeletonInputRef = useRef<HTMLInputElement>(null);
   const atlasInputRef = useRef<HTMLInputElement>(null);
   const imagesInputRef = useRef<HTMLInputElement>(null);
@@ -83,7 +80,36 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
     [requiredAtlasImages, availableImageNames, availableImageBaseNames]
   );
   const isPendingBundleComplete = completeness.hasSkeleton && completeness.hasAtlas && completeness.hasImages && missingAtlasImages.length === 0;
-  const selectedAtlasLabel = selectedAtlasName || atlasOptions[0] || t('toolRouteControls.values.noAtlas');
+  const selectedAssetMeta = selectedAsset
+    ? `${selectedAsset.fileCount} files`
+    : t('toolRouteControls.values.noAssets');
+
+  const handleAssetPick = async (assetId: string) => {
+    if (isLoadingSelected) return;
+    setSelectedAssetId(assetId);
+    setIsOpen(false);
+    try {
+      await onPickAsset?.(assetId);
+    } catch (error) {
+      console.error('Failed to load selected asset from picker', error);
+    }
+  };
+
+  const handleLoadFromUrl = async () => {
+    if (!onLoadFromUrl) return;
+    if (!jsonUrl.trim() || !atlasUrl.trim()) return;
+    setIsLoadingFromUrl(true);
+    try {
+      await onLoadFromUrl(jsonUrl.trim(), atlasUrl.trim());
+      setJsonUrl('');
+      setAtlasUrl('');
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Failed to load from URL', error);
+    } finally {
+      setIsLoadingFromUrl(false);
+    }
+  };
 
   const mergeFiles = (files: File[]) => {
     if (!files.length) return;
@@ -197,27 +223,6 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
             {minimal && <FolderOpenIcon className="tool-route-btn-icon" size={14} />}
             <span>{triggerLabel || t('toolRouteControls.actions.openPicker')}</span>
           </button>
-          {onLoadSelected && (
-            <button
-              type="button"
-              className="primary-btn tool-route-btn tool-route-btn-load"
-              onClick={() => void onLoadSelected()}
-              disabled={isLoadingSelected}
-            >
-              {minimal && <PlayIcon className="tool-route-btn-icon" size={14} />}
-              <span>{isLoadingSelected ? t('toolRouteControls.actions.loading') : t('toolRouteControls.actions.loadSelected')}</span>
-            </button>
-          )}
-          {onOpenUrl && (
-            <button
-              type="button"
-              className="secondary-btn tool-route-btn tool-route-btn-url"
-              onClick={onOpenUrl}
-            >
-              {minimal && <LinkIcon className="tool-route-btn-icon" size={14} />}
-              <span>{t('dashboard.actions.loadFromUrl')}</span>
-            </button>
-          )}
         </div>
         <div className="tool-route-inline-meta">
           <span className="tool-route-pill tool-route-pill-asset">
@@ -230,8 +235,8 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
               {selectedAsset ? selectedAsset.name : t('toolRouteControls.values.noAssets')}
             </span>
           </span>
-          <span className="tool-route-pill subtle tool-route-pill-atlas">
-            <span className="tool-route-pill-label">{selectedAtlasLabel}</span>
+          <span className="tool-route-pill subtle tool-route-pill-meta">
+            <span className="tool-route-pill-label">{selectedAssetMeta}</span>
           </span>
         </div>
       </section>
@@ -247,43 +252,81 @@ export const ToolRouteControls: React.FC<ToolRouteControlsProps> = ({
             </div>
 
             {/* Asset picker section */}
-            <div className="tool-route-grid">
-              <label className="tool-route-field">
-                <span>{t('toolRouteControls.labels.asset')}</span>
-                <div className="tool-asset-list">
-                  {assets.length === 0 && <p className="subtle-text">{t('toolRouteControls.values.noAssets')}</p>}
-                  {assets.map((asset) => (
-                    <button
-                      key={asset.id}
-                      type="button"
-                      className={`tool-asset-item ${selectedAssetId === asset.id ? 'active' : ''}`}
-                      onClick={() => setSelectedAssetId(asset.id)}
-                    >
-                      {asset.name}
-                    </button>
-                  ))}
-                </div>
-              </label>
-
-              <label className="tool-route-field">
-                <span>{t('toolRouteControls.labels.atlas')}</span>
-                <select
-                  value={selectedAtlasName ?? ''}
-                  onChange={(event) => setSelectedAtlasName?.(event.target.value)}
-                  disabled={atlasOptions.length === 0}
+            <div className="tool-asset-grid">
+              {assets.length === 0 && <p className="subtle-text">{t('toolRouteControls.values.noAssets')}</p>}
+              {assets.map((asset) => (
+                <button
+                  key={asset.id}
+                  type="button"
+                  className={`asset-card tool-asset-card ${selectedAssetId === asset.id ? 'active' : ''}`}
+                  onClick={() => void handleAssetPick(asset.id)}
+                  disabled={isLoadingSelected}
                 >
-                  {atlasOptions.length === 0 ? (
-                    <option value="">{t('toolRouteControls.values.noAtlas')}</option>
-                  ) : (
-                    atlasOptions.map((atlasName) => (
-                      <option key={atlasName} value={atlasName}>
-                        {atlasName}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </label>
+                  <div className="asset-thumb">
+                    {asset.previewImageDataUrl ? (
+                      <img src={asset.previewImageDataUrl} alt={asset.name} />
+                    ) : (
+                      <span>{asset.name.slice(0, 1).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="tool-asset-card-copy">
+                    <h3>{asset.name}</h3>
+                    <p>{asset.fileCount} files</p>
+                  </div>
+                </button>
+              ))}
             </div>
+
+            {onLoadFromUrl && (
+              <>
+                <div className="spine-import-divider">
+                  <span>{t('ui.loadFromUrl')}</span>
+                </div>
+                <div className="tool-url-form">
+                  <div className="form-group">
+                    <label htmlFor="tool-json-url">{t('ui.urlModal.jsonLabel')}</label>
+                    <input
+                      id="tool-json-url"
+                      type="url"
+                      value={jsonUrl}
+                      onChange={(event) => setJsonUrl(event.target.value)}
+                      placeholder={t('ui.urlModal.jsonPlaceholder')}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="tool-atlas-url">{t('ui.urlModal.atlasLabel')}</label>
+                    <input
+                      id="tool-atlas-url"
+                      type="url"
+                      value={atlasUrl}
+                      onChange={(event) => setAtlasUrl(event.target.value)}
+                      placeholder={t('ui.urlModal.atlasPlaceholder')}
+                    />
+                  </div>
+                  <div className="tool-url-actions">
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      onClick={() => {
+                        setJsonUrl('');
+                        setAtlasUrl('');
+                      }}
+                      disabled={isLoadingFromUrl || (!jsonUrl && !atlasUrl)}
+                    >
+                      {t('ui.cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      className="primary-btn"
+                      onClick={() => void handleLoadFromUrl()}
+                      disabled={isLoadingFromUrl || !jsonUrl.trim() || !atlasUrl.trim()}
+                    >
+                      {isLoadingFromUrl ? t('toolRouteControls.actions.loading') : t('ui.load')}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Import divider */}
             <div className="spine-import-divider">

@@ -15,7 +15,6 @@ import { MeshAnalysis } from '../components/analysis/MeshAnalysis';
 import { ClippingAnalysis } from '../components/analysis/ClippingAnalysis';
 import { BlendModeAnalysis } from '../components/analysis/BlendModeAnalysis';
 import { PhysicsAnalysis } from '../components/analysis/PhysicsAnalysis';
-import { SkeletonTree } from '../components/analysis/SkeletonTree';
 
 export function BenchmarkRouteView() {
   const { t } = useTranslation();
@@ -34,8 +33,8 @@ export function BenchmarkRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
-    loadCurrentAssetIntoBenchmark,
-    setShowUrlModal,
+    loadStoredAsset,
+    loadFromUrls,
     uploadBundleFiles,
   } = useWorkbench();
 
@@ -46,10 +45,13 @@ export function BenchmarkRouteView() {
     }
   });
 
-  const handleLoadSelected = async () => {
+  const handlePickAsset = async (assetId: string) => {
+    const asset = assets.find((entry) => entry.id === assetId);
+    if (!asset) return;
     setIsLoadingSelected(true);
     try {
-      await loadCurrentAssetIntoBenchmark();
+      setSelectedAssetId(assetId);
+      await loadStoredAsset(asset);
     } finally {
       setIsLoadingSelected(false);
     }
@@ -69,15 +71,22 @@ export function BenchmarkRouteView() {
         title={t('dashboard.tools.benchmark')}
         subtitle="Track rendering and computational pressure before runtime regressions."
       />
+      <section className="route-welcome-card">
+        <div className="route-welcome-copy">
+          <strong>Animator workspace ready</strong>
+          <span>Load a rig and inspect rendering, meshes, clipping, blend, and physics in one pass.</span>
+        </div>
+        <span className="route-welcome-chip">Live diagnostics</span>
+      </section>
       <ToolRouteControls
         minimal
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handlePickAsset}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
       <div className="benchmark-inspector-layout">
@@ -134,8 +143,6 @@ export function BenchmarkRouteView() {
                 <BlendModeAnalysis data={benchmarkData} />
                 <hr className="benchmark-section-divider" />
                 <PhysicsAnalysis data={benchmarkData} />
-                <hr className="benchmark-section-divider" />
-                <SkeletonTree data={benchmarkData} />
               </div>
             </>
           ) : (

@@ -1,9 +1,10 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { Application } from 'pixi.js';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpineLoader } from '../core/SpineLoader';
 import { useToast } from './ToastContext';
+import { tIndexed } from '../utils/indexedMessage';
 
 /**
  * useSpineLoader - Custom hook for handling Spine file loading operations
@@ -15,8 +16,38 @@ export function useSpineLoader(app: Application | null) {
   const [spineInstance, setSpineInstance] = useState<Spine | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const loaderRef = useRef<SpineLoader | null>(null);
+  const spineInstanceRef = useRef<Spine | null>(null);
+  const loadSequenceRef = useRef(0);
   const { addToast } = useToast();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    spineInstanceRef.current = spineInstance;
+  }, [spineInstance]);
+
+  const disposeSpine = useCallback((instance: Spine | null) => {
+    if (!instance) return;
+    try {
+      instance.state.clearTracks();
+      if (instance.parent) {
+        instance.parent.removeChild(instance);
+      }
+    } catch (error) {
+      console.warn('Failed to dispose previous spine instance', error);
+    }
+  }, []);
+
+  const startLoad = useCallback(() => {
+    const loadId = ++loadSequenceRef.current;
+    const existing = spineInstanceRef.current;
+    if (existing) {
+      disposeSpine(existing);
+      spineInstanceRef.current = null;
+    }
+    setSpineInstance(null);
+    setIsLoading(true);
+    return loadId;
+  }, [disposeSpine]);
 
   // Initialize loader when app changes
   useEffect(() => {
@@ -40,15 +71,10 @@ export function useSpineLoader(app: Application | null) {
       throw new Error(message);
     }
 
-    setIsLoading(true);
+    const loadId = startLoad();
     
     try {
       console.log('Loading Spine files from URLs:', { jsonUrl, atlasUrl });
-      
-      // Remove previous Spine instance if exists
-      if (spineInstance) {
-        setSpineInstance(null);
-      }
 
       // Load spine files from URLs
       const newSpineInstance = await loaderRef.current.loadSpineFromUrls(jsonUrl, atlasUrl);
@@ -57,17 +83,32 @@ export function useSpineLoader(app: Application | null) {
         throw new Error('Failed to load Spine instance from URLs');
       }
 
+      // Ignore stale async result if another load started later.
+      if (loadId !== loadSequenceRef.current) {
+        disposeSpine(newSpineInstance);
+        throw new Error('Stale load result');
+      }
+
+      spineInstanceRef.current = newSpineInstance;
       setSpineInstance(newSpineInstance);
       addToast(t('success.loadedFromUrl'), 'success');
       
       return newSpineInstance;
       
     } catch (error) {
+      if (loadId !== loadSequenceRef.current && error instanceof Error && error.message === 'Stale load result') {
+        throw error;
+      }
       console.error('Error loading Spine files from URLs:', error);
-      addToast(t('error.loadingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }), 'error');
+      addToast(
+        tIndexed(t, 'error.loadingError', [error instanceof Error ? error.message : t('dashboard.messages.unknownError')]),
+        'error'
+      );
       throw error;
     } finally {
-      setIsLoading(false);
+      if (loadId === loadSequenceRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -83,7 +124,7 @@ export function useSpineLoader(app: Application | null) {
       throw new Error(message);
     }
 
-    setIsLoading(true);
+    const loadId = startLoad();
     
     try {
       // Log file information for debugging
@@ -92,11 +133,6 @@ export function useSpineLoader(app: Application | null) {
         console.log(`File ${index + 1}: ${file.name} (${file.type})`);
       });
 
-      // Remove previous Spine instance if exists
-      if (spineInstance) {
-        setSpineInstance(null);
-      }
-
       // Load spine files
       const newSpineInstance = await loaderRef.current.loadSpineFiles(files);
       
@@ -104,17 +140,32 @@ export function useSpineLoader(app: Application | null) {
         throw new Error('Failed to load Spine instance');
       }
 
+      // Ignore stale async result if another load started later.
+      if (loadId !== loadSequenceRef.current) {
+        disposeSpine(newSpineInstance);
+        throw new Error('Stale load result');
+      }
+
+      spineInstanceRef.current = newSpineInstance;
       setSpineInstance(newSpineInstance);
       addToast(t('success.loadedFromFile'), 'success');
       
       return newSpineInstance;
       
     } catch (error) {
+      if (loadId !== loadSequenceRef.current && error instanceof Error && error.message === 'Stale load result') {
+        throw error;
+      }
       console.error('Error loading Spine files:', error);
-      addToast(t('error.loadingError', { 0: error instanceof Error ? error.message : t('dashboard.messages.unknownError') }), 'error');
+      addToast(
+        tIndexed(t, 'error.loadingError', [error instanceof Error ? error.message : t('dashboard.messages.unknownError')]),
+        'error'
+      );
       throw error;
     } finally {
-      setIsLoading(false);
+      if (loadId === loadSequenceRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -122,6 +173,11 @@ export function useSpineLoader(app: Application | null) {
    * Clear the current spine instance
    */
   const clearSpineInstance = () => {
+    const existing = spineInstanceRef.current;
+    if (existing) {
+      disposeSpine(existing);
+      spineInstanceRef.current = null;
+    }
     setSpineInstance(null);
   };
 

@@ -33,6 +33,9 @@ export function useUrlLoad({ app, loadSpineFromUrls }: UseUrlLoadOptions) {
 
         addToast(t('success.loadedFromUrl'), 'success');
       } catch (error) {
+        if (error instanceof Error && error.message === 'Stale load result') {
+          return;
+        }
         setUrlLoadStatus('error');
         addToast(
           t('error.failedToLoadFromUrls', { error: (error as Error).message }),
@@ -60,6 +63,9 @@ export function useUrlLoad({ app, loadSpineFromUrls }: UseUrlLoadOptions) {
           setUrlLoadStatus('success');
           addToast(t('success.loadedFromUrl'), 'success');
         } catch (error) {
+          if (error instanceof Error && error.message === 'Stale load result') {
+            return;
+          }
           setUrlLoadStatus('error');
           addToast(
             t('error.failedToLoadFromUrls', { error: (error as Error).message }),

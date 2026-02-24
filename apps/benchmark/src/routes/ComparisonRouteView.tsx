@@ -17,12 +17,9 @@ export function ComparisonRouteView() {
     assets,
     selectedAssetId,
     setSelectedAssetId,
-    atlasOptions,
-    selectedAtlasName,
-    setSelectedAtlasName,
     uploadBundleFiles,
     formatBytes,
-    setShowUrlModal,
+    loadFromUrls,
   } = useWorkbench();
 
   const [isLoadingSelected, setIsLoadingSelected] = useState(false);
@@ -76,8 +73,7 @@ export function ComparisonRouteView() {
     setPickerSide(null);
   }, [pickerSide, loadPaneAsset]);
 
-  const handleLoadSelected = useCallback(async () => {
-    if (!selectedAssetId) return;
+  const handleToolbarPick = useCallback(async (assetId: string) => {
     const targetSide: Exclude<PickerSide, null> = !leftPane.spine
       ? 'left'
       : !rightPane.spine
@@ -86,11 +82,11 @@ export function ComparisonRouteView() {
 
     setIsLoadingSelected(true);
     try {
-      await loadPaneAsset(targetSide, selectedAssetId);
+      await loadPaneAsset(targetSide, assetId);
     } finally {
       setIsLoadingSelected(false);
     }
-  }, [leftPane.spine, loadPaneAsset, rightPane.spine, selectedAssetId]);
+  }, [leftPane.spine, loadPaneAsset, rightPane.spine]);
 
   // Compute intersection of animation names
   const animations = useMemo(() => {
@@ -314,13 +310,10 @@ export function ComparisonRouteView() {
         assets={assets}
         selectedAssetId={selectedAssetId}
         setSelectedAssetId={(id) => setSelectedAssetId(id)}
-        atlasOptions={atlasOptions}
-        selectedAtlasName={selectedAtlasName}
-        setSelectedAtlasName={setSelectedAtlasName}
         onUploadBundle={uploadBundleFiles}
-        onLoadSelected={handleLoadSelected}
+        onPickAsset={handleToolbarPick}
+        onLoadFromUrl={loadFromUrls}
         isLoadingSelected={isLoadingSelected}
-        onOpenUrl={() => setShowUrlModal(true)}
       />
 
       <div className="comparison-layout comparison-layout-editorial" ref={comparisonRootRef}>
@@ -471,22 +464,25 @@ export function ComparisonRouteView() {
                 </select>
                 <ChevronDownIcon className="comparison-shared-select-icon" size={14} />
               </div>
-              {skins.length > 1 && (
-                <div className="comparison-shared-select comparison-shared-select-skin">
-                  <span>Skin:</span>
-                  <select
-                    value={currentSkin}
-                    onChange={(event) => setCurrentSkin(event.target.value)}
-                  >
-                    {skins.map((name) => (
+              <div className="comparison-shared-select comparison-shared-select-skin">
+                <span>Skin:</span>
+                <select
+                  value={skins.length > 0 ? currentSkin : 'default'}
+                  onChange={(event) => setCurrentSkin(event.target.value)}
+                  disabled={skins.length <= 1}
+                >
+                  {skins.length > 0 ? (
+                    skins.map((name) => (
                       <option key={name} value={name}>
                         {name}
                       </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon className="comparison-shared-select-icon" size={14} />
-                </div>
-              )}
+                    ))
+                  ) : (
+                    <option value="default">Default</option>
+                  )}
+                </select>
+                <ChevronDownIcon className="comparison-shared-select-icon" size={14} />
+              </div>
               <div className="comparison-shared-count">
                 <span>Common anims: {animations.length}</span>
                 <CheckIcon className="comparison-shared-count-icon" size={14} />
@@ -507,7 +503,7 @@ export function ComparisonRouteView() {
                 </button>
               </div>
 
-              <div className="tool-asset-list">
+              <div className="tool-asset-grid">
                 {assets.length === 0 && (
                   <p className="subtle-text">{t('toolRouteControls.values.noAssets')}</p>
                 )}
@@ -517,13 +513,20 @@ export function ComparisonRouteView() {
                     <button
                       key={asset.id}
                       type="button"
-                      className={`tool-asset-item ${isSelected ? 'active' : ''}`}
+                      className={`asset-card tool-asset-card ${isSelected ? 'active' : ''}`}
                       onClick={() => void handlePickAsset(asset.id)}
                     >
-                      <span className="tool-asset-item-name">{asset.name}</span>
-                      <span className="tool-asset-item-meta">
-                        {asset.fileCount} files &middot; {formatBytes(asset.totalBytes)}
-                      </span>
+                      <div className="asset-thumb">
+                        {asset.previewImageDataUrl ? (
+                          <img src={asset.previewImageDataUrl} alt={asset.name} />
+                        ) : (
+                          <span>{asset.name.slice(0, 1).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="tool-asset-card-copy">
+                        <h3>{asset.name}</h3>
+                        <p>{asset.fileCount} files &middot; {formatBytes(asset.totalBytes)}</p>
+                      </div>
                     </button>
                   );
                 })}
