@@ -23,7 +23,8 @@ export default defineConfig({
       'packages/metrics-factors/src/**/*.test.ts',
       'packages/metrics-scoring/src/**/*.test.ts',
       'packages/metrics-pipeline/src/**/*.test.ts',
-      'packages/metrics-reporting/src/**/*.test.ts'
+      'packages/metrics-reporting/src/**/*.test.ts',
+      'packages/constraint-tools/src/**/*.test.ts'
     ],
     coverage: {
       provider: 'v8',

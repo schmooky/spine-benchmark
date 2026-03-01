@@ -99,9 +99,6 @@ export function bakeConstraints(
   for (const c of skeleton.transformConstraints) {
     for (const b of c.bones) affectedBoneSet.add(b.data.name);
   }
-  for (const c of skeleton.pathConstraints) {
-    for (const b of c.bones) affectedBoneSet.add(b.data.name);
-  }
   const physicsConstraints = skeleton.physicsConstraints || [];
   for (const c of physicsConstraints) {
     affectedBoneSet.add(c.bone.data.name);
@@ -168,13 +165,15 @@ export function bakeConstraints(
         const boneFrames = frames.get(boneName)!;
         boneFrames.push({
           time,
-          x: bone.x,
-          y: bone.y,
-          rotation: bone.rotation,
-          scaleX: bone.scaleX,
-          scaleY: bone.scaleY,
-          shearX: bone.shearX,
-          shearY: bone.shearY,
+          // Use applied local transforms so constrained world pose is preserved
+          // after constraints are removed from the exported JSON.
+          x: bone.ax,
+          y: bone.ay,
+          rotation: bone.arotation,
+          scaleX: bone.ascaleX,
+          scaleY: bone.ascaleY,
+          shearX: bone.ashearX,
+          shearY: bone.ashearY,
         });
       }
     }, { sampleRate, preserveState: true });
@@ -207,8 +206,8 @@ export function bakeConstraints(
       for (const frame of boneFrames) {
         const value = frame.rotation - setupPose.rotation;
         rotateTimeline.push({
-          time: round(frame.time),
-          value: round(value),
+          time: frame.time,
+          value,
         });
       }
 
@@ -218,29 +217,33 @@ export function bakeConstraints(
         const dx = frame.x - setupPose.x;
         const dy = frame.y - setupPose.y;
         translateTimeline.push({
-          time: round(frame.time),
-          x: round(dx),
-          y: round(dy),
+          time: frame.time,
+          x: dx,
+          y: dy,
         });
       }
 
       // Build scale timeline (absolute values, Spine 4.x format)
       const scaleTimeline: Array<{ time: number; x: number; y: number }> = [];
       for (const frame of boneFrames) {
+        const sx = setupPose.scaleX !== 0 ? frame.scaleX / setupPose.scaleX : frame.scaleX;
+        const sy = setupPose.scaleY !== 0 ? frame.scaleY / setupPose.scaleY : frame.scaleY;
         scaleTimeline.push({
-          time: round(frame.time),
-          x: round(frame.scaleX),
-          y: round(frame.scaleY),
+          time: frame.time,
+          x: sx,
+          y: sy,
         });
       }
 
       // Build shear timeline
       const shearTimeline: Array<{ time: number; x: number; y: number }> = [];
       for (const frame of boneFrames) {
+        const sx = frame.shearX - setupPose.shearX;
+        const sy = frame.shearY - setupPose.shearY;
         shearTimeline.push({
-          time: round(frame.time),
-          x: round(frame.shearX),
-          y: round(frame.shearY),
+          time: frame.time,
+          x: sx,
+          y: sy,
         });
       }
 
@@ -264,14 +267,14 @@ export function bakeConstraints(
   const constraintsRemoved = {
     ik: countArray(data.ik),
     transform: countArray(data.transform),
-    path: countArray(data.path),
+    // Path constraints are currently preserved to keep world-space motion exact.
+    path: 0,
     physics: countArray(data.physics),
   };
 
   // Remove constraint definitions from JSON root
   delete data.ik;
   delete data.transform;
-  delete data.path;
   delete data.physics;
 
   // Remove constraint timelines from all animations
@@ -280,7 +283,6 @@ export function bakeConstraints(
     if (!anim || typeof anim !== 'object') continue;
     delete anim.ik;
     delete anim.transform;
-    delete anim.path;
     delete anim.physics;
   }
 
@@ -295,10 +297,6 @@ export function bakeConstraints(
       sampleRate,
     },
   };
-}
-
-function round(v: number): number {
-  return Math.round(v * 1000) / 1000;
 }
 
 function countArray(value: unknown): number {
