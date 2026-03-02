@@ -34,14 +34,14 @@
     "loading": "Завантаження...",
     "helpText": "Ctrl+K відкриває панель",
     "close": "Закрити",
-    "loadFromUrl": "Load from URL",
+    "loadFromUrl": "Завантажити з URL",
     "loadingFromUrl": "Loading from URL...",
     "urlHelp": "You can also load Spine files from URL using the button above or by adding ?json=<url>&atlas=<url> to the URL",
     "cancel": "Cancel",
     "load": "Load",
     "urlModal": {
       "jsonLabel": "JSON URL:",
-      "atlasLabel": "Atlas URL:",
+      "atlasLabel": "URL-адреса атласу:",
       "jsonPlaceholder": "https://example.com/spine.json",
       "atlasPlaceholder": "https://example.com/spine.atlas"
     },
@@ -733,39 +733,39 @@
       "animationHeatmap": "Теплова карта анімацій"
     },
     "actions": {
-      "import": "Import",
-      "load": "Load",
-      "delete": "Delete",
+      "import": "Імпорт",
+      "load": "навантаження",
+      "delete": "Видалити",
       "startTour": "Почати тур",
-      "loadFromUrl": "Load From URL",
-      "reloadSelected": "Reload Selected Asset",
+      "loadFromUrl": "Завантажити з URL",
+      "reloadSelected": "Перезавантажити вибраний ресурс",
       "continue": "Продовжити",
       "skipForNow": "Пропустити зараз",
-      "collapseSidebar": "Collapse Sidebar",
-      "expandSidebar": "Expand Sidebar"
+      "collapseSidebar": "Згорнути бічну панель",
+      "expandSidebar": "Розгорніть бічну панель"
     },
     "messages": {
-      "noAssets": "No assets stored yet. Drop files into the workspace to add one.",
-      "seedDefaultFailed": "Could not seed demo asset. You can still import your own files.",
-      "autoLoadFailed": "Failed to auto-load default asset.",
-      "loadAssetsFailed": "Failed to load stored assets",
-      "deleteAssetFailed": "Failed to delete asset",
-      "unknownError": "Unknown error",
-      "notInitialized": "Application not initialized"
+      "noAssets": "Активів ще не збережено. Перетягніть файли в робочу область, щоб додати один.",
+      "seedDefaultFailed": "Не вдалося створити демонстраційний ресурс. Ви все ще можете імпортувати власні файли.",
+      "autoLoadFailed": "Не вдалося автоматично завантажити ресурс за умовчанням.",
+      "loadAssetsFailed": "Не вдалося завантажити збережені ресурси",
+      "deleteAssetFailed": "Не вдалося видалити ресурс",
+      "unknownError": "Невідома помилка",
+      "notInitialized": "Програма не ініціалізована"
     },
     "workspace": {
-      "benchmarkTitle": "Benchmark Workspace",
-      "optimizerTitle": "Mesh Optimizer Workspace",
-      "selectedAsset": "Selected asset: {{name}} ({{count}} files)",
-      "empty": "Select an asset from the library or drop files to begin.",
-      "dropArea": "Drop Spine folders/files here to load and save into your asset library",
-      "assetReview": "Asset Review",
-      "selectForReview": "Select an asset to review file inventory.",
-      "updatedAt": "Updated {{date}}",
+      "benchmarkTitle": "Порівняльний робочий простір",
+      "optimizerTitle": "Робоча область Mesh Optimizer",
+      "selectedAsset": "Вибраний актив: {{name}} ({{count}} файлів)",
+      "empty": "Щоб почати, виберіть ресурс із бібліотеки або перетягніть файли.",
+      "dropArea": "Перетягніть сюди папки/файли Spine, щоб завантажити та зберегти у своїй бібліотеці активів",
+      "assetReview": "Огляд активів",
+      "selectForReview": "Виберіть актив для перегляду інвентаризації файлів.",
+      "updatedAt": "Оновлено {{date}}",
       "binaryType": "application/octet-stream",
-      "physicsBakerTitle": "Physics Baker Workspace",
-      "pixelFootprint": "Footprint: {{width}}x{{height}} px",
-      "canvasCoverage": "Canvas coverage: {{coverage}}%",
+      "physicsBakerTitle": "Робоча область Physics Baker",
+      "pixelFootprint": "Футринк: {{width}}x{{height}} пікс",
+      "canvasCoverage": "Покриття полотна: {{coverage}}%",
       "drawCallInspectorTitle": "Draw Call Inspector",
       "atlasRepackTitle": "Atlas Repack Advisor"
     },
@@ -1341,60 +1341,60 @@
     }
   },
   "toolRouteControls": {
-    "title": "Tool Inputs",
-    "summary": "Asset: {{asset}} • Atlas: {{atlas}}",
+    "title": "Введення інструментів",
+    "summary": "Актив: {{asset}} • Атлас: {{atlas}}",
     "labels": {
-      "asset": "Asset",
-      "atlas": "Atlas"
+      "asset": "Актив",
+      "atlas": "Атлас"
     },
     "values": {
-      "noAssets": "No assets available",
-      "noAtlas": "No atlas in asset",
-      "assetFileCount": "{{count}} files"
+      "noAssets": "Немає доступних активів",
+      "noAtlas": "Немає атласу в активі",
+      "assetFileCount": "{{count}} файлів"
     },
     "actions": {
-      "openPicker": "Asset Picker",
-      "close": "Close",
-      "import": "Import",
-      "importing": "Importing...",
-      "cancel": "Cancel",
-      "loadSelected": "Load Selected",
-      "loading": "Loading...",
-      "copySmartLink": "Copy smart link"
+      "openPicker": "Вибір активів",
+      "close": "Закрити",
+      "import": "Імпорт",
+      "importing": "Імпорт...",
+      "cancel": "Скасувати",
+      "loadSelected": "Завантажити вибране",
+      "loading": "Завантаження...",
+      "copySmartLink": "Копіювати розумне посилання"
     },
     "dropzone": {
-      "title": "Drag & drop your Spine files here",
-      "hint": "Skeleton (.json/.skel) + Atlas (.atlas) + Textures (.png)"
+      "title": "Перетягніть файли Spine сюди",
+      "hint": "Скелет (.json/.skel) + Атлас (.atlas) + Текстури (.png)"
     },
     "fileSlots": {
-      "skeleton": "Skeleton",
-      "atlas": "Atlas",
-      "textures": "Textures",
-      "select": "Select",
-      "remove": "Remove",
-      "requiredByAtlas": "Required by atlas:"
+      "skeleton": "Скелет",
+      "atlas": "Атлас",
+      "textures": "Текстури",
+      "select": "Виберіть",
+      "remove": "видалити",
+      "requiredByAtlas": "Обов'язкові для атласу:"
     },
     "errors": {
-      "incompleteBundle": "Bundle is incomplete. Add skeleton, atlas, and required images.",
-      "missingAtlasImages": "Missing {{count}} atlas-referenced images.",
-      "uploadFailed": "Bundle upload failed."
+      "incompleteBundle": "Пакет неповний. Додайте скелет, атлас і потрібні зображення.",
+      "missingAtlasImages": "Відсутні {{count}} зображень із посиланням на атлас.",
+      "uploadFailed": "Не вдалося завантажити пакет."
     },
     "tabs": {
-      "assetOptions": "Asset options",
-      "importSource": "Import source",
-      "fromFile": "From File",
-      "fromUrl": "From URL"
+      "assetOptions": "Опції активів",
+      "importSource": "Джерело імпорту",
+      "fromFile": "З файлу",
+      "fromUrl": "З URL"
     },
     "url": {
-      "imageUrlsLabel": "Image URLs (one per line, optional)",
+      "imageUrlsLabel": "URL-адреси зображень (по одній на рядок, необов’язково)",
       "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png",
-      "smartLinkLabel": "Smart link"
+      "smartLinkLabel": "Розумне посилання"
     },
     "status": {
-      "smartLinkCopied": "Smart link copied.",
-      "smartLinkCopyFailed": "Could not copy smart link.",
-      "smartLinkGenerateFailed": "Could not create smart link.",
-      "smartLinkCopyFailedManual": "Smart link created, but auto-copy failed. Copy it manually from the field below."
+      "smartLinkCopied": "Розумне посилання скопійовано.",
+      "smartLinkCopyFailed": "Не вдалося скопіювати розумне посилання.",
+      "smartLinkGenerateFailed": "Не вдалося створити розумне посилання.",
+      "smartLinkCopyFailedManual": "Смарт-посилання створено, але автоматичне копіювання не вдалося. Скопіюйте його вручну з поля нижче."
     }
   },
   "animationHeatmap": {

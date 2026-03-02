@@ -6,7 +6,7 @@ import traverseModule from '@babel/traverse';
 const rootDir = process.cwd();
 const localesDir = path.join(rootDir, 'src', 'locales');
 const sourceDir = path.join(rootDir, 'src');
-const traverse = traverseModule.default;
+const traverse = traverseModule.default ?? traverseModule;
 
 function isObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
@@ -49,8 +49,17 @@ function hasKey(obj, key) {
 
 function shouldSkipJsxTextLiteral(text) {
   if (!text) return true;
-  if (/^[^A-Za-z\u00C0-\u024F\u0400-\u04FF\u4E00-\u9FFF]+$/.test(text)) return true;
+  if (!/\p{L}/u.test(text)) return true;
   return false;
+}
+
+function extractStaticLiteral(expression) {
+  if (!expression) return null;
+  if (expression.type === 'StringLiteral') return expression.value;
+  if (expression.type === 'TemplateLiteral' && expression.expressions.length === 0) {
+    return expression.quasis.map((quasi) => quasi.value.cooked ?? '').join('');
+  }
+  return null;
 }
 
 function collectLiteralViolations(file, source) {
@@ -82,12 +91,27 @@ function collectLiteralViolations(file, source) {
       const attrName = nameNode.name;
       if (!['aria-label', 'title', 'placeholder', 'alt'].includes(attrName)) return;
       const valueNode = pathRef.node.value;
-      if (!valueNode || valueNode.type !== 'StringLiteral') return;
-      const literal = valueNode.value.trim();
+      if (!valueNode) return;
+      const literal = valueNode.type === 'StringLiteral'
+        ? valueNode.value.trim()
+        : valueNode.type === 'JSXExpressionContainer'
+          ? (extractStaticLiteral(valueNode.expression) ?? '').trim()
+          : '';
       if (!literal || shouldSkipJsxTextLiteral(literal)) return;
       violations.push({
-        line: valueNode.loc?.start.line ?? 1,
+        line: valueNode.loc?.start.line ?? pathRef.node.loc?.start.line ?? 1,
         kind: `attr:${attrName}`,
+        value: literal,
+      });
+    },
+    JSXExpressionContainer(pathRef) {
+      const parentNode = pathRef.parent;
+      if (parentNode.type !== 'JSXElement' && parentNode.type !== 'JSXFragment') return;
+      const literal = (extractStaticLiteral(pathRef.node.expression) ?? '').replace(/\s+/g, ' ').trim();
+      if (!literal || shouldSkipJsxTextLiteral(literal)) return;
+      violations.push({
+        line: pathRef.node.loc?.start.line ?? 1,
+        kind: 'jsx-expression',
         value: literal,
       });
     },
@@ -130,6 +154,7 @@ for (const file of tsFiles) {
 
 const missingInEn = [...usedKeys].filter((key) => !hasKey(locales['en.json'], key)).sort();
 const missingByLocale = [];
+const extraByLocale = [];
 
 const literalViolations = [];
 for (const file of tsFiles) {
@@ -146,13 +171,18 @@ for (const file of tsFiles) {
 
 for (const file of localeFiles) {
   if (file === 'en.json') continue;
+  const localeKeys = flattenKeys(locales[file]);
   const missing = enKeys.filter((key) => !hasKey(locales[file], key));
+  const extra = localeKeys.filter((key) => !hasKey(locales['en.json'], key));
   if (missing.length > 0) {
     missingByLocale.push([file, missing]);
   }
+  if (extra.length > 0) {
+    extraByLocale.push([file, extra]);
+  }
 }
 
-if (missingInEn.length === 0 && missingByLocale.length === 0 && literalViolations.length === 0) {
+if (missingInEn.length === 0 && missingByLocale.length === 0 && extraByLocale.length === 0 && literalViolations.length === 0) {
   console.log('i18n check passed');
   process.exit(0);
 }
@@ -164,6 +194,11 @@ if (missingInEn.length > 0) {
 
 for (const [file, keys] of missingByLocale) {
   console.error(`Missing keys in ${file} (${keys.length}):`);
+  for (const key of keys) console.error(`- ${key}`);
+}
+
+for (const [file, keys] of extraByLocale) {
+  console.error(`Extra keys in ${file} not present in en.json (${keys.length}):`);
   for (const key of keys) console.error(`- ${key}`);
 }
 

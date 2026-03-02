@@ -20,6 +20,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
+      'apps/benchmark/test/**/*.test.ts',
       'packages/metrics-factors/src/**/*.test.ts',
       'packages/metrics-scoring/src/**/*.test.ts',
       'packages/metrics-pipeline/src/**/*.test.ts',

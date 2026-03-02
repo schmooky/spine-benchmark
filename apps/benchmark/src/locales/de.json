@@ -34,14 +34,14 @@
     "loading": "Lädt...",
     "helpText": "Strg+K öffnet ein Panel",
     "close": "Schließen",
-    "loadFromUrl": "Load from URL",
+    "loadFromUrl": "Von URL laden",
     "loadingFromUrl": "Loading from URL...",
     "urlHelp": "You can also load Spine files from URL using the button above or by adding ?json=<url>&atlas=<url> to the URL",
     "cancel": "Cancel",
     "load": "Load",
     "urlModal": {
-      "jsonLabel": "JSON URL:",
-      "atlasLabel": "Atlas URL:",
+      "jsonLabel": "JSON-URL:",
+      "atlasLabel": "Atlas-URL:",
       "jsonPlaceholder": "https://example.com/spine.json",
       "atlasPlaceholder": "https://example.com/spine.atlas"
     },
@@ -734,39 +734,39 @@
     },
     "actions": {
       "import": "Import",
-      "load": "Load",
-      "delete": "Delete",
+      "load": "Laden",
+      "delete": "Löschen",
       "startTour": "Geführte Tour starten",
-      "loadFromUrl": "Load From URL",
-      "reloadSelected": "Reload Selected Asset",
+      "loadFromUrl": "Von URL laden",
+      "reloadSelected": "Ausgewähltes Asset neu laden",
       "continue": "Weiter",
       "skipForNow": "Vorerst überspringen",
-      "collapseSidebar": "Collapse Sidebar",
-      "expandSidebar": "Expand Sidebar"
+      "collapseSidebar": "Seitenleiste einklappen",
+      "expandSidebar": "Erweitern Sie die Seitenleiste"
     },
     "messages": {
-      "noAssets": "No assets stored yet. Drop files into the workspace to add one.",
-      "seedDefaultFailed": "Could not seed demo asset. You can still import your own files.",
-      "autoLoadFailed": "Failed to auto-load default asset.",
-      "loadAssetsFailed": "Failed to load stored assets",
-      "deleteAssetFailed": "Failed to delete asset",
-      "unknownError": "Unknown error",
-      "notInitialized": "Application not initialized"
+      "noAssets": "Noch keine Vermögenswerte gespeichert. Legen Sie Dateien im Arbeitsbereich ab, um eine hinzuzufügen.",
+      "seedDefaultFailed": "Demo-Asset konnte nicht gesetzt werden. Sie können weiterhin Ihre eigenen Dateien importieren.",
+      "autoLoadFailed": "Das automatische Laden des Standard-Assets ist fehlgeschlagen.",
+      "loadAssetsFailed": "Gespeicherte Assets konnten nicht geladen werden",
+      "deleteAssetFailed": "Asset konnte nicht gelöscht werden",
+      "unknownError": "Unbekannter Fehler",
+      "notInitialized": "Anwendung nicht initialisiert"
     },
     "workspace": {
-      "benchmarkTitle": "Benchmark Workspace",
-      "optimizerTitle": "Mesh Optimizer Workspace",
-      "selectedAsset": "Selected asset: {{name}} ({{count}} files)",
-      "empty": "Select an asset from the library or drop files to begin.",
-      "dropArea": "Drop Spine folders/files here to load and save into your asset library",
-      "assetReview": "Asset Review",
-      "selectForReview": "Select an asset to review file inventory.",
-      "updatedAt": "Updated {{date}}",
+      "benchmarkTitle": "Benchmark-Arbeitsbereich",
+      "optimizerTitle": "Arbeitsbereich „Mesh Optimizer“.",
+      "selectedAsset": "Ausgewähltes Asset: {{name}} ({{count}} Dateien)",
+      "empty": "Wählen Sie ein Asset aus der Bibliothek aus oder legen Sie Dateien ab, um zu beginnen.",
+      "dropArea": "Legen Sie Spine-Ordner/Dateien hier ab, um sie in Ihre Asset-Bibliothek zu laden und zu speichern",
+      "assetReview": "Vermögensüberprüfung",
+      "selectForReview": "Wählen Sie ein Asset aus, um den Dateibestand zu überprüfen.",
+      "updatedAt": "Aktualisiert {{date}}",
       "binaryType": "application/octet-stream",
-      "physicsBakerTitle": "Physics Baker Workspace",
+      "physicsBakerTitle": "Physics Baker-Arbeitsbereich",
       "pixelFootprint": "Footprint: {{width}}x{{height}} px",
-      "canvasCoverage": "Canvas coverage: {{coverage}}%",
-      "drawCallInspectorTitle": "Draw Call Inspector",
+      "canvasCoverage": "Leinwandabdeckung: {{coverage}} %",
+      "drawCallInspectorTitle": "Call Inspector zeichnen",
       "atlasRepackTitle": "Atlas Repack Advisor"
     },
     "assetCard": {
@@ -1341,60 +1341,60 @@
     }
   },
   "toolRouteControls": {
-    "title": "Tool Inputs",
-    "summary": "Asset: {{asset}} • Atlas: {{atlas}}",
+    "title": "Werkzeugeingaben",
+    "summary": "Vermögenswert: {{asset}} • Atlas: {{atlas}}",
     "labels": {
-      "asset": "Asset",
+      "asset": "Vermögenswert",
       "atlas": "Atlas"
     },
     "values": {
-      "noAssets": "No assets available",
-      "noAtlas": "No atlas in asset",
-      "assetFileCount": "{{count}} files"
+      "noAssets": "Keine Vermögenswerte verfügbar",
+      "noAtlas": "Kein Atlas im Vermögen",
+      "assetFileCount": "{{count}} Dateien"
     },
     "actions": {
-      "openPicker": "Asset Picker",
-      "close": "Close",
+      "openPicker": "Asset-Picker",
+      "close": "Schließen",
       "import": "Import",
-      "importing": "Importing...",
-      "cancel": "Cancel",
-      "loadSelected": "Load Selected",
-      "loading": "Loading...",
-      "copySmartLink": "Copy smart link"
+      "importing": "Importieren...",
+      "cancel": "Stornieren",
+      "loadSelected": "Ausgewählte laden",
+      "loading": "Laden...",
+      "copySmartLink": "Smart-Link kopieren"
     },
     "dropzone": {
-      "title": "Drag & drop your Spine files here",
-      "hint": "Skeleton (.json/.skel) + Atlas (.atlas) + Textures (.png)"
+      "title": "Ziehen Sie Ihre Spine-Dateien per Drag & Drop hierher",
+      "hint": "Skelett (.json/.skel) + Atlas (.atlas) + Texturen (.png)"
     },
     "fileSlots": {
       "skeleton": "Skeleton",
       "atlas": "Atlas",
-      "textures": "Textures",
-      "select": "Select",
-      "remove": "Remove",
-      "requiredByAtlas": "Required by atlas:"
+      "textures": "Texturen",
+      "select": "Wählen",
+      "remove": "Entfernen",
+      "requiredByAtlas": "Vom Atlas gefordert:"
     },
     "errors": {
-      "incompleteBundle": "Bundle is incomplete. Add skeleton, atlas, and required images.",
-      "missingAtlasImages": "Missing {{count}} atlas-referenced images.",
-      "uploadFailed": "Bundle upload failed."
+      "incompleteBundle": "Bundle ist unvollständig. Fügen Sie Skelett, Atlas und erforderliche Bilder hinzu.",
+      "missingAtlasImages": "Es fehlen {{count}} atlasreferenzierte Bilder.",
+      "uploadFailed": "Das Hochladen des Bundles ist fehlgeschlagen."
     },
     "tabs": {
-      "assetOptions": "Asset options",
-      "importSource": "Import source",
-      "fromFile": "From File",
-      "fromUrl": "From URL"
+      "assetOptions": "Asset-Optionen",
+      "importSource": "Quelle importieren",
+      "fromFile": "Aus Datei",
+      "fromUrl": "Von URL"
     },
     "url": {
-      "imageUrlsLabel": "Image URLs (one per line, optional)",
+      "imageUrlsLabel": "Bild-URLs (eine pro Zeile, optional)",
       "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png",
-      "smartLinkLabel": "Smart link"
+      "smartLinkLabel": "Intelligente Verbindung"
     },
     "status": {
-      "smartLinkCopied": "Smart link copied.",
-      "smartLinkCopyFailed": "Could not copy smart link.",
-      "smartLinkGenerateFailed": "Could not create smart link.",
-      "smartLinkCopyFailedManual": "Smart link created, but auto-copy failed. Copy it manually from the field below."
+      "smartLinkCopied": "Smartlink kopiert.",
+      "smartLinkCopyFailed": "Smartlink konnte nicht kopiert werden.",
+      "smartLinkGenerateFailed": "Smartlink konnte nicht erstellt werden.",
+      "smartLinkCopyFailedManual": "Smart-Link erstellt, aber das automatische Kopieren ist fehlgeschlagen. Kopieren Sie es manuell aus dem Feld unten."
     }
   },
   "animationHeatmap": {

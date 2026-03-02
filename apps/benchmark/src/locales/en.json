@@ -724,7 +724,10 @@
       "navigation": "Navigation",
       "assetLibrary": "Asset Library",
       "documentation": "Documentation",
-      "partners": "Partners"
+      "partners": "Partners",
+      "partnerTools": "Partner Tools",
+      "guides": "Guides",
+      "community": "Community"
     },
     "tools": {
       "benchmark": "Benchmark",
@@ -1009,7 +1012,8 @@
       "selectJsonAsset": "Select an asset with a JSON skeleton first.",
       "jsonNotFound": "JSON file not found in selected asset.",
       "bakeFailed": "Physics bake failed"
-    }
+    },
+    "comingSoon": "Physics baking workflow is being integrated for Spine-compatible exports."
   },
   "constraintBaker": {
     "title": "Constraint Baker",

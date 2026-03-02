@@ -34,16 +34,16 @@
     "loading": "Загрузка...",
     "helpText": "Ctrl+K открывает панель",
     "close": "Закрыть",
-    "loadFromUrl": "Load from URL",
+    "loadFromUrl": "Загрузить с URL",
     "loadingFromUrl": "Loading from URL...",
     "urlHelp": "You can also load Spine files from URL using the button above or by adding ?json=<url>&atlas=<url> to the URL",
     "cancel": "Cancel",
     "load": "Load",
     "urlModal": {
-      "jsonLabel": "JSON URL:",
-      "atlasLabel": "Atlas URL:",
-      "jsonPlaceholder": "https://example.com/spine.json",
-      "atlasPlaceholder": "https://example.com/spine.atlas"
+      "jsonLabel": "URL-адрес JSON:",
+      "atlasLabel": "URL-адрес Атласа:",
+      "jsonPlaceholder": "__ТОКЕН_0__",
+      "atlasPlaceholder": "__ТОКЕН_0__"
     },
     "keys": {
       "enter": "Enter",
@@ -733,41 +733,41 @@
       "animationHeatmap": "Тепловая карта анимаций"
     },
     "actions": {
-      "import": "Import",
-      "load": "Load",
-      "delete": "Delete",
+      "import": "Импорт",
+      "load": "Нагрузка",
+      "delete": "Удалить",
       "startTour": "Начать тур",
-      "loadFromUrl": "Load From URL",
-      "reloadSelected": "Reload Selected Asset",
+      "loadFromUrl": "Загрузить с URL-адреса",
+      "reloadSelected": "Перезагрузить выбранный ресурс",
       "continue": "Продолжить",
       "skipForNow": "Пропустить пока",
-      "collapseSidebar": "Collapse Sidebar",
-      "expandSidebar": "Expand Sidebar"
+      "collapseSidebar": "Свернуть боковую панель",
+      "expandSidebar": "Развернуть боковую панель"
     },
     "messages": {
-      "noAssets": "No assets stored yet. Drop files into the workspace to add one.",
-      "seedDefaultFailed": "Could not seed demo asset. You can still import your own files.",
-      "autoLoadFailed": "Failed to auto-load default asset.",
-      "loadAssetsFailed": "Failed to load stored assets",
-      "deleteAssetFailed": "Failed to delete asset",
-      "unknownError": "Unknown error",
-      "notInitialized": "Application not initialized"
+      "noAssets": "Активы пока не сохранены. Перетащите файлы в рабочую область, чтобы добавить их.",
+      "seedDefaultFailed": "Не удалось загрузить демо-актив. Вы по-прежнему можете импортировать свои собственные файлы.",
+      "autoLoadFailed": "Не удалось автоматически загрузить ресурс по умолчанию.",
+      "loadAssetsFailed": "Не удалось загрузить сохраненные ресурсы.",
+      "deleteAssetFailed": "Не удалось удалить объект.",
+      "unknownError": "Неизвестная ошибка",
+      "notInitialized": "Приложение не инициализировано"
     },
     "workspace": {
-      "benchmarkTitle": "Benchmark Workspace",
-      "optimizerTitle": "Mesh Optimizer Workspace",
-      "selectedAsset": "Selected asset: {{name}} ({{count}} files)",
-      "empty": "Select an asset from the library or drop files to begin.",
-      "dropArea": "Drop Spine folders/files here to load and save into your asset library",
-      "assetReview": "Asset Review",
-      "selectForReview": "Select an asset to review file inventory.",
-      "updatedAt": "Updated {{date}}",
-      "binaryType": "application/octet-stream",
-      "physicsBakerTitle": "Physics Baker Workspace",
-      "pixelFootprint": "Footprint: {{width}}x{{height}} px",
-      "canvasCoverage": "Canvas coverage: {{coverage}}%",
-      "drawCallInspectorTitle": "Draw Call Inspector",
-      "atlasRepackTitle": "Atlas Repack Advisor"
+      "benchmarkTitle": "Рабочая область тестирования",
+      "optimizerTitle": "Рабочая область оптимизатора сетки",
+      "selectedAsset": "Выбранный ресурс: {{name}} (файлы {{count}})",
+      "empty": "Чтобы начать, выберите ресурс из библиотеки или перетащите файлы.",
+      "dropArea": "Перетащите сюда папки/файлы Spine, чтобы загрузить и сохранить их в своей библиотеке ресурсов.",
+      "assetReview": "Обзор активов",
+      "selectForReview": "Выберите ресурс для просмотра инвентаризации файлов.",
+      "updatedAt": "Обновлен {{date}}",
+      "binaryType": "__ТОКЕН_0__",
+      "physicsBakerTitle": "Рабочая область «Физика Бейкера»",
+      "pixelFootprint": "След: {{width}}x{{height}} пикселей",
+      "canvasCoverage": "Покрытие холста: {{coverage}}%",
+      "drawCallInspectorTitle": "Инспектор вызовов отрисовки",
+      "atlasRepackTitle": "Консультант по перепаковке Atlas"
     },
     "assetCard": {
       "summary": "{{count}} files • {{size}}"
@@ -1341,60 +1341,60 @@
     }
   },
   "toolRouteControls": {
-    "title": "Tool Inputs",
-    "summary": "Asset: {{asset}} • Atlas: {{atlas}}",
+    "title": "Инструментальные входы",
+    "summary": "Актив: {{asset}} • Атлас: {{atlas}}",
     "labels": {
-      "asset": "Asset",
-      "atlas": "Atlas"
+      "asset": "Объект",
+      "atlas": "Атлас"
     },
     "values": {
-      "noAssets": "No assets available",
-      "noAtlas": "No atlas in asset",
-      "assetFileCount": "{{count}} files"
+      "noAssets": "Нет доступных активов",
+      "noAtlas": "Нет атласа в активе",
+      "assetFileCount": "{{count}} файлов"
     },
     "actions": {
-      "openPicker": "Asset Picker",
-      "close": "Close",
-      "import": "Import",
-      "importing": "Importing...",
-      "cancel": "Cancel",
-      "loadSelected": "Load Selected",
-      "loading": "Loading...",
-      "copySmartLink": "Copy smart link"
+      "openPicker": "Средство выбора активов",
+      "close": "Закрывать",
+      "import": "Импорт",
+      "importing": "Импорт...",
+      "cancel": "Отмена",
+      "loadSelected": "Загрузить выбранное",
+      "loading": "Загрузка...",
+      "copySmartLink": "Копировать умную ссылку"
     },
     "dropzone": {
-      "title": "Drag & drop your Spine files here",
-      "hint": "Skeleton (.json/.skel) + Atlas (.atlas) + Textures (.png)"
+      "title": "Перетащите сюда файлы Spine.",
+      "hint": "Скелет (.json/.skel) + Атлас (.atlas) + Текстуры (.png)"
     },
     "fileSlots": {
-      "skeleton": "Skeleton",
-      "atlas": "Atlas",
-      "textures": "Textures",
-      "select": "Select",
-      "remove": "Remove",
-      "requiredByAtlas": "Required by atlas:"
+      "skeleton": "Скелет",
+      "atlas": "Атлас",
+      "textures": "Текстуры",
+      "select": "Выбирать",
+      "remove": "Удалять",
+      "requiredByAtlas": "Требуется для атласа:"
     },
     "errors": {
-      "incompleteBundle": "Bundle is incomplete. Add skeleton, atlas, and required images.",
-      "missingAtlasImages": "Missing {{count}} atlas-referenced images.",
-      "uploadFailed": "Bundle upload failed."
+      "incompleteBundle": "Комплект неполный. Добавьте скелет, атлас и необходимые изображения.",
+      "missingAtlasImages": "Отсутствуют изображения {{count}}, связанные с атласом.",
+      "uploadFailed": "Загрузка пакета не удалась."
     },
     "tabs": {
-      "assetOptions": "Asset options",
-      "importSource": "Import source",
-      "fromFile": "From File",
-      "fromUrl": "From URL"
+      "assetOptions": "Варианты активов",
+      "importSource": "Источник импорта",
+      "fromFile": "Из файла",
+      "fromUrl": "С URL-адреса"
     },
     "url": {
-      "imageUrlsLabel": "Image URLs (one per line, optional)",
-      "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png",
-      "smartLinkLabel": "Smart link"
+      "imageUrlsLabel": "URL-адреса изображений (по одному в строке, необязательно)",
+      "imageUrlsPlaceholder": "__ТОКЕН_0__\n__ТОКЕН_1__",
+      "smartLinkLabel": "Умная ссылка"
     },
     "status": {
-      "smartLinkCopied": "Smart link copied.",
-      "smartLinkCopyFailed": "Could not copy smart link.",
-      "smartLinkGenerateFailed": "Could not create smart link.",
-      "smartLinkCopyFailedManual": "Smart link created, but auto-copy failed. Copy it manually from the field below."
+      "smartLinkCopied": "Смарт-ссылка скопирована.",
+      "smartLinkCopyFailed": "Не удалось скопировать смарт-ссылку.",
+      "smartLinkGenerateFailed": "Не удалось создать смарт-ссылку.",
+      "smartLinkCopyFailedManual": "Умная ссылка создана, но автоматическое копирование не выполнено. Скопируйте его вручную из поля ниже."
     }
   },
   "animationHeatmap": {

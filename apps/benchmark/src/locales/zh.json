@@ -34,14 +34,14 @@
     "loading": "載入中...",
     "helpText": "Ctrl+K 開啟面板",
     "close": "關閉",
-    "loadFromUrl": "Load from URL",
+    "loadFromUrl": "从 URL 加载",
     "loadingFromUrl": "Loading from URL...",
     "urlHelp": "You can also load Spine files from URL using the button above or by adding ?json=<url>&atlas=<url> to the URL",
     "cancel": "Cancel",
     "load": "Load",
     "urlModal": {
-      "jsonLabel": "JSON URL:",
-      "atlasLabel": "Atlas URL:",
+      "jsonLabel": "JSON 网址：",
+      "atlasLabel": "图集网址：",
       "jsonPlaceholder": "https://example.com/spine.json",
       "atlasPlaceholder": "https://example.com/spine.atlas"
     },
@@ -733,41 +733,41 @@
       "animationHeatmap": "動畫熱力圖"
     },
     "actions": {
-      "import": "Import",
-      "load": "Load",
-      "delete": "Delete",
+      "import": "进口",
+      "load": "加载",
+      "delete": "删除",
       "startTour": "開始導覽",
-      "loadFromUrl": "Load From URL",
-      "reloadSelected": "Reload Selected Asset",
+      "loadFromUrl": "从 URL 加载",
+      "reloadSelected": "重新加载选定的资产",
       "continue": "繼續",
       "skipForNow": "稍後再說",
-      "collapseSidebar": "Collapse Sidebar",
-      "expandSidebar": "Expand Sidebar"
+      "collapseSidebar": "折叠侧边栏",
+      "expandSidebar": "展开侧边栏"
     },
     "messages": {
-      "noAssets": "No assets stored yet. Drop files into the workspace to add one.",
-      "seedDefaultFailed": "Could not seed demo asset. You can still import your own files.",
-      "autoLoadFailed": "Failed to auto-load default asset.",
-      "loadAssetsFailed": "Failed to load stored assets",
-      "deleteAssetFailed": "Failed to delete asset",
-      "unknownError": "Unknown error",
-      "notInitialized": "Application not initialized"
+      "noAssets": "尚未存储任何资产。将文件拖放到工作区中以添加一个。",
+      "seedDefaultFailed": "无法播种演示资源。您仍然可以导入自己的文件。",
+      "autoLoadFailed": "无法自动加载默认资源。",
+      "loadAssetsFailed": "无法加载存储的资源",
+      "deleteAssetFailed": "删除资产失败",
+      "unknownError": "未知错误",
+      "notInitialized": "应用程序未初始化"
     },
     "workspace": {
-      "benchmarkTitle": "Benchmark Workspace",
-      "optimizerTitle": "Mesh Optimizer Workspace",
-      "selectedAsset": "Selected asset: {{name}} ({{count}} files)",
-      "empty": "Select an asset from the library or drop files to begin.",
-      "dropArea": "Drop Spine folders/files here to load and save into your asset library",
-      "assetReview": "Asset Review",
-      "selectForReview": "Select an asset to review file inventory.",
-      "updatedAt": "Updated {{date}}",
+      "benchmarkTitle": "基准工作区",
+      "optimizerTitle": "网格优化器工作区",
+      "selectedAsset": "所选资产：{{name}}（{{count}} 文件）",
+      "empty": "从库中选择一个资源或拖放文件即可开始。",
+      "dropArea": "将 Spine 文件夹/文件拖放到此处以加载并保存到您的资源库中",
+      "assetReview": "资产审查",
+      "selectForReview": "选择一项资产来查看文件清单。",
+      "updatedAt": "更新了 {{date}}",
       "binaryType": "application/octet-stream",
-      "physicsBakerTitle": "Physics Baker Workspace",
-      "pixelFootprint": "Footprint: {{width}}x{{height}} px",
-      "canvasCoverage": "Canvas coverage: {{coverage}}%",
-      "drawCallInspectorTitle": "Draw Call Inspector",
-      "atlasRepackTitle": "Atlas Repack Advisor"
+      "physicsBakerTitle": "物理贝克工作区",
+      "pixelFootprint": "占地面积：{{width}}x{{height}} 像素",
+      "canvasCoverage": "画布覆盖率：{{coverage}}%",
+      "drawCallInspectorTitle": "绘图调用检查器",
+      "atlasRepackTitle": "Atlas 重新包装顾问"
     },
     "assetCard": {
       "summary": "{{count}} files • {{size}}"
@@ -1341,60 +1341,60 @@
     }
   },
   "toolRouteControls": {
-    "title": "Tool Inputs",
-    "summary": "Asset: {{asset}} • Atlas: {{atlas}}",
+    "title": "工具输入",
+    "summary": "资产：{{asset}} • 图集：{{atlas}}",
     "labels": {
-      "asset": "Asset",
-      "atlas": "Atlas"
+      "asset": "资产",
+      "atlas": "阿特拉斯"
     },
     "values": {
-      "noAssets": "No assets available",
-      "noAtlas": "No atlas in asset",
-      "assetFileCount": "{{count}} files"
+      "noAssets": "没有可用资产",
+      "noAtlas": "资产中没有图集",
+      "assetFileCount": "{{count}} 文件"
     },
     "actions": {
-      "openPicker": "Asset Picker",
-      "close": "Close",
-      "import": "Import",
-      "importing": "Importing...",
-      "cancel": "Cancel",
-      "loadSelected": "Load Selected",
-      "loading": "Loading...",
-      "copySmartLink": "Copy smart link"
+      "openPicker": "资产选择器",
+      "close": "关闭",
+      "import": "进口",
+      "importing": "输入...",
+      "cancel": "取消",
+      "loadSelected": "加载所选内容",
+      "loading": "加载中...",
+      "copySmartLink": "复制智能链接"
     },
     "dropzone": {
-      "title": "Drag & drop your Spine files here",
-      "hint": "Skeleton (.json/.skel) + Atlas (.atlas) + Textures (.png)"
+      "title": "将您的 Spine 文件拖放到此处",
+      "hint": "骨架 (.json/.skel) + 图集 (.atlas) + 纹理 (.png)"
     },
     "fileSlots": {
-      "skeleton": "Skeleton",
-      "atlas": "Atlas",
-      "textures": "Textures",
-      "select": "Select",
-      "remove": "Remove",
-      "requiredByAtlas": "Required by atlas:"
+      "skeleton": "骨骼",
+      "atlas": "阿特拉斯",
+      "textures": "纹理",
+      "select": "选择",
+      "remove": "消除",
+      "requiredByAtlas": "图集要求："
     },
     "errors": {
-      "incompleteBundle": "Bundle is incomplete. Add skeleton, atlas, and required images.",
-      "missingAtlasImages": "Missing {{count}} atlas-referenced images.",
-      "uploadFailed": "Bundle upload failed."
+      "incompleteBundle": "捆绑包不完整。添加骨架、图集和所需图像。",
+      "missingAtlasImages": "缺少 {{count}} 图集引用的图像。",
+      "uploadFailed": "捆绑包上传失败。"
     },
     "tabs": {
-      "assetOptions": "Asset options",
-      "importSource": "Import source",
-      "fromFile": "From File",
-      "fromUrl": "From URL"
+      "assetOptions": "资产选择",
+      "importSource": "导入源码",
+      "fromFile": "从文件",
+      "fromUrl": "来自网址"
     },
     "url": {
-      "imageUrlsLabel": "Image URLs (one per line, optional)",
+      "imageUrlsLabel": "图像 URL（每行一个，可选）",
       "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png",
-      "smartLinkLabel": "Smart link"
+      "smartLinkLabel": "智能链接"
     },
     "status": {
-      "smartLinkCopied": "Smart link copied.",
-      "smartLinkCopyFailed": "Could not copy smart link.",
-      "smartLinkGenerateFailed": "Could not create smart link.",
-      "smartLinkCopyFailedManual": "Smart link created, but auto-copy failed. Copy it manually from the field below."
+      "smartLinkCopied": "已复制智能链接。",
+      "smartLinkCopyFailed": "无法复制智能链接。",
+      "smartLinkGenerateFailed": "无法创建智能链接。",
+      "smartLinkCopyFailedManual": "已创建智能链接，但自动复制失败。从下面的字段手动复制它。"
     }
   },
   "animationHeatmap": {
