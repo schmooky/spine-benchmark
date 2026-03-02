@@ -5259,6 +5259,21 @@ select:focus,
   font-weight: 400;
 }
 
+.route-header-chip-language {
+  cursor: pointer;
+  transition: border-color var(--sb-duration) var(--sb-ease), background var(--sb-duration) var(--sb-ease), color var(--sb-duration) var(--sb-ease);
+}
+
+.route-header-chip-language:hover {
+  border-color: #d9d1c7;
+  background: #f0ede8;
+}
+
+.route-header-chip-language:focus-visible {
+  outline: 2px solid #7c9082;
+  outline-offset: 1px;
+}
+
 .route-header-chip-kbd {
   color: #8a8a8a;
 }

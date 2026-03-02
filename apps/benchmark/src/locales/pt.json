@@ -22,11 +22,11 @@
     "noValidFiles": "Nenhum arquivo válido encontrado nos itens soltos",
     "processingError": "Erro ao processar arquivos soltos: {0}",
     "loadingError": "Erro ao carregar arquivos do Spine: {0}",
-    "failedToLoadFromUrls": "Failed to load from URLs: {{error}}",
-    "urlLoadUnknown": "Unknown URL loading error",
-    "urlLoadCors": "Remote asset is blocked by CORS. Use a CORS-enabled URL (or same-origin/proxy), then try again.",
-    "failedToLoadSpineFromUrls": "Failed to load Spine instance from URLs",
-    "failedToLoadSpineInstance": "Failed to load Spine instance",
+    "failedToLoadFromUrls": "Falha ao carregar de URLs: {{error}}",
+    "urlLoadUnknown": "Erro desconhecido ao carregar de URL",
+    "urlLoadCors": "O asset remoto está bloqueado por CORS. Use uma URL com CORS habilitado (ou mesma origem/proxy) e tente novamente.",
+    "failedToLoadSpineFromUrls": "Falha ao carregar a instância Spine a partir de URLs",
+    "failedToLoadSpineInstance": "Falha ao carregar a instância Spine",
     "readDirectoryFailed": "Failed to read directory contents"
   },
   "ui": {
@@ -35,10 +35,10 @@
     "helpText": "Ctrl+K abre um painel",
     "close": "Fechar",
     "loadFromUrl": "Carregar do URL",
-    "loadingFromUrl": "Loading from URL...",
-    "urlHelp": "You can also load Spine files from URL using the button above or by adding ?json=<url>&atlas=<url> to the URL",
+    "loadingFromUrl": "Carregando da URL...",
+    "urlHelp": "Você também pode carregar arquivos Spine por URL usando o botão acima ou adicionando ?json=<url>&atlas=<url> à URL.",
     "cancel": "Cancel",
-    "load": "Load",
+    "load": "Carregar",
     "urlModal": {
       "jsonLabel": "URL JSON:",
       "atlasLabel": "URL do atlas:",
@@ -49,7 +49,7 @@
       "enter": "Enter",
       "escape": "Esc"
     },
-    "dropFilesHere": "Drop Spine files here",
+    "dropFilesHere": "Solte os arquivos Spine aqui",
     "supportedFormats": "Supports .json, .skel, .atlas, and image files",
     "browseFiles": "Browse Files",
     "default": "Default",
@@ -95,7 +95,7 @@
       "drawCalls": "Draw Calls",
       "mesh": "Mesh",
       "atlas": "Atlas",
-      "selectionRetained": "Selection retained across Draw, Mesh, and Atlas routes.",
+      "selectionRetained": "A seleção é mantida entre as rotas Draw, Mesh e Atlas.",
       "selectionRetainedNamed": "Selection retained: {{name}}"
     },
     "background": {
@@ -206,8 +206,8 @@
       "switch": "mudar"
     },
     "file": {
-      "loadFromUrl": "Load Spine from URL",
-      "loadFromUrlDescription": "Load Spine files from remote URLs"
+      "loadFromUrl": "Carregar Spine por URL",
+      "loadFromUrlDescription": "Carregar arquivos Spine de URLs remotas"
     }
   },
   "commandPalette": {
@@ -257,7 +257,7 @@
     },
     "welcome": {
       "title": "Animator workspace ready",
-      "description": "Load a rig and inspect rendering, meshes, clipping, blend, and physics in one pass.",
+      "description": "Carregue um rig e inspecione renderização, malhas, clipping, blend e física em uma única passada.",
       "chip": "Live diagnostics"
     }
   },
@@ -705,8 +705,8 @@
     }
   },
   "success": {
-    "loadedFromUrl": "Successfully loaded Spine from URL",
-    "loadedFromFile": "Spine files loaded successfully"
+    "loadedFromUrl": "Spine carregado com sucesso da URL",
+    "loadedFromFile": "Arquivos Spine carregados com sucesso"
   },
   "dashboard": {
     "brand": {
@@ -770,7 +770,7 @@
       "atlasRepackTitle": "Consultor Atlas Repack"
     },
     "assetCard": {
-      "summary": "{{count}} files • {{size}}"
+      "summary": "{{count}} arquivos • {{size}}"
     },
     "onboarding": {
       "languageTitle": "Escolha seu idioma",
@@ -955,23 +955,23 @@
     },
     "states": {
       "loadError": {
-        "title": "Could not load current asset",
+        "title": "Não foi possível carregar o asset atual",
         "actions": {
-          "retry": "Retry load",
-          "dismiss": "Dismiss"
+          "retry": "Tentar novamente",
+          "dismiss": "Dispensar"
         }
       },
       "loading": {
-        "title": "Loading mesh metrics",
-        "description": "Scanning mesh attachments, vertices, and deformation ranges."
+        "title": "Carregando métricas de malha",
+        "description": "Analisando attachments de malha, vértices e intervalos de deformação."
       },
       "partialNoJson": {
         "title": "Partial parse: no JSON source",
-        "description": "Optimization actions are limited because this asset has no JSON skeleton file."
+        "description": "As ações de otimização são limitadas porque este asset não tem arquivo de esqueleto JSON."
       },
       "noMeshes": {
         "title": "No mesh attachments detected",
-        "description": "This skeleton currently has no mesh attachments in draw order. You can still inspect Draw Calls and Atlas routes.",
+        "description": "Este esqueleto não possui attachments de malha na ordem de desenho no momento. Você ainda pode inspecionar as rotas Draw Calls e Atlas.",
         "actions": {
           "openDrawCalls": "Open Draw Calls"
         }
@@ -993,14 +993,14 @@
     },
     "values": {
       "noneSelected": "None selected",
-      "noJson": "This asset has no JSON skeleton"
+      "noJson": "Este asset não possui esqueleto JSON"
     },
-    "comingSoon": "Physics baking workflow is being integrated for Spine-compatible exports.",
+    "comingSoon": "O fluxo de baking de física está sendo integrado para exportações compatíveis com Spine.",
     "actions": {
       "bake": "Bake Physics (Soon)",
-      "download": "Download Baked JSON",
-      "loadInBenchmark": "Load In Benchmark",
-      "loading": "Loading..."
+      "download": "Baixar JSON bakeado",
+      "loadInBenchmark": "Carregar no benchmark",
+      "loading": "Carregando..."
     },
     "report": {
       "title": "Physics Bake Report",
@@ -1010,8 +1010,8 @@
       "timelineGroupsRemoved": "Physics timeline groups removed: {{count}}"
     },
     "messages": {
-      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
-      "jsonNotFound": "JSON file not found in selected asset.",
+      "selectJsonAsset": "Selecione primeiro um asset com esqueleto JSON.",
+      "jsonNotFound": "Arquivo JSON não encontrado no asset selecionado.",
       "bakeFailed": "Physics bake failed"
     }
   },
@@ -1034,16 +1034,16 @@
       }
     },
     "empty": {
-      "title": "Load an asset to inspect constraints",
-      "hint": "Select an asset and click Load to see constraint structure"
+      "title": "Carregue um asset para inspecionar constraints",
+      "hint": "Selecione um asset e clique em Carregar para ver a estrutura de constraints"
     },
-    "noConstraints": "No constraints found in this skeleton",
+    "noConstraints": "Nenhuma constraint encontrada neste esqueleto",
     "bake": {
       "button": "Bake All Constraints",
       "baking": "Baking...",
-      "saveAndLoad": "Save & Load Baked",
+      "saveAndLoad": "Salvar e carregar bakeado",
       "saving": "Saving...",
-      "noJson": "This asset has no JSON skeleton",
+      "noJson": "Este asset não possui esqueleto JSON",
       "report": {
         "title": "Bake Report",
         "animationsScanned": "Animations scanned",
@@ -1057,7 +1057,7 @@
         "sampleRate": "Sample rate",
         "sampleRateValue": "{{value}} fps"
       },
-      "description": "Constraint-baked skeleton"
+      "description": "Esqueleto com constraints bakeadas"
     }
   },
   "controls": {
@@ -1089,14 +1089,14 @@
       "headers": {
         "index": "#",
         "attachment": "Attachment",
-        "page": "Atlas Page",
+        "page": "Página de atlas",
         "blend": "Blend"
       }
     },
     "hideInvisible": "Ocultar anexos invisíveis",
     "empty": {
-      "title": "Load an asset to inspect draw calls",
-      "hint": "Select an asset and click Load to begin live inspection"
+      "title": "Carregue um asset para inspecionar draw calls",
+      "hint": "Selecione um asset e clique em Carregar para iniciar a inspeção em tempo real"
     },
     "actions": {
       "clearPageFilter": "Clear page filter"
@@ -1342,23 +1342,23 @@
   },
   "toolRouteControls": {
     "title": "Entradas de ferramentas",
-    "summary": "Ativo: {{asset}} • Atlas: {{atlas}}",
+    "summary": "Asset: {{asset}} • Atlas: {{atlas}}",
     "labels": {
-      "asset": "Ativo",
+      "asset": "Asset",
       "atlas": "Atlas"
     },
     "values": {
-      "noAssets": "Nenhum ativo disponível",
-      "noAtlas": "Nenhum atlas no ativo",
+      "noAssets": "Nenhum asset disponível",
+      "noAtlas": "Nenhum atlas no asset",
       "assetFileCount": "{{count}} arquivos"
     },
     "actions": {
-      "openPicker": "Seletor de ativos",
+      "openPicker": "Selecionar asset",
       "close": "Fechar",
       "import": "Importar",
       "importing": "Importando...",
       "cancel": "Cancelar",
-      "loadSelected": "Carregar selecionado",
+      "loadSelected": "Carregar asset selecionado",
       "loading": "Carregando...",
       "copySmartLink": "Copiar link inteligente"
     },
@@ -1370,7 +1370,7 @@
       "skeleton": "Esqueleto",
       "atlas": "Atlas",
       "textures": "Texturas",
-      "select": "Selecione",
+      "select": "Selecionar",
       "remove": "Remover",
       "requiredByAtlas": "Exigido pelo atlas:"
     },
@@ -1380,13 +1380,13 @@
       "uploadFailed": "Falha no upload do pacote."
     },
     "tabs": {
-      "assetOptions": "Opções de ativos",
+      "assetOptions": "Opções de asset",
       "importSource": "Fonte de importação",
       "fromFile": "Do arquivo",
-      "fromUrl": "Do URL"
+      "fromUrl": "Da URL"
     },
     "url": {
-      "imageUrlsLabel": "URLs de imagem (um por linha, opcional)",
+      "imageUrlsLabel": "URLs de imagem (uma por linha, opcional)",
       "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png",
       "smartLinkLabel": "Link inteligente"
     },
@@ -1394,7 +1394,7 @@
       "smartLinkCopied": "Link inteligente copiado.",
       "smartLinkCopyFailed": "Não foi possível copiar o link inteligente.",
       "smartLinkGenerateFailed": "Não foi possível criar o link inteligente.",
-      "smartLinkCopyFailedManual": "Link inteligente criado, mas falha na cópia automática. Copie-o manualmente do campo abaixo."
+      "smartLinkCopyFailedManual": "Link inteligente criado, mas a cópia automática falhou. Copie manualmente do campo abaixo."
     }
   },
   "animationHeatmap": {
@@ -1434,7 +1434,7 @@
     }
   },
   "assets": {
-    "subtitle": "Import, validate, and manage reusable Spine bundles."
+    "subtitle": "Importe, valide e gerencie pacotes reutilizáveis do Spine."
   },
   "documentation": {
     "subtitle": "Quick links to guides and references used by animators and game teams.",

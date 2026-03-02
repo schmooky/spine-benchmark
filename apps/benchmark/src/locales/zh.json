@@ -22,11 +22,11 @@
     "noValidFiles": "在拖放的項目中找不到有效檔案",
     "processingError": "處理拖放檔案錯誤：{0}",
     "loadingError": "載入 Spine 檔案錯誤：{0}",
-    "failedToLoadFromUrls": "Failed to load from URLs: {{error}}",
-    "urlLoadUnknown": "Unknown URL loading error",
-    "urlLoadCors": "Remote asset is blocked by CORS. Use a CORS-enabled URL (or same-origin/proxy), then try again.",
-    "failedToLoadSpineFromUrls": "Failed to load Spine instance from URLs",
-    "failedToLoadSpineInstance": "Failed to load Spine instance",
+    "failedToLoadFromUrls": "从 URL 加载失败：{{error}}",
+    "urlLoadUnknown": "从 URL 加载时发生未知错误",
+    "urlLoadCors": "远程资源被 CORS 阻止。请使用支持 CORS 的 URL（或同源/代理），然后重试。",
+    "failedToLoadSpineFromUrls": "无法从 URL 加载 Spine 实例",
+    "failedToLoadSpineInstance": "无法加载 Spine 实例",
     "readDirectoryFailed": "Failed to read directory contents"
   },
   "ui": {
@@ -35,10 +35,10 @@
     "helpText": "Ctrl+K 開啟面板",
     "close": "關閉",
     "loadFromUrl": "从 URL 加载",
-    "loadingFromUrl": "Loading from URL...",
-    "urlHelp": "You can also load Spine files from URL using the button above or by adding ?json=<url>&atlas=<url> to the URL",
+    "loadingFromUrl": "正在从 URL 加载...",
+    "urlHelp": "你也可以通过上方按钮从 URL 加载 Spine 文件，或在 URL 后添加 ?json=<url>&atlas=<url>。",
     "cancel": "Cancel",
-    "load": "Load",
+    "load": "加载",
     "urlModal": {
       "jsonLabel": "JSON 网址：",
       "atlasLabel": "图集网址：",
@@ -49,7 +49,7 @@
       "enter": "Enter",
       "escape": "Esc"
     },
-    "dropFilesHere": "Drop Spine files here",
+    "dropFilesHere": "将 Spine 文件拖放到这里",
     "supportedFormats": "Supports .json, .skel, .atlas, and image files",
     "browseFiles": "Browse Files",
     "default": "Default",
@@ -94,8 +94,8 @@
     "routeJumps": {
       "drawCalls": "Draw Calls",
       "mesh": "Mesh",
-      "atlas": "Atlas",
-      "selectionRetained": "Selection retained across Draw, Mesh, and Atlas routes.",
+      "atlas": "图集",
+      "selectionRetained": "在 Draw、Mesh 和 Atlas 路线之间会保留当前选择。",
       "selectionRetainedNamed": "Selection retained: {{name}}"
     },
     "background": {
@@ -206,8 +206,8 @@
       "switch": "切換"
     },
     "file": {
-      "loadFromUrl": "Load Spine from URL",
-      "loadFromUrlDescription": "Load Spine files from remote URLs"
+      "loadFromUrl": "从 URL 加载 Spine",
+      "loadFromUrlDescription": "从远程 URL 加载 Spine 文件"
     }
   },
   "commandPalette": {
@@ -257,7 +257,7 @@
     },
     "welcome": {
       "title": "Animator workspace ready",
-      "description": "Load a rig and inspect rendering, meshes, clipping, blend, and physics in one pass.",
+      "description": "加载一个 rig，并在一次流程中检查渲染、网格、裁剪、混合与物理。",
       "chip": "Live diagnostics"
     }
   },
@@ -705,8 +705,8 @@
     }
   },
   "success": {
-    "loadedFromUrl": "Successfully loaded Spine from URL",
-    "loadedFromFile": "Spine files loaded successfully"
+    "loadedFromUrl": "已成功从 URL 加载 Spine",
+    "loadedFromFile": "Spine 文件加载成功"
   },
   "dashboard": {
     "brand": {
@@ -715,7 +715,7 @@
     },
     "sections": {
       "tools": "工具",
-      "assetLibrary": "資產庫",
+      "assetLibrary": "资源库",
       "partnerTools": "合作工具",
       "guides": "指南",
       "community": "社群",
@@ -770,7 +770,7 @@
       "atlasRepackTitle": "Atlas 重新包装顾问"
     },
     "assetCard": {
-      "summary": "{{count}} files • {{size}}"
+      "summary": "{{count}} 个文件 • {{size}}"
     },
     "onboarding": {
       "languageTitle": "選擇你的語言",
@@ -955,23 +955,23 @@
     },
     "states": {
       "loadError": {
-        "title": "Could not load current asset",
+        "title": "无法加载当前资源",
         "actions": {
-          "retry": "Retry load",
-          "dismiss": "Dismiss"
+          "retry": "重试加载",
+          "dismiss": "关闭"
         }
       },
       "loading": {
-        "title": "Loading mesh metrics",
-        "description": "Scanning mesh attachments, vertices, and deformation ranges."
+        "title": "正在加载网格指标",
+        "description": "正在扫描网格附件、顶点和变形范围。"
       },
       "partialNoJson": {
         "title": "Partial parse: no JSON source",
-        "description": "Optimization actions are limited because this asset has no JSON skeleton file."
+        "description": "优化操作受限，因为该资源没有 JSON 骨骼文件。"
       },
       "noMeshes": {
         "title": "No mesh attachments detected",
-        "description": "This skeleton currently has no mesh attachments in draw order. You can still inspect Draw Calls and Atlas routes.",
+        "description": "该骨骼当前在绘制顺序中没有网格附件。你仍然可以查看 Draw Calls 和 Atlas 路线。",
         "actions": {
           "openDrawCalls": "Open Draw Calls"
         }
@@ -988,19 +988,19 @@
     "title": "Physics Baker",
     "subtitle": "Bake runtime physics into timeline keys for deterministic playback and lower runtime cost.",
     "labels": {
-      "asset": "Asset:",
+      "asset": "资源：",
       "json": "JSON:"
     },
     "values": {
       "noneSelected": "None selected",
-      "noJson": "This asset has no JSON skeleton"
+      "noJson": "该资源没有 JSON 骨骼"
     },
-    "comingSoon": "Physics baking workflow is being integrated for Spine-compatible exports.",
+    "comingSoon": "物理烘焙工作流正在集成中，将支持 Spine 兼容导出。",
     "actions": {
       "bake": "Bake Physics (Soon)",
-      "download": "Download Baked JSON",
-      "loadInBenchmark": "Load In Benchmark",
-      "loading": "Loading..."
+      "download": "下载烘焙后的 JSON",
+      "loadInBenchmark": "加载到 Benchmark",
+      "loading": "加载中..."
     },
     "report": {
       "title": "Physics Bake Report",
@@ -1010,8 +1010,8 @@
       "timelineGroupsRemoved": "Physics timeline groups removed: {{count}}"
     },
     "messages": {
-      "selectJsonAsset": "Select an asset with a JSON skeleton first.",
-      "jsonNotFound": "JSON file not found in selected asset.",
+      "selectJsonAsset": "请先选择包含 JSON 骨骼的资源。",
+      "jsonNotFound": "在所选资源中未找到 JSON 文件。",
       "bakeFailed": "Physics bake failed"
     }
   },
@@ -1034,16 +1034,16 @@
       }
     },
     "empty": {
-      "title": "Load an asset to inspect constraints",
-      "hint": "Select an asset and click Load to see constraint structure"
+      "title": "加载资源以检查 constraints",
+      "hint": "选择资源并点击“加载”以查看约束结构"
     },
-    "noConstraints": "No constraints found in this skeleton",
+    "noConstraints": "该骨骼中未找到 constraints",
     "bake": {
       "button": "Bake All Constraints",
       "baking": "Baking...",
-      "saveAndLoad": "Save & Load Baked",
+      "saveAndLoad": "保存并加载烘焙结果",
       "saving": "Saving...",
-      "noJson": "This asset has no JSON skeleton",
+      "noJson": "该资源没有 JSON 骨骼",
       "report": {
         "title": "Bake Report",
         "animationsScanned": "Animations scanned",
@@ -1057,7 +1057,7 @@
         "sampleRate": "Sample rate",
         "sampleRateValue": "{{value}} fps"
       },
-      "description": "Constraint-baked skeleton"
+      "description": "约束已烘焙的骨骼"
     }
   },
   "controls": {
@@ -1089,14 +1089,14 @@
       "headers": {
         "index": "#",
         "attachment": "Attachment",
-        "page": "Atlas Page",
+        "page": "图集页",
         "blend": "Blend"
       }
     },
     "hideInvisible": "隐藏不可见附件",
     "empty": {
-      "title": "Load an asset to inspect draw calls",
-      "hint": "Select an asset and click Load to begin live inspection"
+      "title": "加载资源以检查 draw calls",
+      "hint": "选择资源并点击“加载”，开始实时检查"
     },
     "actions": {
       "clearPageFilter": "Clear page filter"
@@ -1342,51 +1342,51 @@
   },
   "toolRouteControls": {
     "title": "工具输入",
-    "summary": "资产：{{asset}} • 图集：{{atlas}}",
+    "summary": "资源：{{asset}} • 图集：{{atlas}}",
     "labels": {
-      "asset": "资产",
-      "atlas": "阿特拉斯"
+      "asset": "资源",
+      "atlas": "图集"
     },
     "values": {
-      "noAssets": "没有可用资产",
-      "noAtlas": "资产中没有图集",
-      "assetFileCount": "{{count}} 文件"
+      "noAssets": "暂无可用资源",
+      "noAtlas": "该资源中没有图集",
+      "assetFileCount": "{{count}} 个文件"
     },
     "actions": {
-      "openPicker": "资产选择器",
+      "openPicker": "选择资源",
       "close": "关闭",
-      "import": "进口",
-      "importing": "输入...",
+      "import": "导入",
+      "importing": "导入中...",
       "cancel": "取消",
-      "loadSelected": "加载所选内容",
+      "loadSelected": "加载所选资源",
       "loading": "加载中...",
       "copySmartLink": "复制智能链接"
     },
     "dropzone": {
-      "title": "将您的 Spine 文件拖放到此处",
-      "hint": "骨架 (.json/.skel) + 图集 (.atlas) + 纹理 (.png)"
+      "title": "将 Spine 文件拖放到这里",
+      "hint": "骨骼 (.json/.skel) + 图集 (.atlas) + 纹理 (.png)"
     },
     "fileSlots": {
       "skeleton": "骨骼",
-      "atlas": "阿特拉斯",
+      "atlas": "图集",
       "textures": "纹理",
       "select": "选择",
-      "remove": "消除",
+      "remove": "移除",
       "requiredByAtlas": "图集要求："
     },
     "errors": {
-      "incompleteBundle": "捆绑包不完整。添加骨架、图集和所需图像。",
-      "missingAtlasImages": "缺少 {{count}} 图集引用的图像。",
-      "uploadFailed": "捆绑包上传失败。"
+      "incompleteBundle": "资源包不完整。请添加骨骼、图集和所需图片。",
+      "missingAtlasImages": "缺少 {{count}} 张图集引用的图片。",
+      "uploadFailed": "资源包上传失败。"
     },
     "tabs": {
-      "assetOptions": "资产选择",
-      "importSource": "导入源码",
+      "assetOptions": "资源选项",
+      "importSource": "导入来源",
       "fromFile": "从文件",
-      "fromUrl": "来自网址"
+      "fromUrl": "从 URL"
     },
     "url": {
-      "imageUrlsLabel": "图像 URL（每行一个，可选）",
+      "imageUrlsLabel": "图片 URL（每行一个，可选）",
       "imageUrlsPlaceholder": "https://cdn.example.com/page-1.png\nhttps://cdn.example.com/page-2.png",
       "smartLinkLabel": "智能链接"
     },
@@ -1394,7 +1394,7 @@
       "smartLinkCopied": "已复制智能链接。",
       "smartLinkCopyFailed": "无法复制智能链接。",
       "smartLinkGenerateFailed": "无法创建智能链接。",
-      "smartLinkCopyFailedManual": "已创建智能链接，但自动复制失败。从下面的字段手动复制它。"
+      "smartLinkCopyFailedManual": "已创建智能链接，但自动复制失败。请从下方输入框手动复制。"
     }
   },
   "animationHeatmap": {
@@ -1434,7 +1434,7 @@
     }
   },
   "assets": {
-    "subtitle": "Import, validate, and manage reusable Spine bundles."
+    "subtitle": "导入、校验并管理可复用的 Spine 资源包。"
   },
   "documentation": {
     "subtitle": "Quick links to guides and references used by animators and game teams.",

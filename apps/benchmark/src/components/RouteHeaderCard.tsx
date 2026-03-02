@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { commandRegistry } from '../utils/commandRegistry';
 
 interface RouteHeaderCardProps {
   title: string;
@@ -10,6 +11,9 @@ interface RouteHeaderCardProps {
 export function RouteHeaderCard({ title, subtitle, version = 'v1.2.0' }: RouteHeaderCardProps) {
   const { t, i18n } = useTranslation();
   const languageLabel = t(`dashboard.languages.${i18n.language}`, { defaultValue: i18n.language.toUpperCase() });
+  const handleLanguageClick = () => {
+    commandRegistry.executeCommand('language.change');
+  };
 
   return (
     <header className="route-header-card">
@@ -18,9 +22,15 @@ export function RouteHeaderCard({ title, subtitle, version = 'v1.2.0' }: RouteHe
         <p>{subtitle}</p>
       </div>
       <div className="route-header-actions" aria-label={t('ui.routeUtilities')}>
-        <span className="route-header-chip">
+        <button
+          type="button"
+          className="route-header-chip route-header-chip-language"
+          onClick={handleLanguageClick}
+          title={t('language.changeLanguage')}
+          aria-label={t('language.changeLanguage')}
+        >
           {languageLabel}
-        </span>
+        </button>
         <span className="route-header-chip route-header-chip-kbd">
           {t('ui.shortcuts.commandPalette')}
         </span>
