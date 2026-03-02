@@ -60,6 +60,7 @@ export function MeshOptimizerRouteView() {
     toggleMeshes,
     saveAndLoadOptimizedAsset,
     setHighlightedMeshSlot,
+    setSlotHighlight,
     routeSelection,
     setRouteSelection,
     lastLoadError,
@@ -89,8 +90,9 @@ export function MeshOptimizerRouteView() {
     return () => {
       toggleMeshes(false);
       setHighlightedMeshSlot(null);
+      setSlotHighlight(null);
     };
-  }, [toggleMeshes, setHighlightedMeshSlot]);
+  }, [toggleMeshes, setHighlightedMeshSlot, setSlotHighlight]);
 
   useEffect(() => {
     setReport(null);
@@ -100,8 +102,9 @@ export function MeshOptimizerRouteView() {
     setHoveredMeshIndex(null);
     setMeshPreview(null);
     setHighlightedMeshSlot(null);
+    setSlotHighlight(null);
     setFilterMode('all');
-  }, [selectedAssetId, setHighlightedMeshSlot]);
+  }, [selectedAssetId, setHighlightedMeshSlot, setSlotHighlight]);
 
   const snapshot = useMeshInspector(spineInstance);
   const drawSnapshot = useDrawCallInspector(spineInstance);
@@ -119,7 +122,8 @@ export function MeshOptimizerRouteView() {
     if (!persisted) return;
     setSelectedMeshIndex(persisted.index);
     setHighlightedMeshSlot(persisted.slotName);
-  }, [spineInstance, selectedMeshIndex, routeSelection.slotIndex, snapshot.meshes, setHighlightedMeshSlot]);
+    setSlotHighlight(persisted.index);
+  }, [spineInstance, selectedMeshIndex, routeSelection.slotIndex, snapshot.meshes, setHighlightedMeshSlot, setSlotHighlight]);
 
   const displayedMeshes = useMemo(() => {
     switch (filterMode) {
@@ -212,11 +216,13 @@ export function MeshOptimizerRouteView() {
       setHoveredMeshIndex(null);
       setMeshPreview(null);
       setHighlightedMeshSlot(null);
+      setSlotHighlight(null);
       return;
     }
 
     setSelectedMeshIndex(mesh.index);
     setHighlightedMeshSlot(mesh.slotName);
+    setSlotHighlight(mesh.index);
     setRouteSelection({
       sourceRoute: 'mesh-optimizer',
       slotIndex: mesh.index,
@@ -233,15 +239,16 @@ export function MeshOptimizerRouteView() {
       return;
     }
     setMeshPreview(renderMeshPreview(data));
-  }, [selectedMeshIndex, setHighlightedMeshSlot, setRouteSelection, atlasPageBySlotIndex, spineInstance]);
+  }, [selectedMeshIndex, setHighlightedMeshSlot, setSlotHighlight, setRouteSelection, atlasPageBySlotIndex, spineInstance]);
 
   const closeInsight = useCallback(() => {
     setHoveredMeshIndex(null);
     setSelectedMeshIndex(null);
     setMeshPreview(null);
     setHighlightedMeshSlot(null);
+    setSlotHighlight(null);
     setShowExplainer(false);
-  }, [setHighlightedMeshSlot]);
+  }, [setHighlightedMeshSlot, setSlotHighlight]);
 
   const pinActiveInsight = useCallback(() => {
     if (!activeMesh) return;
@@ -334,6 +341,7 @@ export function MeshOptimizerRouteView() {
           onRun: () => {
             setSelectedMeshIndex(activeMesh.index);
             setHighlightedMeshSlot(activeMesh.slotName);
+            setSlotHighlight(activeMesh.index);
           },
         },
         {
@@ -393,17 +401,13 @@ export function MeshOptimizerRouteView() {
         howToVerify: t('meshOptimizer.insight.explainer.howToVerify'),
       },
     };
-  }, [activeMesh, atlasPageBySlotIndex, navigate, setHighlightedMeshSlot, setRouteSelection, t]);
+  }, [activeMesh, atlasPageBySlotIndex, navigate, setHighlightedMeshSlot, setSlotHighlight, setRouteSelection, t]);
 
   const selectedMesh = selectedMeshIndex !== null
     ? snapshot.meshes.find((mesh) => mesh.index === selectedMeshIndex)
     : null;
 
-  const hasNoChanges =
-    report !== null &&
-    report.removedEmptyDeforms === 0 &&
-    report.removedDuplicateFrames === 0 &&
-    report.removedDrawOrderDuplicates === 0;
+  const hasNoChanges = report !== null && report.changedAnimations === 0;
 
   const showFallback = !spineInstance || snapshot.meshes.length === 0 || !!lastLoadError;
 
@@ -577,6 +581,7 @@ export function MeshOptimizerRouteView() {
                         setSelectedMeshIndex(null);
                         setMeshPreview(null);
                         setHighlightedMeshSlot(null);
+                        setSlotHighlight(null);
                       }}
                     >
                       <XMarkIcon size={14} />

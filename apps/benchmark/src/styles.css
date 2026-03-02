@@ -5369,6 +5369,14 @@ select:focus,
   justify-content: center;
   gap: 8px;
   line-height: 1;
+  min-width: 0;
+}
+
+.tool-route-btn > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tool-route-btn-icon {
@@ -5379,7 +5387,9 @@ select:focus,
 }
 
 .tool-route-inline.tool-route-minimal .tool-route-btn-open {
-  width: 120px;
+  width: auto;
+  min-width: 120px;
+  max-width: min(280px, 36vw);
   border: 0;
   background: #f5f3ef;
   color: #2d2d2d;

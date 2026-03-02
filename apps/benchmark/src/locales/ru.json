@@ -1353,7 +1353,7 @@
       "assetFileCount": "{{count}} файлов"
     },
     "actions": {
-      "openPicker": "Средство выбора активов",
+      "openPicker": "Выбрать актив",
       "close": "Закрывать",
       "import": "Импорт",
       "importing": "Импорт...",
