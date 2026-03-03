@@ -5,6 +5,8 @@ export interface SpineWidgetOptions {
   atlas: string;
   images?: string; // Space-separated image URLs for atlas pages
   animation?: string;
+  nextAnimation?: string;
+  nextAnimationLoop?: boolean;
   skin?: string;
   loop?: boolean;
   scale?: number;
@@ -44,6 +46,7 @@ export interface SpineWidgetInstance {
   element: HTMLElement;
   canvas: HTMLCanvasElement;
   play(animation?: string, loop?: boolean): void;
+  addAnimation(animation: string, loop?: boolean, delay?: number): void;
   stop(): void;
   pause(): void;
   resume(): void;

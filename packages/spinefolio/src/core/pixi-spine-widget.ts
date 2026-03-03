@@ -82,6 +82,8 @@ export class PixiSpineWidget {
     scale: number;
     x: number;
     y: number;
+    nextAnimation?: string;
+    nextAnimationLoop: boolean;
     premultipliedAlpha: boolean;
     fitToContainer: boolean;
     backgroundColor: string;
@@ -126,6 +128,8 @@ export class PixiSpineWidget {
       atlas: options.atlas,
       images: options.images,
       animation: options.animation,
+      nextAnimation: options.nextAnimation,
+      nextAnimationLoop: options.nextAnimationLoop ?? true,
       skin: options.skin,
       loop: options.loop ?? true,
       scale: options.scale ?? 1,
@@ -283,10 +287,8 @@ export class PixiSpineWidget {
         this.setSkin(this.options.skin);
       }
 
-      // Set initial animation if specified
-      if (this.options.animation) {
-        this.setAnimation(this.options.animation, this.options.loop);
-      }
+      // Set initial animation sequence if specified
+      this.applyInitialAnimationSequence();
 
       // Apply initial scale
       if (this.options.scale !== 1) {
@@ -312,16 +314,20 @@ export class PixiSpineWidget {
         }
       });
 
-      // Set up animation complete listener
-      if (this.options.onAnimationComplete) {
-        this.spine.state.addListener({
-          complete: (entry: any) => {
-            if (this.options.onAnimationComplete) {
-              this.options.onAnimationComplete(entry.animation.name);
-            }
-          },
-        });
-      }
+      // Keep currentAnimation in sync with active track.
+      this.spine.state.addListener({
+        start: (entry: any) => {
+          if (entry?.animation?.name) {
+            this.currentAnimation = entry.animation.name;
+          }
+          this.isPausedState = false;
+        },
+        complete: (entry: any) => {
+          if (this.options.onAnimationComplete) {
+            this.options.onAnimationComplete(entry.animation.name);
+          }
+        },
+      });
     } catch (error) {
       throw new Error(`Failed to load Spine assets: ${(error as Error).message}`);
     }
@@ -389,6 +395,27 @@ export class PixiSpineWidget {
     } catch (error) {
       console.warn('[Spinefolio] Failed to parse atlas pages for data-images, using first image URL fallback.', error);
       return { images: imageList[0] };
+    }
+  }
+
+  private applyInitialAnimationSequence(): void {
+    if (!this.spine) return;
+
+    const initialAnimation = this.options.animation;
+    const queuedAnimation = this.options.nextAnimation;
+
+    // Backward-compatible behavior: if only `animation` is provided, play it exactly as before.
+    if (initialAnimation) {
+      this.setAnimation(initialAnimation, this.options.loop);
+      if (queuedAnimation) {
+        this.addAnimation(queuedAnimation, this.options.nextAnimationLoop, 0);
+      }
+      return;
+    }
+
+    // If only queued animation is provided, treat it as the initial animation.
+    if (queuedAnimation) {
+      this.setAnimation(queuedAnimation, this.options.nextAnimationLoop);
     }
   }
 
@@ -1394,6 +1421,27 @@ export class PixiSpineWidget {
   }
 
   /**
+   * Queue an animation to play after the current track.
+   *
+   * @param name - Animation name
+   * @param loop - Whether queued animation should loop
+   * @param delay - Delay in seconds before queued animation starts (default: 0)
+   */
+  addAnimation(name: string, loop: boolean = true, delay: number = 0): void {
+    if (!this.spine) {
+      console.warn('Spine not loaded yet');
+      return;
+    }
+
+    try {
+      this.spine.state.addAnimation(0, name, loop, delay);
+      this.isPausedState = false;
+    } catch (error) {
+      console.error(`Failed to add animation "${name}":`, error);
+    }
+  }
+
+  /**
    * Set skin
    * 
    * @param name - Skin name
@@ -1515,9 +1563,7 @@ export class PixiSpineWidget {
 
     this.spine.skeleton.setToSetupPose();
     
-    if (this.options.animation) {
-      this.setAnimation(this.options.animation, this.options.loop);
-    }
+    this.applyInitialAnimationSequence();
 
     if (this.options.fitToContainer) {
       this.fitToContainer();

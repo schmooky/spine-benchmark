@@ -136,6 +136,18 @@ export function parseDataAttributes(element: HTMLElement): SpineWidgetOptions {
   if (animation) {
     options.animation = animation;
   }
+
+  // Optional: queued animation after initial animation
+  const nextAnimation = element.getAttribute('data-next-animation');
+  if (nextAnimation) {
+    options.nextAnimation = nextAnimation;
+  }
+
+  const nextAnimationLoop = element.getAttribute('data-next-animation-loop')
+    ?? element.getAttribute('data-next-loop');
+  if (nextAnimationLoop !== null) {
+    options.nextAnimationLoop = parseBool(nextAnimationLoop);
+  }
   
   // Optional: skin
   const skin = element.getAttribute('data-skin');

@@ -61,6 +61,8 @@ createSpineWidget(element: HTMLElement, options: SpineWidgetOptions): SpineWidge
 | `atlas` | `string` | **required** | Path to atlas file (.atlas) |
 | `images` | `string` | `undefined` | Space/comma-separated image URLs to override atlas page files (useful for `.ktx2` / `.basis` substitution) |
 | `animation` | `string` | `undefined` | Initial animation name |
+| `nextAnimation` | `string` | `undefined` | Optional queued animation (`addAnimation`) after the initial animation |
+| `nextAnimationLoop` | `boolean` | `true` | Loop setting for `nextAnimation` |
 | `skin` | `string` | `undefined` | Initial skin name |
 | `loop` | `boolean` | `true` | Loop animation |
 | `scale` | `number` | `1` | Scale factor |
@@ -124,6 +126,9 @@ For HTML auto-init:
 ```typescript
 // Play animation
 widget.play(animation?: string, loop?: boolean): void
+
+// Queue next animation on the same track
+widget.addAnimation(animation: string, loop?: boolean, delay?: number): void
 
 // Pause animation
 widget.pause(): void
@@ -253,6 +258,34 @@ const widget = createSpineWidget(element, {
   controlsPosition: 'top-left',
   allowSkinChange: true
 });
+```
+
+### Setup Then Loop Animation (No Controls)
+
+```typescript
+const widget = createSpineWidget(element, {
+  skeleton: 'assets/character.skel',
+  atlas: 'assets/character.atlas',
+  animation: 'setup',
+  loop: false,
+  nextAnimation: 'idle',
+  nextAnimationLoop: true,
+  showControls: false,
+});
+```
+
+Equivalent HTML auto-init:
+
+```html
+<div
+  data-spinefolio
+  data-skeleton="/assets/character.json"
+  data-atlas="/assets/character.atlas"
+  data-animation="setup"
+  data-loop="false"
+  data-next-animation="idle"
+  data-next-animation-loop="true"
+></div>
 ```
 
 ### Debug Visualization

@@ -55,6 +55,11 @@ function parseControlsPosition(
   }
 }
 
+function parseOptionalBool(value?: string): boolean | undefined {
+  if (value === undefined) return undefined;
+  return value === '' || value === 'true';
+}
+
 /**
  * Factory function to create a Spine widget instance
  * @param element - The HTML element to attach the widget to
@@ -95,6 +100,10 @@ export function create(
     atlas: options?.atlas || el.dataset.atlas || '',
     images: options?.images || el.dataset.images,
     animation: options?.animation || el.dataset.animation,
+    nextAnimation: options?.nextAnimation || el.dataset.nextAnimation,
+    nextAnimationLoop:
+      options?.nextAnimationLoop
+      ?? parseOptionalBool(el.dataset.nextAnimationLoop ?? el.dataset.nextLoop),
     skin: options?.skin || el.dataset.skin,
     loop: options?.loop ?? el.dataset.loop !== 'false',
     scale: options?.scale ?? parseFloat(el.dataset.scale || '1'),
