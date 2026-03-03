@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinefolio Example - Spine Animation Widget</title>
+    
+    <!-- 
+        SPINEFOLIO USAGE EXAMPLE
+        
+        1. Include the CSS file (required for widget styling)
+        2. Include the JS file (contains all dependencies bundled)
+        3. Add elements with data-spinefolio attribute
+        4. Configure via data attributes or JavaScript API
+    -->
+    
+    <!-- Core Spinefolio CSS - Required -->
+    <link rel="stylesheet" href="spinefolio.css">
+    
+    <!-- Optional: Include a theme for enhanced styling -->
+    <!-- <link rel="stylesheet" href="glassmorphic.css"> -->
+    <!-- <link rel="stylesheet" href="minimal.css"> -->
+    <!-- <link rel="stylesheet" href="neon.css"> -->
+    <!-- <link rel="stylesheet" href="themes/schmooky.css"> -->
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .example-section {
+            margin-bottom: 40px;
+        }
+        
+        .example-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 10px;
+        }
+        
+        .widget-container {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            margin: 20px auto;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        
+        .code-block code {
+            display: block;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Spinefolio Example</h1>
+        <p class="description">
+            This page demonstrates how to use Spinefolio to embed Spine animations in your web pages.
+            All you need is the CSS and JS files in the same directory as this HTML file.
+        </p>
+        
+        <!-- Example 1: Basic Auto-Init -->
+        <div class="example-section">
+            <h2 class="example-title">Example 1: Basic Auto-Initialization</h2>
+            <p class="description">
+                Add the <code>data-spinefolio</code> attribute to any element and configure it with data attributes.
+                The widget will automatically initialize when the page loads.
+            </p>
+            
+            <div
+                class="widget-container"
+                data-spinefolio
+                data-skeleton="./low_1.json"
+                data-atlas="./low.atlas"
+                data-animation="idle"
+                data-loop="true"
+                data-show-controls="true"
+                data-highlight-attachment-bounds="blick_01"
+                data-highlight-attachment-color="#ff3366"
+                data-debug-mesh-attachment="blick_01"
+                data-debug-mesh-color="#00eaff"
+            ></div>
+            
+            <div class="code-block"><code>&lt;div
+    data-spinefolio
+    data-skeleton="./low_1.json"
+    data-atlas="./low.atlas"
+    data-animation="idle"
+    data-loop="true"
+    data-show-controls="true"
+&gt;&lt;/div&gt;</code></div>
+        </div>
+        
+        <!-- Example 2: Custom Background -->
+        <div class="example-section">
+            <h2 class="example-title">Example 2: Custom Background</h2>
+            <p class="description">
+                Customize the background color for better visual presentation.
+            </p>
+            
+            <div
+                class="widget-container"
+                data-spinefolio
+                data-skeleton="./low_1.json"
+                data-atlas="./low.atlas"
+                data-animation="win"
+                data-loop="true"
+                data-background-color="#1a1a2e"
+                data-show-controls="true"
+            ></div>
+            
+            <div class="code-block"><code>&lt;div
+    data-spinefolio
+    data-skeleton="./low_1.json"
+    data-atlas="./low.atlas"
+    data-animation="win"
+    data-loop="true"
+    data-background-color="#1a1a2e"
+    data-show-controls="true"
+&gt;&lt;/div&gt;</code></div>
+        </div>
+        
+        <!-- Example 3: Interactive Controls -->
+        <div class="example-section">
+            <h2 class="example-title">Example 3: Interactive with Pan & Zoom</h2>
+            <p class="description">
+                Enable pan and zoom controls for interactive exploration of the animation.
+            </p>
+            
+            <div
+                class="widget-container"
+                data-spinefolio
+                data-skeleton="./low_1.json"
+                data-atlas="./low.atlas"
+                data-animation="blur_in"
+                data-loop="true"
+                data-enable-pan="true"
+                data-enable-zoom="true"
+                data-min-zoom="0.5"
+                data-max-zoom="3"
+                data-show-controls="true"
+            ></div>
+            
+            <div class="code-block"><code>&lt;div
+    data-spinefolio
+    data-skeleton="./low_1.json"
+    data-atlas="./low.atlas"
+    data-animation="blur_in"
+    data-loop="true"
+    data-enable-pan="true"
+    data-enable-zoom="true"
+    data-min-zoom="0.5"
+    data-max-zoom="3"
+    data-show-controls="true"
+&gt;&lt;/div&gt;</code></div>
+        </div>
+        
+        <!-- JavaScript API Example -->
+        <div class="example-section">
+            <h2 class="example-title">JavaScript API Usage</h2>
+            <p class="description">
+                You can also create widgets programmatically using the JavaScript API.
+            </p>
+            
+            <div id="programmatic-widget" class="widget-container"></div>
+            
+            <div class="code-block"><code>// Create a widget programmatically
+const widget = Spinefolio.create('#programmatic-widget', {
+    skeleton: './low_1.json',
+    atlas: './low.atlas',
+    animation: 'idle',
+    loop: true,
+    showControls: true,
+    enablePan: true,
+    enableZoom: true,
+    onLoad: () => console.log('Widget loaded!'),
+    onError: (error) => console.error('Error:', error)
+});
+
+// Control the widget
+widget.setAnimation('win', true);
+widget.setSkin('default');
+widget.setTimeScale(1.5);
+
+// Get the widget instance later
+const instance = Spinefolio.get('#programmatic-widget');
+
+// Destroy when done
+Spinefolio.destroy('#programmatic-widget');</code></div>
+        </div>
+        
+        <!-- Configuration Reference -->
+        <div class="example-section">
+            <h2 class="example-title">Available Data Attributes</h2>
+            <div class="code-block"><code><!-- Required -->
+data-skeleton          Path to skeleton JSON file
+data-atlas             Path to atlas file
+
+<!-- Optional -->
+data-animation         Animation name to play (default: first animation)
+data-skin              Skin name to use (default: default skin)
+data-loop              Loop animation (default: true)
+data-scale             Scale factor (default: 1)
+data-x                 X position offset (default: 0)
+data-y                 Y position offset (default: 0)
+data-background-color  Background color (default: transparent)
+data-fit               Fit to container (default: true)
+
+<!-- Controls -->
+data-show-controls     Show control panel (default: false)
+data-allow-skin-change Show skin switch in controls (default: false)
+data-enable-pan        Enable pan/drag (default: true)
+data-enable-zoom       Enable zoom (default: true)
+data-min-zoom          Minimum zoom level (default: 0.25)
+data-max-zoom          Maximum zoom level (default: 4)
+
+<!-- Debug -->
+data-show-bones        Show skeleton bones (default: false)
+data-show-bounds       Show bounding boxes (default: false)
+data-debug             Enable debug mode (default: false)
+
+<!-- Advanced -->
+data-pma               Premultiplied alpha (default: true)
+data-copyright         Copyright text
+data-font              Custom font family</code></div>
+        </div>
+    </div>
+    
+    <!-- 
+        Load Spinefolio - Place at end of body
+        The script will automatically initialize all elements with data-spinefolio attribute
+    -->
+    <script src="spinefolio.js"></script>
+    
+    <!-- Optional: Programmatic usage example -->
+    <script>
+        // Wait for Spinefolio to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Example: Create a widget programmatically
+            const widget = Spinefolio.create('#programmatic-widget', {
+                skeleton: './low_1.json',
+                atlas: './low.atlas',
+                animation: 'idle',
+                loop: true,
+                showControls: true,
+                enablePan: true,
+                enableZoom: true,
+                onLoad: () => {
+                    console.log('Programmatic widget loaded!');
+                },
+                onError: (error) => {
+                    console.error('Failed to load widget:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

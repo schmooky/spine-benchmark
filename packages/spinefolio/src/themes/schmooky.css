@@ -1,0 +1,162 @@
+/**
+ * Spinefolio Theme - Schmooky Blog
+ * Captured from https://schmooky.dev design tokens.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+[data-spinefolio].spinefolio-theme-schmooky {
+  --schmooky-bg: #0c0c0c;
+  --schmooky-bg-secondary: #111111;
+  --schmooky-surface: #161616;
+  --schmooky-divider: #222222;
+  --schmooky-text-primary: #ffffff;
+  --schmooky-text-secondary: #888888;
+  --schmooky-text-muted: #666666;
+  --schmooky-accent: #ff6b35;
+  --schmooky-accent-soft: rgba(255, 107, 53, 0.24);
+  --schmooky-font-main: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --schmooky-font-serif: "Playfair Display", Georgia, serif;
+  --schmooky-font-mono: "JetBrains Mono", SFMono-Regular, Menlo, Monaco, monospace;
+
+  font-family: var(--schmooky-font-main);
+  background:
+    radial-gradient(160% 90% at 50% 0%, rgba(255, 107, 53, 0.08) 0%, rgba(255, 107, 53, 0) 50%),
+    linear-gradient(180deg, var(--schmooky-bg-secondary) 0%, var(--schmooky-bg) 100%);
+  border: 1px solid var(--schmooky-divider);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 16px 30px rgba(0, 0, 0, 0.32);
+  color: var(--schmooky-text-primary);
+}
+
+[data-spinefolio].spinefolio-theme-schmooky:focus-within {
+  outline: 1px solid var(--schmooky-accent);
+  outline-offset: 0;
+}
+
+.spinefolio-theme-schmooky .spine-controls-windows-menu {
+  font-family: var(--schmooky-font-main);
+}
+
+.spinefolio-theme-schmooky .spine-menu-bar {
+  background: var(--schmooky-surface);
+  border: 1px solid var(--schmooky-divider);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.spinefolio-theme-schmooky .spine-menu-button-windows {
+  color: var(--schmooky-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.spinefolio-theme-schmooky .spine-menu-button-windows:hover {
+  background: rgba(255, 107, 53, 0.15);
+  color: var(--schmooky-text-primary);
+}
+
+.spinefolio-theme-schmooky .spine-menu-button-windows.active {
+  background: var(--schmooky-accent);
+  color: #0c0c0c;
+  box-shadow: none;
+}
+
+.spinefolio-theme-schmooky .spine-menu-dropdown {
+  background: var(--schmooky-surface);
+  border: 1px solid var(--schmooky-divider);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+}
+
+.spinefolio-theme-schmooky .spine-menu-separator {
+  background: var(--schmooky-divider);
+}
+
+.spinefolio-theme-schmooky .spine-menu-item-label {
+  color: var(--schmooky-text-muted);
+  font-family: var(--schmooky-font-mono);
+  letter-spacing: 0.02em;
+}
+
+.spinefolio-theme-schmooky .spine-menu-item-button:hover {
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.spinefolio-theme-schmooky .spine-menu-action-btn,
+.spinefolio-theme-schmooky .spine-menu-checkbox-text {
+  color: var(--schmooky-text-secondary);
+}
+
+.spinefolio-theme-schmooky .spine-menu-shortcut {
+  color: var(--schmooky-text-muted);
+  font-family: var(--schmooky-font-mono);
+}
+
+.spinefolio-theme-schmooky .spine-menu-select {
+  background: var(--schmooky-bg-secondary);
+  color: var(--schmooky-text-primary);
+  border: 1px solid var(--schmooky-divider);
+  font-family: var(--schmooky-font-main);
+}
+
+.spinefolio-theme-schmooky .spine-menu-select:focus {
+  border-color: var(--schmooky-accent);
+  box-shadow: 0 0 0 1px var(--schmooky-accent-soft);
+}
+
+.spinefolio-theme-schmooky .spine-menu-slider {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.spinefolio-theme-schmooky .spine-menu-slider::-webkit-slider-thumb {
+  background: var(--schmooky-accent);
+  border: 1px solid #bf4f24;
+}
+
+.spinefolio-theme-schmooky .spine-menu-slider::-moz-range-thumb {
+  background: var(--schmooky-accent);
+  border: 1px solid #bf4f24;
+}
+
+.spinefolio-theme-schmooky .spine-menu-value {
+  color: var(--schmooky-accent);
+  font-family: var(--schmooky-font-mono);
+}
+
+.spinefolio-theme-schmooky .spine-menu-checkbox {
+  accent-color: var(--schmooky-accent);
+}
+
+/* Blog embed helpers */
+.spinefolio-embed-schmooky {
+  margin: 2rem 0;
+  border-top: 1px solid #222222;
+  border-bottom: 1px solid #222222;
+  padding: 1.25rem 0;
+}
+
+.spinefolio-embed-schmooky__frame {
+  width: 100%;
+  max-width: 720px;
+  height: min(58vw, 460px);
+  min-height: 340px;
+  margin: 0 auto;
+}
+
+.spinefolio-embed-schmooky__caption {
+  margin-top: 0.75rem;
+  text-align: center;
+  color: #666666;
+  font-family: "JetBrains Mono", SFMono-Regular, Menlo, Monaco, monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 720px) {
+  .spinefolio-embed-schmooky__frame {
+    height: min(72vw, 420px);
+    min-height: 280px;
+  }
+}

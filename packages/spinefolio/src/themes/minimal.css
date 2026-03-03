@@ -1,0 +1,90 @@
+/**
+ * Spinefolio WebGL - Minimal Theme
+ * Clean, unobtrusive styling with subtle shadows and soft edges.
+ * Best for professional portfolios and clean designs.
+ */
+
+.spinefolio-widget.spinefolio-theme-minimal {
+  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 4px 6px rgba(0, 0, 0, 0.04);
+}
+
+.spinefolio-widget.spinefolio-theme-minimal.spinefolio-dark {
+  background: linear-gradient(180deg, #212529 0%, #1a1d20 100%);
+}
+
+/* Loading spinner - subtle gray */
+.spinefolio-widget.spinefolio-theme-minimal:not(.spinefolio-loaded):not(.spinefolio-error)::before {
+  border-color: #adb5bd;
+  border-top-color: transparent;
+  opacity: 0.6;
+}
+
+/* Error state */
+.spinefolio-widget.spinefolio-theme-minimal.spinefolio-error {
+  background: #f8f9fa;
+}
+
+.spinefolio-widget.spinefolio-theme-minimal.spinefolio-error::before {
+  color: #868e96;
+}
+
+/* Controls styling */
+.spinefolio-widget.spinefolio-theme-minimal .spinefolio-controls {
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+  padding: 16px 12px 12px;
+}
+
+.spinefolio-widget.spinefolio-theme-minimal .spinefolio-anim-select,
+.spinefolio-widget.spinefolio-theme-minimal .spinefolio-btn {
+  background: rgba(255, 255, 255, 0.95);
+  color: #212529;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+}
+
+.spinefolio-widget.spinefolio-theme-minimal .spinefolio-anim-select:hover,
+.spinefolio-widget.spinefolio-theme-minimal .spinefolio-btn:hover {
+  background: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Interactive hover effect */
+.spinefolio-widget.spinefolio-theme-minimal[data-interactive="true"]:hover {
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Focus outline for accessibility */
+.spinefolio-widget.spinefolio-theme-minimal:focus-within {
+  outline: 2px solid #4dabf7;
+  outline-offset: 2px;
+}
+
+/* Variant: Bordered */
+.spinefolio-widget.spinefolio-theme-minimal.spinefolio-bordered {
+  border: 1px solid #dee2e6;
+  box-shadow: none;
+}
+
+.spinefolio-widget.spinefolio-theme-minimal.spinefolio-bordered.spinefolio-dark {
+  border-color: #343a40;
+}
+
+/* Variant: Flat */
+.spinefolio-widget.spinefolio-theme-minimal.spinefolio-flat {
+  background: #f8f9fa;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.spinefolio-widget.spinefolio-theme-minimal.spinefolio-flat.spinefolio-dark {
+  background: #212529;
+}

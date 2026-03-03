@@ -1,0 +1,63 @@
+{
+  "name": "@spine-benchmark/spinefolio",
+  "version": "2.2.2",
+  "description": "Spine widget library for PixiJS v8 with auto-initialization and blog-ready demos",
+  "type": "module",
+  "main": "./dist/spinefolio.js",
+  "module": "./dist/spinefolio.module.js",
+  "types": "./dist/types/core/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/core/index.d.ts",
+      "import": "./dist/spinefolio.module.js",
+      "default": "./dist/spinefolio.js"
+    },
+    "./auto": {
+      "types": "./dist/types/core/spinefolio-auto.d.ts",
+      "import": "./dist/spinefolio-auto.module.js",
+      "default": "./dist/spinefolio-auto.js"
+    },
+    "./spinefolio.css": "./dist/spinefolio.css",
+    "./themes/minimal.css": "./dist/themes/minimal.css",
+    "./themes/glassmorphic.css": "./dist/themes/glassmorphic.css",
+    "./themes/neon.css": "./dist/themes/neon.css",
+    "./themes/schmooky.css": "./dist/themes/schmooky.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "spine",
+    "pixi",
+    "pixijs",
+    "animation",
+    "widget"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "vite",
+    "demo": "npm run build && vite preview --open /demo-schmooky-blog.html --strictPort",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && npm run build:core && npm run build:auto && npm run build:types && node scripts/prepare-dist.mjs",
+    "build:core": "vite build",
+    "build:auto": "vite build --config vite.config.auto.ts",
+    "build:types": "tsc -p tsconfig.build.json",
+    "preview": "vite preview",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101",
+    "pixi.js": "^8.16.0"
+  },
+  "devDependencies": {
+    "terser": "^5.46.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

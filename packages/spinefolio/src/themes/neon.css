@@ -1,0 +1,215 @@
+/**
+ * Spinefolio WebGL - Neon Theme
+ * Cyberpunk-inspired with glowing borders and vibrant colors.
+ * Perfect for gaming, tech, and creative portfolios.
+ */
+
+.spinefolio-widget.spinefolio-theme-neon {
+  --neon-primary: #00f5ff;
+  --neon-secondary: #ff00ff;
+  --neon-glow: rgba(0, 245, 255, 0.5);
+  --neon-bg: #0a0a0f;
+  
+  background: var(--neon-bg);
+  border: 2px solid var(--neon-primary);
+  border-radius: 4px;
+  box-shadow: 
+    0 0 10px var(--neon-glow),
+    0 0 20px rgba(0, 245, 255, 0.3),
+    inset 0 0 20px rgba(0, 245, 255, 0.05);
+  position: relative;
+  overflow: visible;
+}
+
+/* Corner accents */
+.spinefolio-widget.spinefolio-theme-neon::before,
+.spinefolio-widget.spinefolio-theme-neon::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--neon-secondary);
+  pointer-events: none;
+}
+
+.spinefolio-widget.spinefolio-theme-neon::before {
+  top: -6px;
+  left: -6px;
+  border-right: none;
+  border-bottom: none;
+  box-shadow: -2px -2px 8px rgba(255, 0, 255, 0.5);
+}
+
+.spinefolio-widget.spinefolio-theme-neon::after {
+  bottom: -6px;
+  right: -6px;
+  border-left: none;
+  border-top: none;
+  box-shadow: 2px 2px 8px rgba(255, 0, 255, 0.5);
+}
+
+/* Color variants */
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-neon-pink {
+  --neon-primary: #ff00ff;
+  --neon-secondary: #00f5ff;
+  --neon-glow: rgba(255, 0, 255, 0.5);
+}
+
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-neon-green {
+  --neon-primary: #00ff88;
+  --neon-secondary: #ff00ff;
+  --neon-glow: rgba(0, 255, 136, 0.5);
+}
+
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-neon-orange {
+  --neon-primary: #ff6600;
+  --neon-secondary: #00f5ff;
+  --neon-glow: rgba(255, 102, 0, 0.5);
+}
+
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-neon-yellow {
+  --neon-primary: #ffff00;
+  --neon-secondary: #ff00ff;
+  --neon-glow: rgba(255, 255, 0, 0.4);
+}
+
+/* Loading spinner - neon glow */
+.spinefolio-widget.spinefolio-theme-neon:not(.spinefolio-loaded):not(.spinefolio-error) > .spinefolio-canvas + *,
+.spinefolio-widget.spinefolio-theme-neon:not(.spinefolio-loaded):not(.spinefolio-error) > .spinefolio-canvas::before {
+  /* Hide default spinner */
+  display: none;
+}
+
+/* Custom neon spinner using pseudo-element on container */
+.spinefolio-widget.spinefolio-theme-neon:not(.spinefolio-loaded):not(.spinefolio-error) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinefolio-widget.spinefolio-theme-neon:not(.spinefolio-loaded):not(.spinefolio-error) .spinefolio-canvas {
+  opacity: 0;
+}
+
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-loaded .spinefolio-canvas {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Error state */
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-error {
+  border-color: #ff0044;
+  box-shadow: 
+    0 0 10px rgba(255, 0, 68, 0.5),
+    0 0 20px rgba(255, 0, 68, 0.3);
+}
+
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-error::before {
+  border-color: #ff0044;
+}
+
+/* Controls - cyberpunk style */
+.spinefolio-widget.spinefolio-theme-neon .spinefolio-controls {
+  background: linear-gradient(
+    0deg,
+    rgba(10, 10, 15, 0.95) 0%,
+    rgba(10, 10, 15, 0.8) 70%,
+    transparent 100%
+  );
+  padding: 24px 16px 16px;
+  border-top: 1px solid rgba(0, 245, 255, 0.2);
+}
+
+.spinefolio-widget.spinefolio-theme-neon .spinefolio-anim-select,
+.spinefolio-widget.spinefolio-theme-neon .spinefolio-btn {
+  background: transparent;
+  color: var(--neon-primary);
+  border: 1px solid var(--neon-primary);
+  border-radius: 2px;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-family: 'Courier New', monospace;
+  box-shadow: 
+    0 0 5px var(--neon-glow),
+    inset 0 0 5px rgba(0, 245, 255, 0.1);
+  transition: all 0.15s ease;
+}
+
+.spinefolio-widget.spinefolio-theme-neon .spinefolio-anim-select:hover,
+.spinefolio-widget.spinefolio-theme-neon .spinefolio-btn:hover {
+  background: var(--neon-primary);
+  color: var(--neon-bg);
+  box-shadow: 
+    0 0 15px var(--neon-glow),
+    0 0 30px rgba(0, 245, 255, 0.3);
+}
+
+/* Interactive hover effect */
+.spinefolio-widget.spinefolio-theme-neon[data-interactive="true"]:hover {
+  box-shadow: 
+    0 0 15px var(--neon-glow),
+    0 0 30px rgba(0, 245, 255, 0.4),
+    0 0 45px rgba(0, 245, 255, 0.2),
+    inset 0 0 30px rgba(0, 245, 255, 0.1);
+  transform: scale(1.01);
+  transition: all 0.2s ease;
+}
+
+/* Focus outline */
+.spinefolio-widget.spinefolio-theme-neon:focus-within {
+  outline: 2px solid var(--neon-secondary);
+  outline-offset: 4px;
+  box-shadow: 
+    0 0 15px var(--neon-glow),
+    0 0 30px rgba(255, 0, 255, 0.3);
+}
+
+/* Scanlines effect (optional) */
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-scanlines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 1;
+  border: none;
+  width: auto;
+  height: auto;
+}
+
+/* Flicker animation (optional) */
+.spinefolio-widget.spinefolio-theme-neon.spinefolio-flicker {
+  animation: neon-flicker 4s infinite;
+}
+
+@keyframes neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    box-shadow: 
+      0 0 10px var(--neon-glow),
+      0 0 20px rgba(0, 245, 255, 0.3),
+      inset 0 0 20px rgba(0, 245, 255, 0.05);
+  }
+  20%, 24%, 55% {
+    box-shadow: 
+      0 0 5px var(--neon-glow),
+      0 0 10px rgba(0, 245, 255, 0.2),
+      inset 0 0 10px rgba(0, 245, 255, 0.02);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .spinefolio-widget.spinefolio-theme-neon.spinefolio-flicker {
+    animation: none;
+  }
+}

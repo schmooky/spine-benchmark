@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0C0C0C">
+    <title>Spinefolio x Schmooky Blog Theme Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="./spinefolio.css">
+    <link rel="stylesheet" href="./themes/schmooky.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #0C0C0C;
+            --bg-secondary: #111111;
+            --surface: #161616;
+            --text-primary: #FFFFFF;
+            --text-secondary: #888888;
+            --text-muted: #666666;
+            --accent: #FF6B35;
+            --divider: #222222;
+            --font-main: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-serif: "Playfair Display", Georgia, serif;
+            --font-mono: "JetBrains Mono", SFMono-Regular, Menlo, Monaco, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.7;
+            padding: 48px 24px 80px;
+        }
+
+        .article {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .article__meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .article__title {
+            font-size: clamp(30px, 5vw, 48px);
+            line-height: 1.1;
+            margin-bottom: 18px;
+            letter-spacing: -0.02em;
+        }
+
+        .article__desc {
+            color: var(--text-secondary);
+            font-size: 20px;
+            margin-bottom: 30px;
+        }
+
+        .prose {
+            color: var(--text-secondary);
+            font-size: 17px;
+        }
+
+        .prose p + p {
+            margin-top: 20px;
+        }
+
+        .prose h2 {
+            margin-top: 34px;
+            margin-bottom: 14px;
+            color: var(--text-primary);
+            font-size: 24px;
+        }
+
+        .prose code {
+            background: var(--surface);
+            border: 1px solid var(--divider);
+            color: var(--accent);
+            font-family: var(--font-mono);
+            border-radius: 3px;
+            padding: 2px 6px;
+        }
+
+        .demo-note {
+            margin-top: 28px;
+            padding: 14px 16px;
+            border: 1px solid var(--divider);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .demo-note strong {
+            color: var(--accent);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <article class="article">
+        <div class="article__meta">
+            <span>Demo</span>
+            <span>·</span>
+            <span>Schmooky Theme Capture</span>
+        </div>
+
+        <h1 class="article__title">Spinefolio Canvas Seamlessly Inside Blog Prose</h1>
+        <p class="article__desc">
+            This demo mirrors the exact visual language from <code>schmooky.dev</code> and embeds the canvas like a native article block.
+        </p>
+
+        <div class="prose">
+            <p>
+                The widget below uses the same dark surfaces, muted typography, and accent orange from your portfolio.
+                Controls are re-skinned to blend in with article UI while keeping interaction intact.
+            </p>
+        </div>
+
+        <figure class="spinefolio-embed-schmooky">
+            <div
+                class="spinefolio-embed-schmooky__frame spinefolio-theme-schmooky"
+                data-spinefolio
+                data-skeleton="./low_1.json"
+                data-atlas="./low.atlas"
+                data-animation="idle"
+                data-loop="true"
+                data-show-controls="true"
+                data-highlight-attachment-bounds="blick_01"
+                data-highlight-attachment-color="#FF6B35"
+                data-highlight-attachment-line-width="2"
+                data-debug-mesh-attachment="blick_01"
+                data-debug-mesh-color="#FFFFFF"
+                data-debug-mesh-line-width="1.5"
+            ></div>
+            <figcaption class="spinefolio-embed-schmooky__caption">
+                Embedded Spine scene, themed for schmooky.dev article layout
+            </figcaption>
+        </figure>
+
+        <div class="prose">
+            <h2>Drop-in Blog Usage</h2>
+            <p>
+                Use class <code>spinefolio-theme-schmooky</code> on the widget container and include
+                <code>./themes/schmooky.css</code> next to <code>spinefolio.css</code>.
+            </p>
+        </div>
+
+        <p class="demo-note">
+            <strong>Tip:</strong> In your post templates, wrap the widget with <code>.spinefolio-embed-schmooky</code>
+            to get spacing/caption rhythm identical to your prose sections.
+        </p>
+    </article>
+
+    <script src="./spinefolio.js"></script>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinefolio Technical Documentation | Interactive Animation System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        /* ============================================
+           BREACH DESIGN SYSTEM v2.2
+           For CV, Portfolio, Blog, Documentation
+           Based on Into the Breach aesthetic
+           ============================================ */
+        
+        /* ============================================
+           CSS CUSTOM PROPERTIES (TOKENS)
+           ============================================ */
+        :root {
+            /* === COLORS === */
+            
+            /* Primary Palette */
+            --breach-orange: #f5a623;
+            --breach-orange-dark: #c4841c;
+            --breach-orange-light: #fbbf24;
+            
+            /* Neutrals */
+            --breach-white: #f8f6f1;
+            --breach-bg: #f0ede8;
+            --breach-grey-100: #e7e5e4;
+            --breach-grey-200: #d6d3ce;
+            --breach-grey-300: #a8a29e;
+            --breach-grey-400: #78716c;
+            --breach-grey-500: #57534e;
+            --breach-line: #4a4a4a;
+            --breach-line-faint: #9a9a9a;
+            
+            /* Semantic Colors */
+            --breach-success: #4ade80;
+            --breach-info: #3b82f6;
+            --breach-warning: #f5a623;
+            --breach-danger: #ef4444;
+            --breach-accent: #a855f7;
+            
+            /* === TYPOGRAPHY === */
+            --breach-font: 'Share Tech Mono', monospace;
+            
+            --breach-text-xs: 9px;
+            --breach-text-sm: 10px;
+            --breach-text-base: 11px;
+            --breach-text-md: 12px;
+            --breach-text-lg: 14px;
+            --breach-text-xl: 16px;
+            --breach-text-2xl: 18px;
+            --breach-text-3xl: 20px;
+            --breach-text-4xl: 24px;
+            --breach-text-5xl: 28px;
+            
+            --breach-tracking-tight: 0.5px;
+            --breach-tracking-normal: 1px;
+            --breach-tracking-wide: 2px;
+            --breach-tracking-wider: 3px;
+            
+            --breach-leading-tight: 1.3;
+            --breach-leading-normal: 1.5;
+            --breach-leading-relaxed: 1.7;
+            --breach-leading-loose: 2;
+            
+            /* === SPACING === */
+            --breach-space-1: 2px;
+            --breach-space-2: 4px;
+            --breach-space-3: 6px;
+            --breach-space-4: 8px;
+            --breach-space-5: 10px;
+            --breach-space-6: 12px;
+            --breach-space-8: 16px;
+            --breach-space-10: 20px;
+            --breach-space-12: 24px;
+            --breach-space-16: 32px;
+            --breach-space-20: 40px;
+            --breach-space-24: 48px;
+            
+            /* === BORDERS === */
+            --breach-border-width: 1px;
+            --breach-border-color: #999;
+            --breach-border: var(--breach-border-width) solid var(--breach-border-color);
+            
+            /* === TRANSITIONS === */
+            --breach-transition-fast: 0.15s ease;
+            --breach-transition-base: 0.2s ease;
+            --breach-transition-slow: 0.3s ease;
+        }
+        
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body {
+            font-family: var(--breach-font);
+            font-size: var(--breach-text-md);
+            background: var(--breach-bg);
+            color: var(--breach-line);
+            line-height: var(--breach-leading-relaxed);
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+        
+        /* ============================================
+           TYPOGRAPHY
+           ============================================ */
+        .breach-h1, .breach-h2, .breach-h3 {
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: var(--breach-leading-tight);
+        }
+        
+        .breach-h1 {
+            font-size: var(--breach-text-5xl);
+            letter-spacing: var(--breach-tracking-wider);
+            margin-bottom: var(--breach-space-8);
+        }
+        
+        .breach-h2 {
+            font-size: var(--breach-text-4xl);
+            letter-spacing: var(--breach-tracking-wide);
+            margin-bottom: var(--breach-space-6);
+            margin-top: var(--breach-space-16);
+        }
+        
+        .breach-h3 {
+            font-size: var(--breach-text-2xl);
+            letter-spacing: var(--breach-tracking-wide);
+            margin-bottom: var(--breach-space-5);
+            margin-top: var(--breach-space-12);
+        }
+        
+        .breach-prose {
+            font-size: var(--breach-text-md);
+            line-height: var(--breach-leading-relaxed);
+            color: var(--breach-grey-500);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .breach-prose p {
+            margin-bottom: var(--breach-space-8);
+        }
+        
+        .breach-prose strong {
+            font-weight: 800;
+            color: var(--breach-line);
+        }
+        
+        .breach-prose em {
+            font-style: italic;
+        }
+        
+        /* ============================================
+           NAVIGATION
+           ============================================ */
+        .breach-nav {
+            display: flex;
+            gap: var(--breach-space-8);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .breach-nav__item {
+            font-size: var(--breach-text-sm);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: var(--breach-tracking-tight);
+            color: var(--breach-line);
+            text-decoration: none;
+            padding: var(--breach-space-2) var(--breach-space-4);
+            border: 1px solid transparent;
+            transition: all var(--breach-transition-fast);
+        }
+        
+        .breach-nav__item:hover {
+            border-color: var(--breach-line);
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .breach-nav__item--active {
+            border-color: var(--breach-line);
+            background: var(--breach-white);
+        }
+        
+        /* ============================================
+           HEADER
+           ============================================ */
+        .breach-header {
+            background: var(--breach-orange);
+            padding: var(--breach-space-6) var(--breach-space-12);
+            margin: var(--breach-space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--breach-space-8);
+        }
+        
+        .breach-header__title {
+            font-size: var(--breach-text-3xl);
+            font-weight: 700;
+            letter-spacing: var(--breach-tracking-wider);
+            color: var(--breach-line);
+            text-transform: uppercase;
+        }
+        
+        .breach-header__subtitle {
+            font-size: var(--breach-text-sm);
+            color: var(--breach-grey-500);
+            letter-spacing: var(--breach-tracking-normal);
+            margin-top: var(--breach-space-2);
+        }
+        
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .breach-footer {
+            padding: var(--breach-space-6);
+            margin: var(--breach-space-4);
+            border-top: 1px solid var(--breach-grey-300);
+            display: flex;
+            justify-content: space-between;
+            font-size: var(--breach-text-sm);
+            color: var(--breach-grey-400);
+            flex-wrap: wrap;
+            gap: var(--breach-space-4);
+        }
+        
+        /* ============================================
+           WIDGET CONTAINERS - SQUARE SHAPED
+           ============================================ */
+        .spine-widget {
+            width: 300px;
+            height: 300px;
+            background: var(--breach-grey-100);
+            border: var(--breach-border);
+            position: relative;
+            overflow: hidden;
+            margin: var(--breach-space-12) auto;
+        }
+        
+        .spine-widget--large {
+            width: 400px;
+            height: 400px;
+        }
+        
+        .spine-widget--small {
+            width: 250px;
+            height: 250px;
+        }
+        
+        /* Widget caption */
+        .widget-caption {
+            text-align: center;
+            font-size: var(--breach-text-sm);
+            color: var(--breach-grey-400);
+            margin-top: var(--breach-space-4);
+            font-style: italic;
+        }
+        
+        /* Widget menu overlay */
+        .widget-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(245, 166, 35, 0.95);
+            padding: var(--breach-space-3) var(--breach-space-4);
+            font-size: var(--breach-text-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: var(--breach-tracking-tight);
+            color: var(--breach-line);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Widget copyright overlay */
+        .widget-copyright {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: var(--breach-space-2) var(--breach-space-4);
+            font-size: var(--breach-text-xs);
+            color: var(--breach-grey-300);
+            z-index: 10;
+            text-align: center;
+        }
+        
+        /* ============================================
+           LAYOUT
+           ============================================ */
+        .article-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--breach-space-12);
+        }
+        
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            body { font-size: var(--breach-text-base); }
+            
+            .breach-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: var(--breach-space-4) var(--breach-space-6);
+                margin: var(--breach-space-3);
+            }
+            
+            .breach-header__title { font-size: var(--breach-text-xl); }
+            
+            .breach-nav {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--breach-space-4);
+            }
+            
+            .spine-widget {
+                width: 100%;
+                height: 250px;
+            }
+            
+            .spine-widget--large {
+                width: 100%;
+                height: 300px;
+            }
+            
+            .spine-widget--small {
+                width: 100%;
+                height: 200px;
+            }
+            
+            .article-container {
+                padding: var(--breach-space-6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER WITH NAVIGATION -->
+    <div class="breach-header">
+        <div>
+            <div class="breach-header__title">Spinefolio</div>
+        </div>
+    </div>
+    
+    <!-- MAIN ARTICLE CONTENT -->
+    <article class="article-container">
+        <h1 class="breach-h1">Building Interactive Animations with Spinefolio</h1>
+        
+        <div class="breach-prose">
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. <strong>Spinefolio</strong> represents a paradigm shift in how developers integrate skeletal animations into web applications. Rather than wrestling with complex initialization code and manual PIXI.js setup, developers can now leverage a declarative HTML-first approach that feels natural and intuitive.
+            </p>
+            
+            <p>
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. The system automatically detects animation containers marked with the <em>data-spinefolio</em> attribute and initializes them with zero configuration required. This approach dramatically reduces boilerplate code while maintaining full type safety through TypeScript's advanced type system.
+            </p>
+            
+            <p>
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Modern web applications demand high-performance rendering capabilities, and Spinefolio delivers by leveraging WebGL through PIXI.js. The result is smooth, hardware-accelerated animations that maintain 60 FPS even with multiple concurrent instances.
+            </p>
+        </div>
+        
+        <!-- FIRST WIDGET: Main Example -->
+        <div
+            class="spine-widget spine-widget--large"
+            data-spinefolio
+            data-skeleton="./high_1.json"
+            data-atlas="./high.atlas"
+            data-animation="win"
+            data-loop="true"
+            data-show-controls="true"
+            data-controls-position="top-left"
+            data-enable-pan="true"
+            data-enable-zoom="true"
+            data-highlight-attachment-bounds="helmet_1"
+            data-highlight-attachment-color="#ff3366"
+            data-highlight-attachment-line-width="3"
+            data-debug-mesh-attachment="helmet_1"
+            data-debug-mesh-color="#00eaff"
+            data-debug-mesh-line-width="2"
+            data-background="pixi"
+        >
+            <div class="widget-menu">
+                <span>SPINEFOLIO</span>
+                <span>INTERACTIVE</span>
+            </div>
+            <div class="widget-copyright">© 2026 Spinefolio</div>
+        </div>
+        <p class="widget-caption">Figure 1: Interactive Spine animation with full pan and zoom controls</p>
+        
+        <div class="breach-prose">
+            <h2 class="breach-h2">Architecture and Design Philosophy</h2>
+            
+            <p>
+                Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. The architecture follows a modular design pattern where each component serves a single, well-defined purpose. This separation of concerns enables developers to extend functionality through plugins without modifying core system code.
+            </p>
+            
+            <p>
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium. Type safety is not an afterthought but a fundamental design principle. Every public API surface is fully typed, providing IntelliSense support and compile-time error detection. This approach catches bugs before they reach production and improves the overall developer experience.
+            </p>
+            
+            <p>
+                Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. The widget system supports advanced features like debug visualization, custom zoom boundaries, and programmatic animation control. These capabilities make it suitable for both production deployments and development workflows.
+            </p>
+        </div>
+        
+        <!-- SECOND WIDGET: Custom Background -->
+        <div
+            class="spine-widget"
+            data-spinefolio
+            data-skeleton="./high_1.json"
+            data-atlas="./high.atlas"
+            data-animation="idle"
+            data-loop="true"
+            data-background-color="#1a1a2e"
+            data-show-controls="true"
+            data-background="pixi"
+        >
+            <div class="widget-menu">
+                <span>CUSTOM BG</span>
+                <span>CONTROLS</span>
+            </div>
+            <div class="widget-copyright">© 2026 Spinefolio</div>
+        </div>
+        <p class="widget-caption">Figure 2: Custom background with interactive controls menu</p>
+        
+        <div class="breach-prose">
+            <h2 class="breach-h2">Performance Optimization Strategies</h2>
+            
+            <p>
+                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Performance optimization begins at the architectural level. The system employs object pooling for frequently created instances, reducing garbage collection pressure and maintaining consistent frame rates.
+            </p>
+            
+            <p>
+                Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit. Texture atlases are loaded once and shared across multiple animation instances, minimizing memory footprint and network requests. This approach is particularly effective in applications that display multiple characters or UI elements simultaneously.
+            </p>
+            
+            <p>
+                Sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. The rendering pipeline is optimized for batch processing, grouping draw calls to minimize state changes. WebGL context switches are expensive operations, and reducing them directly translates to improved performance across all devices.
+            </p>
+        </div>
+        
+        <!-- THIRD WIDGET: Custom Configuration -->
+        <div
+            class="spine-widget"
+            data-spinefolio
+            data-skeleton="./high_1.json"
+            data-atlas="./high.atlas"
+            data-animation="win"
+            data-loop="true"
+            data-enable-zoom="true"
+            data-min-zoom="0.5"
+            data-max-zoom="3"
+            data-zoom-speed="0.15"
+            data-background="pixi"
+        >
+            <div class="widget-menu">
+                <span>CUSTOM ZOOM</span>
+                <span>CONFIG</span>
+            </div>
+            <div class="widget-copyright">© 2026 Spinefolio</div>
+        </div>
+        <p class="widget-caption">Figure 3: Custom zoom configuration with bounded scaling parameters</p>
+        
+        <div class="breach-prose">
+            <h2 class="breach-h2">Integration Patterns and Best Practices</h2>
+            
+            <p>
+                Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam. Integration with existing frameworks is straightforward thanks to the declarative API. React, Vue, and Angular applications can embed Spinefolio widgets without additional wrapper components or lifecycle management code.
+            </p>
+            
+            <p>
+                Nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur. The auto-initialization system respects the component lifecycle of modern frameworks, ensuring proper cleanup when components unmount. This prevents memory leaks and maintains application stability over extended usage periods.
+            </p>
+            
+            <p>
+                Vel illum qui dolorem eum fugiat quo voluptas nulla pariatur. For advanced use cases, the system exposes a programmatic API that provides fine-grained control over animation playback, skin switching, and event handling. This flexibility ensures that Spinefolio can adapt to diverse application requirements without compromising on simplicity for common scenarios.
+            </p>
+            
+            <h3 class="breach-h3">Conclusion</h3>
+            
+            <p>
+                At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident. Spinefolio demonstrates that powerful animation systems need not sacrifice developer experience for capability. By embracing modern web standards and TypeScript's type system, it delivers a solution that is both approachable for beginners and robust enough for production applications.
+            </p>
+            
+            <p>
+                Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. The future of web animation lies in systems that abstract complexity without hiding functionality. Spinefolio represents a step toward that future, providing developers with the tools they need to create engaging, performant interactive experiences.
+            </p>
+        </div>
+    </article>
+    
+    <!-- FOOTER -->
+    <div class="breach-footer">
+        <div>© 2026 Spinefolio • Built with Breach Design System v2.2</div>
+        <div>Powered by TypeScript, PIXI.js, and Spine Runtime</div>
+    </div>
+    
+    <!-- Load the Spinefolio auto-init script -->
+    <script type="module" src="/src/core/spinefolio-auto.ts"></script>
+</body>
+</html>
