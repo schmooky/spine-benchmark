@@ -31,7 +31,6 @@ export function BenchmarkRouteView() {
     handleDragOver,
     handleDragLeave,
     pixiContainerRef,
-    pixelFootprint,
     assets,
     selectedAssetId,
     setSelectedAssetId,
@@ -186,12 +185,6 @@ export function BenchmarkRouteView() {
             <div ref={pixiContainerRef} className="pixi-host" />
             <div className="canvas-grid-overlay" />
             <CanvasStatsOverlay spineInstance={spineInstance} />
-            {pixelFootprint && (
-              <div className="pixel-footprint-overlay">
-                <span>{t('dashboard.workspace.pixelFootprint', { width: pixelFootprint.width, height: pixelFootprint.height })}</span>
-                <strong>{t('dashboard.workspace.canvasCoverage', { coverage: pixelFootprint.coverage })}</strong>
-              </div>
-            )}
 
             {!spineInstance && urlLoadStatus !== 'loading' && (
               <div className="drop-area">

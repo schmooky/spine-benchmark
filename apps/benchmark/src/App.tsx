@@ -117,6 +117,47 @@ function hexToPixiColor(hexColor: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function getCanvasOverlayTokens(backgroundHex: string): {
+  text: string;
+  muted: string;
+  shadow: string;
+} {
+  const normalized = backgroundHex.replace('#', '').trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return {
+      text: '#f5f7fa',
+      muted: 'rgba(245, 247, 250, 0.78)',
+      shadow: '0 1px 2px rgba(0, 0, 0, 0.72), 0 0 8px rgba(0, 0, 0, 0.5)',
+    };
+  }
+
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+  const linear = (channel: number) => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+  };
+  const luminance =
+    (0.2126 * linear(r)) +
+    (0.7152 * linear(g)) +
+    (0.0722 * linear(b));
+
+  if (luminance > 0.62) {
+    return {
+      text: '#1f2328',
+      muted: 'rgba(31, 35, 40, 0.74)',
+      shadow: '0 1px 2px rgba(255, 255, 255, 0.75), 0 0 8px rgba(255, 255, 255, 0.45)',
+    };
+  }
+
+  return {
+    text: '#f5f7fa',
+    muted: 'rgba(245, 247, 250, 0.78)',
+    shadow: '0 1px 2px rgba(0, 0, 0, 0.72), 0 0 8px rgba(0, 0, 0, 0.5)',
+  };
+}
+
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
@@ -142,7 +183,6 @@ const App: React.FC = () => {
   const [hasAutoLoadedAsset, setHasAutoLoadedAsset] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('language');
-  const [pixelFootprint, setPixelFootprint] = useState<{ width: number; height: number; coverage: number } | null>(null);
   const [routeSelection, setRouteSelection] = useState<RouteSelectionState>(DEFAULT_ROUTE_SELECTION);
   const [lastLoadError, setLastLoadError] = useState<string | null>(null);
   const migratedLegacyBackgroundRef = useRef(false);
@@ -190,9 +230,16 @@ const App: React.FC = () => {
     const root = document.documentElement;
     root.style.setProperty('--sb-page-bg', backgroundColor);
     root.style.setProperty('--sb-canvas-bg', backgroundColor);
+    const overlayTokens = getCanvasOverlayTokens(backgroundColor);
+    root.style.setProperty('--sb-canvas-overlay-text', overlayTokens.text);
+    root.style.setProperty('--sb-canvas-overlay-muted', overlayTokens.muted);
+    root.style.setProperty('--sb-canvas-overlay-shadow', overlayTokens.shadow);
     return () => {
       root.style.removeProperty('--sb-page-bg');
       root.style.removeProperty('--sb-canvas-bg');
+      root.style.removeProperty('--sb-canvas-overlay-text');
+      root.style.removeProperty('--sb-canvas-overlay-muted');
+      root.style.removeProperty('--sb-canvas-overlay-shadow');
     };
   }, [backgroundColor]);
 
@@ -388,39 +435,6 @@ const App: React.FC = () => {
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
-
-  useEffect(() => {
-    if (!app || !spineInstance) {
-      setPixelFootprint(null);
-      return;
-    }
-
-    let lastUpdate = 0;
-    const updateFootprint = () => {
-      const now = performance.now();
-      if (now - lastUpdate < 180) return;
-      lastUpdate = now;
-
-      const bounds = spineInstance.getBounds();
-      const width = Math.max(0, Math.round(bounds.width));
-      const height = Math.max(0, Math.round(bounds.height));
-      const canvasArea = Math.max(1, app.screen.width * app.screen.height);
-      const coverage = Math.min(100, Number((((width * height) / canvasArea) * 100).toFixed(1)));
-
-      setPixelFootprint((prev) => {
-        if (prev && prev.width === width && prev.height === height && prev.coverage === coverage) {
-          return prev;
-        }
-        return { width, height, coverage };
-      });
-    };
-
-    updateFootprint();
-    app.ticker.add(updateFootprint);
-    return () => {
-      app.ticker.remove(updateFootprint);
-    };
-  }, [app, spineInstance]);
 
   useEffect(() => {
     if (!atlasOptions.length) {
@@ -681,7 +695,6 @@ const App: React.FC = () => {
     handleDrop,
     handleDragOver,
     handleDragLeave,
-    pixelFootprint,
     selectedAsset,
     atlasOptions,
     selectedAtlasName,
@@ -741,7 +754,6 @@ const App: React.FC = () => {
     handleDrop,
     handleDragOver,
     handleDragLeave,
-    pixelFootprint,
     selectedAsset,
     atlasOptions,
     selectedAtlasName,

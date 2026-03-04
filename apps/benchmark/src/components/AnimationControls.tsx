@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,6 +27,8 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   const [animations, setAnimations] = useState<string[]>([]);
   const [skins, setSkins] = useState<string[]>([]);
   const [currentSkin, setCurrentSkin] = useState<string>('');
+  const [animationSelectWidth, setAnimationSelectWidth] = useState<number>(92);
+  const animationSelectMeasureRef = useRef<HTMLSpanElement | null>(null);
   const stateRef = useRef({
     isPlaying,
     isLooping,
@@ -201,6 +203,16 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
 
   const hasSkins = skins.length > 0;
   const skinSelectValue = hasSkins ? currentSkin : 'default';
+  const animationSelectLabel = currentAnimation || animations[0] || t('ui.default');
+
+  useLayoutEffect(() => {
+    const measureEl = animationSelectMeasureRef.current;
+    if (!measureEl) return;
+
+    const measuredTextWidth = Math.ceil(measureEl.getBoundingClientRect().width);
+    // Reserve extra space for native select chrome/arrow.
+    setAnimationSelectWidth(Math.max(92, measuredTextWidth + 34));
+  }, [animationSelectLabel]);
   
   return (
     <div className="animation-controls">
@@ -253,17 +265,21 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
       </div>
       
       <div className="animation-controls-row animation-controls-row-selects">
-        <label className="animation-select-chip">
+        <label className="animation-select-chip animation-select-chip-animation">
           <span className="animation-select-prefix">{t('controls.labels.selectAnimation')}:</span>
           <select
             className="animation-select-native"
             value={currentAnimation}
             onChange={(event) => playAnimation(event.target.value)}
+            style={{ width: `${animationSelectWidth}px` }}
           >
             {animations.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
+          <span ref={animationSelectMeasureRef} className="animation-select-measure" aria-hidden="true">
+            {animationSelectLabel}
+          </span>
         </label>
 
         <label className="animation-select-chip animation-select-chip-skin">

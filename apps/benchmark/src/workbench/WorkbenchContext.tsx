@@ -24,7 +24,6 @@ export interface WorkbenchContextValue {
   handleDrop: (event: React.DragEvent<HTMLDivElement>) => Promise<void>;
   handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   handleDragLeave: (event: React.DragEvent<HTMLDivElement>) => void;
-  pixelFootprint: { width: number; height: number; coverage: number } | null;
   selectedAsset: StoredAsset | null;
   atlasOptions: string[];
   selectedAtlasName: string | null;
