@@ -12,6 +12,13 @@ export interface ComparisonPane {
   isLoading: boolean;
 }
 
+function destroyComparisonApp(app: Application): void {
+  // Passing `true` to app.destroy() releases global PIXI resources in v8,
+  // which can break other active renderer instances.
+  app.stop();
+  app.destroy({ removeView: true }, { children: true });
+}
+
 export function useComparisonApp(
   containerRef: RefObject<HTMLDivElement | null>,
 ): ComparisonPane {
@@ -39,7 +46,7 @@ export function useComparisonApp(
       });
 
       if (destroyed) {
-        app.destroy(true);
+        destroyComparisonApp(app);
         return;
       }
 
@@ -60,7 +67,7 @@ export function useComparisonApp(
     return () => {
       destroyed = true;
       if (appRef.current) {
-        appRef.current.destroy(true);
+        destroyComparisonApp(appRef.current);
         appRef.current = null;
       }
       viewportRef.current = null;
