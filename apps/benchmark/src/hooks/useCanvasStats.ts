@@ -5,13 +5,16 @@ import { BlendMode, RegionAttachment, MeshAttachment, TextureAtlasRegion } from 
 export interface CanvasStats {
   fps: number;
   drawCalls: number;
+  flushes: number;
   textures: number;
 }
 
-const EMPTY_STATS: CanvasStats = { fps: 0, drawCalls: 0, textures: 0 };
+const EMPTY_STATS: CanvasStats = { fps: 0, drawCalls: 0, flushes: 0, textures: 0 };
 const FPS_SAMPLES = 60;
 
-function countDrawCallsAndTextures(skeleton: { drawOrder: any[] }): { drawCalls: number; textures: number } {
+function countDrawCallsFlushesAndTextures(
+  skeleton: { drawOrder: any[] },
+): { drawCalls: number; flushes: number; textures: number } {
   let drawCalls = 0;
   let prevPage: string | null = null;
   let prevBlend: number | null = null;
@@ -48,7 +51,10 @@ function countDrawCallsAndTextures(skeleton: { drawOrder: any[] }): { drawCalls:
     prevBlend = blendMode;
   }
 
-  return { drawCalls, textures: pages.size };
+  // In Pixi's batched path, each submitted batch maps to one flush.
+  const flushes = drawCalls;
+
+  return { drawCalls, flushes, textures: pages.size };
 }
 
 export function useCanvasStats(spineInstance: Spine | null): CanvasStats {
@@ -84,8 +90,8 @@ export function useCanvasStats(spineInstance: Spine | null): CanvasStats {
       const fps = avgDelta > 0 ? Math.round(1000 / avgDelta) : 0;
 
       try {
-        const { drawCalls, textures } = countDrawCallsAndTextures(spineInstance.skeleton);
-        setStats({ fps, drawCalls, textures });
+        const { drawCalls, flushes, textures } = countDrawCallsFlushesAndTextures(spineInstance.skeleton);
+        setStats({ fps, drawCalls, flushes, textures });
       } catch {
         setStats((prev) => ({ ...prev, fps }));
       }

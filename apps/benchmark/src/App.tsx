@@ -32,6 +32,7 @@ import {
   Sparkles,
   Square,
 } from 'lucide-react';
+import benchmarkBrandIcon from '../assets/favicon.svg';
 import {
   StoredAsset,
   assetToFiles,
@@ -59,16 +60,10 @@ const DEFAULT_ROUTE_SELECTION: RouteSelectionState = {
 const languageOptions = [
   { code: 'en', labelKey: 'dashboard.languages.en' },
   { code: 'ru', labelKey: 'dashboard.languages.ru' },
-  { code: 'zh', labelKey: 'dashboard.languages.zh' },
-  { code: 'uk', labelKey: 'dashboard.languages.uk' },
-  { code: 'fr', labelKey: 'dashboard.languages.fr' },
-  { code: 'de', labelKey: 'dashboard.languages.de' },
-  { code: 'pt', labelKey: 'dashboard.languages.pt' },
-  { code: 'es', labelKey: 'dashboard.languages.es' },
 ];
 
 const partnerTools = [
-  { labelKey: 'dashboard.links.partner.spineEditor', href: 'https://esotericsoftware.com/spine-editor' },
+  { labelKey: 'dashboard.links.partner.spineEditor', href: 'https://esotericsoftware.com' },
   { labelKey: 'dashboard.links.partner.spineRuntimes', href: 'https://esotericsoftware.com/spine-runtimes' },
   { labelKey: 'dashboard.links.partner.texturePacker', href: 'https://www.codeandweb.com/texturepacker' }
 ];
@@ -689,11 +684,10 @@ const App: React.FC = () => {
     <div className="app-shell">
       <aside className="app-sidebar">
         <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <span className="sidebar-logo-mark" />
-            <h1>{t('dashboard.brand.title')}</h1>
-          </div>
-          <p>{t('dashboard.brand.subtitle')}</p>
+          <Link to="/tools/benchmark" className="sidebar-brand" aria-label="Benchmark">
+            <img src={benchmarkBrandIcon} alt="" className="sidebar-brand-icon" />
+            <span className="sidebar-brand-text">Benchmark</span>
+          </Link>
         </div>
 
         <section className="sidebar-section" data-tour="tool-switcher">
@@ -751,6 +745,26 @@ const App: React.FC = () => {
           <button type="button" className="secondary-btn sidebar-tour-btn" onClick={startGuidedTour}>
             {t('dashboard.actions.startTour')}
           </button>
+        </section>
+        <section className="sidebar-section sidebar-outreach">
+          <div className="sidebar-outreach-links">
+            <a
+              className="sidebar-outreach-link"
+              href="https://t.me/+nwFiDd407Pk4Njdi"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📬 Telegram
+            </a>
+            <a
+              className="sidebar-outreach-link"
+              href="https://github.com/schmooky/spine-benchmark"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              🐙 GitHub
+            </a>
+          </div>
         </section>
       </aside>
 

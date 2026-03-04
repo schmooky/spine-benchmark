@@ -535,7 +535,7 @@
                   "id": "AUagm",
                   "name": "infoContentTitle",
                   "fill": "#e0e0e0",
-                  "content": "Performance Score",
+                  "content": "Impact Level",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "600"
@@ -545,7 +545,7 @@
                   "id": "r5aXv",
                   "name": "infoScore",
                   "fill": "#43b581",
-                  "content": "85",
+                  "content": "Moderate",
                   "fontFamily": "Inter",
                   "fontSize": 48,
                   "fontWeight": "700"

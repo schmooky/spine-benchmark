@@ -36,7 +36,7 @@ export function useUrlHash(): UseUrlHashReturn {
       if (part === 'command-palette') {
         state.commandPalette = true;
       } else if (part === 'benchmark-info') {
-        // Legacy hash param — ignored, kept for backward compat
+        // Legacy hash param - ignored, kept for backward compat
       } else if (part.startsWith('benchmark-tab=')) {
         state.benchmarkTab = part.split('=')[1];
       }

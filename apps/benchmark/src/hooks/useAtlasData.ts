@@ -33,10 +33,10 @@ function extractImageSrc(page: TextureAtlasPage): string {
     if (!img) return '';
     // Direct HTMLImageElement (has .src)
     if (img instanceof HTMLImageElement) return img.src;
-    // Pixi TextureSource — resource may be HTMLImageElement
+    // Pixi TextureSource - resource may be HTMLImageElement
     if (img.resource) {
       if (img.resource instanceof HTMLImageElement) return img.resource.src;
-      // ImageBitmap fallback — draw to canvas
+      // ImageBitmap fallback - draw to canvas
       if (typeof ImageBitmap !== 'undefined' && img.resource instanceof ImageBitmap) {
         const canvas = document.createElement('canvas');
         canvas.width = img.resource.width;

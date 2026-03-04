@@ -221,11 +221,11 @@ export function calculateOverallScore(componentScores: { [key: string]: number }
  * @returns CSS color string
  */
 export function getScoreColor(score: number): string {
-  if (score >= 85) return '#4caf50'; // Green for excellent
-  if (score >= 70) return '#8bc34a'; // Light green for good
-  if (score >= 55) return '#ffb300'; // Amber for moderate
-  if (score >= 40) return '#f57c00'; // Orange for poor
-  return '#e53935'; // Red for very poor
+  if (score >= 85) return '#4caf50';
+  if (score >= 70) return '#8bc34a';
+  if (score >= 55) return '#ffb300';
+  if (score >= 40) return '#f57c00';
+  return '#e53935';
 }
 
 /**
@@ -234,11 +234,11 @@ export function getScoreColor(score: number): string {
  * @returns Text rating
  */
 export function getScoreRating(score: number): string {
-  if (score >= 85) return "excellent";
-  if (score >= 70) return "good";
+  if (score >= 85) return "minimal";
+  if (score >= 70) return "low";
   if (score >= 55) return "moderate";
-  if (score >= 40) return "poor";
-  return "veryPoor";
+  if (score >= 40) return "high";
+  return "veryHigh";
 }
 
 /**
@@ -247,11 +247,11 @@ export function getScoreRating(score: number): string {
  * @returns Score interpretation text
  */
 export function getScoreInterpretation(score: number): string {
-  if (score >= 85) return "Excellent performance. No optimization needed.";
-  if (score >= 70) return "Good performance. Minor optimization opportunities.";
-  if (score >= 55) return "Moderate performance. Optimization recommended.";
-  if (score >= 40) return "Poor performance. Optimization required.";
-  return "Very poor performance. Immediate optimization required.";
+  if (score >= 85) return "Minimal impact. Runtime pressure is low.";
+  if (score >= 70) return "Low impact. Runtime pressure is manageable.";
+  if (score >= 55) return "Moderate impact. Optimization is recommended.";
+  if (score >= 40) return "High impact. Optimization is strongly recommended.";
+  return "Very high impact. Optimization is required.";
 }
 
 /**

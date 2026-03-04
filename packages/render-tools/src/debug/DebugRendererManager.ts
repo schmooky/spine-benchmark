@@ -11,6 +11,7 @@ export class DebugRendererManager {
   private layers: Map<string, DebugLayer> = new Map();
   private flagsManager: DebugFlagsManager;
   private currentSpine: Spine | null = null;
+  private isDisposed = false;
 
   constructor(app: Application) {
     this.app = app;
@@ -50,6 +51,7 @@ export class DebugRendererManager {
   }
 
   public setSpine(spine: Spine | null): void {
+    if (this.isDisposed) return;
     this.currentSpine = spine;
     if (!spine) {
       this.clearAll();
@@ -57,6 +59,7 @@ export class DebugRendererManager {
   }
 
   public update(): void {
+    if (this.isDisposed) return;
     const spine = this.currentSpine;
     if (!spine) return;
 
@@ -90,6 +93,7 @@ export class DebugRendererManager {
   }
 
   public setDebugFlags(flags: Partial<DebugFlags>): void {
+    if (this.isDisposed) return;
     this.flagsManager.setDebugFlags(flags);
     
     // Update layer visibility based on flags
@@ -109,6 +113,7 @@ export class DebugRendererManager {
   }
 
   public clearAll(): void {
+    if (this.isDisposed) return;
     this.layers.forEach(layer => layer.clear());
   }
 
@@ -117,39 +122,48 @@ export class DebugRendererManager {
   }
 
   public destroy(): void {
+    if (this.isDisposed) return;
+    this.currentSpine = null;
     this.clearAll();
     this.layers.forEach(layer => layer.destroy());
     this.layers.clear();
     this.container.destroy({ children: true });
+    this.isDisposed = true;
   }
 
   // Convenience methods for toggling specific debug features
   public togglePathConstraints(visible?: boolean): void {
+    if (this.isDisposed) return;
     this.flagsManager.togglePathConstraints(visible);
     this.setDebugFlags(this.flagsManager.getDebugFlags());
   }
 
   public toggleIkConstraints(visible?: boolean): void {
+    if (this.isDisposed) return;
     this.flagsManager.toggleIkConstraints(visible);
     this.setDebugFlags(this.flagsManager.getDebugFlags());
   }
 
   public toggleMeshes(visible?: boolean): void {
+    if (this.isDisposed) return;
     this.flagsManager.toggleMeshes(visible);
     this.setDebugFlags(this.flagsManager.getDebugFlags());
   }
 
   public togglePhysics(visible?: boolean): void {
+    if (this.isDisposed) return;
     this.flagsManager.togglePhysics(visible);
     this.setDebugFlags(this.flagsManager.getDebugFlags());
   }
 
   public toggleTransformConstraints(visible?: boolean): void {
+    if (this.isDisposed) return;
     this.flagsManager.toggleTransformConstraints(visible);
     this.setDebugFlags(this.flagsManager.getDebugFlags());
   }
 
   public setHighlightedMeshSlot(slotName: string | null): void {
+    if (this.isDisposed) return;
     const meshLayer = this.layers.get('meshes') as MeshDebugLayer | undefined;
     if (meshLayer) {
       meshLayer.setHighlightedSlot(slotName);

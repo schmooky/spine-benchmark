@@ -208,11 +208,11 @@ export function calculateOverallScore(componentScores: { [key: string]: number }
  * @returns CSS color string
  */
 export function getScoreColor(score: number): string {
-  if (score >= 85) return '#4caf50'; // Green for excellent
-  if (score >= 70) return '#8bc34a'; // Light green for good
-  if (score >= 55) return '#ffb300'; // Amber for moderate
-  if (score >= 40) return '#f57c00'; // Orange for poor
-  return '#e53935'; // Red for very poor
+  if (score >= 85) return '#4caf50';
+  if (score >= 70) return '#8bc34a';
+  if (score >= 55) return '#ffb300';
+  if (score >= 40) return '#f57c00';
+  return '#e53935';
 }
 
 /**
@@ -221,11 +221,11 @@ export function getScoreColor(score: number): string {
  * @returns Text rating
  */
 export function getScoreRating(score: number): string {
-  if (score >= 85) return i18n.t('analysis.scores.ratings.excellent');
-  if (score >= 70) return i18n.t('analysis.scores.ratings.good');
-  if (score >= 55) return i18n.t('analysis.scores.ratings.moderate');
-  if (score >= 40) return i18n.t('analysis.scores.ratings.poor');
-  return i18n.t('analysis.scores.ratings.veryPoor');
+  if (score >= 85) return i18n.t('analysis.summary.impact.minimal');
+  if (score >= 70) return i18n.t('analysis.summary.impact.low');
+  if (score >= 55) return i18n.t('analysis.summary.impact.moderate');
+  if (score >= 40) return i18n.t('analysis.summary.impact.high');
+  return i18n.t('analysis.summary.impact.veryHigh');
 }
 
 /**

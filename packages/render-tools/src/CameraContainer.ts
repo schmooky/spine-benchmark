@@ -8,6 +8,9 @@ import { DebugRendererManager } from './debug/DebugRendererManager.js';
 const HIGHLIGHT_BOX_COLOR = 0x60A5FA;
 const HIGHLIGHT_BOX_ALPHA = 0.9;
 const HIGHLIGHT_BOX_WIDTH = 2;
+const HIGHLIGHT_MESH_COLOR = 0x2DD4A8;
+const HIGHLIGHT_MESH_ALPHA = 0.92;
+const HIGHLIGHT_MESH_WIDTH = 1.8;
 
 export class CameraContainer extends Container {
   originalWidth: number;
@@ -21,6 +24,48 @@ export class CameraContainer extends Container {
   private debugContainer: Container;
   private slotHighlightGraphics: Graphics;
   private highlightedSlotIndex: number | null = null;
+  private canvasView: HTMLCanvasElement | null = null;
+  private isDisposed = false;
+  private readonly tickerUpdate = () => {
+    if (this.isDisposed || !this.currentSpine) return;
+    this.debugRenderer.update();
+    this.updateSlotHighlight();
+  };
+  private readonly handleMouseDown = (e: MouseEvent) => {
+    if (e.button !== 0 || this.isDisposed || !this.canvasView) return;
+    this.isDragging = true;
+    this.lastPosition = { x: e.clientX, y: e.clientY };
+    this.canvasView.style.cursor = "grabbing";
+  };
+  private readonly handleMouseMove = (e: MouseEvent) => {
+    if (this.isDisposed || !this.isDragging || !this.lastPosition) return;
+    const dx = e.clientX - this.lastPosition.x;
+    const dy = e.clientY - this.lastPosition.y;
+    this.x += dx;
+    this.y += dy;
+    this.lastPosition = { x: e.clientX, y: e.clientY };
+  };
+  private readonly handleMouseUp = (e: MouseEvent) => {
+    if (e.button !== 0 || this.isDisposed || !this.canvasView) return;
+    this.isDragging = false;
+    this.lastPosition = null;
+    this.canvasView.style.cursor = "default";
+  };
+  private readonly handleWheel = (e: WheelEvent) => {
+    if (this.isDisposed) return;
+    e.preventDefault();
+    const scrollDirection = Math.sign(e.deltaY);
+    const minScale = 0.2;
+    const maxScale = 10;
+    const scaleStep = 0.1;
+
+    let newScale = this.scale.x - scrollDirection * scaleStep;
+    newScale = Math.max(minScale, Math.min(maxScale, newScale));
+    newScale = Number((Math.ceil(newScale * 20) / 20).toFixed(2));
+
+    this.scale.set(newScale);
+    this.setCanvasScaleDebugInfo(newScale);
+  };
 
   constructor(options: { width: number; height: number; app: Application }) {
     super();
@@ -48,59 +93,28 @@ export class CameraContainer extends Container {
     window.addEventListener("resize", this.onResize);
 
     // Set up ticker for debug updates
-    this.app.ticker.add(() => {
-      if (this.currentSpine) {
-        this.debugRenderer.update();
-        this.updateSlotHighlight();
-      }
-    });
+    this.app.ticker.add(this.tickerUpdate);
   }
 
   private setupEventListeners(): void {
     const view = this.app.canvas as HTMLCanvasElement | undefined;
     if (!view) return;
+    this.canvasView = view;
+    this.canvasView.addEventListener("mousedown", this.handleMouseDown);
+    window.addEventListener("mousemove", this.handleMouseMove);
+    window.addEventListener("mouseup", this.handleMouseUp);
+    this.canvasView.addEventListener("wheel", this.handleWheel, { passive: false });
+  }
 
-    view.addEventListener("mousedown", (e: MouseEvent) => {
-      if (e.button !== 0) return;
-      this.isDragging = true;
-      this.lastPosition = { x: e.clientX, y: e.clientY };
-      view.style.cursor = "grabbing";
-    });
-
-    window.addEventListener("mousemove", (e: MouseEvent) => {
-      if (!this.isDragging || !this.lastPosition) return;
-      const dx = e.clientX - this.lastPosition.x;
-      const dy = e.clientY - this.lastPosition.y;
-      this.x += dx;
-      this.y += dy;
-      this.lastPosition = { x: e.clientX, y: e.clientY };
-    });
-
-    window.addEventListener("mouseup", (e: MouseEvent) => {
-      if (e.button !== 0) return;
-      this.isDragging = false;
-      this.lastPosition = null;
-      view.style.cursor = "default";
-    });
-
-    view.addEventListener(
-      "wheel",
-      (e: WheelEvent) => {
-        e.preventDefault();
-        const scrollDirection = Math.sign(e.deltaY);
-        const minScale = 0.2;
-        const maxScale = 10;
-        const scaleStep = 0.1;
-
-        let newScale = this.scale.x - scrollDirection * scaleStep;
-        newScale = Math.max(minScale, Math.min(maxScale, newScale));
-        newScale = Number((Math.ceil(newScale * 20) / 20).toFixed(2));
-
-        this.scale.set(newScale);
-        this.setCanvasScaleDebugInfo(newScale);
-      },
-      { passive: false }
-    );
+  private removeEventListeners(): void {
+    if (this.canvasView) {
+      this.canvasView.removeEventListener("mousedown", this.handleMouseDown);
+      this.canvasView.removeEventListener("wheel", this.handleWheel);
+      this.canvasView.style.cursor = "default";
+      this.canvasView = null;
+    }
+    window.removeEventListener("mousemove", this.handleMouseMove);
+    window.removeEventListener("mouseup", this.handleMouseUp);
   }
 
   public onResize(): void {
@@ -171,7 +185,9 @@ export class CameraContainer extends Container {
       this.slotHighlightGraphics.parent.removeChild(this.slotHighlightGraphics);
     }
 
-    this.slotHighlightGraphics.clear();
+    if (!this.slotHighlightGraphics.destroyed) {
+      this.slotHighlightGraphics.clear();
+    }
     this.highlightedSlotIndex = null;
 
     for (let i = this.children.length - 1; i >= 0; i -= 1) {
@@ -219,12 +235,13 @@ export class CameraContainer extends Container {
 
   public setSlotHighlight(slotIndex: number | null): void {
     this.highlightedSlotIndex = slotIndex;
-    if (slotIndex === null) {
+    if (slotIndex === null && !this.slotHighlightGraphics.destroyed) {
       this.slotHighlightGraphics.clear();
     }
   }
 
   private updateSlotHighlight(): void {
+    if (this.slotHighlightGraphics.destroyed) return;
     this.slotHighlightGraphics.clear();
     if (this.highlightedSlotIndex === null || !this.currentSpine) return;
 
@@ -261,6 +278,37 @@ export class CameraContainer extends Container {
         if (y < minY) minY = y;
         if (y > maxY) maxY = y;
       }
+
+      // For mesh attachments, show actual mesh triangulation instead of a plain box.
+      const triangles = attachment.triangles;
+      let drawnTriangles = 0;
+      if (triangles && triangles.length >= 3) {
+        this.slotHighlightGraphics
+          .stroke({ width: HIGHLIGHT_MESH_WIDTH, color: HIGHLIGHT_MESH_COLOR, alpha: HIGHLIGHT_MESH_ALPHA, pixelLine: true });
+
+        for (let i = 0; i + 2 < triangles.length; i += 3) {
+          const a = triangles[i] * 2;
+          const b = triangles[i + 1] * 2;
+          const c = triangles[i + 2] * 2;
+          if (a + 1 >= verts.length || b + 1 >= verts.length || c + 1 >= verts.length) continue;
+
+          const ax = verts[a], ay = verts[a + 1];
+          const bx = verts[b], by = verts[b + 1];
+          const cx = verts[c], cy = verts[c + 1];
+          if (!isFinite(ax) || !isFinite(ay) || !isFinite(bx) || !isFinite(by) || !isFinite(cx) || !isFinite(cy)) continue;
+
+          this.slotHighlightGraphics
+            .moveTo(ax, ay)
+            .lineTo(bx, by)
+            .lineTo(cx, cy)
+            .lineTo(ax, ay);
+          drawnTriangles++;
+        }
+      }
+
+      if (drawnTriangles > 0) {
+        return;
+      }
     } else {
       return;
     }
@@ -274,6 +322,7 @@ export class CameraContainer extends Container {
   }
 
   public forceResetDebugGraphics(): void {
+    if (this.isDisposed) return;
     this.debugRenderer.clearAll();
     if (this.currentSpine) {
       this.debugRenderer.update();
@@ -287,12 +336,21 @@ export class CameraContainer extends Container {
   }
 
   public override destroy(): void {
+    if (this.isDisposed) return;
+    this.isDisposed = true;
     window.removeEventListener("resize", this.onResize);
+    this.removeEventListeners();
+    this.app.ticker.remove(this.tickerUpdate);
+    this.currentSpine = null;
+    this.debugRenderer.setSpine(null);
+    gsap.killTweensOf(this);
     const existingParent = this.debugRenderer.getContainer().parent;
     if (existingParent) {
       existingParent.removeChild(this.debugRenderer.getContainer());
     }
-    this.slotHighlightGraphics.destroy();
+    if (!this.slotHighlightGraphics.destroyed) {
+      this.slotHighlightGraphics.destroy();
+    }
     this.debugRenderer.destroy();
     super.destroy();
   }

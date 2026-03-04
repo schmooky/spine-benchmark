@@ -5,7 +5,6 @@ import { ToolRouteControls } from '../components/ToolRouteControls';
 import { CanvasStatsOverlay } from '../components/CanvasStatsOverlay';
 import { RouteHeaderCard } from '../components/RouteHeaderCard';
 import { CheckIcon, ChevronDownIcon } from '../components/Icons';
-import { useCanvasStats } from '../hooks/useCanvasStats';
 import { useWorkbench } from '../workbench/WorkbenchContext';
 import { ComparisonPane, useComparisonApp } from '../hooks/useComparisonApp';
 
@@ -32,8 +31,6 @@ export function ComparisonRouteView() {
   // Per-pane hooks
   const leftPane = useComparisonApp(leftHostRef);
   const rightPane = useComparisonApp(rightHostRef);
-  const leftStats = useCanvasStats(leftPane.spine);
-  const rightStats = useCanvasStats(rightPane.spine);
 
   // Asset selection
   const [leftAssetId, setLeftAssetId] = useState<string>('');
@@ -200,7 +197,7 @@ export function ComparisonRouteView() {
     }
   }, [leftPane.viewport, rightPane.viewport, leftPane.app, rightPane.app]);
 
-  // Wheel zoom — only on the canvas wrapper
+  // Wheel zoom - only on the canvas wrapper
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
@@ -219,7 +216,7 @@ export function ComparisonRouteView() {
     return () => wrapper.removeEventListener('wheel', onWheel);
   }, [applyCamera]);
 
-  // Drag pan — only start from canvas elements, not from UI overlays
+  // Drag pan - only start from canvas elements, not from UI overlays
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
@@ -258,31 +255,14 @@ export function ComparisonRouteView() {
     };
   }, [applyCamera]);
 
-  const bothLoaded = Boolean(leftPane.spine && rightPane.spine);
-  const paneAStatusKey = leftPane.isLoading ? 'loading' : leftPane.spine ? 'loaded' : 'empty';
-  const paneBStatusKey = rightPane.isLoading ? 'loading' : rightPane.spine ? 'loaded' : 'empty';
-  const paneAStatus = t(`comparison.statusValues.${paneAStatusKey}`);
-  const paneBStatus = t(`comparison.statusValues.${paneBStatusKey}`);
-  const drawDelta = rightStats.drawCalls - leftStats.drawCalls;
-
-  const nextActions = useMemo(() => {
-    if (!bothLoaded) {
-      return [
-        t('comparison.nextActions.loadBothPanes'),
-        t('comparison.nextActions.enableSharedPlayback'),
-        t('comparison.nextActions.useFollowUpRoutes'),
-      ];
-    }
-    return [
-      t('comparison.nextActions.switchToAnimation', {
-        animation: currentAnimation || animations[0] || t('comparison.nextActions.sharedAnimationFallback'),
-      }),
-      drawDelta > 0
-        ? t('comparison.nextActions.inspectPaneB')
-        : t('comparison.nextActions.inspectPaneA'),
-      t('comparison.nextActions.useAtlasSuggestion'),
-    ];
-  }, [animations, bothLoaded, currentAnimation, drawDelta, t]);
+  const leftAssetName = useMemo(
+    () => assets.find((asset) => asset.id === leftAssetId)?.name ?? t('comparison.selectAsset'),
+    [assets, leftAssetId, t],
+  );
+  const rightAssetName = useMemo(
+    () => assets.find((asset) => asset.id === rightAssetId)?.name ?? t('comparison.selectAsset'),
+    [assets, rightAssetId, t],
+  );
 
   const paneBadge = useCallback((pane: ComparisonPane, label: 'A' | 'B') => {
     const width = Math.round(pane.app?.screen.width ?? 0);
@@ -322,82 +302,30 @@ export function ComparisonRouteView() {
       />
 
       <div className="comparison-layout comparison-layout-editorial" ref={comparisonRootRef}>
-        <aside className="comparison-analysis-panel">
-          <div className="comparison-stat-grid comparison-animate">
-            <article className="comparison-stat-card">
-              <span>{t('comparison.summary.paneA')}</span>
-              <strong>{paneAStatus}</strong>
-            </article>
-            <article className="comparison-stat-card">
-              <span>{t('comparison.summary.paneB')}</span>
-              <strong>{paneBStatus}</strong>
-            </article>
-            <article className="comparison-stat-card">
-              <span>{t('comparison.summary.sharedAnimations')}</span>
-              <strong>{animations.length}</strong>
-            </article>
-            <article className="comparison-stat-card">
-              <span>{t('comparison.summary.sync')}</span>
-              <strong>{bothLoaded ? t('comparison.statusValues.on') : t('comparison.statusValues.off')}</strong>
-            </article>
-          </div>
-
-          <div className="comparison-action-row comparison-animate">
-            <div className="comparison-action-copy">
-              <strong>{t('comparison.actionRow.title')}</strong>
-              <span>{t('comparison.actionRow.description')}</span>
-            </div>
-            <div className="comparison-action-buttons">
-              <button type="button" className="secondary-btn" onClick={() => setPickerSide('left')}>
-                {t('comparison.actions.pickLeft')}
-              </button>
-              <button type="button" className="secondary-btn" onClick={() => setPickerSide('right')}>
-                {t('comparison.actions.pickRight')}
-              </button>
-            </div>
-          </div>
-
-          <section className="comparison-status-card comparison-animate">
-            <h3>{t('comparison.status.title')}</h3>
-            <div className="comparison-status-head">
-              <span>{t('comparison.status.headers.check')}</span>
-              <span>{t('comparison.status.headers.result')}</span>
-            </div>
-            <div className="comparison-status-row">
-              <span>{t('comparison.status.animationIntersection')}</span>
-              <span>{t('comparison.status.nameCount', { count: animations.length })}</span>
-            </div>
-            <div className="comparison-status-row highlighted">
-              <span>{t('comparison.status.cameraSync')}</span>
-              <span>{bothLoaded ? t('comparison.status.cameraSyncEnabled') : t('comparison.status.cameraSyncNeedsBoth')}</span>
-            </div>
-            <div className="comparison-status-row">
-              <span>{t('comparison.status.playbackLock')}</span>
-              <span>{isPlaying ? t('comparison.status.playbackEnabled') : t('comparison.status.playbackPaused')}</span>
-            </div>
-          </section>
-
-          <section className="comparison-diff-card comparison-animate">
-            <h3>{t('comparison.differences.title')}</h3>
-            <p>
-              {t('comparison.differences.summary', {
-                drawCallsA: leftStats.drawCalls,
-                drawCallsB: rightStats.drawCalls,
-                texturesA: leftStats.textures,
-                texturesB: rightStats.textures,
-              })}
-            </p>
-            <h4>{t('comparison.differences.nextAction')}</h4>
-            <pre>{nextActions.join('\n')}</pre>
-          </section>
-        </aside>
-
         <section className="comparison-viewer-panel">
+          <section className="comparison-pane-pickers comparison-animate">
+            <button
+              type="button"
+              className="comparison-pane-picker-btn"
+              onClick={() => setPickerSide('left')}
+            >
+              <span className="comparison-pane-picker-label">{t('comparison.actions.pickLeft')}</span>
+              <span className="comparison-pane-picker-value">{leftAssetName}</span>
+            </button>
+            <button
+              type="button"
+              className="comparison-pane-picker-btn"
+              onClick={() => setPickerSide('right')}
+            >
+              <span className="comparison-pane-picker-label">{t('comparison.actions.pickRight')}</span>
+              <span className="comparison-pane-picker-value">{rightAssetName}</span>
+            </button>
+          </section>
+
           <div className="comparison-pane-grid" ref={wrapperRef}>
             <section className="comparison-editorial-pane comparison-animate">
               <div className="comparison-editorial-pane-top">
                 <span className="comparison-pane-chip">{t('comparison.summary.paneA')}</span>
-                <span className="comparison-pane-chip">{paneAStatus}</span>
               </div>
               <div className="comparison-editorial-pane-body">
                 <div className="pixi-host comparison-pixi-host" ref={leftHostRef} />
@@ -416,7 +344,6 @@ export function ComparisonRouteView() {
             <section className="comparison-editorial-pane comparison-animate">
               <div className="comparison-editorial-pane-top">
                 <span className="comparison-pane-chip">{t('comparison.summary.paneB')}</span>
-                <span className="comparison-pane-chip">{paneBStatus}</span>
               </div>
               <div className="comparison-editorial-pane-body">
                 <div className="pixi-host comparison-pixi-host" ref={rightHostRef} />

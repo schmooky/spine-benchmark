@@ -13,6 +13,34 @@ export default defineConfig({
           src: "stats.js", // Or wherever your stats.js is
           dest: "", // '' means place it in root of dist/
         },
+        {
+          src: "assets/favicon-96x96.png",
+          dest: "",
+        },
+        {
+          src: "assets/favicon.svg",
+          dest: "",
+        },
+        {
+          src: "assets/favicon.ico",
+          dest: "",
+        },
+        {
+          src: "assets/apple-touch-icon.png",
+          dest: "",
+        },
+        {
+          src: "assets/site.webmanifest",
+          dest: "",
+        },
+        {
+          src: "assets/web-app-manifest-192x192.png",
+          dest: "",
+        },
+        {
+          src: "assets/web-app-manifest-512x512.png",
+          dest: "",
+        },
       ],
     }),
   ],
@@ -35,7 +63,6 @@ export default defineConfig({
       "@esotericsoftware/spine-pixi-v8",
       "pixi.js",
       "gsap",
-      "@paralleldrive/cuid2",
     ],
   },
 });

@@ -440,8 +440,8 @@ export function AnimationHeatmapRouteView() {
         isLoadingSelected={isLoadingSelected}
       />
 
-      <div className="heatmap-layout">
-        {/* Left panel — performance charts */}
+      <div className="benchmark-inspector-layout heatmap-layout">
+        {/* Left panel - performance charts */}
         <div className="tool-panel heatmap-panel">
           {spineInstance ? (
             <>
@@ -476,7 +476,7 @@ export function AnimationHeatmapRouteView() {
           )}
         </div>
 
-        {/* Right side — canvas + animation controls */}
+        {/* Right side - canvas + animation controls */}
         <div className="tool-canvas">
           <div
             className="canvas-container"

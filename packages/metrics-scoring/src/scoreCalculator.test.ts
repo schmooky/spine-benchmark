@@ -104,17 +104,17 @@ describe('metrics-scoring', () => {
     expect(getScoreColor(45)).toBe('#f57c00');
     expect(getScoreColor(10)).toBe('#e53935');
 
-    expect(getScoreRating(90)).toBe('excellent');
-    expect(getScoreRating(75)).toBe('good');
+    expect(getScoreRating(90)).toBe('minimal');
+    expect(getScoreRating(75)).toBe('low');
     expect(getScoreRating(60)).toBe('moderate');
-    expect(getScoreRating(45)).toBe('poor');
-    expect(getScoreRating(10)).toBe('veryPoor');
+    expect(getScoreRating(45)).toBe('high');
+    expect(getScoreRating(10)).toBe('veryHigh');
 
-    expect(getScoreInterpretation(90)).toContain('Excellent');
-    expect(getScoreInterpretation(75)).toContain('Good');
-    expect(getScoreInterpretation(60)).toContain('Moderate');
-    expect(getScoreInterpretation(45)).toContain('Poor');
-    expect(getScoreInterpretation(10)).toContain('Very poor');
+    expect(getScoreInterpretation(90)).toContain('Minimal impact');
+    expect(getScoreInterpretation(75)).toContain('Low impact');
+    expect(getScoreInterpretation(60)).toContain('Moderate impact');
+    expect(getScoreInterpretation(45)).toContain('High impact');
+    expect(getScoreInterpretation(10)).toContain('Very high impact');
   });
 
   it('maps impact helpers and badge classes', () => {

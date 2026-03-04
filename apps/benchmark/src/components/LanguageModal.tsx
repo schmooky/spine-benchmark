@@ -7,12 +7,6 @@ import { XMarkIcon } from './Icons';
 const languages = [
   { code: 'en', labelKey: 'dashboard.languages.en' },
   { code: 'ru', labelKey: 'dashboard.languages.ru' },
-  { code: 'zh', labelKey: 'dashboard.languages.zh' },
-  { code: 'uk', labelKey: 'dashboard.languages.uk' },
-  { code: 'fr', labelKey: 'dashboard.languages.fr' },
-  { code: 'de', labelKey: 'dashboard.languages.de' },
-  { code: 'pt', labelKey: 'dashboard.languages.pt' },
-  { code: 'es', labelKey: 'dashboard.languages.es' },
 ];
 
 interface LanguageModalProps {

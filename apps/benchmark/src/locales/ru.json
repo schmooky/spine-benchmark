@@ -65,7 +65,8 @@
       "fps": "FPS",
       "drawCalls": "DC",
       "textures": "TX",
-      "blendBreaks": "BB"
+      "blendBreaks": "BB",
+      "flushes": "FL"
     },
     "insights": {
       "crossRouteNavigation": "Cross-route navigation",
@@ -277,11 +278,11 @@
     "summary": {
       "title": "Анализ производительности Spine",
       "skeletonLabel": "Скелет: {{name}}",
-      "performanceLabel": "{{rating}} производительность",
-      "componentScoresTitle": "Оценки компонентов",
+      "performanceLabel": "{{rating}} профиль влияния",
+      "componentScoresTitle": "Компоненты влияния",
       "skeletonStatsTitle": "Статистика скелета",
       "optimizationTitle": "Рекомендации по оптимизации",
-      "performanceExplanationTitle": "Интерпретация оценки производительности",
+      "performanceExplanationTitle": "Шкала уровней влияния",
       "components": {
         "boneStructure": "Структура костей",
         "meshComplexity": "Сложность сетки",
@@ -291,14 +292,14 @@
       },
       "tableHeaders": {
         "component": "Компонент",
-        "score": "Оценка",
+        "score": "Влияние",
         "weight": "Вес",
         "meter": "Индикатор",
-        "scoreRange": "Диапазон оценок",
+        "scoreRange": "Диапазон стоимости",
         "rating": "Рейтинг",
         "interpretation": "Интерпретация",
         "duration": "Duration",
-        "overallScore": "Overall Score",
+        "overallScore": "Суммарное влияние",
         "activeFeatures": "Active Features",
         "performanceImpact": "Performance Impact"
       },
@@ -333,41 +334,41 @@
         "highVertexAnimations": "{{count}} animations have high vertex counts (>500). Consider simplifying meshes for: {{names}}",
         "focusPoorAnimations": "Focus optimization on these poor-performing animations: {{names}}",
         "multiIssueAnimations": "{{count}} animations combine multiple expensive features. Consider simplifying: {{names}}",
-        "performanceGenerallyGood": "Performance is generally good across all animations. Minor optimizations may still be possible in specific areas."
+        "performanceGenerallyGood": "Влияние в целом низкое по всем анимациям. Точечная оптимизация опциональна."
       },
       "performanceRanges": {
         "excellent": {
-          "range": "85-100",
-          "rating": "Отлично",
-          "description": "Подходит для всех платформ и непрерывных анимаций"
+          "range": "< 3",
+          "rating": "Минимальное",
+          "description": "Низкая нагрузка на рантайм."
         },
         "good": {
-          "range": "70-84",
-          "rating": "Хорошо",
-          "description": "Хорошо работает на большинстве платформ, но могут быть проблемы на слабых устройствах"
+          "range": "3 - <8",
+          "rating": "Низкое",
+          "description": "Управляемая нагрузка на рантайм."
         },
         "moderate": {
-          "range": "55-69",
-          "rating": "Умеренно",
-          "description": "Может вызывать падения производительности, особенно с несколькими экземплярами"
+          "range": "8 - <15",
+          "rating": "Умеренное",
+          "description": "Заметная нагрузка; оптимизируйте узкие места."
         },
         "poor": {
-          "range": "40-54",
-          "rating": "Плохо",
-          "description": "Проблемы с производительностью вероятны на большинстве устройств"
+          "range": ">= 15",
+          "rating": "Высокое+",
+          "description": "Высокая нагрузка; оптимизация рекомендуется."
         }
       },
       "animationOverview": {
-        "title": "Animation Performance Overview",
+        "title": "Обзор влияния анимаций",
         "totalAnimations": "Total Animations:",
-        "bestPerformance": "Best Performance:",
-        "worstPerformance": "Worst Performance:",
+        "bestPerformance": "Минимальное влияние:",
+        "worstPerformance": "Максимальное влияние:",
         "withPhysics": "With Physics:",
         "withClipping": "With Clipping:",
         "withSpecialBlendModes": "With Special Blend Modes:",
         "animationsCount": "{{count}} animations"
       },
-      "perAnimationScoresTitle": "Per-Animation Scores",
+      "perAnimationScoresTitle": "Влияние по анимациям",
       "features": {
         "physics": "Physics",
         "ik": "IK",
@@ -383,7 +384,7 @@
         "veryHigh": "Very High"
       },
       "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
-      "medianPerformanceLabel": "{{rating}} Performance",
+      "medianPerformanceLabel": "{{rating}} профиль влияния",
       "durationSeconds": "{{value}}s"
     },
     "impact": {
@@ -399,18 +400,18 @@
     },
     "scores": {
       "ratings": {
-        "excellent": "Отлично",
-        "good": "Хорошо",
-        "moderate": "Умеренно",
-        "poor": "Плохо",
-        "veryPoor": "Очень плохо"
+        "excellent": "Минимальное",
+        "good": "Низкое",
+        "moderate": "Умеренное",
+        "poor": "Высокое",
+        "veryPoor": "Очень высокое"
       },
       "interpretations": {
-        "excellent": "Подходит для всех платформ и непрерывных анимаций",
-        "good": "Хорошо работает на большинстве платформ, но могут быть проблемы на слабых устройствах",
-        "moderate": "Может вызывать падения производительности, особенно с несколькими экземплярами",
-        "poor": "Проблемы с производительностью вероятны на большинстве устройств",
-        "veryPoor": "Значительные проблемы с производительностью на всех устройствах"
+        "excellent": "Низкая нагрузка на рантайм.",
+        "good": "Управляемая нагрузка на рантайм.",
+        "moderate": "Заметная нагрузка; оптимизируйте узкие места.",
+        "poor": "Высокая нагрузка; оптимизация рекомендуется.",
+        "veryPoor": "Очень высокая нагрузка; оптимизация обязательна."
       }
     },
     "mesh": {
@@ -423,11 +424,11 @@
         "meshesWithParentMesh": "Сетки с родительской сеткой: {{count}}"
       },
       "performanceScore": {
-        "title": "Оценка производительности сеток: {{score}}/100"
+        "title": "Влияние мешей"
       },
       "formula": {
         "title": "Формула влияния на производительность:",
-        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+        "description": "meshCost = (totalVertices / 200) + (deformedMeshes × 1.5) + (weightedMeshes × 2)"
       },
       "tableHeaders": {
         "slot": "Слот",
@@ -464,11 +465,11 @@
         "complexMasks": "Сложные маски (>4 вершин): {{count}}"
       },
       "performanceScore": {
-        "title": "Оценка производительности обрезки: {{score}}/100"
+        "title": "Влияние clipping"
       },
       "formula": {
         "title": "Формула влияния на производительность:",
-        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+        "description": "clippingCost = activeMasks × 5"
       },
       "tableHeaders": {
         "slotName": "Имя слота",
@@ -504,11 +505,11 @@
         "multiplyBlendModes": "Мультипликативные режимы смешивания: {{count}}"
       },
       "performanceScore": {
-        "title": "Оценка производительности режимов смешивания: {{score}}/100"
+        "title": "Влияние blend режимов"
       },
       "formula": {
         "title": "Формула влияния на производительность:",
-        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+        "description": "blendCost = activeNonNormalCount × 3"
       },
       "tableHeaders": {
         "blendMode": "Режим смешивания",
@@ -549,11 +550,11 @@
         "maxDepth": "Макс. глубина: {{depth}}"
       },
       "performanceScore": {
-        "title": "Оценка производительности структуры костей: {{score}}/100"
+        "title": "Влияние иерархии костей"
       },
       "formula": {
         "title": "Формула влияния на производительность:",
-        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+        "description": "Влияние костей определяется общим числом костей и глубиной иерархии."
       },
       "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
       "notes": {
@@ -570,12 +571,12 @@
         "totalConstraints": "Всего ограничений: {{count}}"
       },
       "performanceScore": {
-        "title": "Оценка производительности ограничений: {{score}}/100"
+        "title": "Влияние ограничений"
       },
       "formula": {
         "title": "Формула влияния на производительность:",
-        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
-        "explanation": "Где constraintImpact - это взвешенная сумма влияний IK, трансформации, пути и физических ограничений"
+        "description": "constraintCost = (activePhysics × 4) + (activeIK × 2) + (activeTransform × 1.5) + (activePath × 2.5)",
+        "explanation": "Чем выше стоимость, тем выше нагрузка в рантайме."
       },
       "impactBreakdown": {
         "title": "Разбивка влияния:",
@@ -692,12 +693,12 @@
       }
     },
     "common": {
-      "medianScore": "Median Performance Score: {{score}}%",
+      "medianScore": "Медианная стоимость влияния: {{score}}",
       "worstImpact": "Худшее влияние:",
       "perAnimationBreakdown": "Per-Animation Breakdown",
       "headers": {
         "animation": "Animation",
-        "score": "Score",
+        "score": "Влияние",
         "impact": "Влияние"
       },
       "yes": "Yes",
@@ -850,7 +851,7 @@
   },
   "meshOptimizer": {
     "title": "Инспектор мешей",
-    "subtitle": "Визуализация мешей в реальном времени — треугольники, вершины и деформация",
+    "subtitle": "Визуализация мешей в реальном времени - треугольники, вершины и деформация",
     "summary": {
       "meshes": "Меши",
       "vertices": "Вершины",
@@ -886,7 +887,7 @@
         "emptyDeforms": "Пустые деформ-таймлайны",
         "duplicateFrames": "Дублирующие деформ-кадры",
         "drawOrderDuplicates": "Дублирующие кадры draw-order",
-        "noChanges": "Оптимизация не требуется — ассет уже оптимален"
+        "noChanges": "Оптимизация не требуется - ассет уже оптимален"
       },
       "description": "Оптимизировано: удалено {{emptyDeforms}} пустых деформаций, {{duplicateFrames}} дублирующих кадров, {{drawOrderDuplicates}} дублей draw-order"
     },
@@ -897,7 +898,7 @@
       "overclustered": "Перегруженные треугольники",
       "invisibleDeform": "Невидимая деформация",
       "noProblems": "Проблем не обнаружено",
-      "liveHint": "Выделено на канвасе — красные треугольники перегружены",
+      "liveHint": "Выделено на канвасе - красные треугольники перегружены",
       "deformMagnitudeValue": "{{value}} px",
       "pixelAreaValue": "{{value}} px²"
     },
@@ -1083,7 +1084,8 @@
     "summary": {
       "drawCalls": "Draw Calls",
       "pageBreaks": "Page Breaks",
-      "blendBreaks": "Blend Breaks"
+      "blendBreaks": "Blend Breaks",
+      "flushes": "Flushes"
     },
     "list": {
       "headers": {
@@ -1174,7 +1176,7 @@
   },
   "atlasRepack": {
     "title": "Atlas Repack Advisor",
-    "subtitle": "Визуальный анализ атласа — посмотрите, как страницы и регионы атласа влияют на draw calls",
+    "subtitle": "Визуальный анализ атласа - посмотрите, как страницы и регионы атласа влияют на draw calls",
     "summary": {
       "pages": "Страницы",
       "regions": "Регионы",
@@ -1335,7 +1337,7 @@
       "on": "On",
       "off": "Off"
     },
-    "selectAssetForPane": "{{selectAsset}} — {{pane}}",
+    "selectAssetForPane": "{{selectAsset}} - {{pane}}",
     "assetCard": {
       "summary": "{{count}} files · {{size}}"
     }

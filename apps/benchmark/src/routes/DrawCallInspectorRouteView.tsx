@@ -80,7 +80,7 @@ export function DrawCallInspectorRouteView() {
     if (pixiContainerRef.current) {
       reparentPixiCanvas(pixiContainerRef.current);
     }
-  });
+  }, [pixiContainerRef]);
 
   useEffect(() => {
     return () => {
@@ -387,6 +387,15 @@ export function DrawCallInspectorRouteView() {
                     {snapshot.drawCallCount}
                   </span>
                   <span className="dc-inspector-stat-label">{t('drawCallInspector.summary.drawCalls')}</span>
+                </div>
+                <div className="dc-inspector-stat">
+                  <span
+                    className="dc-inspector-stat-value"
+                    style={{ '--dc-stat-color': getStatColor(snapshot.flushCount, 3, 8) } as React.CSSProperties}
+                  >
+                    {snapshot.flushCount}
+                  </span>
+                  <span className="dc-inspector-stat-label">{t('drawCallInspector.summary.flushes')}</span>
                 </div>
                 <div className="dc-inspector-stat">
                   <span

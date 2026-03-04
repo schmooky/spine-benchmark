@@ -83,7 +83,7 @@ export function MeshOptimizerRouteView() {
     if (pixiContainerRef.current) {
       reparentPixiCanvas(pixiContainerRef.current);
     }
-  });
+  }, [pixiContainerRef]);
 
   useEffect(() => {
     toggleMeshes(true);

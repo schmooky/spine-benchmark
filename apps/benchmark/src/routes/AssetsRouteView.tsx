@@ -33,7 +33,7 @@ export function AssetsRouteView() {
     if (pixiContainerRef.current) {
       reparentPixiCanvas(pixiContainerRef.current);
     }
-  });
+  }, [pixiContainerRef]);
 
   const handlePickAsset = async (assetId: string) => {
     const asset = assets.find((entry) => entry.id === assetId);
@@ -66,7 +66,7 @@ export function AssetsRouteView() {
       />
 
       <div className="assets-layout">
-      {/* Left panel — asset management */}
+      {/* Left panel - asset management */}
       <div className="tool-panel assets-panel" data-tour="asset-library">
         <div className="route-section-header">
           <h3>{t('dashboard.sections.assetLibrary')}</h3>
@@ -115,7 +115,7 @@ export function AssetsRouteView() {
         </div>
       </div>
 
-      {/* Right panel — live spine preview */}
+      {/* Right panel - live spine preview */}
       <div className="tool-canvas assets-canvas">
         <div
           className="canvas-container"

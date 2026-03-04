@@ -64,6 +64,7 @@
     "canvasStats": {
       "fps": "FPS",
       "drawCalls": "DC",
+      "flushes": "FL",
       "textures": "TX",
       "blendBreaks": "BB"
     },
@@ -283,11 +284,11 @@
     "summary": {
       "title": "Spine Performance Analysis",
       "skeletonLabel": "Skeleton: {{name}}",
-      "performanceLabel": "{{rating}} Performance",
-      "componentScoresTitle": "Component Scores",
+      "performanceLabel": "{{rating}} impact profile",
+      "componentScoresTitle": "Impact Components",
       "skeletonStatsTitle": "Skeleton Statistics",
       "optimizationTitle": "Optimization Recommendations",
-      "performanceExplanationTitle": "Performance Score Interpretation",
+      "performanceExplanationTitle": "Impact Level Guide",
       "components": {
         "boneStructure": "Bone Structure",
         "meshComplexity": "Mesh Complexity",
@@ -297,14 +298,14 @@
       },
       "tableHeaders": {
         "component": "Component",
-        "score": "Score",
+        "score": "Impact",
         "weight": "Weight",
         "meter": "Meter",
-        "scoreRange": "Score Range",
+        "scoreRange": "Cost Range",
         "rating": "Rating",
         "interpretation": "Interpretation",
         "duration": "Duration",
-        "overallScore": "Overall Score",
+        "overallScore": "Combined Impact",
         "activeFeatures": "Active Features",
         "performanceImpact": "Performance Impact"
       },
@@ -339,41 +340,41 @@
         "highVertexAnimations": "{{count}} animations have high vertex counts (>500). Consider simplifying meshes for: {{names}}",
         "focusPoorAnimations": "Focus optimization on these poor-performing animations: {{names}}",
         "multiIssueAnimations": "{{count}} animations combine multiple expensive features. Consider simplifying: {{names}}",
-        "performanceGenerallyGood": "Performance is generally good across all animations. Minor optimizations may still be possible in specific areas."
+        "performanceGenerallyGood": "Impact is generally low across animations. Minor tuning may still help in specific areas."
       },
       "performanceRanges": {
         "excellent": {
-          "range": "85-100",
-          "rating": "Excellent",
-          "description": "Suitable for all platforms and continuous animations"
+          "range": "< 3",
+          "rating": "Minimal",
+          "description": "Low runtime pressure."
         },
         "good": {
-          "range": "70-84",
-          "rating": "Good",
-          "description": "Works well on most platforms but may have issues on low-end devices"
+          "range": "3 - <8",
+          "rating": "Low",
+          "description": "Manageable runtime pressure."
         },
         "moderate": {
-          "range": "55-69",
+          "range": "8 - <15",
           "rating": "Moderate",
-          "description": "May cause performance dips, especially with multiple instances"
+          "description": "Noticeable pressure; optimize hotspots."
         },
         "poor": {
-          "range": "40-54",
-          "rating": "Poor",
-          "description": "Performance issues likely on most devices"
+          "range": ">= 15",
+          "rating": "High+",
+          "description": "High pressure; optimization recommended."
         }
       },
       "animationOverview": {
-        "title": "Animation Performance Overview",
+        "title": "Animation Impact Overview",
         "totalAnimations": "Total Animations:",
-        "bestPerformance": "Best Performance:",
-        "worstPerformance": "Worst Performance:",
+        "bestPerformance": "Lowest Impact:",
+        "worstPerformance": "Highest Impact:",
         "withPhysics": "With Physics:",
         "withClipping": "With Clipping:",
         "withSpecialBlendModes": "With Special Blend Modes:",
         "animationsCount": "{{count}} animations"
       },
-      "perAnimationScoresTitle": "Per-Animation Scores",
+      "perAnimationScoresTitle": "Per-Animation Impact",
       "features": {
         "physics": "Physics",
         "ik": "IK",
@@ -389,7 +390,7 @@
         "veryHigh": "Very High"
       },
       "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
-      "medianPerformanceLabel": "{{rating}} Performance",
+      "medianPerformanceLabel": "{{rating}} impact profile",
       "durationSeconds": "{{value}}s"
     },
     "impact": {
@@ -405,18 +406,18 @@
     },
     "scores": {
       "ratings": {
-        "excellent": "Excellent",
-        "good": "Good",
+        "excellent": "Minimal",
+        "good": "Low",
         "moderate": "Moderate",
-        "poor": "Poor",
-        "veryPoor": "Very Poor"
+        "poor": "High",
+        "veryPoor": "Very High"
       },
       "interpretations": {
-        "excellent": "Suitable for all platforms and continuous animations",
-        "good": "Works well on most platforms but may have issues on low-end devices",
-        "moderate": "May cause performance dips, especially with multiple instances",
-        "poor": "Performance issues likely on most devices",
-        "veryPoor": "Significant performance issues on all devices"
+        "excellent": "Low runtime pressure.",
+        "good": "Manageable runtime pressure.",
+        "moderate": "Noticeable pressure; optimize hotspots.",
+        "poor": "High pressure; optimization recommended.",
+        "veryPoor": "Very high pressure; optimization required."
       }
     },
     "mesh": {
@@ -429,11 +430,11 @@
         "meshesWithParentMesh": "Meshes with parent mesh: {{count}}"
       },
       "performanceScore": {
-        "title": "Mesh Performance Score: {{score}}/100"
+        "title": "Mesh Impact"
       },
       "formula": {
         "title": "Performance Impact Formula:",
-        "description": "meshScore = 100 - log₂(totalMeshes/{{idealMeshCount}} + 1) × 15 - log₂(totalVertices/{{idealVertexCount}} + 1) × 10 - (deformedMeshes × {{deformedFactor}}) - (weightedMeshes × {{weightedFactor}})"
+        "description": "meshCost = (totalVertices / 200) + (deformedMeshes × 1.5) + (weightedMeshes × 2)"
       },
       "tableHeaders": {
         "slot": "Slot",
@@ -470,11 +471,11 @@
         "complexMasks": "Complex masks (>4 vertices): {{count}}"
       },
       "performanceScore": {
-        "title": "Clipping Performance Score: {{score}}/100"
+        "title": "Clipping Impact"
       },
       "formula": {
         "title": "Performance Impact Formula:",
-        "description": "clippingScore = 100 - log₂(maskCount/{{idealClippingCount}} + 1) × 20 - log₂(vertexCount + 1) × 5 - (complexMasks × 10)"
+        "description": "clippingCost = activeMasks × 5"
       },
       "tableHeaders": {
         "slotName": "Slot Name",
@@ -510,11 +511,11 @@
         "multiplyBlendModes": "Multiply blend modes: {{count}}"
       },
       "performanceScore": {
-        "title": "Blend Mode Performance Score: {{score}}/100"
+        "title": "Blend Impact"
       },
       "formula": {
         "title": "Performance Impact Formula:",
-        "description": "blendModeScore = 100 - log₂(nonNormalCount/{{idealBlendModeCount}} + 1) × 20 - (additiveCount × 2)"
+        "description": "blendCost = activeNonNormalCount × 3"
       },
       "tableHeaders": {
         "blendMode": "Blend Mode",
@@ -555,11 +556,11 @@
         "maxDepth": "Max depth: {{depth}}"
       },
       "performanceScore": {
-        "title": "Bone Structure Performance Score: {{score}}/100"
+        "title": "Bone Hierarchy Impact"
       },
       "formula": {
         "title": "Performance Impact Formula:",
-        "description": "boneScore = 100 - log₂(totalBones/{{idealBoneCount}} + 1) × 15 - (maxDepth × {{depthFactor}})"
+        "description": "Bone impact is inferred from total bones and hierarchy depth."
       },
       "nodeLabel": "{{name}} (x: {{x}}, y: {{y}})",
       "notes": {
@@ -576,12 +577,12 @@
         "totalConstraints": "Total constraints: {{count}}"
       },
       "performanceScore": {
-        "title": "Constraint Performance Score: {{score}}/100"
+        "title": "Constraint Impact"
       },
       "formula": {
         "title": "Performance Impact Formula:",
-        "description": "constraintScore = 100 - (constraintImpact × 0.5)",
-        "explanation": "Where constraintImpact is a weighted sum of IK, transform, path, and physics constraint impacts"
+        "description": "constraintCost = (activePhysics × 4) + (activeIK × 2) + (activeTransform × 1.5) + (activePath × 2.5)",
+        "explanation": "Higher cost indicates higher runtime pressure."
       },
       "impactBreakdown": {
         "title": "Impact Breakdown:",
@@ -698,12 +699,12 @@
       }
     },
     "common": {
-      "medianScore": "Median Performance Score: {{score}}%",
+      "medianScore": "Median impact cost: {{score}}",
       "worstImpact": "Worst Impact:",
       "perAnimationBreakdown": "Per-Animation Breakdown",
       "headers": {
         "animation": "Animation",
-        "score": "Score",
+        "score": "Impact",
         "impact": "Impact"
       },
       "yes": "Yes",
@@ -856,7 +857,7 @@
   },
   "meshOptimizer": {
     "title": "Mesh Inspector",
-    "subtitle": "Live mesh visualization — see triangles, vertices, and deformation in real-time",
+    "subtitle": "Live mesh visualization - see triangles, vertices, and deformation in real-time",
     "summary": {
       "meshes": "Meshes",
       "vertices": "Vertices",
@@ -892,7 +893,7 @@
         "emptyDeforms": "Empty deform timelines",
         "duplicateFrames": "Duplicate deform frames",
         "drawOrderDuplicates": "Duplicate draw-order frames",
-        "noChanges": "No optimizations found — asset is already clean"
+        "noChanges": "No optimizations found - asset is already clean"
       },
       "description": "Optimized: removed {{emptyDeforms}} empty deforms, {{duplicateFrames}} duplicate frames, {{drawOrderDuplicates}} draw-order duplicates"
     },
@@ -903,7 +904,7 @@
       "overclustered": "Overclustered triangles",
       "invisibleDeform": "Invisible deformation",
       "noProblems": "No problems detected",
-      "liveHint": "Highlighted on canvas — red triangles are overclustered",
+      "liveHint": "Highlighted on canvas - red triangles are overclustered",
       "deformMagnitudeValue": "{{value}} px",
       "pixelAreaValue": "{{value}} px²"
     },
@@ -1065,6 +1066,7 @@
     "subtitle": "Live draw call analysis with real-time slot visualization",
     "summary": {
       "drawCalls": "Draw Calls",
+      "flushes": "Flushes",
       "pageBreaks": "Page Breaks",
       "blendBreaks": "Blend Breaks"
     },
@@ -1157,7 +1159,7 @@
   },
   "atlasRepack": {
     "title": "Atlas Repack Advisor",
-    "subtitle": "Visual atlas analysis — see how atlas pages and regions affect draw calls",
+    "subtitle": "Visual atlas analysis - see how atlas pages and regions affect draw calls",
     "summary": {
       "pages": "Pages",
       "regions": "Regions",
@@ -1335,7 +1337,7 @@
       "on": "On",
       "off": "Off"
     },
-    "selectAssetForPane": "{{selectAsset}} — {{pane}}",
+    "selectAssetForPane": "{{selectAsset}} - {{pane}}",
     "assetCard": {
       "summary": "{{count}} files · {{size}}"
     }

@@ -24,6 +24,10 @@ export const CanvasStatsOverlay: React.FC<CanvasStatsOverlayProps> = ({ spineIns
         <span className="canvas-stats-value">{stats.drawCalls}</span>
       </span>
       <span className="canvas-stats-item">
+        <span className="canvas-stats-label">{t('ui.canvasStats.flushes')}</span>
+        <span className="canvas-stats-value">{stats.flushes}</span>
+      </span>
+      <span className="canvas-stats-item">
         <span className="canvas-stats-label">{t('ui.canvasStats.textures')}</span>
         <span className="canvas-stats-value">{stats.textures}</span>
       </span>

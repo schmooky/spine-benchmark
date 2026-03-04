@@ -1,7 +1,7 @@
 import { Application } from 'pixi.js';
 import 'pixi.js/basis';
 import 'pixi.js/ktx2';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useToast } from './ToastContext';
 import { useTranslation } from 'react-i18next';
 import { tIndexed } from '../utils/indexedMessage';
@@ -22,11 +22,29 @@ export function getPixiCanvas(): HTMLCanvasElement | null {
 /** Re-parent the singleton canvas into a new host and update resizeTo so it fills the container. */
 export function reparentPixiCanvas(container: HTMLElement): void {
   if (!singletonApp) return;
-  if (singletonApp.canvas.parentElement !== container) {
+  if (!container.isConnected) return;
+
+  const needsParentMove = singletonApp.canvas.parentElement !== container;
+  const needsResizeTarget = singletonApp.resizeTo !== container;
+
+  if (needsParentMove) {
     container.appendChild(singletonApp.canvas);
   }
-  singletonApp.resizeTo = container;
-  singletonApp.resize();
+
+  if (needsResizeTarget) {
+    singletonApp.resizeTo = container;
+  }
+
+  const targetWidth = Math.round(container.clientWidth);
+  const targetHeight = Math.round(container.clientHeight);
+  const sizeChanged =
+    targetWidth > 0 &&
+    targetHeight > 0 &&
+    (singletonApp.screen.width !== targetWidth || singletonApp.screen.height !== targetHeight);
+
+  if (sizeChanged) {
+    singletonApp.resize();
+  }
 }
 
 const parseBackgroundColor = (value: string): number => parseInt(value.replace('#', '0x'), 16);
@@ -83,6 +101,18 @@ export function usePixiApp({ containerRef, backgroundColor }: UsePixiAppOptions)
   const [app, setApp] = useState<Application | null>(null);
   const { addToast } = useToast();
   const { t } = useTranslation();
+  const addToastRef = useRef(addToast);
+  const tRef = useRef(t);
+  const backgroundColorRef = useRef(backgroundColor);
+
+  useEffect(() => {
+    addToastRef.current = addToast;
+    tRef.current = t;
+  }, [addToast, t]);
+
+  useEffect(() => {
+    backgroundColorRef.current = backgroundColor;
+  }, [backgroundColor]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,11 +129,13 @@ export function usePixiApp({ containerRef, backgroundColor }: UsePixiAppOptions)
       }
 
       try {
-        const pixiApp = await getOrCreateApp(container, backgroundColor);
+        const pixiApp = await getOrCreateApp(container, backgroundColorRef.current);
         if (!cancelled) setApp(pixiApp);
       } catch (error) {
-        addToast(
-          tIndexed(t, 'error.failedToInitialize', [error instanceof Error ? error.message : t('dashboard.messages.unknownError')]),
+        addToastRef.current(
+          tIndexed(tRef.current, 'error.failedToInitialize', [
+            error instanceof Error ? error.message : tRef.current('dashboard.messages.unknownError'),
+          ]),
           'error'
         );
       }
@@ -118,7 +150,7 @@ export function usePixiApp({ containerRef, backgroundColor }: UsePixiAppOptions)
       }
       setApp(null);
     };
-  }, [addToast, containerRef, t]);
+  }, [containerRef]);
 
   useEffect(() => {
     if (app) {

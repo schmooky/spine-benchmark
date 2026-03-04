@@ -15,6 +15,7 @@ export interface LiveSlotInfo {
 export interface DrawCallSnapshot {
   slots: LiveSlotInfo[];
   drawCallCount: number;
+  flushCount: number;
   pageBreaks: number;
   blendBreaks: number;
 }
@@ -22,6 +23,7 @@ export interface DrawCallSnapshot {
 const EMPTY_SNAPSHOT: DrawCallSnapshot = {
   slots: [],
   drawCallCount: 0,
+  flushCount: 0,
   pageBreaks: 0,
   blendBreaks: 0,
 };
@@ -94,7 +96,8 @@ export function collectSnapshot(skeleton: { drawOrder: any[] }): DrawCallSnapsho
     });
   }
 
-  return { slots, drawCallCount, pageBreaks, blendBreaks };
+  // For this route, "flushes" map to submitted batches/draw calls.
+  return { slots, drawCallCount, flushCount: drawCallCount, pageBreaks, blendBreaks };
 }
 
 export function useDrawCallInspector(spineInstance: Spine | null): DrawCallSnapshot {

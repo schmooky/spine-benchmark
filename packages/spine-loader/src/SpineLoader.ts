@@ -336,7 +336,7 @@ export class SpineLoader {
     let rewritten = atlasText;
 
     for (const atlasName of atlasImageNames) {
-      // Already have an exact match — no rewrite needed
+      // Already have an exact match - no rewrite needed
       if (availableFileNames.includes(atlasName)) continue;
 
       const dotIdx = atlasName.lastIndexOf('.');

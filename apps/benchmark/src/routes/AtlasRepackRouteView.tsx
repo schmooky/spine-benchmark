@@ -67,7 +67,7 @@ export function AtlasRepackRouteView() {
     if (pixiContainerRef.current) {
       reparentPixiCanvas(pixiContainerRef.current);
     }
-  });
+  }, [pixiContainerRef]);
 
   const snapshot = useDrawCallInspector(spineInstance);
   const atlasData = useAtlasData(spineInstance);
@@ -490,7 +490,7 @@ export function AtlasRepackRouteView() {
                               width: `${region.width * scaleX}%`,
                               height: `${region.height * scaleY}%`,
                             }}
-                            title={isProblematic ? `${region.name} — ${t('atlasRepack.region.problematic')}` : region.name}
+                            title={isProblematic ? `${region.name} - ${t('atlasRepack.region.problematic')}` : region.name}
                             onMouseEnter={() => setHoveredRegionId(regionId)}
                             onMouseLeave={() => setHoveredRegionId((current) => (current === regionId ? null : current))}
                             onFocus={() => setHoveredRegionId(regionId)}

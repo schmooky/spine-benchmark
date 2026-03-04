@@ -13,6 +13,7 @@ export abstract class DebugLayer {
   protected graphics: Graphics;
   protected app: Application;
   protected isVisible: boolean = false;
+  protected isDisposed: boolean = false;
   protected color: number;
   protected alpha: number;
   protected strokeWidth: number;
@@ -33,6 +34,7 @@ export abstract class DebugLayer {
   }
 
   public setVisible(visible: boolean): void {
+    if (this.isDisposed || this.container.destroyed) return;
     this.isVisible = visible;
     this.container.visible = visible;
     if (!visible) {
@@ -41,6 +43,7 @@ export abstract class DebugLayer {
   }
 
   public clear(): void {
+    if (this.isDisposed || this.graphics.destroyed) return;
     this.graphics.clear();
   }
 
@@ -93,6 +96,8 @@ export abstract class DebugLayer {
   }
 
   public destroy(): void {
+    if (this.isDisposed) return;
+    this.isDisposed = true;
     this.clear();
     this.container.destroy({ children: true });
   }

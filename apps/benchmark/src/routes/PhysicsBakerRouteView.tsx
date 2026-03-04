@@ -57,7 +57,7 @@ export function PhysicsBakerRouteView() {
     if (pixiContainerRef.current) {
       reparentPixiCanvas(pixiContainerRef.current);
     }
-  });
+  }, [pixiContainerRef]);
 
   // Reset state when asset changes
   useEffect(() => {
@@ -191,7 +191,7 @@ export function PhysicsBakerRouteView() {
       />
 
       <div className="physics-baker-layout">
-        {/* Left panel — constraint list */}
+        {/* Left panel - constraint list */}
         <div className="tool-panel">
           {spineInstance && constraints.length > 0 ? (
             <>
@@ -331,7 +331,7 @@ export function PhysicsBakerRouteView() {
           </div>
         </div>
 
-        {/* Right side — canvas + animation controls */}
+        {/* Right side - canvas + animation controls */}
         <div className="tool-canvas">
           <div
             className="canvas-container"

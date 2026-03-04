@@ -43,7 +43,7 @@ export function BenchmarkRouteView() {
     if (pixiContainerRef.current) {
       reparentPixiCanvas(pixiContainerRef.current);
     }
-  });
+  }, [pixiContainerRef]);
 
   const handlePickAsset = async (assetId: string) => {
     const asset = assets.find((entry) => entry.id === assetId);
@@ -71,13 +71,6 @@ export function BenchmarkRouteView() {
         title={t('dashboard.tools.benchmark')}
         subtitle={t('benchmark.subtitle')}
       />
-      <section className="route-welcome-card">
-        <div className="route-welcome-copy">
-          <strong>{t('benchmark.welcome.title')}</strong>
-          <span>{t('benchmark.welcome.description')}</span>
-        </div>
-        <span className="route-welcome-chip">{t('benchmark.welcome.chip')}</span>
-      </section>
       <ToolRouteControls
         minimal
         assets={assets}
@@ -90,7 +83,7 @@ export function BenchmarkRouteView() {
       />
 
       <div className="benchmark-inspector-layout">
-        {/* Left panel — stats + all analysis sections */}
+        {/* Left panel - stats + all analysis sections */}
         <div className="tool-panel">
           {benchmarkData ? (
             <>
@@ -153,7 +146,7 @@ export function BenchmarkRouteView() {
           )}
         </div>
 
-        {/* Right side — canvas + animation controls */}
+        {/* Right side - canvas + animation controls */}
         <div className="tool-canvas">
           <div
             className="canvas-container"

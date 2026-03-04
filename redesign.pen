@@ -777,7 +777,7 @@
                           "type": "text",
                           "id": "WbonD",
                           "fill": "$ed-text",
-                          "content": "Welcome animator — your workspace is ready",
+                          "content": "Welcome animator - your workspace is ready",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "600"
