@@ -169,4 +169,12 @@ export class DebugRendererManager {
       meshLayer.setHighlightedSlot(slotName);
     }
   }
+
+  public setMeshHighlightStyle(style: { color?: number; lineWidth?: number }): void {
+    if (this.isDisposed) return;
+    const meshLayer = this.layers.get('meshes') as MeshDebugLayer | undefined;
+    if (meshLayer) {
+      meshLayer.setHighlightStyle(style);
+    }
+  }
 }

@@ -163,6 +163,8 @@ describe('metrics-scoring', () => {
 
     expect(renderImpact.cost).toBeGreaterThan(0);
     expect(cpuImpact.cost).toBeGreaterThan(0);
+    expect(cpuImpact.cost).toBeCloseTo(6.59, 2);
+    expect(cpuImpact.level).toBe('low');
     expect(['minimal', 'low', 'moderate', 'high', 'veryHigh']).toContain(renderImpact.level);
     expect(['minimal', 'low', 'moderate', 'high', 'veryHigh']).toContain(cpuImpact.level);
   });

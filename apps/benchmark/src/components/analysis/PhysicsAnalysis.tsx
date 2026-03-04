@@ -9,7 +9,12 @@ interface PhysicsAnalysisProps {
 }
 
 function constraintImpactCost(c: any): number {
-  return (c.activePhysicsCount * 4) + (c.activeIkCount * 2) + (c.activeTransformCount * 1.5) + (c.activePathCount * 2.5);
+  return (
+    (c.activePhysicsCount * 0.7) +
+    (c.activePathCount * 0.55) +
+    (c.activeIkCount * 0.35) +
+    (c.activeTransformCount * 0.2)
+  );
 }
 
 export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {

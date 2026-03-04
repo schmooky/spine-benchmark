@@ -9,7 +9,16 @@ interface MeshAnalysisProps {
 }
 
 function meshImpactCost(m: any): number {
-  return (m.totalVertices / 200) + (m.deformedMeshCount * 1.5) + (m.weightedMeshCount * 2);
+  const meshCount = Math.max(m.activeMeshCount ?? 0, 1);
+  const averageVerticesPerMesh = m.totalVertices / meshCount;
+  const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
+  const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
+
+  return (
+    (m.totalVertices / 2000) +
+    (m.deformedMeshCount * deformedMeshWeight) +
+    (m.weightedMeshCount * weightedMeshWeight)
+  );
 }
 
 export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {

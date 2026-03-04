@@ -33,6 +33,7 @@ import {
   Square,
 } from 'lucide-react';
 import benchmarkBrandIcon from '../assets/favicon.svg';
+import { GitHubIcon, TelegramIcon } from './components/Icons';
 import {
   StoredAsset,
   assetToFiles,
@@ -138,6 +139,7 @@ const App: React.FC = () => {
     getCameraContainer,
     setHighlightedMeshSlot,
     setSlotHighlight,
+    setMeshHighlightStyle,
   } = useSpineApp(app);
 
   const loadAssetFromRemoteBundle = useCallback(
@@ -638,6 +640,7 @@ const App: React.FC = () => {
     saveAndLoadOptimizedAsset,
     setHighlightedMeshSlot,
     setSlotHighlight,
+    setMeshHighlightStyle,
     routeSelection,
     setRouteSelection,
     lastLoadError,
@@ -675,6 +678,7 @@ const App: React.FC = () => {
     saveAndLoadOptimizedAsset,
     setHighlightedMeshSlot,
     setSlotHighlight,
+    setMeshHighlightStyle,
     routeSelection,
     lastLoadError
   ]);
@@ -684,9 +688,9 @@ const App: React.FC = () => {
     <div className="app-shell">
       <aside className="app-sidebar">
         <div className="sidebar-header">
-          <Link to="/tools/benchmark" className="sidebar-brand" aria-label="Benchmark">
+          <Link to="/tools/benchmark" className="sidebar-brand" aria-label={t('dashboard.tools.benchmark')}>
             <img src={benchmarkBrandIcon} alt="" className="sidebar-brand-icon" />
-            <span className="sidebar-brand-text">Benchmark</span>
+            <span className="sidebar-brand-text">{t('dashboard.tools.benchmark')}</span>
           </Link>
         </div>
 
@@ -749,20 +753,24 @@ const App: React.FC = () => {
         <section className="sidebar-section sidebar-outreach">
           <div className="sidebar-outreach-links">
             <a
-              className="sidebar-outreach-link"
+              className="sidebar-outreach-link is-telegram"
               href="https://t.me/+nwFiDd407Pk4Njdi"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={t('dashboard.links.community.telegram')}
             >
-              📬 Telegram
+              <TelegramIcon className="sidebar-outreach-link-icon" size={14} />
+              <span className="sidebar-outreach-link-label">{t('dashboard.links.community.telegram')}</span>
             </a>
             <a
-              className="sidebar-outreach-link"
+              className="sidebar-outreach-link is-github"
               href="https://github.com/schmooky/spine-benchmark"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={t('dashboard.links.community.github')}
             >
-              🐙 GitHub
+              <GitHubIcon className="sidebar-outreach-link-icon" size={14} />
+              <span className="sidebar-outreach-link-label">{t('dashboard.links.community.github')}</span>
             </a>
           </div>
         </section>

@@ -57,6 +57,7 @@ export interface WorkbenchContextValue {
   saveAndLoadOptimizedAsset: (files: File[], name: string, description: string) => Promise<void>;
   setHighlightedMeshSlot: (slotName: string | null) => void;
   setSlotHighlight: (slotIndex: number | null) => void;
+  setMeshHighlightStyle: (style: { color?: number; lineWidth?: number }) => void;
   routeSelection: RouteSelectionState;
   setRouteSelection: React.Dispatch<React.SetStateAction<RouteSelectionState>>;
   lastLoadError: string | null;

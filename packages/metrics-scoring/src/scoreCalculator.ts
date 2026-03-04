@@ -3,7 +3,7 @@ import { PERFORMANCE_FACTORS } from "@spine-benchmark/metrics-factors";
 interface AnimationAnalysisLike {
   blendModeMetrics: { activeNonNormalCount: number };
   clippingMetrics: { activeMaskCount: number };
-  meshMetrics: { totalVertices: number; deformedMeshCount: number; weightedMeshCount: number };
+  meshMetrics: { activeMeshCount?: number; totalVertices: number; deformedMeshCount: number; weightedMeshCount: number };
   constraintMetrics: {
     activePhysicsCount: number;
     activeIkCount: number;
@@ -305,7 +305,23 @@ export function worstRenderingImpact(animations: AnimationAnalysisLike[]): Impac
  */
 export function worstComputationalImpact(animations: AnimationAnalysisLike[]): ImpactResult {
   return animations.reduce((worst, a) => {
-    const cost = (a.constraintMetrics.activePhysicsCount * 4) + (a.constraintMetrics.activeIkCount * 2) + (a.constraintMetrics.activeTransformCount * 1.5) + (a.constraintMetrics.activePathCount * 2.5) + (a.meshMetrics.deformedMeshCount * 1.5) + (a.meshMetrics.weightedMeshCount * 2);
+    const meshCount = Math.max(a.meshMetrics.activeMeshCount ?? 0, 1);
+    const averageVerticesPerMesh = a.meshMetrics.totalVertices / meshCount;
+
+    const constraintCost =
+      (a.constraintMetrics.activePhysicsCount * 0.7) +
+      (a.constraintMetrics.activePathCount * 0.55) +
+      (a.constraintMetrics.activeIkCount * 0.35) +
+      (a.constraintMetrics.activeTransformCount * 0.2);
+
+    const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
+    const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
+    const meshComputationCost =
+      (a.meshMetrics.deformedMeshCount * deformedMeshWeight) +
+      (a.meshMetrics.weightedMeshCount * weightedMeshWeight) +
+      (a.meshMetrics.totalVertices / 2000);
+
+    const cost = constraintCost + meshComputationCost;
     return cost > worst.cost ? getImpactFromCost(cost) : worst;
   }, getImpactFromCost(0));
 }

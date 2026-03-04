@@ -53,6 +53,10 @@ export function useSpineApp(app: Application | null) {
     cameraContainerRef.current?.setSlotHighlight(slotIndex);
   }, []);
 
+  const setMeshHighlightStyle = useCallback((style: { color?: number; lineWidth?: number }) => {
+    cameraContainerRef.current?.setMeshHighlightStyle(style);
+  }, []);
+
   useEffect(() => {
     if (!app) return;
 
@@ -143,6 +147,7 @@ export function useSpineApp(app: Application | null) {
     pathConstraintsVisible,
     getCameraContainer,
     setHighlightedMeshSlot,
-    setSlotHighlight
+    setSlotHighlight,
+    setMeshHighlightStyle
   };
 }

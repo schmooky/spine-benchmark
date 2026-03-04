@@ -495,7 +495,7 @@
       },
       "formula": {
         "title": "Performance Impact Formula:",
-        "description": "meshCost = (totalVertices / 200) + (deformedMeshes × 1.5) + (weightedMeshes × 2)"
+        "description": "meshCost = (totalVertices / 2000) + (deformedMeshes × (0.08 + min(0.5, avgVerticesPerMesh / 500))) + (weightedMeshes × (0.1 + min(0.55, avgVerticesPerMesh / 450)))"
       },
       "tableHeaders": {
         "slot": "Slot",
@@ -642,7 +642,7 @@
       },
       "formula": {
         "title": "Performance Impact Formula:",
-        "description": "constraintCost = (activePhysics × 4) + (activeIK × 2) + (activeTransform × 1.5) + (activePath × 2.5)",
+        "description": "constraintCost = (activePhysics × 0.7) + (activePath × 0.55) + (activeIK × 0.35) + (activeTransform × 0.2)",
         "explanation": "Higher cost indicates higher runtime pressure."
       },
       "impactBreakdown": {
@@ -895,6 +895,7 @@
       },
       "community": {
         "telegram": "Telegram Updates",
+        "github": "GitHub",
         "forum": "Spine Forum",
         "issues": "Repository Issues"
       }
@@ -973,6 +974,14 @@
       "all": "All",
       "deformed": "Deformed",
       "weighted": "Weighted"
+    },
+    "highlightControls": {
+      "button": "Highlight",
+      "color": "Mesh color",
+      "lineWidth": "Line width",
+      "lineWidthValue": "{{value}} px",
+      "pixelLine": "Default: 1px pixel line",
+      "reset": "Reset"
     },
     "infoPanel": {
       "emptyTitle": "Select a mesh row",

@@ -1,11 +1,13 @@
 import { Graphics } from 'pixi.js';
-import { Spine, MeshAttachment } from '@esotericsoftware/spine-pixi-v8';
+import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer.js';
 
 export interface MeshDebugOptions extends DebugLayerOptions {
   triangleColor?: number;
   hullColor?: number;
   vertexColor?: number;
+  highlightColor?: number;
+  highlightLineWidth?: number;
   showTriangles?: boolean;
   showHull?: boolean;
   showVertices?: boolean;
@@ -21,6 +23,37 @@ const HIGHLIGHT_COLOR = 0x2DD4A8;
 const HIGHLIGHT_ALPHA = 0.6;
 const DIM_ALPHA = 0.08;
 const OVERCLUSTERED_THRESHOLD = 0.15;
+const HIGHLIGHT_LINE_WIDTH = 1;
+
+function shouldUsePixelLine(width: number): boolean {
+  return width <= 1.0001;
+}
+
+interface MeshAttachmentLike {
+  worldVerticesLength: number;
+  triangles: ArrayLike<number>;
+  computeWorldVertices: (
+    slot: unknown,
+    start: number,
+    count: number,
+    worldVertices: Float32Array,
+    offset: number,
+    stride: number,
+  ) => void;
+}
+
+function isMeshAttachmentLike(attachment: unknown): attachment is MeshAttachmentLike {
+  if (!attachment || typeof attachment !== 'object') return false;
+  const candidate = attachment as Record<string, unknown>;
+  const triangles = candidate.triangles;
+  const hasTriangles =
+    Array.isArray(triangles) || (ArrayBuffer.isView(triangles) && 'length' in (triangles as object));
+  return (
+    typeof candidate.worldVerticesLength === 'number' &&
+    typeof candidate.computeWorldVertices === 'function' &&
+    hasTriangles
+  );
+}
 
 export class MeshDebugLayer extends DebugLayer {
   private triangleColor: number;
@@ -29,6 +62,8 @@ export class MeshDebugLayer extends DebugLayer {
   private showTriangles: boolean;
   private showHull: boolean;
   private showVertices: boolean;
+  private highlightColor: number;
+  private highlightLineWidth: number;
   private triangleAlpha: number;
   private hullAlpha: number;
   private vertexAlpha: number;
@@ -43,6 +78,8 @@ export class MeshDebugLayer extends DebugLayer {
     this.showTriangles = options.showTriangles ?? true;
     this.showHull = options.showHull ?? true;
     this.showVertices = options.showVertices ?? false;
+    this.highlightColor = options.highlightColor ?? HIGHLIGHT_COLOR;
+    this.highlightLineWidth = options.highlightLineWidth ?? HIGHLIGHT_LINE_WIDTH;
     this.triangleAlpha = options.triangleAlpha ?? 0.3;
     this.hullAlpha = options.hullAlpha ?? 0.5;
     this.vertexAlpha = options.vertexAlpha ?? 0.6;
@@ -66,44 +103,44 @@ export class MeshDebugLayer extends DebugLayer {
     // Process each slot to find mesh attachments
     for (const slot of skeleton.slots) {
       const attachment = slot.getAttachment();
-      if (attachment instanceof MeshAttachment) {
-        const verticesLength = attachment.worldVerticesLength;
-        if (verticesLength === 0) continue;
+      if (!isMeshAttachmentLike(attachment)) continue;
 
-        const vertices = new Float32Array(verticesLength);
-        attachment.computeWorldVertices(slot, 0, verticesLength, vertices, 0, 2);
+      const verticesLength = attachment.worldVerticesLength;
+      if (verticesLength === 0) continue;
 
-        const isHighlighted = this.highlightedSlotName !== null && slot.data.name === this.highlightedSlotName;
-        const isDimmed = this.highlightedSlotName !== null && !isHighlighted;
+      const vertices = new Float32Array(verticesLength);
+      attachment.computeWorldVertices(slot, 0, verticesLength, vertices, 0, 2);
 
-        if (isHighlighted) {
-          // Draw highlighted mesh with problem detection
-          if (this.showTriangles && attachment.triangles && attachment.triangles.length > 0) {
-            this.drawHighlightedTriangles(this.graphics, vertices, attachment.triangles);
-          }
-          if (this.showHull && verticesLength >= 4) {
-            this.drawHull(this.graphics, vertices, HIGHLIGHT_ALPHA);
-          }
-          if (this.showVertices && verticesLength >= 2) {
-            this.drawVertices(this.graphics, vertices);
-          }
-        } else if (!isDimmed) {
-          // Draw normal mesh (skip entirely if another mesh is highlighted)
-          if (this.showTriangles && attachment.triangles && attachment.triangles.length > 0) {
-            this.drawTriangles(this.graphics, vertices, attachment.triangles);
-          }
-          if (this.showHull && verticesLength >= 4) {
-            this.drawHull(this.graphics, vertices);
-          }
-          if (this.showVertices && verticesLength >= 2) {
-            this.drawVertices(this.graphics, vertices);
-          }
+      const isHighlighted = this.highlightedSlotName !== null && slot.data.name === this.highlightedSlotName;
+      const isDimmed = this.highlightedSlotName !== null && !isHighlighted;
+
+      if (isHighlighted) {
+        // Draw highlighted mesh with problem detection
+        if (this.showTriangles && attachment.triangles && attachment.triangles.length > 0) {
+          this.drawHighlightedTriangles(this.graphics, vertices, attachment.triangles);
+        }
+        if (this.showHull && verticesLength >= 4) {
+          this.drawHull(this.graphics, vertices, HIGHLIGHT_ALPHA, this.highlightColor, this.highlightLineWidth);
+        }
+        if (this.showVertices && verticesLength >= 2) {
+          this.drawVertices(this.graphics, vertices);
+        }
+      } else if (!isDimmed) {
+        // Draw normal mesh (skip entirely if another mesh is highlighted)
+        if (this.showTriangles && attachment.triangles && attachment.triangles.length > 0) {
+          this.drawTriangles(this.graphics, vertices, attachment.triangles);
+        }
+        if (this.showHull && verticesLength >= 4) {
+          this.drawHull(this.graphics, vertices);
+        }
+        if (this.showVertices && verticesLength >= 2) {
+          this.drawVertices(this.graphics, vertices);
         }
       }
     }
   }
 
-  private drawHighlightedTriangles(g: Graphics, vertices: Float32Array, triangles: Array<number>): void {
+  private drawHighlightedTriangles(g: Graphics, vertices: Float32Array, triangles: ArrayLike<number>): void {
     if (triangles.length === 0 || vertices.length === 0) return;
 
     const triangleCount = triangles.length / 3;
@@ -137,7 +174,12 @@ export class MeshDebugLayer extends DebugLayer {
     }
 
     // Pass 1: Draw normal triangles with teal stroke (same proven pattern as drawTriangles)
-    g.stroke({ width: 1, color: HIGHLIGHT_COLOR, alpha: HIGHLIGHT_ALPHA, pixelLine: true });
+    g.stroke({
+      width: this.highlightLineWidth,
+      color: this.highlightColor,
+      alpha: HIGHLIGHT_ALPHA,
+      pixelLine: shouldUsePixelLine(this.highlightLineWidth),
+    });
     for (let t = 0; t < triangleCount; t++) {
       if (overclustered.has(t)) continue;
       const i0 = triangles[t * 3], i1 = triangles[t * 3 + 1], i2 = triangles[t * 3 + 2];
@@ -155,7 +197,13 @@ export class MeshDebugLayer extends DebugLayer {
     }
 
     // Pass 2: Draw overclustered triangles with red stroke
-    g.stroke({ width: 1.5, color: PROBLEM_COLOR, alpha: 0.8, pixelLine: true });
+    const overclusteredWidth = Math.max(this.highlightLineWidth + 0.5, this.highlightLineWidth);
+    g.stroke({
+      width: overclusteredWidth,
+      color: PROBLEM_COLOR,
+      alpha: 0.8,
+      pixelLine: shouldUsePixelLine(overclusteredWidth),
+    });
     for (let t = 0; t < triangleCount; t++) {
       if (!overclustered.has(t)) continue;
       const i0 = triangles[t * 3], i1 = triangles[t * 3 + 1], i2 = triangles[t * 3 + 2];
@@ -173,7 +221,7 @@ export class MeshDebugLayer extends DebugLayer {
     }
   }
 
-  private drawTriangles(g: Graphics, vertices: Float32Array, triangles: Array<number>, alphaOverride?: number): void {
+  private drawTriangles(g: Graphics, vertices: Float32Array, triangles: ArrayLike<number>, alphaOverride?: number): void {
     if (triangles.length === 0 || vertices.length === 0) return;
 
     g.stroke({ width: 1, color: this.triangleColor, alpha: alphaOverride ?? this.triangleAlpha, pixelLine: true });
@@ -202,10 +250,21 @@ export class MeshDebugLayer extends DebugLayer {
     }
   }
   
-  private drawHull(g: Graphics, vertices: Float32Array, alphaOverride?: number): void {
+  private drawHull(
+    g: Graphics,
+    vertices: Float32Array,
+    alphaOverride?: number,
+    colorOverride?: number,
+    lineWidthOverride?: number,
+  ): void {
     if (vertices.length < 4) return;
 
-    g.stroke({ width: 1.5, color: this.hullColor, alpha: alphaOverride ?? this.hullAlpha, pixelLine: true });
+    g.stroke({
+      width: lineWidthOverride ?? 1.5,
+      color: colorOverride ?? this.hullColor,
+      alpha: alphaOverride ?? this.hullAlpha,
+      pixelLine: shouldUsePixelLine(lineWidthOverride ?? 1.5),
+    });
     
     // Draw hull as a polygon connecting all vertices in order
     if (!isFinite(vertices[0]) || !isFinite(vertices[1])) return;
@@ -272,4 +331,9 @@ export class MeshDebugLayer extends DebugLayer {
   }
   
   public setVertexRadius(radius: number): void { this.vertexRadius = radius; }
+
+  public setHighlightStyle(style: { color?: number; lineWidth?: number }): void {
+    if (style.color !== undefined) this.highlightColor = style.color;
+    if (style.lineWidth !== undefined) this.highlightLineWidth = style.lineWidth;
+  }
 }

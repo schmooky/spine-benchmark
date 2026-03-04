@@ -10,7 +10,55 @@ const HIGHLIGHT_BOX_ALPHA = 0.9;
 const HIGHLIGHT_BOX_WIDTH = 2;
 const HIGHLIGHT_MESH_COLOR = 0x2DD4A8;
 const HIGHLIGHT_MESH_ALPHA = 0.92;
-const HIGHLIGHT_MESH_WIDTH = 1.8;
+const HIGHLIGHT_MESH_WIDTH = 1;
+
+function shouldUsePixelLine(width: number): boolean {
+  return width <= 1.0001;
+}
+
+interface MeshAttachmentLike {
+  worldVerticesLength: number;
+  triangles: ArrayLike<number>;
+  computeWorldVertices: (
+    slot: unknown,
+    start: number,
+    count: number,
+    worldVertices: Float32Array,
+    offset: number,
+    stride: number,
+  ) => void;
+}
+
+interface RegionAttachmentLike {
+  computeWorldVertices: (
+    slot: unknown,
+    worldVertices: Float32Array,
+    offset: number,
+    stride: number,
+  ) => void;
+}
+
+function isMeshAttachmentLike(attachment: unknown): attachment is MeshAttachmentLike {
+  if (!attachment || typeof attachment !== "object") return false;
+  const candidate = attachment as Record<string, unknown>;
+  const triangles = candidate.triangles;
+  const hasTriangles =
+    Array.isArray(triangles) || (ArrayBuffer.isView(triangles) && 'length' in (triangles as object));
+  return (
+    typeof candidate.worldVerticesLength === "number" &&
+    typeof candidate.computeWorldVertices === "function" &&
+    hasTriangles
+  );
+}
+
+function isRegionAttachmentLike(attachment: unknown): attachment is RegionAttachmentLike {
+  if (!attachment || typeof attachment !== "object") return false;
+  const candidate = attachment as Record<string, unknown>;
+  return (
+    typeof candidate.computeWorldVertices === "function" &&
+    !isMeshAttachmentLike(attachment)
+  );
+}
 
 export class CameraContainer extends Container {
   originalWidth: number;
@@ -24,6 +72,8 @@ export class CameraContainer extends Container {
   private debugContainer: Container;
   private slotHighlightGraphics: Graphics;
   private highlightedSlotIndex: number | null = null;
+  private meshHighlightColor = HIGHLIGHT_MESH_COLOR;
+  private meshHighlightLineWidth = HIGHLIGHT_MESH_WIDTH;
   private canvasView: HTMLCanvasElement | null = null;
   private isDisposed = false;
   private readonly tickerUpdate = () => {
@@ -233,6 +283,16 @@ export class CameraContainer extends Container {
     this.debugRenderer.setHighlightedMeshSlot(slotName);
   }
 
+  public setMeshHighlightStyle(style: { color?: number; lineWidth?: number }): void {
+    if (style.color !== undefined) {
+      this.meshHighlightColor = style.color;
+    }
+    if (style.lineWidth !== undefined) {
+      this.meshHighlightLineWidth = style.lineWidth;
+    }
+    this.debugRenderer.setMeshHighlightStyle(style);
+  }
+
   public setSlotHighlight(slotIndex: number | null): void {
     this.highlightedSlotIndex = slotIndex;
     if (slotIndex === null && !this.slotHighlightGraphics.destroyed) {
@@ -254,9 +314,13 @@ export class CameraContainer extends Container {
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-    if (attachment instanceof RegionAttachment) {
+    if (attachment instanceof RegionAttachment || isRegionAttachmentLike(attachment)) {
       const verts = new Float32Array(8);
-      attachment.computeWorldVertices(slot, verts, 0, 2);
+      try {
+        attachment.computeWorldVertices(slot, verts, 0, 2);
+      } catch {
+        return;
+      }
       for (let i = 0; i < 8; i += 2) {
         const x = verts[i], y = verts[i + 1];
         if (!isFinite(x) || !isFinite(y)) continue;
@@ -265,7 +329,7 @@ export class CameraContainer extends Container {
         if (y < minY) minY = y;
         if (y > maxY) maxY = y;
       }
-    } else if (attachment instanceof MeshAttachment) {
+    } else if (attachment instanceof MeshAttachment || isMeshAttachmentLike(attachment)) {
       const len = attachment.worldVerticesLength;
       if (len === 0) return;
       const verts = new Float32Array(len);
@@ -284,7 +348,12 @@ export class CameraContainer extends Container {
       let drawnTriangles = 0;
       if (triangles && triangles.length >= 3) {
         this.slotHighlightGraphics
-          .stroke({ width: HIGHLIGHT_MESH_WIDTH, color: HIGHLIGHT_MESH_COLOR, alpha: HIGHLIGHT_MESH_ALPHA, pixelLine: true });
+          .stroke({
+            width: this.meshHighlightLineWidth,
+            color: this.meshHighlightColor,
+            alpha: HIGHLIGHT_MESH_ALPHA,
+            pixelLine: shouldUsePixelLine(this.meshHighlightLineWidth),
+          });
 
         for (let i = 0; i + 2 < triangles.length; i += 3) {
           const a = triangles[i] * 2;
@@ -305,10 +374,6 @@ export class CameraContainer extends Container {
           drawnTriangles++;
         }
       }
-
-      if (drawnTriangles > 0) {
-        return;
-      }
     } else {
       return;
     }
@@ -316,9 +381,16 @@ export class CameraContainer extends Container {
     if (!isFinite(minX) || !isFinite(minY)) return;
 
     const pad = 4;
+    const boxWidth = this.meshHighlightLineWidth > 0 ? this.meshHighlightLineWidth : HIGHLIGHT_BOX_WIDTH;
+    const boxColor = this.meshHighlightColor || HIGHLIGHT_BOX_COLOR;
     this.slotHighlightGraphics
       .rect(minX - pad, minY - pad, (maxX - minX) + pad * 2, (maxY - minY) + pad * 2)
-      .stroke({ width: HIGHLIGHT_BOX_WIDTH, color: HIGHLIGHT_BOX_COLOR, alpha: HIGHLIGHT_BOX_ALPHA, pixelLine: true });
+      .stroke({
+        width: boxWidth,
+        color: boxColor,
+        alpha: HIGHLIGHT_BOX_ALPHA,
+        pixelLine: shouldUsePixelLine(boxWidth),
+      });
   }
 
   public forceResetDebugGraphics(): void {

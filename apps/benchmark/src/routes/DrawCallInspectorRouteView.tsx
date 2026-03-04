@@ -98,12 +98,42 @@ export function DrawCallInspectorRouteView() {
   }, [spineInstance, setSlotHighlight]);
 
   useEffect(() => {
-    if (!spineInstance || selectedSlotIndex !== null || routeSelection.slotIndex === null) return;
-    const persisted = snapshot.slots.find((slot) => slot.index === routeSelection.slotIndex);
+    if (!spineInstance || selectedSlotIndex !== null) return;
+
+    let persisted: LiveSlotInfo | undefined;
+
+    if (routeSelection.slotIndex !== null) {
+      persisted = snapshot.slots.find((slot) => slot.index === routeSelection.slotIndex);
+    }
+
+    if (!persisted && routeSelection.attachmentName) {
+      persisted =
+        snapshot.slots.find(
+          (slot) =>
+            slot.attachmentName === routeSelection.attachmentName &&
+            (!routeSelection.slotName || slot.slotName === routeSelection.slotName),
+        ) ??
+        snapshot.slots.find((slot) => slot.attachmentName === routeSelection.attachmentName);
+    }
+
+    if (!persisted && routeSelection.slotName) {
+      persisted = snapshot.slots.find((slot) => slot.slotName === routeSelection.slotName);
+    }
+
     if (!persisted) return;
+
     setSelectedSlotIndex(persisted.index);
     setSlotHighlight(persisted.index);
-  }, [spineInstance, selectedSlotIndex, routeSelection.slotIndex, snapshot.slots, setSlotHighlight]);
+  }, [
+    spineInstance,
+    selectedSlotIndex,
+    routeSelection.updatedAt,
+    routeSelection.slotIndex,
+    routeSelection.slotName,
+    routeSelection.attachmentName,
+    snapshot.slots,
+    setSlotHighlight,
+  ]);
 
   const displaySlots = useMemo(() => {
     let filtered = hideInvisible ? snapshot.slots.filter((slot) => !slot.isInvisible) : snapshot.slots;
@@ -416,6 +446,12 @@ export function DrawCallInspectorRouteView() {
                   <span className="dc-inspector-stat-label">{t('drawCallInspector.summary.blendBreaks')}</span>
                 </div>
               </div>
+
+              {activeSlot && (
+                <p className="subtle-text">
+                  {t('drawCallInspector.list.headers.attachment')}: <strong>{activeSlot.attachmentName}</strong>
+                </p>
+              )}
 
               {isPartialParse && (
                 <RouteStateCallout

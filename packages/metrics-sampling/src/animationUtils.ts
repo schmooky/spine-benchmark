@@ -69,7 +69,8 @@ export function getActiveComponentsForAnimation(
     }
   );
   
-  // Also check which constraints are actually keyframed in this animation
+  // Record timeline-driven component hints without inflating active constraint counts.
+  // Runtime cost should reflect sampled active state, not just timeline presence.
   analyzeAnimationTimelines(animation, skeleton, activeComponents);
   
   console.log(`Completed analysis of "${animation.name}": found ${activeComponents.slots.size} active slots, ${activeComponents.meshes.size} meshes`);
@@ -184,21 +185,19 @@ function analyzeAnimationTimelines(
   activeComponents: ActiveComponents
 ): void {
   animation.timelines.forEach(timeline => {
-    // Check constraint timelines to ensure we don't miss any
+    // Timeline presence means the feature exists in the animation, but not necessarily
+    // that the constraint is active/effective on sampled frames.
     if (timeline instanceof IkConstraintTimeline) {
       const constraintIndex = (timeline as any).ikConstraintIndex;
       const constraint = skeleton.ikConstraints[constraintIndex];
       if (constraint) {
-        // Even if not currently active, mark it as used in this animation
         activeComponents.hasIK = true;
-        activeComponents.activeConstraints.ik.add(constraint.data.name);
       }
     } else if (timeline instanceof TransformConstraintTimeline) {
       const constraintIndex = (timeline as any).transformConstraintIndex;
       const constraint = skeleton.transformConstraints[constraintIndex];
       if (constraint) {
         activeComponents.hasTransform = true;
-        activeComponents.activeConstraints.transform.add(constraint.data.name);
       }
     } else if (timeline instanceof PathConstraintMixTimeline ||
                timeline instanceof PathConstraintPositionTimeline ||
@@ -207,14 +206,12 @@ function analyzeAnimationTimelines(
       const constraint = skeleton.pathConstraints[constraintIndex];
       if (constraint) {
         activeComponents.hasPath = true;
-        activeComponents.activeConstraints.path.add(constraint.data.name);
       }
     } else if (timeline instanceof PhysicsConstraintTimeline) {
       const constraintIndex = (timeline as any).physicsConstraintIndex;
       const constraint = skeleton.physicsConstraints?.[constraintIndex];
       if (constraint) {
         activeComponents.hasPhysics = true;
-        activeComponents.activeConstraints.physics.add(constraint.data.name);
       }
     }
     

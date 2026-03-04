@@ -145,14 +145,26 @@ export function renderingImpactCost(animation: AnimationAnalysis): number {
 }
 
 export function computationalImpactCost(animation: AnimationAnalysis): number {
-  return (
-    animation.constraintMetrics.activePhysicsCount * 4 +
-    animation.constraintMetrics.activeIkCount * 2 +
-    animation.constraintMetrics.activeTransformCount * 1.5 +
-    animation.constraintMetrics.activePathCount * 2.5 +
-    animation.meshMetrics.deformedMeshCount * 1.5 +
-    animation.meshMetrics.weightedMeshCount * 2
-  );
+  const meshCount = Math.max(animation.meshMetrics.activeMeshCount ?? 0, 1);
+  const averageVerticesPerMesh = animation.meshMetrics.totalVertices / meshCount;
+
+  // Runtime-aligned weighting:
+  // - Constraints are active-gated and frequently early-out in spine-ts core.
+  // - Mesh deformation/weighting scales with per-mesh vertex complexity.
+  const constraintCost =
+    animation.constraintMetrics.activePhysicsCount * 0.7 +
+    animation.constraintMetrics.activePathCount * 0.55 +
+    animation.constraintMetrics.activeIkCount * 0.35 +
+    animation.constraintMetrics.activeTransformCount * 0.2;
+
+  const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
+  const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
+  const meshComputationCost =
+    animation.meshMetrics.deformedMeshCount * deformedMeshWeight +
+    animation.meshMetrics.weightedMeshCount * weightedMeshWeight +
+    animation.meshMetrics.totalVertices / 2000;
+
+  return constraintCost + meshComputationCost;
 }
 
 function rowTone(totalCost: number): ImpactRowTone {

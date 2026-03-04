@@ -3601,6 +3601,77 @@ input[type="color"]::-webkit-color-swatch {
   border-bottom: 1px solid var(--sb-border);
 }
 
+.mesh-highlight-controls {
+  margin-left: auto;
+  position: relative;
+}
+
+.mesh-highlight-config-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mesh-highlight-config-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  padding: 10px;
+  border: 1px solid var(--sb-border-strong);
+  border-radius: 12px;
+  background: var(--sb-bg-1);
+  box-shadow: var(--sb-shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 40;
+}
+
+.mesh-highlight-config-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--sb-text-secondary);
+}
+
+.mesh-highlight-color-input {
+  width: 100%;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--sb-border);
+  border-radius: 8px;
+  background: var(--sb-bg-2);
+  cursor: pointer;
+}
+
+.mesh-highlight-width-slider {
+  width: 100%;
+  accent-color: var(--sb-accent);
+}
+
+.mesh-highlight-config-footnote {
+  font-size: 10px;
+  color: var(--sb-text-muted);
+}
+
+.mesh-highlight-reset-btn {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .mesh-highlight-controls {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .mesh-highlight-config-menu {
+    position: static;
+    width: 100%;
+  }
+}
+
 .mesh-inspector-list {
   flex: 1;
   overflow-y: auto;
@@ -5089,16 +5160,45 @@ body {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 10px;
   font-size: 12px;
   font-weight: 500;
   transition: border-color var(--sb-duration) var(--sb-ease), background var(--sb-duration) var(--sb-ease), color var(--sb-duration) var(--sb-ease);
+}
+
+.sidebar-outreach-link-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: var(--sb-text-muted);
+  transition: color var(--sb-duration) var(--sb-ease);
+}
+
+.sidebar-outreach-link-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-outreach-link.is-telegram .sidebar-outreach-link-icon {
+  color: color-mix(in srgb, var(--sb-info) 80%, var(--sb-text) 20%);
+}
+
+.sidebar-outreach-link.is-github .sidebar-outreach-link-icon {
+  color: color-mix(in srgb, var(--sb-accent) 76%, var(--sb-text) 24%);
 }
 
 .sidebar-outreach-link:hover {
   border-color: var(--sb-border-strong);
   background: var(--sb-bg-3);
   color: var(--sb-text);
+}
+
+.sidebar-outreach-link:hover .sidebar-outreach-link-icon {
+  color: var(--sb-accent-hover);
 }
 
 .workspace-main {

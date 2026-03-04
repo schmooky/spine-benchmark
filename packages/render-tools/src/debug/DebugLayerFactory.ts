@@ -63,6 +63,8 @@ interface MeshLayerOptions extends BaseLayerOptions {
   triangleColor?: number;
   hullColor?: number;
   vertexColor?: number;
+  highlightColor?: number;
+  highlightLineWidth?: number;
   showTriangles?: boolean;
   showHull?: boolean;
   showVertices?: boolean;
@@ -164,6 +166,8 @@ export class DebugLayerFactory {
           triangleColor: (options as MeshLayerOptions).triangleColor ?? 0x00FF00,
           hullColor: (options as MeshLayerOptions).hullColor ?? 0xFF00FF,
           vertexColor: (options as MeshLayerOptions).vertexColor ?? 0xFFFF00,
+          highlightColor: (options as MeshLayerOptions).highlightColor ?? 0x2DD4A8,
+          highlightLineWidth: (options as MeshLayerOptions).highlightLineWidth ?? 1,
           alpha: options.alpha ?? 1.0,
           strokeWidth: options.strokeWidth ?? 1,
           showTriangles: (options as MeshLayerOptions).showTriangles ?? true,
@@ -270,6 +274,8 @@ export class DebugLayerFactory {
           triangleColor: 0x00FF00,
           hullColor: 0xFF00FF,
           vertexColor: 0xFFFF00,
+          highlightColor: 0x2DD4A8,
+          highlightLineWidth: 1,
           alpha: 0.6,
           strokeWidth: 1,
           showTriangles: true,

@@ -146,6 +146,7 @@ describe('impactReportModel', () => {
 
     expect(report.schemaVersion).toBe(1);
     expect(report.animations[0].name).toBe('walk');
+    expect(report.animations[0].computational.cost).toBeLessThan(10);
     expect(report.hotspots.peakPageBreaks).toBe(9);
     expect(report.summary.rendering.worst.cost).toBeGreaterThan(0);
 
