@@ -1470,7 +1470,7 @@
     }
   },
   "animationHeatmap": {
-    "subtitle": "Analyze all frames to find spikes in draw calls, textures, and blend breaks.",
+    "subtitle": "Покадровый анализ с RI/CI по каждой анимации, плюс draw calls, textures и break-спайки.",
     "actions": {
       "analyzeAll": "Analyze All Animations",
       "analyzing": "Analyzing..."
@@ -1478,7 +1478,7 @@
     "animationMeta": "{{duration}}s / {{frames}} frames",
     "empty": {
       "title": "Animation Performance",
-      "hint": "Click \"Analyze All Animations\" to sample every frame and generate performance charts showing draw call, texture, and blend break costs over time.",
+      "hint": "Нажмите \"Analyze All Animations\", чтобы просэмплировать каждый кадр и построить графики RI/CI по анимациям вместе с draw-call и break-диагностикой.",
       "loadHint": "Load a Spine asset to analyze animation performance frame-by-frame.",
       "analyzing": "Analyzing all animations automatically...",
       "noData": "No animation heatmap data is available for this asset."
@@ -1486,10 +1486,16 @@
     "frameDetail": {
       "frameTitle": "Frame #{{index}}",
       "time": "{{time}}s",
+      "renderingImpact": "RI: {{value}}",
+      "computationalImpact": "CI: {{value}}",
+      "totalImpact": "TI: {{value}}",
       "drawCalls": "DC: {{value}}",
       "textures": "TX: {{value}}",
+      "clippingMasks": "CM: {{value}}",
       "blendBreaks": "BB: {{value}}",
       "pageBreaks": "PB: {{value}}",
+      "renderingFormula": "RI = blends({{blends}})×3 + masks({{masks}})×5 + vertices({{vertices}})/200",
+      "computationalFormula": "CI = physics({{physics}})×0.7 + path({{path}})×0.55 + ik({{ik}})×0.35 + transform({{transform}})×0.2 + deformed({{deformed}}) + weighted({{weighted}}) + vertices({{vertices}})/2000",
       "slot": "Slot",
       "page": "Page",
       "blend": "Blend",
@@ -1501,7 +1507,12 @@
     "tooltip": {
       "frame": "#{{index}} ({{time}}s)",
       "metric": "{{label}}: {{value}}",
+      "totalImpact": "TI: {{value}}",
+      "drawCalls": "DC: {{value}}",
+      "textures": "TX: {{value}}",
+      "clippingMasks": "CM: {{value}}",
       "pageBreaks": "PB: {{value}}",
+      "blendBreaks": "BB: {{value}}",
       "visibleSlots": "Slots: {{value}}"
     }
   },

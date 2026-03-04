@@ -4913,6 +4913,17 @@ input[type="color"]::-webkit-color-swatch {
   color: var(--sb-text);
 }
 
+.heatmap-frame-detail-impact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--sb-border);
+  font-family: var(--sb-font-mono);
+  font-size: 10px;
+  color: var(--sb-text-muted);
+}
+
 .heatmap-slot-list-header {
   display: grid;
   grid-template-columns: 32px 1fr 80px 60px 44px;

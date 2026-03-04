@@ -10,16 +10,25 @@ import { LiveSlotInfo } from '../hooks/useDrawCallInspector';
 import { reparentPixiCanvas } from '../hooks/usePixiApp';
 import { RouteHeaderCard } from '../components/RouteHeaderCard';
 
-type MetricKey = 'drawCalls' | 'textures' | 'blendBreaks';
+type MetricKey = 'renderingImpact' | 'computationalImpact';
 
 const METRICS: { key: MetricKey; labelKey: string; color: string }[] = [
-  { key: 'drawCalls', labelKey: 'ui.canvasStats.drawCalls', color: '#60A5FA' },
-  { key: 'textures', labelKey: 'ui.canvasStats.textures', color: '#FBBF24' },
-  { key: 'blendBreaks', labelKey: 'ui.canvasStats.blendBreaks', color: '#F87171' },
+  { key: 'renderingImpact', labelKey: 'benchmark.summary.renderingImpact', color: '#2DD4A8' },
+  { key: 'computationalImpact', labelKey: 'benchmark.summary.computationalImpact', color: '#F472B6' },
 ];
 
 const CHART_HEIGHT = 120;
 const CHART_PADDING = { top: 8, right: 8, bottom: 20, left: 32 };
+
+function formatMetricValue(key: MetricKey, value: number): string {
+  switch (key) {
+    case 'renderingImpact':
+    case 'computationalImpact':
+      return value.toFixed(2);
+    default:
+      return `${value}`;
+  }
+}
 
 function MetricChart({
   frames,
@@ -232,10 +241,18 @@ function ChartTooltip({ frame, index }: { frame: FrameMetrics; index: number }) 
       <span className="perf-chart-tooltip-frame">{t('animationHeatmap.tooltip.frame', { index, time: frame.time.toFixed(3) })}</span>
       {METRICS.map((m) => (
         <span key={m.key} className="perf-chart-tooltip-val" style={{ color: m.color }}>
-          {t('animationHeatmap.tooltip.metric', { label: t(m.labelKey), value: frame[m.key] as number })}
+          {t('animationHeatmap.tooltip.metric', {
+            label: t(m.labelKey),
+            value: formatMetricValue(m.key, frame[m.key] as number),
+          })}
         </span>
       ))}
+      <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.totalImpact', { value: frame.totalImpact.toFixed(2) })}</span>
+      <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.drawCalls', { value: frame.drawCalls })}</span>
+      <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.textures', { value: frame.textures })}</span>
+      <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.clippingMasks', { value: frame.clippingMasks })}</span>
       <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.pageBreaks', { value: frame.pageBreaks })}</span>
+      <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.blendBreaks', { value: frame.blendBreaks })}</span>
       <span className="perf-chart-tooltip-val">{t('animationHeatmap.tooltip.visibleSlots', { value: frame.visibleSlots })}</span>
     </div>
   );
@@ -249,10 +266,34 @@ function FrameDetail({ frame, index }: { frame: FrameMetrics; index: number }) {
       <div className="heatmap-frame-detail-header">
         <strong>{t('animationHeatmap.frameDetail.frameTitle', { index })}</strong>
         <span>{t('animationHeatmap.frameDetail.time', { time: frame.time.toFixed(3) })}</span>
+        <span>{t('animationHeatmap.frameDetail.renderingImpact', { value: frame.renderingImpact.toFixed(2) })}</span>
+        <span>{t('animationHeatmap.frameDetail.computationalImpact', { value: frame.computationalImpact.toFixed(2) })}</span>
+        <span>{t('animationHeatmap.frameDetail.totalImpact', { value: frame.totalImpact.toFixed(2) })}</span>
         <span>{t('animationHeatmap.frameDetail.drawCalls', { value: frame.drawCalls })}</span>
         <span>{t('animationHeatmap.frameDetail.textures', { value: frame.textures })}</span>
+        <span>{t('animationHeatmap.frameDetail.clippingMasks', { value: frame.clippingMasks })}</span>
         <span>{t('animationHeatmap.frameDetail.blendBreaks', { value: frame.blendBreaks })}</span>
         <span>{t('animationHeatmap.frameDetail.pageBreaks', { value: frame.pageBreaks })}</span>
+      </div>
+      <div className="heatmap-frame-detail-impact">
+        <span>
+          {t('animationHeatmap.frameDetail.renderingFormula', {
+            blends: frame.nonNormalBlends,
+            masks: frame.clippingMasks,
+            vertices: frame.meshVertices,
+          })}
+        </span>
+        <span>
+          {t('animationHeatmap.frameDetail.computationalFormula', {
+            physics: frame.activePhysicsCount,
+            path: frame.activePathCount,
+            ik: frame.activeIkCount,
+            transform: frame.activeTransformCount,
+            deformed: frame.deformedMeshCount,
+            weighted: frame.weightedMeshCount,
+            vertices: frame.meshVertices,
+          })}
+        </span>
       </div>
       <div className="heatmap-slot-list-header">
         <span className="heatmap-slot-idx">{t('drawCallInspector.list.headers.index')}</span>
@@ -305,9 +346,8 @@ function AnimationHeatmapPanel({ animData, isSelected, onSelect }: { animData: A
 
   const ranges = useMemo(() => {
     const r: Record<MetricKey, MetricRange> = {
-      drawCalls: computeRange(animData.frames, 'drawCalls'),
-      textures: computeRange(animData.frames, 'textures'),
-      blendBreaks: computeRange(animData.frames, 'blendBreaks'),
+      renderingImpact: computeRange(animData.frames, 'renderingImpact'),
+      computationalImpact: computeRange(animData.frames, 'computationalImpact'),
     };
     return r;
   }, [animData.frames]);
@@ -333,9 +373,9 @@ function AnimationHeatmapPanel({ animData, isSelected, onSelect }: { animData: A
                 <span className="perf-chart-legend-swatch" style={{ background: m.color }} />
                 {t('animationHeatmap.legend.metricRange', {
                   label: t(m.labelKey),
-                  min: ranges[m.key].min,
-                  max: ranges[m.key].max,
-                  avg: ranges[m.key].avg,
+                  min: formatMetricValue(m.key, ranges[m.key].min),
+                  max: formatMetricValue(m.key, ranges[m.key].max),
+                  avg: formatMetricValue(m.key, ranges[m.key].avg),
                 })}
               </span>
             ))}
