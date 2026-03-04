@@ -2502,6 +2502,170 @@ input[type="color"]::-webkit-color-swatch {
   font-family: var(--sb-font-mono);
 }
 
+.impact-delta-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.impact-delta-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.impact-delta-panel {
+  margin: 18px 0 20px;
+  padding: 14px;
+  background: var(--sb-bg-2);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--sb-radius-md);
+}
+
+.impact-delta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.impact-delta-card {
+  border-radius: var(--sb-radius-sm);
+  border: 1px solid var(--sb-border);
+  background: var(--sb-bg-1);
+  padding: 10px;
+}
+
+.impact-delta-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.impact-delta-direction {
+  font-family: var(--sb-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.impact-delta-values {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--sb-font-mono);
+  font-size: 11px;
+  color: var(--sb-text-secondary);
+}
+
+.impact-delta-better {
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #34d399;
+}
+
+.impact-delta-worse {
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #f87171;
+}
+
+.impact-delta-neutral {
+  border-color: rgba(148, 163, 184, 0.35);
+  color: #94a3b8;
+}
+
+.impact-delta-animation-list {
+  margin-top: 12px;
+  border-top: 1px solid var(--sb-border);
+  padding-top: 10px;
+}
+
+.impact-delta-animation-list h4 {
+  margin: 0 0 6px;
+}
+
+.impact-delta-animation-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.impact-delta-animation-row span:last-child {
+  font-family: var(--sb-font-mono);
+  color: var(--sb-text-secondary);
+}
+
+.impact-delta-better span:last-child,
+.impact-delta-animation-row.impact-delta-better span:last-child {
+  color: #34d399;
+}
+
+.impact-delta-worse span:last-child,
+.impact-delta-animation-row.impact-delta-worse span:last-child {
+  color: #f87171;
+}
+
+.impact-advisor-panel {
+  margin-top: 20px;
+}
+
+.impact-advisor-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.impact-advisor-card {
+  border-radius: var(--sb-radius-sm);
+  border: 1px solid var(--sb-border);
+  background: var(--sb-bg-2);
+  padding: 12px;
+}
+
+.impact-advisor-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.impact-advisor-severity {
+  font-family: var(--sb-font-mono);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+.impact-advisor-card p {
+  margin: 0 0 6px;
+  color: var(--sb-text-secondary);
+}
+
+.impact-advisor-card small {
+  color: var(--sb-text-muted);
+}
+
+.impact-advisor-warning {
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.impact-advisor-critical {
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.impact-advisor-info {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+@media (max-width: 1100px) {
+  .impact-delta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 /* ── 28. Feature Tags ─────────────────────────────────────────────── */
 .feature-tags {

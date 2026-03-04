@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimationControls } from '../components/AnimationControls';
 import { useWorkbench } from '../workbench/WorkbenchContext';
@@ -8,6 +8,8 @@ import { reparentPixiCanvas } from '../hooks/usePixiApp';
 import { getStatColor } from '../core/utils/colorUtils';
 import { worstRenderingImpact, worstComputationalImpact } from '../core/utils/scoreCalculator';
 import { RouteHeaderCard } from '../components/RouteHeaderCard';
+import { analyzeDrawCallsFromAsset } from '../core/tools/drawCallUtils';
+import type { ImpactSupplementalMetrics } from '../core/SpineAnalyzer';
 
 // Analysis components
 import { Summary } from '../components/analysis/Summary';
@@ -36,6 +38,8 @@ export function BenchmarkRouteView() {
     loadStoredAsset,
     loadFromUrls,
     uploadBundleFiles,
+    selectedAsset,
+    selectedAtlasName,
   } = useWorkbench();
 
   // Re-parent the singleton PIXI canvas into this route's pixi-host div
@@ -64,6 +68,30 @@ export function BenchmarkRouteView() {
   const computational = benchmarkData && benchmarkData.animations.length > 0
     ? worstComputationalImpact(benchmarkData.animations)
     : null;
+
+  const supplementalImpact = useMemo<ImpactSupplementalMetrics | undefined>(() => {
+    if (!selectedAsset) return undefined;
+    try {
+      const drawCall = analyzeDrawCallsFromAsset(selectedAsset, selectedAtlasName ?? undefined);
+      const perAnimation: ImpactSupplementalMetrics['perAnimation'] = {};
+      drawCall.animationStats.forEach((stat) => {
+        perAnimation[stat.name] = {
+          drawCalls: stat.worstDrawCalls,
+          pageBreaks: Math.max(0, stat.worstDrawCalls - 1),
+        };
+      });
+
+      return {
+        drawCalls: drawCall.base.drawCalls,
+        pageBreaks: drawCall.base.pageBreaks,
+        blendBreaks: drawCall.base.blendBreaks,
+        uniquePages: drawCall.uniquePages,
+        perAnimation,
+      };
+    } catch {
+      return undefined;
+    }
+  }, [selectedAsset, selectedAtlasName]);
 
   return (
     <div className="route-workspace">
@@ -127,7 +155,7 @@ export function BenchmarkRouteView() {
               </div>
 
               <div className="benchmark-sidebar-content">
-                <Summary data={benchmarkData} />
+                <Summary data={benchmarkData} supplemental={supplementalImpact} />
                 <hr className="benchmark-section-divider" />
                 <MeshAnalysis data={benchmarkData} />
                 <hr className="benchmark-section-divider" />

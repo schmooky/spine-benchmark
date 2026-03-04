@@ -385,7 +385,66 @@
       },
       "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
       "medianPerformanceLabel": "{{rating}} профиль влияния",
-      "durationSeconds": "{{value}}s"
+      "durationSeconds": "{{value}}s",
+      "delta": {
+        "title": "Дельта влияния (A vs B)",
+        "hint": "Зафиксируйте текущий результат как базу A, затем загрузите другой ассет как B для сравнения.",
+        "actions": {
+          "captureBaseline": "Сделать текущий baseline A",
+          "clearBaseline": "Очистить baseline"
+        },
+        "activeBaseline": "База A: {{baseline}} · Текущий B: {{current}}",
+        "totalImpact": "Суммарное влияние",
+        "pageBreaks": "Нагрузка разрывов страниц",
+        "blendSwitches": "Нагрузка переключений blend",
+        "meshDensity": "Нагрузка плотности мешей",
+        "constraints": "Нагрузка ограничений",
+        "baselineValue": "A: {{value}}",
+        "currentValue": "B: {{value}}",
+        "deltaValue": "Δ: {{value}}",
+        "perAnimationTitle": "Дельты по анимациям",
+        "direction": {
+          "better": "Лучше",
+          "worse": "Хуже",
+          "neutral": "Без изменений"
+        },
+        "animation": {
+          "new": "Новая в B",
+          "removed": "Удалена из B",
+          "delta": "A {{baseline}} → B {{current}} (Δ {{delta}})"
+        }
+      },
+      "advisor": {
+        "title": "Советник по влиянию",
+        "affectedAnimations": "Затронутые анимации: {{names}}",
+        "severity": {
+          "info": "Инфо",
+          "warning": "Предупреждение",
+          "critical": "Критично"
+        },
+        "rules": {
+          "pageBreakPressure": {
+            "title": "Высокая нагрузка разрывов страниц",
+            "body": "Пиковые разрывы страниц: {{pageBreaks}}. Объединяйте страницы атласа и держите draw order более последовательным."
+          },
+          "blendSwitchPressure": {
+            "title": "Высокая нагрузка переключений blend",
+            "body": "Пиковые non-normal переключения blend: {{switches}}. Сгруппируйте additive/multiply и уменьшите переключения в кадре."
+          },
+          "meshDensityPressure": {
+            "title": "Высокая плотность мешей",
+            "body": "Пиковые активные вершины: {{vertices}}. Упростите плотные меши, особенно деформируемые и взвешенные."
+          },
+          "constraintPressure": {
+            "title": "Высокая нагрузка ограничений",
+            "body": "Пиковые активные ограничения: {{constraints}} (physics: {{physics}}, IK: {{ik}}). Запекайте или упрощайте дорогие ограничения."
+          },
+          "stableProfile": {
+            "title": "Профиль влияния стабильный",
+            "body": "Критичных hotspot-рисков не обнаружено. Продолжайте отслеживать дельты при добавлении новых ассетов."
+          }
+        }
+      }
     },
     "impact": {
       "rendering": "Влияние на рендеринг",
@@ -393,10 +452,12 @@
       "blendBreaks": "{{count}} разрывов смешивания",
       "clipMasks": "{{count}} масок обрезки",
       "peakVertices": "{{count}} пиковых вершин",
+      "pageBreaks": "{{count}} разрывов страниц",
       "physicsCount": "{{count}} физики",
       "ikCount": "{{count}} IK",
       "deformedCount": "{{count}} деформированных",
-      "weightedCount": "{{count}} взвешенных"
+      "weightedCount": "{{count}} взвешенных",
+      "constraintsCount": "{{count}} ограничений"
     },
     "scores": {
       "ratings": {
