@@ -19,6 +19,7 @@ export function ComparisonRouteView() {
     uploadBundleFiles,
     formatBytes,
     loadFromUrls,
+    viewportBackground,
   } = useWorkbench();
 
   const [isLoadingSelected, setIsLoadingSelected] = useState(false);
@@ -29,8 +30,8 @@ export function ComparisonRouteView() {
   const comparisonRootRef = useRef<HTMLDivElement | null>(null);
 
   // Per-pane hooks
-  const leftPane = useComparisonApp(leftHostRef);
-  const rightPane = useComparisonApp(rightHostRef);
+  const leftPane = useComparisonApp(leftHostRef, viewportBackground);
+  const rightPane = useComparisonApp(rightHostRef, viewportBackground);
 
   // Asset selection
   const [leftAssetId, setLeftAssetId] = useState<string>('');

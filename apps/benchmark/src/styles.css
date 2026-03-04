@@ -4403,7 +4403,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .constraint-baker-list-header {
   display: grid;
-  grid-template-columns: 72px 1fr 1fr 52px 52px;
+  grid-template-columns: 84px 1fr 1fr 52px 52px;
   gap: 4px;
   padding: 6px 14px 6px 18px;
   font-size: 10px;
@@ -4423,7 +4423,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .constraint-baker-row {
   display: grid;
-  grid-template-columns: 72px 1fr 1fr 52px 52px;
+  grid-template-columns: 84px 1fr 1fr 52px 52px;
   gap: 4px;
   padding: 4px 14px 4px 18px;
   font-size: 12px;
@@ -5758,7 +5758,9 @@ select:focus,
 .route-workspace > .physics-baker-layout,
 .route-workspace > .assets-layout {
   display: grid;
-  grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "canvas panel panel";
   gap: 16px;
   overflow: hidden;
   min-width: 0;
@@ -5767,7 +5769,9 @@ select:focus,
 .route-workspace > .mesh-inspector-layout.with-side-insight,
 .route-workspace > .dc-inspector-layout.with-side-insight,
 .route-workspace > .atlas-repack-layout.with-side-insight {
-  grid-template-columns: minmax(340px, 500px) minmax(0, 1fr) minmax(280px, 332px);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "canvas panel info";
 }
 
 .route-workspace > .benchmark-inspector-layout {
@@ -5798,6 +5802,32 @@ select:focus,
   height: 100%;
   min-height: 0;
   min-width: 0;
+}
+
+.route-workspace > .benchmark-inspector-layout > .tool-canvas,
+.route-workspace > .mesh-inspector-layout > .tool-canvas,
+.route-workspace > .dc-inspector-layout > .tool-canvas,
+.route-workspace > .atlas-repack-layout > .tool-canvas,
+.route-workspace > .heatmap-layout > .tool-canvas,
+.route-workspace > .physics-baker-layout > .tool-canvas,
+.route-workspace > .assets-layout > .tool-canvas {
+  grid-area: canvas;
+}
+
+.route-workspace > .benchmark-inspector-layout > .tool-panel,
+.route-workspace > .mesh-inspector-layout > .tool-panel,
+.route-workspace > .dc-inspector-layout > .tool-panel,
+.route-workspace > .atlas-repack-layout > .tool-panel,
+.route-workspace > .heatmap-layout > .tool-panel,
+.route-workspace > .physics-baker-layout > .tool-panel,
+.route-workspace > .assets-layout > .tool-panel {
+  grid-area: panel;
+}
+
+.route-workspace > .mesh-inspector-layout.with-side-insight > .tool-info-panel,
+.route-workspace > .dc-inspector-layout.with-side-insight > .tool-info-panel,
+.route-workspace > .atlas-repack-layout.with-side-insight > .tool-info-panel {
+  grid-area: info;
 }
 
 .route-workspace .tool-panel {
@@ -6746,6 +6776,7 @@ select:focus,
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+  background: var(--sb-canvas-bg);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -6760,9 +6791,6 @@ select:focus,
   left: 12px;
   right: auto;
   gap: 6px;
-  --sb-canvas-overlay-text: #f5f5f3;
-  --sb-canvas-overlay-muted: rgba(245, 245, 243, 0.84);
-  --sb-canvas-overlay-shadow: 0 1px 2px rgba(0, 0, 0, 0.72), 0 0 8px rgba(0, 0, 0, 0.45);
 }
 
 .comparison-pane-res-badge {
@@ -6953,23 +6981,14 @@ select:focus,
   .route-workspace > .mesh-inspector-layout.with-side-insight,
   .route-workspace > .dc-inspector-layout.with-side-insight,
   .route-workspace > .atlas-repack-layout.with-side-insight {
-    grid-template-columns: minmax(320px, 460px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) minmax(200px, 34vh);
-  }
-
-  .route-workspace > .with-side-insight > .tool-panel {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-  }
-
-  .route-workspace > .with-side-insight > .tool-canvas {
-    grid-column: 2;
-    grid-row: 1;
+    grid-template-areas:
+      "canvas panel"
+      "canvas info";
   }
 
   .route-workspace > .with-side-insight > .tool-info-panel {
-    grid-column: 2;
-    grid-row: 2;
     min-height: 200px;
     max-height: 34vh;
   }
@@ -7044,19 +7063,23 @@ select:focus,
   .route-workspace > .physics-baker-layout,
   .route-workspace > .assets-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(320px, 56vh) auto;
+    grid-template-areas:
+      "canvas"
+      "panel";
     height: auto;
     min-height: 0;
   }
 
   .route-workspace > .with-side-insight {
-    grid-template-rows: none;
+    grid-template-rows: minmax(320px, 56vh) auto auto;
+    grid-template-areas:
+      "canvas"
+      "panel"
+      "info";
   }
 
-  .route-workspace > .with-side-insight > .tool-panel,
-  .route-workspace > .with-side-insight > .tool-canvas,
   .route-workspace > .with-side-insight > .tool-info-panel {
-    grid-column: auto;
-    grid-row: auto;
     max-height: none;
   }
 

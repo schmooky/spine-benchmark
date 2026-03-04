@@ -21,12 +21,19 @@ function destroyComparisonApp(app: Application): void {
 
 export function useComparisonApp(
   containerRef: RefObject<HTMLDivElement | null>,
+  backgroundColor: string,
 ): ComparisonPane {
   const appRef = useRef<Application | null>(null);
   const viewportRef = useRef<Container | null>(null);
   const [spine, setSpine] = useState<Spine | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
+
+  const parseBackgroundColor = useCallback((value: string): number => {
+    const normalized = value.replace('#', '').trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return 0xefefec;
+    return Number.parseInt(normalized, 16);
+  }, []);
 
   // Create Pixi Application on mount
   useEffect(() => {
@@ -42,7 +49,7 @@ export function useComparisonApp(
         resolution: 2,
         autoDensity: true,
         resizeTo: container,
-        backgroundColor: 0x08090c,
+        backgroundColor: parseBackgroundColor(backgroundColor),
       });
 
       if (destroyed) {
@@ -74,7 +81,13 @@ export function useComparisonApp(
       setReady(false);
       setSpine(null);
     };
-  }, [containerRef]);
+  }, [containerRef, parseBackgroundColor]);
+
+  useEffect(() => {
+    const app = appRef.current;
+    if (!app) return;
+    app.renderer.background.color = parseBackgroundColor(backgroundColor);
+  }, [backgroundColor, parseBackgroundColor]);
 
   const loadAsset = useCallback(
     async (asset: StoredAsset) => {

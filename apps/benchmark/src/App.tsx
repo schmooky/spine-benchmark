@@ -816,13 +816,13 @@ const App: React.FC = () => {
               <span className="tool-chip-icon" aria-hidden="true"><LinkGlyph className="icon" size={14} strokeWidth={2} /></span>
               <span className="tool-chip-label">{t('dashboard.tools.atlasRepack')}</span>
             </Link>
-            <Link to="/tools/comparison" className={`tool-chip ${pathname.startsWith('/tools/comparison') ? 'active' : ''}`}>
-              <span className="tool-chip-icon" aria-hidden="true"><Play className="icon" size={14} strokeWidth={2} /></span>
-              <span className="tool-chip-label">{t('dashboard.tools.comparison')}</span>
-            </Link>
             <Link to="/tools/animation-heatmap" className={`tool-chip ${pathname.startsWith('/tools/animation-heatmap') ? 'active' : ''}`}>
               <span className="tool-chip-icon" aria-hidden="true"><Sparkles className="icon" size={14} strokeWidth={2} /></span>
               <span className="tool-chip-label">{t('dashboard.tools.animationHeatmap')}</span>
+            </Link>
+            <Link to="/tools/comparison" className={`tool-chip ${pathname.startsWith('/tools/comparison') ? 'active' : ''}`}>
+              <span className="tool-chip-icon" aria-hidden="true"><Play className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.tools.comparison')}</span>
             </Link>
           </div>
         </section>
