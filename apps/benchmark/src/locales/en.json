@@ -787,6 +787,7 @@
       "assetLibrary": "Asset Library",
       "documentation": "Documentation",
       "partners": "Partners",
+      "options": "Options",
       "partnerTools": "Partner Tools",
       "guides": "Guides",
       "community": "Community"
@@ -1544,6 +1545,28 @@
     },
     "links": {
       "pixi": "PixiJS"
+    }
+  },
+  "options": {
+    "subtitle": "Configure viewport visuals and mesh highlight behavior.",
+    "actions": {
+      "resetAll": "Reset All Defaults"
+    },
+    "viewport": {
+      "title": "Viewport Background",
+      "description": "The canvas background is synced with the page tone for a seamless viewport.",
+      "selectColor": "Use {{color}}",
+      "customColor": "Custom color",
+      "reset": "Reset Viewport Background"
+    },
+    "highlight": {
+      "title": "Mesh Highlight",
+      "description": "Used by mesh and draw-call inspection overlays.",
+      "color": "Mesh color",
+      "lineWidth": "Line width",
+      "lineWidthValue": "{{value}} px",
+      "pixelLine": "Default: 1px pixel line",
+      "reset": "Reset Highlight Style"
     }
   }
 }

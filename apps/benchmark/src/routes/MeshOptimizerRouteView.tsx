@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 import { AnimationControls } from '../components/AnimationControls';
@@ -13,7 +13,7 @@ import { optimizeJson, OptimizationReport } from '../core/meshOptimizer';
 import { renderMeshPreview, MeshPreviewResult } from '../core/meshPreviewRenderer';
 import { getStatColor } from '../core/utils/colorUtils';
 import { RouteHeaderCard } from '../components/RouteHeaderCard';
-import { CogIcon, XMarkIcon } from '../components/Icons';
+import { XMarkIcon } from '../components/Icons';
 import {
   MetricExplainerModal,
   MetricInsightModel,
@@ -23,14 +23,6 @@ import {
 } from '../components/insights/MetricInsightTools';
 
 type MeshFilterMode = 'all' | 'deformed' | 'weighted';
-const DEFAULT_HIGHLIGHT_COLOR = '#2dd4a8';
-const DEFAULT_HIGHLIGHT_WIDTH = 1;
-
-function hexToPixiColor(hexColor: string): number {
-  const normalized = hexColor.replace('#', '');
-  const parsed = Number.parseInt(normalized, 16);
-  return Number.isFinite(parsed) ? parsed : 0x2dd4a8;
-}
 
 function getActiveMesh(
   snapshot: ReturnType<typeof useMeshInspector>,
@@ -69,7 +61,6 @@ export function MeshOptimizerRouteView() {
     saveAndLoadOptimizedAsset,
     setHighlightedMeshSlot,
     setSlotHighlight,
-    setMeshHighlightStyle,
     routeSelection,
     setRouteSelection,
     lastLoadError,
@@ -87,10 +78,6 @@ export function MeshOptimizerRouteView() {
   const [meshPreview, setMeshPreview] = useState<MeshPreviewResult | null>(null);
   const [showExplainer, setShowExplainer] = useState(false);
   const [filterMode, setFilterMode] = useState<MeshFilterMode>('all');
-  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
-  const [highlightColor, setHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR);
-  const [highlightLineWidth, setHighlightLineWidth] = useState(DEFAULT_HIGHLIGHT_WIDTH);
-  const highlightControlsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (pixiContainerRef.current) {
@@ -106,49 +93,6 @@ export function MeshOptimizerRouteView() {
       setSlotHighlight(null);
     };
   }, [toggleMeshes, setHighlightedMeshSlot, setSlotHighlight]);
-
-  useEffect(() => {
-    setMeshHighlightStyle({
-      color: hexToPixiColor(highlightColor),
-      lineWidth: highlightLineWidth,
-    });
-  }, [highlightColor, highlightLineWidth, setMeshHighlightStyle]);
-
-  useEffect(() => {
-    return () => {
-      setMeshHighlightStyle({
-        color: hexToPixiColor(DEFAULT_HIGHLIGHT_COLOR),
-        lineWidth: DEFAULT_HIGHLIGHT_WIDTH,
-      });
-    };
-  }, [setMeshHighlightStyle]);
-
-  useEffect(() => {
-    if (!showHighlightMenu) return;
-
-    const handleDocumentMouseDown = (event: MouseEvent) => {
-      if (
-        highlightControlsRef.current &&
-        event.target instanceof Node &&
-        !highlightControlsRef.current.contains(event.target)
-      ) {
-        setShowHighlightMenu(false);
-      }
-    };
-
-    const handleDocumentKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setShowHighlightMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleDocumentMouseDown);
-    document.addEventListener('keydown', handleDocumentKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleDocumentMouseDown);
-      document.removeEventListener('keydown', handleDocumentKeyDown);
-    };
-  }, [showHighlightMenu]);
 
   useEffect(() => {
     setReport(null);
@@ -615,58 +559,6 @@ export function MeshOptimizerRouteView() {
                 >
                   {t('meshOptimizer.filters.weighted')}
                 </button>
-                <div className="mesh-highlight-controls" ref={highlightControlsRef}>
-                  <button
-                    type="button"
-                    className={`route-jump-chip mesh-highlight-config-trigger${showHighlightMenu ? ' active' : ''}`}
-                    onClick={() => setShowHighlightMenu((open) => !open)}
-                  >
-                    <CogIcon size={12} />
-                    <span>{t('meshOptimizer.highlightControls.button')}</span>
-                  </button>
-                  {showHighlightMenu && (
-                    <div className="mesh-highlight-config-menu">
-                      <label className="mesh-highlight-config-row">
-                        <span>{t('meshOptimizer.highlightControls.color')}</span>
-                        <input
-                          className="mesh-highlight-color-input"
-                          type="color"
-                          value={highlightColor}
-                          onChange={(event) => setHighlightColor(event.target.value)}
-                        />
-                      </label>
-                      <label className="mesh-highlight-config-row">
-                        <span>
-                          {t('meshOptimizer.highlightControls.lineWidth')}: {t('meshOptimizer.highlightControls.lineWidthValue', {
-                            value: highlightLineWidth.toFixed(0),
-                          })}
-                        </span>
-                        <input
-                          className="mesh-highlight-width-slider"
-                          type="range"
-                          min={1}
-                          max={6}
-                          step={1}
-                          value={highlightLineWidth}
-                          onChange={(event) => setHighlightLineWidth(Number.parseFloat(event.target.value))}
-                        />
-                      </label>
-                      <div className="mesh-highlight-config-footnote">
-                        {t('meshOptimizer.highlightControls.pixelLine')}
-                      </div>
-                      <button
-                        type="button"
-                        className="secondary-btn mesh-highlight-reset-btn"
-                        onClick={() => {
-                          setHighlightColor(DEFAULT_HIGHLIGHT_COLOR);
-                          setHighlightLineWidth(DEFAULT_HIGHLIGHT_WIDTH);
-                        }}
-                      >
-                        {t('meshOptimizer.highlightControls.reset')}
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {!jsonFile && (

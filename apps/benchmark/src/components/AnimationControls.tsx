@@ -102,12 +102,12 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
   // Handle play/pause
   useEffect(() => {
     if (!spineInstance) return;
-    
-    if (isPlaying) {
-      spineInstance.state.timeScale = 1;
-    } else {
-      spineInstance.state.timeScale = 0;
-    }
+
+    const hasTrack = Boolean(spineInstance.state.getCurrent(0)?.animation);
+    // Heatmap sampling temporarily clears tracks; avoid forcing a paused timeScale in that window.
+    if (!hasTrack && !isPlaying) return;
+
+    spineInstance.state.timeScale = isPlaying ? 1 : 0;
   }, [isPlaying, spineInstance]);
   
   const playAnimation = (name: string, loop: boolean = isLooping) => {

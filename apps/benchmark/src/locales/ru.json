@@ -783,6 +783,7 @@
       "community": "Сообщество",
       "documentation": "Документация",
       "partners": "Партнёры",
+      "options": "Параметры",
       "navigation": "Навигация"
     },
     "tools": {
@@ -1544,6 +1545,28 @@
     },
     "links": {
       "pixi": "PixiJS"
+    }
+  },
+  "options": {
+    "subtitle": "Настройте фон вьюпорта и стиль подсветки мешей.",
+    "actions": {
+      "resetAll": "Сбросить всё"
+    },
+    "viewport": {
+      "title": "Фон вьюпорта",
+      "description": "Фон canvas синхронизирован с фоном страницы для цельного вида.",
+      "selectColor": "Использовать {{color}}",
+      "customColor": "Пользовательский цвет",
+      "reset": "Сбросить фон вьюпорта"
+    },
+    "highlight": {
+      "title": "Подсветка мешей",
+      "description": "Используется в оверлеях инспектора мешей и draw-call.",
+      "color": "Цвет меша",
+      "lineWidth": "Толщина линии",
+      "lineWidthValue": "{{value}} px",
+      "pixelLine": "По умолчанию: 1px pixel line",
+      "reset": "Сбросить стиль подсветки"
     }
   }
 }

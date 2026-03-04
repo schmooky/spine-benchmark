@@ -29,6 +29,7 @@ import {
   Play,
   Rabbit,
   RotateCcw,
+  SlidersHorizontal,
   Sparkles,
   Square,
 } from 'lucide-react';
@@ -49,6 +50,12 @@ type OnboardingStep = 'language' | 'intro';
 
 const ONBOARDING_KEY = 'spine-workbench-onboarding-done-v1';
 const STALE_LOAD_RESULT = '__stale_load_result__';
+const DEFAULT_VIEWPORT_BACKGROUND = '#efefec';
+const LEGACY_VIEWPORT_BACKGROUND = '#282b30';
+const DEFAULT_MESH_HIGHLIGHT_COLOR = '#2dd4a8';
+const DEFAULT_MESH_HIGHLIGHT_WIDTH = 1;
+const MIN_MESH_HIGHLIGHT_WIDTH = 1;
+const MAX_MESH_HIGHLIGHT_WIDTH = 6;
 const DEFAULT_ROUTE_SELECTION: RouteSelectionState = {
   sourceRoute: null,
   slotIndex: null,
@@ -94,13 +101,37 @@ function filterAssetFilesByAtlas(files: File[], selectedAtlasName?: string | nul
   return files.filter((file) => !file.name.endsWith('.atlas') || file.name === selectedAtlasName);
 }
 
+function clampMeshHighlightWidth(value: number): number {
+  return Math.min(MAX_MESH_HIGHLIGHT_WIDTH, Math.max(MIN_MESH_HIGHLIGHT_WIDTH, Math.round(value)));
+}
+
+function normalizeHexColor(value: string, fallback: string): string {
+  const candidate = value.trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(candidate) ? candidate : fallback;
+}
+
+function hexToPixiColor(hexColor: string, fallback: number): number {
+  const normalized = hexColor.replace('#', '').trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return fallback;
+  const parsed = Number.parseInt(normalized, 16);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const pixiContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', '#282b30');
+  const [backgroundColor, setBackgroundColor] = useSafeLocalStorage('spine-benchmark-bg-color', DEFAULT_VIEWPORT_BACKGROUND);
+  const [meshHighlightColor, setMeshHighlightColor] = useSafeLocalStorage(
+    'spine-benchmark-mesh-highlight-color',
+    DEFAULT_MESH_HIGHLIGHT_COLOR
+  );
+  const [meshHighlightLineWidth, setMeshHighlightLineWidth] = useSafeLocalStorage(
+    'spine-benchmark-mesh-highlight-width',
+    DEFAULT_MESH_HIGHLIGHT_WIDTH
+  );
   const [showBenchmark, setShowBenchmark] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
@@ -114,6 +145,7 @@ const App: React.FC = () => {
   const [pixelFootprint, setPixelFootprint] = useState<{ width: number; height: number; coverage: number } | null>(null);
   const [routeSelection, setRouteSelection] = useState<RouteSelectionState>(DEFAULT_ROUTE_SELECTION);
   const [lastLoadError, setLastLoadError] = useState<string | null>(null);
+  const migratedLegacyBackgroundRef = useRef(false);
 
   const { addToast } = useToast();
   const { updateHash, getStateFromHash, onHashChange } = useUrlHash();
@@ -141,6 +173,54 @@ const App: React.FC = () => {
     setSlotHighlight,
     setMeshHighlightStyle,
   } = useSpineApp(app);
+
+  useEffect(() => {
+    const normalizedBackground = normalizeHexColor(backgroundColor, DEFAULT_VIEWPORT_BACKGROUND);
+    if (normalizedBackground !== backgroundColor) {
+      setBackgroundColor(normalizedBackground);
+      return;
+    }
+    if (!migratedLegacyBackgroundRef.current && normalizedBackground === LEGACY_VIEWPORT_BACKGROUND) {
+      migratedLegacyBackgroundRef.current = true;
+      setBackgroundColor(DEFAULT_VIEWPORT_BACKGROUND);
+    }
+  }, [backgroundColor, setBackgroundColor]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--sb-page-bg', backgroundColor);
+    root.style.setProperty('--sb-canvas-bg', backgroundColor);
+    return () => {
+      root.style.removeProperty('--sb-page-bg');
+      root.style.removeProperty('--sb-canvas-bg');
+    };
+  }, [backgroundColor]);
+
+  useEffect(() => {
+    const normalizedHighlightColor = normalizeHexColor(meshHighlightColor, DEFAULT_MESH_HIGHLIGHT_COLOR);
+    if (normalizedHighlightColor !== meshHighlightColor) {
+      setMeshHighlightColor(normalizedHighlightColor);
+      return;
+    }
+
+    const normalizedLineWidth = clampMeshHighlightWidth(meshHighlightLineWidth);
+    if (normalizedLineWidth !== meshHighlightLineWidth) {
+      setMeshHighlightLineWidth(normalizedLineWidth);
+      return;
+    }
+
+    setMeshHighlightStyle({
+      color: hexToPixiColor(normalizedHighlightColor, 0x2dd4a8),
+      lineWidth: normalizedLineWidth,
+    });
+  }, [
+    app,
+    meshHighlightColor,
+    meshHighlightLineWidth,
+    setMeshHighlightColor,
+    setMeshHighlightLineWidth,
+    setMeshHighlightStyle,
+  ]);
 
   const loadAssetFromRemoteBundle = useCallback(
     async (
@@ -641,6 +721,12 @@ const App: React.FC = () => {
     setHighlightedMeshSlot,
     setSlotHighlight,
     setMeshHighlightStyle,
+    viewportBackground: backgroundColor,
+    setViewportBackground: setBackgroundColor,
+    meshHighlightColor,
+    setMeshHighlightColor,
+    meshHighlightLineWidth,
+    setMeshHighlightLineWidth,
     routeSelection,
     setRouteSelection,
     lastLoadError,
@@ -679,6 +765,9 @@ const App: React.FC = () => {
     setHighlightedMeshSlot,
     setSlotHighlight,
     setMeshHighlightStyle,
+    backgroundColor,
+    meshHighlightColor,
+    meshHighlightLineWidth,
     routeSelection,
     lastLoadError
   ]);
@@ -742,6 +831,10 @@ const App: React.FC = () => {
             <Link to="/partners" className={`tool-chip ${pathname.startsWith('/partners') ? 'active' : ''}`}>
               <span className="tool-chip-icon" aria-hidden="true"><Sparkles className="icon" size={14} strokeWidth={2} /></span>
               <span className="tool-chip-label">{t('dashboard.sections.partners')}</span>
+            </Link>
+            <Link to="/options" className={`tool-chip ${pathname.startsWith('/options') ? 'active' : ''}`}>
+              <span className="tool-chip-icon" aria-hidden="true"><SlidersHorizontal className="icon" size={14} strokeWidth={2} /></span>
+              <span className="tool-chip-label">{t('dashboard.sections.options')}</span>
             </Link>
           </div>
         </section>

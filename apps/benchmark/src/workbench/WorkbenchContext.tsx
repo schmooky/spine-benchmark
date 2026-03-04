@@ -58,6 +58,12 @@ export interface WorkbenchContextValue {
   setHighlightedMeshSlot: (slotName: string | null) => void;
   setSlotHighlight: (slotIndex: number | null) => void;
   setMeshHighlightStyle: (style: { color?: number; lineWidth?: number }) => void;
+  viewportBackground: string;
+  setViewportBackground: React.Dispatch<React.SetStateAction<string>>;
+  meshHighlightColor: string;
+  setMeshHighlightColor: React.Dispatch<React.SetStateAction<string>>;
+  meshHighlightLineWidth: number;
+  setMeshHighlightLineWidth: React.Dispatch<React.SetStateAction<number>>;
   routeSelection: RouteSelectionState;
   setRouteSelection: React.Dispatch<React.SetStateAction<RouteSelectionState>>;
   lastLoadError: string | null;

@@ -151,11 +151,9 @@ export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHe
         return;
       }
 
-      // Sampling mutates live animation state; keep render pipeline away from transient states.
+      // Sampling mutates live animation state; keep it hidden from rendering while we sample.
       const previousVisible = targetSpine.visible;
-      const previousRenderable = targetSpine.renderable;
       targetSpine.visible = false;
-      targetSpine.renderable = false;
 
       try {
         const animations = targetSpine.skeleton.data.animations;
@@ -266,7 +264,6 @@ export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHe
         setData([]);
       } finally {
         targetSpine.visible = previousVisible;
-        targetSpine.renderable = previousRenderable;
         isAnalyzingRef.current = false;
         if (runId === analysisRunRef.current) {
           setIsAnalyzing(false);

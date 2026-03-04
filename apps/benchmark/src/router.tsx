@@ -17,6 +17,7 @@ import { DrawCallInspectorRouteView } from './routes/DrawCallInspectorRouteView'
 import { AtlasRepackRouteView } from './routes/AtlasRepackRouteView';
 import { ComparisonRouteView } from './routes/ComparisonRouteView';
 import { AnimationHeatmapRouteView } from './routes/AnimationHeatmapRouteView';
+import { OptionsRouteView } from './routes/OptionsRouteView';
 
 const rootRoute = createRootRoute({
   component: () => <App />,
@@ -101,6 +102,12 @@ const partnersRoute = createRoute({
   component: PartnersRouteView,
 });
 
+const optionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/options',
+  component: OptionsRouteView,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   toolsLayoutRoute.addChildren([
@@ -115,6 +122,7 @@ const routeTree = rootRoute.addChildren([
   assetsRoute,
   documentationRoute,
   partnersRoute,
+  optionsRoute,
 ]);
 
 export const router = createRouter({ routeTree });

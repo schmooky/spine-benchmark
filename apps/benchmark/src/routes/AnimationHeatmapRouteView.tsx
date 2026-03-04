@@ -447,8 +447,38 @@ export function AnimationHeatmapRouteView() {
       return;
     }
     if (autoAnalyzedSpineRef.current === spineInstance) return;
-    autoAnalyzedSpineRef.current = spineInstance;
-    analyze();
+
+    let rafId = 0;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 45;
+
+    const runWhenReady = () => {
+      if (cancelled) return;
+
+      const isMountedToStage = Boolean(spineInstance.parent);
+      const hasAnimations = spineInstance.skeleton.data.animations.length > 0;
+      const hasTrack = Boolean(spineInstance.state.getCurrent(0)?.animation);
+      const isReady = isMountedToStage && (!hasAnimations || hasTrack);
+
+      if (isReady || attempts >= maxAttempts) {
+        autoAnalyzedSpineRef.current = spineInstance;
+        analyze();
+        return;
+      }
+
+      attempts += 1;
+      rafId = window.requestAnimationFrame(runWhenReady);
+    };
+
+    rafId = window.requestAnimationFrame(runWhenReady);
+
+    return () => {
+      cancelled = true;
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
   }, [spineInstance, analyze]);
 
   const handlePickAsset = async (assetId: string) => {
