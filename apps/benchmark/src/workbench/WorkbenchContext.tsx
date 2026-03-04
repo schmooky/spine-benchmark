@@ -57,7 +57,6 @@ export interface WorkbenchContextValue {
   saveAndLoadOptimizedAsset: (files: File[], name: string, description: string) => Promise<void>;
   setHighlightedMeshSlot: (slotName: string | null) => void;
   setSlotHighlight: (slotIndex: number | null) => void;
-  setMeshHighlightStyle: (style: { color?: number; lineWidth?: number }) => void;
   viewportBackground: string;
   setViewportBackground: React.Dispatch<React.SetStateAction<string>>;
   meshHighlightColor: string;

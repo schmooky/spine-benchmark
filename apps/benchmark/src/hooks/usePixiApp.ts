@@ -14,11 +14,6 @@ export interface UsePixiAppOptions {
 let singletonApp: Application | null = null;
 let singletonInitPromise: Promise<Application> | null = null;
 
-/** Returns the singleton PIXI canvas element (even if detached from DOM). */
-export function getPixiCanvas(): HTMLCanvasElement | null {
-  return singletonApp?.canvas ?? null;
-}
-
 /** Re-parent the singleton canvas into a new host and update resizeTo so it fills the container. */
 export function reparentPixiCanvas(container: HTMLElement): void {
   if (!singletonApp) return;

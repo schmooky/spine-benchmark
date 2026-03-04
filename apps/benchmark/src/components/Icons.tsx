@@ -6,11 +6,6 @@ interface IconProps {
   size?: number;
 }
 
-const defaultProps = {
-  className: '',
-  size: 24,
-};
-
 // Helper function to create icon components
 const createIcon = (path: React.ReactNode, viewBox = '0 0 24 24') => {
   return ({ className = '', size = 24 }: IconProps) => (
@@ -31,22 +26,6 @@ const createIcon = (path: React.ReactNode, viewBox = '0 0 24 24') => {
     </svg>
   );
 };
-
-// Document Icon
-export const DocumentTextIcon = createIcon(
-  <>
-    <path d="M8 14H16M8 10H16M13 18H8C6.89543 18 6 17.1046 6 16V8C6 6.89543 6.89543 6 8 6H16C17.1046 6 18 6.89543 18 8V13" />
-    <path d="M15 18L18 21M18 21L21 18M18 21V15" />
-  </>
-);
-
-// Question Mark Circle Icon
-export const QuestionMarkCircleIcon = createIcon(
-  <>
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 16V16.01M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12V12.5C11 12.7761 11.2239 13 11.5 13H12Z" />
-  </>
-);
 
 // Play Icon
 export const PlayIcon = createIcon(
@@ -92,42 +71,10 @@ export const XMarkIcon = createIcon(
   <path d="M6 18L18 6M6 6L18 18" />
 );
 
-// Swatch (Color Palette) Icon
-export const SwatchIcon = createIcon(
-  <>
-    <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-    <path d="M15 10l5 5" />
-  </>
-);
-
-// Image Icon
-export const ImageIcon = createIcon(
-  <>
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" />
-    <path d="M21 15l-5-5L5 21" />
-  </>
-);
-
-// Cog (Settings) Icon 
-export const CogIcon = createIcon(
-  <>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
-  </>
-);
-
 export const FolderOpenIcon = createIcon(
   <>
     <path d="M3 7a2 2 0 0 1 2-2h4.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
     <path d="M3 10h18" />
-  </>
-);
-
-export const LinkIcon = createIcon(
-  <>
-    <path d="M10 13a5 5 0 0 1 0-7l1.5-1.5a5 5 0 1 1 7 7L17 13" />
-    <path d="M14 11a5 5 0 0 1 0 7L12.5 19.5a5 5 0 1 1-7-7L7 11" />
   </>
 );
 
@@ -147,59 +94,6 @@ export const ChevronDownIcon = createIcon(
 
 export const CheckIcon = createIcon(
   <path d="M20 6L9 17l-5-5" />
-);
-
-export const TimelineIcon = ({ className = '', size = 24 }: IconProps) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className={`icon ${className}`}
-    aria-hidden="true"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
-    <circle cx="9" cy="9" r="1.5" fill="currentColor" />
-    <circle cx="15" cy="15.75" r="1.5" fill="currentColor" />
-    <rect x="6" y="7.5" width="1" height="9" rx="0.5" fill="currentColor" />
-    <rect x="12" y="7.5" width="1" height="9" rx="0.5" fill="currentColor" />
-    <rect x="18" y="7.5" width="1" height="9" rx="0.5" fill="currentColor" />
-  </svg>
-);
-
-export const MeshIcon = createIcon(
-  <>
-    <rect x="4" y="5" width="16" height="14" rx="2" />
-    <path d="M4 10H20M10 5V19M14 5V19" />
-  </>
-);
-
-export const LayersIcon = createIcon(
-  <>
-    <path d="M12 4L20 8L12 12L4 8L12 4Z" />
-    <path d="M4 12L12 16L20 12" />
-    <path d="M4 16L12 20L20 16" />
-  </>
-);
-
-export const CompareIcon = createIcon(
-  <>
-    <rect x="3.5" y="5" width="7.5" height="14" rx="1.6" />
-    <rect x="13" y="5" width="7.5" height="14" rx="1.6" />
-    <path d="M11 8H13M11 12H13M11 16H13" />
-  </>
-);
-
-export const HeatmapIcon = createIcon(
-  <>
-    <path d="M4 20H20" />
-    <rect x="4.5" y="13" width="3.5" height="7" rx="1" />
-    <rect x="10.25" y="9" width="3.5" height="11" rx="1" />
-    <rect x="16" y="5" width="3.5" height="15" rx="1" />
-  </>
 );
 
 export const TelegramIcon = ({ className = '', size = 24 }: IconProps) => (

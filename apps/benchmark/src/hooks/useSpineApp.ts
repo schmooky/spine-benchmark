@@ -7,8 +7,6 @@ import { useSpineLoader } from './useSpineLoader';
 import { useDebugVisualizer } from './useDebugVisualizer';
 import { useBackgroundManager } from './useBackgroundManager';
 
-export type { DebugFlags } from '../core/debug/DebugFlagsManager';
-
 export function useSpineApp(app: Application | null) {
   const { i18n } = useTranslation();
   const [benchmarkData, setBenchmarkData] = useState<SpineAnalysisResult | null>(null);
