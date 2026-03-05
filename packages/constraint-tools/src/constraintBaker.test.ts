@@ -59,22 +59,22 @@ const VINE_PRO_FIXTURE_PATH = fileURLToPath(
 const VINE_PRO_JSON = readFileSync(VINE_PRO_FIXTURE_PATH, 'utf8');
 
 const TEST_ATTACHMENT_LOADER: AttachmentLoader = {
-  newRegionAttachment(_skin, name, path) {
+  newRegionAttachment(_skin: unknown, name: string, path: string, _sequence: unknown) {
     return new RegionAttachment(name, path);
   },
-  newMeshAttachment(_skin, name, path) {
+  newMeshAttachment(_skin: unknown, name: string, path: string, _sequence: unknown) {
     return new MeshAttachment(name, path);
   },
-  newBoundingBoxAttachment(_skin, name) {
+  newBoundingBoxAttachment(_skin: unknown, name: string) {
     return new BoundingBoxAttachment(name);
   },
-  newPathAttachment(_skin, name) {
+  newPathAttachment(_skin: unknown, name: string) {
     return new PathAttachment(name);
   },
-  newPointAttachment(_skin, name) {
+  newPointAttachment(_skin: unknown, name: string) {
     return new PointAttachment(name);
   },
-  newClippingAttachment(_skin, name) {
+  newClippingAttachment(_skin: unknown, name: string) {
     return new ClippingAttachment(name);
   }
 };
