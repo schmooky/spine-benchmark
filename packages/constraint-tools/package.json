@@ -24,6 +24,7 @@
     "@spine-benchmark/metrics-sampling": "^0.1.0"
   },
   "devDependencies": {
+    "@esotericsoftware/spine-core": "^4.2.101",
     "@spine-benchmark/metrics-sampling": "file:../metrics-sampling",
     "typescript": "^5.9.3"
   }
