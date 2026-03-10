@@ -55,19 +55,15 @@ export abstract class DebugLayer {
   }
 
   protected isPointVisible(x: number, y: number, pad = 0): boolean {
-    return true;
     const r = this.screenRect;
     return x >= r.x - pad && y >= r.y - pad && x <= r.x + r.width + pad && y <= r.y + r.height + pad;
   }
 
   protected isCircleVisible(x: number, y: number, radius: number): boolean {
-    return true;
     return this.isPointVisible(x, y, radius);
   }
 
   protected isSegmentVisible(x1: number, y1: number, x2: number, y2: number): boolean {
-    return true;
-
     if (this.isPointVisible(x1, y1) || this.isPointVisible(x2, y2)) return true;
 
     const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
@@ -77,11 +73,9 @@ export abstract class DebugLayer {
   }
 
   protected isPolylineVisible(points: ArrayLike<number>, stride = 2, xOff = 0, yOff = 1): boolean {
-    return true;
-
     const r = this.screenRect;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    
+
     for (let i = 0; i < points.length; i += stride) {
       const x = points[i + xOff];
       const y = points[i + yOff];
@@ -91,7 +85,7 @@ export abstract class DebugLayer {
       if (y > maxY) maxY = y;
       if (this.isPointVisible(x, y)) return true;
     }
-    
+
     return maxX >= r.x && minX <= r.x + r.width && maxY >= r.y && minY <= r.y + r.height;
   }
 

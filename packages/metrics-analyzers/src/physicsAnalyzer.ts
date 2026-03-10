@@ -12,7 +12,6 @@ export interface ConstraintMetrics {
   transformImpact: number;
   pathImpact: number;
   physicsImpact: number;
-  score: number;
 }
 
 export interface IkConstraintInfo {
@@ -207,19 +206,6 @@ export function analyzePhysicsForAnimation(
   const totalActiveConstraints = activeIkCount + activeTransformCount + 
                                 activePathCount + activePhysicsCount;
   
-  // Calculate constraint score based on weighted impacts
-  let constraintScore = 100;
-  
-  if (totalActiveConstraints > 0) {
-    const totalWeightedImpact = 
-      (ikImpact * PERFORMANCE_FACTORS.IK_WEIGHT) +
-      (transformImpact * PERFORMANCE_FACTORS.TRANSFORM_WEIGHT) +
-      (pathImpact * PERFORMANCE_FACTORS.PATH_WEIGHT) +
-      (physicsImpact * PERFORMANCE_FACTORS.PHYSICS_WEIGHT);
-    
-    constraintScore = Math.max(0, 100 - (totalWeightedImpact * 0.5));
-  }
-  
   return {
     activeIkCount,
     activeTransformCount,
@@ -229,8 +215,7 @@ export function analyzePhysicsForAnimation(
     ikImpact,
     transformImpact,
     pathImpact,
-    physicsImpact,
-    score: constraintScore
+    physicsImpact
   };
 }
 
@@ -326,19 +311,6 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
   const totalConstraints = ikConstraints.length + transformConstraints.length + 
                            pathConstraints.length + physicsConstraints.length;
   
-  // Calculate constraint score based on weighted impacts
-  let constraintScore = 100;
-  
-  if (totalConstraints > 0) {
-    const totalWeightedImpact = 
-      (ikImpact * PERFORMANCE_FACTORS.IK_WEIGHT) +
-      (transformImpact * PERFORMANCE_FACTORS.TRANSFORM_WEIGHT) +
-      (pathImpact * PERFORMANCE_FACTORS.PATH_WEIGHT) +
-      (physicsImpact * PERFORMANCE_FACTORS.PHYSICS_WEIGHT);
-    
-    constraintScore = Math.max(0, 100 - (totalWeightedImpact * 0.5));
-  }
-  
   const metrics = {
     activeIkCount: ikData.length,
     activeTransformCount: transformData.length,
@@ -349,7 +321,6 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     transformImpact,
     pathImpact,
     physicsImpact,
-    score: constraintScore,
     // Additional fields for compatibility
     ikCount: ikConstraints.length,
     transformCount: transformConstraints.length,

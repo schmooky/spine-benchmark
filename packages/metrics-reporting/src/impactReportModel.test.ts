@@ -14,26 +14,22 @@ function createAnalysis(overrides?: Partial<any>): any {
       metrics: {
         totalBones: 42,
         maxDepth: 6,
-        score: 0,
       },
     },
     animations: [
       {
         name: 'walk',
         duration: 1.2,
-        overallScore: 0,
         meshMetrics: {
           activeMeshCount: 6,
           totalVertices: 820,
           weightedMeshCount: 5,
           deformedMeshCount: 4,
-          score: 0,
         },
         clippingMetrics: {
           activeMaskCount: 3,
           totalVertices: 18,
           complexMasks: 2,
-          score: 0,
         },
         blendModeMetrics: {
           activeNonNormalCount: 5,
@@ -42,7 +38,6 @@ function createAnalysis(overrides?: Partial<any>): any {
           nonNormalBlendModeCount: 5,
           additiveCount: 3,
           multiplyCount: 1,
-          score: 0,
         },
         constraintMetrics: {
           activePhysicsCount: 3,
@@ -54,7 +49,6 @@ function createAnalysis(overrides?: Partial<any>): any {
           transformImpact: 0,
           pathImpact: 0,
           physicsImpact: 0,
-          score: 0,
         },
         activeComponents: {
           hasPhysics: true,
@@ -66,19 +60,16 @@ function createAnalysis(overrides?: Partial<any>): any {
       {
         name: 'idle',
         duration: 0.8,
-        overallScore: 0,
         meshMetrics: {
           activeMeshCount: 1,
           totalVertices: 80,
           weightedMeshCount: 0,
           deformedMeshCount: 0,
-          score: 0,
         },
         clippingMetrics: {
           activeMaskCount: 0,
           totalVertices: 0,
           complexMasks: 0,
-          score: 0,
         },
         blendModeMetrics: {
           activeNonNormalCount: 0,
@@ -87,7 +78,6 @@ function createAnalysis(overrides?: Partial<any>): any {
           nonNormalBlendModeCount: 0,
           additiveCount: 0,
           multiplyCount: 0,
-          score: 0,
         },
         constraintMetrics: {
           activePhysicsCount: 0,
@@ -99,7 +89,6 @@ function createAnalysis(overrides?: Partial<any>): any {
           transformImpact: 0,
           pathImpact: 0,
           physicsImpact: 0,
-          score: 0,
         },
         activeComponents: {
           hasPhysics: false,
@@ -113,9 +102,6 @@ function createAnalysis(overrides?: Partial<any>): any {
     globalClipping: {},
     globalBlendMode: {},
     globalPhysics: {},
-    medianScore: 0,
-    bestAnimation: null,
-    worstAnimation: null,
     stats: {
       animationsWithPhysics: 1,
       animationsWithClipping: 1,
@@ -124,7 +110,6 @@ function createAnalysis(overrides?: Partial<any>): any {
       animationsWithTransform: 1,
       animationsWithPath: 1,
       highVertexAnimations: 1,
-      poorPerformingAnimations: 1,
     },
     ...overrides,
   };
@@ -163,9 +148,8 @@ describe('impactReportModel', () => {
         {
           name: 'idle',
           duration: 1,
-          overallScore: 0,
-          meshMetrics: { activeMeshCount: 1, totalVertices: 70, weightedMeshCount: 0, deformedMeshCount: 0, score: 0 },
-          clippingMetrics: { activeMaskCount: 0, totalVertices: 0, complexMasks: 0, score: 0 },
+          meshMetrics: { activeMeshCount: 1, totalVertices: 70, weightedMeshCount: 0, deformedMeshCount: 0 },
+          clippingMetrics: { activeMaskCount: 0, totalVertices: 0, complexMasks: 0 },
           blendModeMetrics: {
             activeNonNormalCount: 0,
             activeAdditiveCount: 0,
@@ -173,7 +157,6 @@ describe('impactReportModel', () => {
             nonNormalBlendModeCount: 0,
             additiveCount: 0,
             multiplyCount: 0,
-            score: 0,
           },
           constraintMetrics: {
             activePhysicsCount: 0,
@@ -185,7 +168,6 @@ describe('impactReportModel', () => {
             transformImpact: 0,
             pathImpact: 0,
             physicsImpact: 0,
-            score: 0,
           },
           activeComponents: {
             hasPhysics: false,
@@ -204,7 +186,6 @@ describe('impactReportModel', () => {
         animationsWithTransform: 0,
         animationsWithPath: 0,
         highVertexAnimations: 0,
-        poorPerformingAnimations: 0,
       },
     });
 

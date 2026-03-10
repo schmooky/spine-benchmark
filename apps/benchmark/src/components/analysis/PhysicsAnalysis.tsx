@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
 import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
-import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
 
 interface PhysicsAnalysisProps {
   data: SpineAnalysisResult;
@@ -117,25 +116,25 @@ const ConstraintImpactBreakdown: React.FC<{ data: SpineAnalysisResult }> = ({ da
             <td>{t('analysis.physics.constraintTypes.ik')}</td>
             <td>{metrics.ikCount}</td>
             <td>{metrics.ikImpact.toFixed(1)}%</td>
-            <td>{(metrics.ikImpact * PERFORMANCE_FACTORS.IK_WEIGHT).toFixed(1)}%</td>
+            <td>{(metrics.ikImpact * 0.20).toFixed(1)}%</td>
           </tr>
           <tr className={metrics.transformImpact > 50 ? 'row-warning' : ''}>
             <td>{t('analysis.physics.constraintTypes.transform')}</td>
             <td>{metrics.transformCount}</td>
             <td>{metrics.transformImpact.toFixed(1)}%</td>
-            <td>{(metrics.transformImpact * PERFORMANCE_FACTORS.TRANSFORM_WEIGHT).toFixed(1)}%</td>
+            <td>{(metrics.transformImpact * 0.15).toFixed(1)}%</td>
           </tr>
           <tr className={metrics.pathImpact > 50 ? 'row-warning' : ''}>
             <td>{t('analysis.physics.constraintTypes.path')}</td>
             <td>{metrics.pathCount}</td>
             <td>{metrics.pathImpact.toFixed(1)}%</td>
-            <td>{(metrics.pathImpact * PERFORMANCE_FACTORS.PATH_WEIGHT).toFixed(1)}%</td>
+            <td>{(metrics.pathImpact * 0.25).toFixed(1)}%</td>
           </tr>
           <tr className={metrics.physicsImpact > 50 ? 'row-warning' : ''}>
             <td>{t('analysis.physics.constraintTypes.physics')}</td>
             <td>{metrics.physicsCount}</td>
             <td>{metrics.physicsImpact.toFixed(1)}%</td>
-            <td>{(metrics.physicsImpact * PERFORMANCE_FACTORS.PHYSICS_WEIGHT).toFixed(1)}%</td>
+            <td>{(metrics.physicsImpact * 0.40).toFixed(1)}%</td>
           </tr>
         </tbody>
       </table>

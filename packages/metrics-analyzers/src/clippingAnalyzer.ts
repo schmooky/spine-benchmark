@@ -1,6 +1,4 @@
 import { Animation, ClippingAttachment, Spine } from '@esotericsoftware/spine-pixi-v8';
-import { PERFORMANCE_FACTORS } from '@spine-benchmark/metrics-factors';
-import { calculateClippingScore } from '@spine-benchmark/metrics-scoring';
 import type { ActiveComponents } from '@spine-benchmark/metrics-sampling';
 
 export interface ClippingMetrics {
@@ -8,7 +6,6 @@ export interface ClippingMetrics {
   maskCount: number; // For compatibility
   totalVertices: number;
   complexMasks: number;
-  score: number;
 }
 
 export interface ClippingMaskInfo {
@@ -62,15 +59,11 @@ export function analyzeClippingForAnimation(
     }
   });
   
-  // Calculate clipping score
-  const clippingScore = calculateClippingScore(activeMaskCount, totalVertices, complexMasks);
-  
   return {
     activeMaskCount,
     maskCount: activeMaskCount, // For compatibility
     totalVertices,
-    complexMasks,
-    score: clippingScore
+    complexMasks
   };
 }
 
@@ -98,15 +91,11 @@ export function analyzeGlobalClipping(spineInstance: Spine): GlobalClippingAnaly
   // Calculate complexity metrics
   const complexMasks = masks.filter(mask => mask.vertexCount > 4).length;
   
-  // Calculate clipping score
-  const clippingScore = calculateClippingScore(masks.length, totalVertices, complexMasks);
-  
   const metrics: ClippingMetrics = {
     activeMaskCount: masks.length,
     maskCount: masks.length,
     totalVertices,
-    complexMasks,
-    score: clippingScore
+    complexMasks
   };
   
   return {

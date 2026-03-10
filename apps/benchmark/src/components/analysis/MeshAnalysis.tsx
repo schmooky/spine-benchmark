@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
 import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
-import { PERFORMANCE_FACTORS } from '../../core/constants/performanceFactors';
 
 interface MeshAnalysisProps {
   data: SpineAnalysisResult;
@@ -82,8 +81,8 @@ export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {
         <h4>{t('analysis.mesh.notes.title')}</h4>
         <ul>
           <li><strong>{t('analysis.mesh.notes.vertexCount')}</strong></li>
-          <li><strong>{t('analysis.mesh.notes.deformation', { factor: PERFORMANCE_FACTORS.MESH_DEFORMED_FACTOR })}</strong></li>
-          <li><strong>{t('analysis.mesh.notes.boneWeights', { factor: PERFORMANCE_FACTORS.MESH_WEIGHTED_FACTOR })}</strong></li>
+          <li><strong>{t('analysis.mesh.notes.deformation', { factor: 1.5 })}</strong></li>
+          <li><strong>{t('analysis.mesh.notes.boneWeights', { factor: 2.0 })}</strong></li>
           <li><strong>{t('analysis.mesh.notes.optimizationTip')}</strong></li>
         </ul>
       </div>

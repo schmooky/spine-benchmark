@@ -5,7 +5,6 @@ import {
   analyzeGlobalData,
   analyzeAnimations,
   calculateStatistics,
-  sortAnalyses,
   aggregateResults
 } from "@spine-benchmark/metrics-pipeline";
 import { exportAnalysisJson } from "@spine-benchmark/metrics-reporting";
@@ -32,17 +31,13 @@ export class SpineAnalyzer {
     // Calculate statistics
     const statistics = calculateStatistics(animationData);
 
-    // Sort animations and calculate median score
-    const sortedData = sortAnalyses(animationData);
-
     // Aggregate all results
     return aggregateResults(
       spineInstance,
       skeletonData,
       globalData,
       animationData,
-      statistics,
-      sortedData
+      statistics
     );
   }
 

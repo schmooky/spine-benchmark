@@ -9,7 +9,6 @@ const {
   mockAnalyzeSkeletonStructure,
   mockAnalyzePhysicsForAnimation,
   mockAnalyzeGlobalPhysics,
-  mockCalculateOverallScore,
   mockGetActiveComponentsForAnimation
 } = vi.hoisted(() => ({
   mockAnalyzeMeshesForAnimation: vi.fn(),
@@ -21,7 +20,6 @@ const {
   mockAnalyzeSkeletonStructure: vi.fn(),
   mockAnalyzePhysicsForAnimation: vi.fn(),
   mockAnalyzeGlobalPhysics: vi.fn(),
-  mockCalculateOverallScore: vi.fn(),
   mockGetActiveComponentsForAnimation: vi.fn()
 }));
 
@@ -37,10 +35,6 @@ vi.mock('@spine-benchmark/metrics-analyzers', () => ({
   analyzeGlobalPhysics: mockAnalyzeGlobalPhysics
 }));
 
-vi.mock('@spine-benchmark/metrics-scoring', () => ({
-  calculateOverallScore: mockCalculateOverallScore
-}));
-
 vi.mock('@spine-benchmark/metrics-sampling', () => ({
   getActiveComponentsForAnimation: mockGetActiveComponentsForAnimation
 }));
@@ -51,31 +45,25 @@ import {
   analyzeGlobalData,
   analyzeSingleAnimation,
   analyzeSkeleton,
-  calculateStatistics,
-  sortAnalyses
+  calculateStatistics
 } from './animationPipeline';
 import * as pipelineIndex from './index';
 
 const createAnimationAnalysis = (overrides: Record<string, unknown> = {}) => ({
   name: 'anim',
   duration: 1,
-  overallScore: 80,
   meshMetrics: {
-    score: 80,
     totalVertices: 100,
     deformedMeshCount: 0,
     weightedMeshCount: 0
   },
   clippingMetrics: {
-    score: 80,
     activeMaskCount: 0
   },
   blendModeMetrics: {
-    score: 80,
     activeNonNormalCount: 0
   },
   constraintMetrics: {
-    score: 80,
     activePhysicsCount: 0,
     activeIkCount: 0,
     activeTransformCount: 0,
@@ -110,37 +98,32 @@ describe('metrics-pipeline', () => {
       hasPath: false
     });
     mockAnalyzeMeshesForAnimation.mockReturnValue({
-      score: 70,
       totalVertices: 700,
       deformedMeshCount: 1,
       weightedMeshCount: 1
     });
     mockAnalyzeClippingForAnimation.mockReturnValue({
-      score: 80,
       activeMaskCount: 2
     });
     mockAnalyzeBlendModesForAnimation.mockReturnValue({
-      score: 85,
       activeNonNormalCount: 1
     });
     mockAnalyzePhysicsForAnimation.mockReturnValue({
-      score: 90,
       activePhysicsCount: 1,
       activeIkCount: 1,
       activeTransformCount: 0,
       activePathCount: 0
     });
     mockAnalyzeSkeletonStructure.mockReturnValue({
-      metrics: { score: 95 }
+      metrics: { totalBones: 30, maxDepth: 5 }
     });
     mockAnalyzeGlobalMeshes.mockReturnValue({ maxVertices: 999 });
     mockAnalyzeGlobalClipping.mockReturnValue({ maxMasks: 5 });
     mockAnalyzeGlobalBlendModes.mockReturnValue({ maxBlendModes: 4 });
     mockAnalyzeGlobalPhysics.mockReturnValue({ maxPhysics: 3 });
-    mockCalculateOverallScore.mockReturnValue(88);
   });
 
-  it('analyzes a single animation with delegated analyzers and scoring', () => {
+  it('analyzes a single animation with delegated analyzers', () => {
     const animation = { name: 'walk', duration: 1.25 };
     const spine = {
       skeleton: {
@@ -174,17 +157,9 @@ describe('metrics-pipeline', () => {
       animation,
       mockGetActiveComponentsForAnimation.mock.results[0]?.value
     );
-    expect(mockCalculateOverallScore).toHaveBeenCalledWith({
-      boneScore: 95,
-      meshScore: 70,
-      clippingScore: 80,
-      blendModeScore: 85,
-      constraintScore: 90
-    });
     expect(result).toMatchObject({
       name: 'walk',
-      duration: 1.25,
-      overallScore: 88
+      duration: 1.25
     });
   });
 
@@ -223,7 +198,7 @@ describe('metrics-pipeline', () => {
     const global = analyzeGlobalData(spine as any);
 
     expect(mockAnalyzeSkeletonStructure).toHaveBeenCalledWith(spine);
-    expect(skeleton).toEqual({ metrics: { score: 95 } });
+    expect(skeleton).toEqual({ metrics: { totalBones: 30, maxDepth: 5 } });
     expect(global).toEqual({
       globalMesh: { maxVertices: 999 },
       globalClipping: { maxMasks: 5 },
@@ -235,8 +210,7 @@ describe('metrics-pipeline', () => {
   it('calculates aggregate animation statistics', () => {
     const stats = calculateStatistics([
       createAnimationAnalysis({
-        overallScore: 50,
-        meshMetrics: { score: 70, totalVertices: 800, deformedMeshCount: 1, weightedMeshCount: 0 },
+        meshMetrics: { totalVertices: 800, deformedMeshCount: 1, weightedMeshCount: 0 },
         activeComponents: {
           hasPhysics: true,
           hasClipping: true,
@@ -247,8 +221,7 @@ describe('metrics-pipeline', () => {
         }
       }) as any,
       createAnimationAnalysis({
-        overallScore: 90,
-        meshMetrics: { score: 90, totalVertices: 120, deformedMeshCount: 0, weightedMeshCount: 0 }
+        meshMetrics: { totalVertices: 120, deformedMeshCount: 0, weightedMeshCount: 0 }
       }) as any
     ]);
 
@@ -259,28 +232,8 @@ describe('metrics-pipeline', () => {
       animationsWithIK: 1,
       animationsWithTransform: 1,
       animationsWithPath: 1,
-      highVertexAnimations: 1,
-      poorPerformingAnimations: 1
+      highVertexAnimations: 1
     });
-  });
-
-  it('sorts analyses and computes median for non-empty and empty sets', () => {
-    const sortedData = sortAnalyses([
-      createAnimationAnalysis({ name: 'a', overallScore: 90 }) as any,
-      createAnimationAnalysis({ name: 'b', overallScore: 50 }) as any,
-      createAnimationAnalysis({ name: 'c', overallScore: 70 }) as any
-    ]);
-    const emptySorted = sortAnalyses([]);
-
-    expect(sortedData.sorted.map((a) => a.name)).toEqual(['a', 'c', 'b']);
-    expect(sortedData.best?.name).toBe('a');
-    expect(sortedData.worst?.name).toBe('b');
-    expect(sortedData.medianScore).toBe(70);
-
-    expect(emptySorted.sorted).toEqual([]);
-    expect(emptySorted.best).toBeNull();
-    expect(emptySorted.worst).toBeNull();
-    expect(emptySorted.medianScore).toBe(100);
   });
 
   it('aggregates final result and falls back to Unnamed skeleton', () => {
@@ -293,11 +246,11 @@ describe('metrics-pipeline', () => {
         }
       }
     };
-    const animationData = [createAnimationAnalysis({ name: 'idle', overallScore: 77 }) as any];
+    const animationData = [createAnimationAnalysis({ name: 'idle' }) as any];
 
     const result = aggregateResults(
       spine as any,
-      { metrics: { score: 99 } } as any,
+      { metrics: { totalBones: 30, maxDepth: 5 } } as any,
       {
         globalMesh: { maxVertices: 999 } as any,
         globalClipping: { maxMasks: 4 } as any,
@@ -312,25 +265,15 @@ describe('metrics-pipeline', () => {
         animationsWithIK: 0,
         animationsWithTransform: 0,
         animationsWithPath: 0,
-        highVertexAnimations: 0,
-        poorPerformingAnimations: 0
-      },
-      {
-        sorted: animationData,
-        best: animationData[0],
-        worst: animationData[0],
-        medianScore: 77
+        highVertexAnimations: 0
       }
     );
 
     expect(result).toMatchObject({
       skeletonName: 'Unnamed',
       totalAnimations: 1,
-      totalSkins: 2,
-      medianScore: 77
+      totalSkins: 2
     });
-    expect(result.bestAnimation?.name).toBe('idle');
-    expect(result.worstAnimation?.name).toBe('idle');
   });
 
   it('keeps explicit skeleton name when provided', () => {
@@ -346,7 +289,7 @@ describe('metrics-pipeline', () => {
 
     const result = aggregateResults(
       spine as any,
-      { metrics: { score: 90 } } as any,
+      { metrics: { totalBones: 10, maxDepth: 3 } } as any,
       {
         globalMesh: {} as any,
         globalClipping: {} as any,
@@ -361,14 +304,7 @@ describe('metrics-pipeline', () => {
         animationsWithIK: 0,
         animationsWithTransform: 0,
         animationsWithPath: 0,
-        highVertexAnimations: 0,
-        poorPerformingAnimations: 0
-      },
-      {
-        sorted: [],
-        best: null,
-        worst: null,
-        medianScore: 100
+        highVertexAnimations: 0
       }
     );
 
