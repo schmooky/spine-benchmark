@@ -28,6 +28,6 @@ export type {
   ImpactLevel,
 } from './types.js';
 
-export { DEFAULT_CONFIG, ISSUE_IMPACT, ISSUE_EXPLAIN } from './types.js';
+export { DEFAULT_CONFIG, ISSUE_IMPACT, ISSUE_EXPLAIN, DEFAULT_IMPACT_BRACKETS, classifyImpactLevel } from './types.js';
 export type { WaterfallEntry, WaterfallBreak } from './waterfall.js';
 export type { RemoteFrameData, RemoteIssue, RemoteProblemNode, FrameTiming } from './bridge.js';

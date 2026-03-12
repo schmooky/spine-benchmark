@@ -320,7 +320,7 @@ export class Crawler {
     const screenW = this._app.screen.width;
     if (screenW === 0) return;
 
-    // Use pixi's extract.base64() — works regardless of preserveDrawingBuffer,
+    // Use pixi's extract.base64() - works regardless of preserveDrawingBuffer,
     // returns a data URL string that's trivially safe over BroadcastChannel.
     const extractRes = Math.max(0.05, 160 / screenW);
     const frame = this._frame;

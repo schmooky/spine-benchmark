@@ -11,7 +11,7 @@ import {
     BitmapText,
     ParticleContainer,
 } from 'pixi.js';
-/** Lightweight unique-id generator — no external deps needed. */
+/** Lightweight unique-id generator - no external deps needed. */
 let _idCounter = 0;
 const _prefix = Math.random().toString(36).slice(2, 8);
 function createNodeId(): string {
@@ -30,7 +30,7 @@ import type {
     SpineBudget,
     AggregateBudget,
 } from './types.js';
-import { ISSUE_IMPACT } from './types.js';
+import { ISSUE_IMPACT, classifyImpactLevel } from './types.js';
 import { isSpine, analyzeSpine } from './spine-analyzer.js';
 import { SpineBudgetTracker } from './spine-budget-tracker.js';
 
@@ -125,7 +125,7 @@ export class Scanner {
         const census = this._buildCensus();
 
         // Calculate aggregate budget
-        const aggregateBudget = this.budgetTracker.calculateAggregate(this._visibleSpineBudgets);
+        const aggregateBudget = this.budgetTracker.calculateAggregate(this._visibleSpineBudgets, config.impactBrackets);
 
         return {
             frame: this._frame,
@@ -232,26 +232,8 @@ export class Scanner {
             } else if (kind === 'mesh') {
                 drawCalls = 1;
             } else if (kind === 'spine' && isSpine(node)) {
-                spineAnalysis = analyzeSpine(node);
+                spineAnalysis = analyzeSpine(node, config.impactBrackets);
                 drawCalls = spineAnalysis.estimatedDrawCalls;
-
-                // Calculate budget if RI/CI are available
-                if (spineAnalysis.renderingImpact && spineAnalysis.computationalImpact) {
-                    const spineBudget: SpineBudget = {
-                        ri: spineAnalysis.renderingImpact,
-                        ci: spineAnalysis.computationalImpact,
-                        total: spineAnalysis.renderingImpact.total + spineAnalysis.computationalImpact.total,
-                        level: this._classifyImpactLevel(
-                            spineAnalysis.renderingImpact.total + spineAnalysis.computationalImpact.total
-                        ),
-                    };
-
-                    // Track budget for this spine
-                    const spineObj = node as unknown as { skeleton?: { data?: { name?: string } } };
-                    const skelName = spineObj.skeleton?.data?.name ?? 'unknown';
-                    this.budgetTracker.recordBudget(skelName, spineBudget);
-                    this._visibleSpineBudgets.push({ skeletonName: skelName, budget: spineBudget });
-                }
             } else if (kind === 'particleContainer') {
                 drawCalls = 1;
             }
@@ -477,17 +459,23 @@ export class Scanner {
             ? `${kind}:${name}`
             : `${kind}#${this._getOrCreateMeta(node).uid}`;
 
-        // ── Calculate spine budget if available ──
+        // ── Calculate spine budget if available, and track for aggregation ──
         let spineBudget: SpineBudget | undefined;
         if (kind === 'spine' && spineAnalysis?.renderingImpact && spineAnalysis?.computationalImpact) {
+            const budgetTotal = spineAnalysis.renderingImpact.total + spineAnalysis.computationalImpact.total;
             spineBudget = {
                 ri: spineAnalysis.renderingImpact,
                 ci: spineAnalysis.computationalImpact,
-                total: spineAnalysis.renderingImpact.total + spineAnalysis.computationalImpact.total,
-                level: this._classifyImpactLevel(
-                    spineAnalysis.renderingImpact.total + spineAnalysis.computationalImpact.total
-                ),
+                total: budgetTotal,
+                level: classifyImpactLevel(budgetTotal, config.impactBrackets),
             };
+
+            if (visible) {
+                const spineObj = node as unknown as { skeleton?: { data?: { name?: string } } };
+                const skelName = spineObj.skeleton?.data?.name ?? 'unknown';
+                this.budgetTracker.recordBudget(skelName, spineBudget);
+                this._visibleSpineBudgets.push({ skeletonName: skelName, budget: spineBudget });
+            }
         }
 
         // ── Store meta ──
@@ -598,13 +586,6 @@ export class Scanner {
         return { severity, code, message, frame: this._frame };
     }
 
-    private _classifyImpactLevel(score: number): 'minimal' | 'low' | 'moderate' | 'high' | 'very-high' {
-        if (score >= 100) return 'very-high';
-        if (score >= 50) return 'high';
-        if (score >= 25) return 'moderate';
-        if (score >= 10) return 'low';
-        return 'minimal';
-    }
 }
 
 /** PixiJS v8 has no worldAlpha - walk the parent chain. */

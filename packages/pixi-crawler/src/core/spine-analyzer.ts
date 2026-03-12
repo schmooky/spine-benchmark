@@ -2,6 +2,9 @@
  * Deep Spine analysis - inspects skeleton draw order at runtime
  * to compute actual draw call fragmentation from blend mode transitions,
  * atlas page switches, and clipping boundaries.
+ *
+ * RI/CI formulas are aligned with @spine-benchmark/metrics-reporting
+ * and @spine-benchmark/metrics-scoring (impactReportModel / scoreCalculator).
  */
 
 import type { Container } from 'pixi.js';
@@ -11,12 +14,12 @@ import type {
     SpineBatchBreak,
     RenderingImpact,
     ComputationalImpact,
-    SpineBudget,
     ImpactLevel,
 } from './types.js';
+import { classifyImpactLevel } from './types.js';
 
-// We import spine-core types dynamically to avoid hard dependency.
-// At runtime the Spine object will have .skeleton with slots etc.
+// ── Duck-typed Spine runtime interfaces ─────────────────────
+// Avoids hard dependency on @esotericsoftware/spine-core.
 
 interface SpineSlot {
     data: {
@@ -26,14 +29,22 @@ interface SpineSlot {
     };
     color: { a: number };
     attachment: SpineAttachment | null;
+    /** Deform values applied to the slot's attachment. Non-empty when actively deformed. */
+    deform?: number[];
 }
 
 interface SpineAttachment {
     name: string;
     region?: SpineRegion | null;
     type?: number;
-    // ClippingAttachment check
+    /** Present on ClippingAttachment */
     endSlot?: unknown;
+    /** worldVerticesLength / 2 = vertex count. Present on VertexAttachment (Region, Mesh). */
+    worldVerticesLength?: number;
+    /** Bone indices for weighted meshes. null = unweighted. */
+    bones?: number[] | null;
+    /** Present on MeshAttachment — triangle index array */
+    triangles?: number[];
 }
 
 interface SpineRegion {
@@ -47,7 +58,7 @@ interface SpineAtlasPage {
     height: number;
 }
 
-interface SpineLike {
+export interface SpineLike {
     skeleton?: {
         slots: SpineSlot[];
         drawOrder: SpineSlot[];
@@ -57,156 +68,169 @@ interface SpineLike {
         ikConstraints?: unknown[];
         transformConstraints?: unknown[];
         pathConstraints?: unknown[];
+        physicsConstraints?: unknown[];
     };
     state?: {
         tracks?: (unknown | null)[];
     };
 }
 
-/**
- * Classify impact level based on score thresholds.
- * minimal: 0-10, low: 10-25, moderate: 25-50, high: 50-100, very-high: 100+
- */
-function classifyImpactLevel(score: number): ImpactLevel {
-    if (score >= 100) return 'very-high';
-    if (score >= 50) return 'high';
-    if (score >= 25) return 'moderate';
-    if (score >= 10) return 'low';
-    return 'minimal';
-}
+// ═════════════════════════════════════════════════════════════
+// RI formula (matches metrics-reporting/impactReportModel.ts)
+//
+//   RI = (activeNonNormalBlendModes × 3)
+//      + (activeMaskCount × 5)
+//      + (totalVertices / 200)
+//
+// Impact thresholds: <3 minimal, <8 low, <15 moderate, <25 high, ≥25 very-high
+// ═════════════════════════════════════════════════════════════
 
-/**
- * Analyze constraints from skeleton to count IK, transform, and path constraints.
- */
-function analyzeConstraints(skeleton: SpineLike['skeleton']): {
-    ik: number;
-    transform: number;
-    path: number;
-    physics: number;
-} {
-    if (!skeleton) {
-        return { ik: 0, transform: 0, path: 0, physics: 0 };
-    }
-
-    const ik = skeleton.ikConstraints?.length ?? 0;
-    const transform = skeleton.transformConstraints?.length ?? 0;
-    const path = skeleton.pathConstraints?.length ?? 0;
-
-    // Physics constraints are typically stored differently in Spine runtime
-    // For now, we'll estimate based on active animation tracks that might use physics
-    const physics = 0; // Would need deeper runtime inspection
-
-    return { ik, transform, path, physics };
-}
-
-/**
- * Analyze meshes from slot breakdown to count vertices, weighted meshes, and deformed meshes.
- */
-function analyzeMeshes(slotBreakdown: SpineSlotInfo[]): {
-    vertices: number;
-    weightedMeshes: number;
-    deformedMeshes: number;
-} {
-    let vertices = 0;
-    let weightedMeshes = 0;
-    let deformedMeshes = 0;
-
-    for (const slot of slotBreakdown) {
-        if (slot.attachmentType === 'mesh' && slot.visible) {
-            // Estimate vertices per mesh (typical Spine mesh has 20-100 vertices)
-            // Without access to actual mesh data, we use a conservative estimate
-            vertices += 50;
-
-            // Weighted meshes are common in Spine for deformation
-            // We'll count all visible meshes as potentially weighted
-            weightedMeshes++;
-
-            // Deformed meshes would need runtime inspection of mesh.vertices
-            // For now, assume 50% of meshes are actively deformed
-            if (Math.random() > 0.5) {
-                deformedMeshes++;
-            }
-        }
-    }
-
-    return { vertices, weightedMeshes, deformedMeshes };
-}
-
-/**
- * Calculate Rendering Impact (RI) based on visual complexity.
- * Formula: RI = (blendModes * 3) + (clippingMasks * 5) + (vertices / 200)
- */
 function calculateRI(
     blendModeTransitions: number,
-    slotBreakdown: SpineSlotInfo[]
+    clippingMasks: number,
+    totalVertices: number,
+    brackets?: [number, number, number, number],
 ): RenderingImpact {
-    // Count clipping attachments
-    let clippingMasks = 0;
-    for (const slot of slotBreakdown) {
-        if (slot.attachmentType === 'clipping' && slot.visible) {
-            clippingMasks++;
-        }
-    }
-
-    // Analyze meshes for vertex count
-    const { vertices } = analyzeMeshes(slotBreakdown);
-
-    // Calculate RI using the formula from spine-benchmark
-    const total = (blendModeTransitions * 3) + (clippingMasks * 5) + (vertices / 200);
+    const total = (blendModeTransitions * 3) + (clippingMasks * 5) + (totalVertices / 200);
 
     return {
         blendModes: blendModeTransitions,
         clippingMasks,
-        vertices,
+        vertices: totalVertices,
         total,
-        level: classifyImpactLevel(total),
+        level: classifyImpactLevel(total, brackets),
+    };
+}
+
+// ═════════════════════════════════════════════════════════════
+// CI formula (matches metrics-reporting/impactReportModel.ts)
+//
+//   constraintCost = (physics × 0.7) + (path × 0.55)
+//                  + (ik × 0.35) + (transform × 0.2)
+//
+//   avgVerts = totalVertices / activeMeshCount  (0 if no meshes)
+//
+//   deformedMeshWeight = 0.08 + min(0.5, avgVerts / 500)
+//   weightedMeshWeight = 0.1  + min(0.55, avgVerts / 450)
+//
+//   meshCost = (deformedMeshCount × deformedMeshWeight)
+//            + (weightedMeshCount × weightedMeshWeight)
+//            + (totalVertices / 2000)
+//
+//   CI = constraintCost + meshCost
+//
+// Impact thresholds: <3 minimal, <8 low, <15 moderate, <25 high, ≥25 very-high
+// ═════════════════════════════════════════════════════════════
+
+interface MeshStats {
+    totalVertices: number;
+    activeMeshCount: number;
+    weightedMeshCount: number;
+    deformedMeshCount: number;
+}
+
+interface ConstraintCounts {
+    ik: number;
+    transform: number;
+    path: number;
+    physics: number;
+}
+
+function analyzeConstraints(skeleton: SpineLike['skeleton']): ConstraintCounts {
+    if (!skeleton) {
+        return { ik: 0, transform: 0, path: 0, physics: 0 };
+    }
+
+    return {
+        ik: skeleton.ikConstraints?.length ?? 0,
+        transform: skeleton.transformConstraints?.length ?? 0,
+        path: skeleton.pathConstraints?.length ?? 0,
+        physics: skeleton.physicsConstraints?.length ?? 0,
     };
 }
 
 /**
- * Calculate Computational Impact (CI) based on runtime calculations.
- * Formula: CI = (physics * 4) + (path * 2.5) + (ik * 2) + (weightedMeshes * 2) + (transform * 1.5) + (deformedMeshes * 1.5)
+ * Analyze meshes by reading real vertex counts from attachments
+ * and checking bones/deform arrays for weighted/deformed status.
  */
+function analyzeMeshes(drawOrder: SpineSlot[]): MeshStats {
+    let totalVertices = 0;
+    let activeMeshCount = 0;
+    let weightedMeshCount = 0;
+    let deformedMeshCount = 0;
+
+    for (const slot of drawOrder) {
+        const att = slot.attachment;
+        if (!att) continue;
+        if (!slot.data.visible || slot.color.a <= 0) continue;
+
+        // Is it a mesh? Check for triangles array (MeshAttachment)
+        const isMesh = att.triangles != null;
+        if (!isMesh) continue;
+
+        activeMeshCount++;
+
+        // Read real vertex count: worldVerticesLength is in floats (x,y pairs),
+        // so divide by 2 for vertex count
+        const vertCount = (att.worldVerticesLength ?? 0) / 2;
+        totalVertices += vertCount;
+
+        // Weighted mesh: has bone indices
+        if (att.bones != null && att.bones.length > 0) {
+            weightedMeshCount++;
+        }
+
+        // Deformed mesh: slot.deform has non-zero-length array when actively deformed
+        if (slot.deform != null && slot.deform.length > 0) {
+            deformedMeshCount++;
+        }
+    }
+
+    return { totalVertices, activeMeshCount, weightedMeshCount, deformedMeshCount };
+}
+
 function calculateCI(
     skeleton: SpineLike['skeleton'],
-    slotBreakdown: SpineSlotInfo[]
+    drawOrder: SpineSlot[],
+    brackets?: [number, number, number, number],
 ): ComputationalImpact {
-    const constraints = analyzeConstraints(skeleton);
-    const meshes = analyzeMeshes(slotBreakdown);
+    const c = analyzeConstraints(skeleton);
+    const m = analyzeMeshes(drawOrder);
 
-    // Calculate CI using the formula from spine-benchmark
-    const total =
-        (constraints.physics * 4) +
-        (constraints.path * 2.5) +
-        (constraints.ik * 2) +
-        (meshes.weightedMeshes * 2) +
-        (constraints.transform * 1.5) +
-        (meshes.deformedMeshes * 1.5);
+    // Constraint cost (canonical weights from metrics-reporting)
+    const constraintCost =
+        (c.physics * 0.7) +
+        (c.path * 0.55) +
+        (c.ik * 0.35) +
+        (c.transform * 0.2);
+
+    // Mesh computation cost (vertex-count-scaled weights from metrics-reporting)
+    const avgVerts = m.activeMeshCount > 0 ? m.totalVertices / m.activeMeshCount : 0;
+    const deformedMeshWeight = 0.08 + Math.min(0.5, avgVerts / 500);
+    const weightedMeshWeight = 0.1 + Math.min(0.55, avgVerts / 450);
+
+    const meshCost =
+        (m.deformedMeshCount * deformedMeshWeight) +
+        (m.weightedMeshCount * weightedMeshWeight) +
+        (m.totalVertices / 2000);
+
+    const total = constraintCost + meshCost;
 
     return {
-        physics: constraints.physics,
-        path: constraints.path,
-        ik: constraints.ik,
-        weightedMeshes: meshes.weightedMeshes,
-        transform: constraints.transform,
-        deformedMeshes: meshes.deformedMeshes,
+        physics: c.physics,
+        path: c.path,
+        ik: c.ik,
+        weightedMeshes: m.weightedMeshCount,
+        transform: c.transform,
+        deformedMeshes: m.deformedMeshCount,
         total,
-        level: classifyImpactLevel(total),
+        level: classifyImpactLevel(total, brackets),
     };
 }
 
-/**
- * Calculate combined spine budget from RI and CI.
- */
-function calculateBudget(ri: RenderingImpact, ci: ComputationalImpact): SpineBudget {
-    const total = ri.total + ci.total;
-    return {
-        ri,
-        ci,
-        total,
-        level: classifyImpactLevel(total),
-    };
-}
+// ═════════════════════════════════════════════════════════════
+// Public API
+// ═════════════════════════════════════════════════════════════
 
 /**
  * Check if a pixi node is a Spine instance.
@@ -222,9 +246,16 @@ export function isSpine(node: Container): node is Container & SpineLike {
 }
 
 /**
- * Perform deep analysis of a Spine's draw order to find DC fragmentation.
+ * Perform deep analysis of a Spine's draw order to find DC fragmentation,
+ * then compute RI and CI using the canonical metrics-reporting formulas.
+ *
+ * @param brackets Optional impact level brackets [low, moderate, high, veryHigh].
+ *                 Defaults to metrics-reporting values [3, 8, 15, 25].
  */
-export function analyzeSpine(node: Container): SpineAnalysis {
+export function analyzeSpine(
+    node: Container,
+    brackets?: [number, number, number, number],
+): SpineAnalysis {
     const spine = node as unknown as SpineLike;
     const skeleton = spine.skeleton!;
     const drawOrder = skeleton.drawOrder;
@@ -242,6 +273,10 @@ export function analyzeSpine(node: Container): SpineAnalysis {
     let pageSwitches = 0;
     let inClipping = false;
 
+    // Also accumulate RI mesh data during the draw-order walk
+    let totalVertices = 0;
+    let clippingMasks = 0;
+
     for (const slot of drawOrder) {
         const slotData = slot.data;
         const attachment = slot.attachment;
@@ -255,16 +290,23 @@ export function analyzeSpine(node: Container): SpineAnalysis {
         if (attachment) {
             attachmentName = attachment.name;
 
-            // Check if it's a clipping attachment
             if (attachment.endSlot !== undefined) {
+                // ClippingAttachment
                 attachmentType = 'clipping';
+                if (visible) clippingMasks++;
             } else if (attachment.region?.page) {
                 // Region or Mesh with texture
-                const hasTriangles = 'triangles' in attachment;
-                attachmentType = hasTriangles ? 'mesh' : 'region';
+                const isMesh = attachment.triangles != null;
+                attachmentType = isMesh ? 'mesh' : 'region';
                 const page = attachment.region.page;
                 atlasPage = page.name;
                 atlasPageSet.add(atlasPage);
+
+                // Accumulate real vertex count for RI
+                if (visible) {
+                    const verts = (attachment.worldVerticesLength ?? 0) / 2;
+                    totalVertices += verts;
+                }
             } else {
                 attachmentType = 'other';
             }
@@ -350,9 +392,11 @@ export function analyzeSpine(node: Container): SpineAnalysis {
         prevSlotName = slotData.name;
     }
 
-    // Calculate budget metrics
-    const renderingImpact = calculateRI(blendTransitions, slotBreakdown);
-    const computationalImpact = calculateCI(skeleton, slotBreakdown);
+    // Calculate RI using real vertex counts accumulated above
+    const renderingImpact = calculateRI(blendTransitions, clippingMasks, totalVertices, brackets);
+
+    // Calculate CI by reading constraints + mesh properties from skeleton/drawOrder
+    const computationalImpact = calculateCI(skeleton, drawOrder, brackets);
 
     return {
         totalSlots: drawOrder.length,

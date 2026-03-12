@@ -7,8 +7,8 @@ import type {
     SpineBudget,
     SpineBudgetHistory,
     AggregateBudget,
-    ImpactLevel,
 } from './types.js';
+import { classifyImpactLevel } from './types.js';
 
 /**
  * Tracks budget history for multiple spine skeletons.
@@ -62,7 +62,10 @@ export class SpineBudgetTracker {
     /**
      * Calculate aggregate budget across all visible spines.
      */
-    calculateAggregate(visibleSpines: { skeletonName: string; budget: SpineBudget }[]): AggregateBudget {
+    calculateAggregate(
+        visibleSpines: { skeletonName: string; budget: SpineBudget }[],
+        brackets?: [number, number, number, number],
+    ): AggregateBudget {
         if (visibleSpines.length === 0) {
             return {
                 totalRI: 0,
@@ -95,7 +98,7 @@ export class SpineBudgetTracker {
             spineCount,
             avgRI,
             avgCI,
-            level: this.classifyImpactLevel(total),
+            level: classifyImpactLevel(total, brackets),
         };
     }
 
@@ -129,7 +132,7 @@ export class SpineBudgetTracker {
                 clippingMasks: 0,
                 vertices: 0,
                 total: avgRI,
-                level: this.classifyImpactLevel(avgRI),
+                level: classifyImpactLevel(avgRI),
             },
             ci: {
                 physics: 0,
@@ -139,10 +142,10 @@ export class SpineBudgetTracker {
                 transform: 0,
                 deformedMeshes: 0,
                 total: avgCI,
-                level: this.classifyImpactLevel(avgCI),
+                level: classifyImpactLevel(avgCI),
             },
             total: avgTotal,
-            level: this.classifyImpactLevel(avgTotal),
+            level: classifyImpactLevel(avgTotal),
         };
     }
 
@@ -160,14 +163,4 @@ export class SpineBudgetTracker {
         this.histories.delete(skeletonName);
     }
 
-    /**
-     * Classify impact level based on score thresholds.
-     */
-    private classifyImpactLevel(score: number): ImpactLevel {
-        if (score >= 100) return 'very-high';
-        if (score >= 50) return 'high';
-        if (score >= 25) return 'moderate';
-        if (score >= 10) return 'low';
-        return 'minimal';
-    }
 }
