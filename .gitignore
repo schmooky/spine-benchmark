@@ -130,3 +130,6 @@ dist
 .pnp.*
 
 .vscode/
+
+# Crawler demo assets (will be added separately)
+apps/crawler/public/assets/

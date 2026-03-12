@@ -1,0 +1,49 @@
+{
+  "name": "@spine-benchmark/pixi-crawler",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Real-time Spine animation profiler and performance analyzer for PixiJS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    },
+    "./ui": {
+      "import": "./dist/ui/index.js",
+      "types": "./dist/ui/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:dev": "tsc -p tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "spine",
+    "animation",
+    "pixi",
+    "performance",
+    "profiler",
+    "debug"
+  ],
+  "author": "Spine Benchmark Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "pixi.js": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}

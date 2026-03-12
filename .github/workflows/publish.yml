@@ -1,0 +1,81 @@
+name: Publish Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish'
+        required: true
+        type: choice
+        options:
+          - pixi-crawler
+          - spinefolio
+          - metrics
+          - metrics-factors
+          - metrics-scoring
+          - metrics-sampling
+          - metrics-analyzers
+          - metrics-pipeline
+          - metrics-reporting
+          - drawcall-tools
+          - mesh-tools
+          - render-tools
+          - constraint-tools
+          - file-tools
+          - spine-loader
+          - asset-store
+          - workbench-core
+      dry-run:
+        description: 'Dry run (skip actual publish)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build package
+        run: npm run build --workspace @spine-benchmark/${{ inputs.package }}
+
+      - name: Publish to npm
+        if: ${{ !inputs.dry-run }}
+        run: |
+          cd packages/${{ inputs.package }}
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup GitHub Packages auth
+        if: ${{ !inputs.dry-run }}
+        run: |
+          echo "@spine-benchmark:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+
+      - name: Publish to GitHub Packages
+        if: ${{ !inputs.dry-run }}
+        run: |
+          cd packages/${{ inputs.package }}
+          npm publish --access public --registry https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dry run report
+        if: ${{ inputs.dry-run }}
+        run: |
+          echo "📦 Dry run for @spine-benchmark/${{ inputs.package }}"
+          cd packages/${{ inputs.package }}
+          echo "Package contents:"
+          npm pack --dry-run
