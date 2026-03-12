@@ -1,6 +1,10 @@
 # macOS
 .DS_Store
 
+# This repo uses npm (CI runs npm ci). Block other lockfiles.
+pnpm-lock.yaml
+yarn.lock
+
 # Logs
 logs
 *.log
