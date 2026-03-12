@@ -19,6 +19,9 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    setupFiles: [
+      'vitest.setup.ts',
+    ],
     include: [
       'apps/benchmark/test/**/*.test.ts',
       'packages/metrics-factors/src/**/*.test.ts',
