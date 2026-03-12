@@ -213,8 +213,11 @@ describe('analyzeSpine - Rendering Impact', () => {
         const result = analyzeSpine(node);
 
         expect(result.renderingImpact!.clippingMasks).toBe(1);
-        // RI = (0 × 3) + (1 × 5) + (200/200) = 6
-        expect(result.renderingImpact!.total).toBeCloseTo(6, 2);
+        // After clipping start (DC=1, prevBlend=-1), slot0's blend=0 differs from -1,
+        // so a blend transition is counted: blendTransitions=1
+        // RI = (1 × 3) + (1 × 5) + (200/200) = 9
+        expect(result.renderingImpact!.blendModes).toBe(1);
+        expect(result.renderingImpact!.total).toBeCloseTo(9, 2);
     });
 
     it('counts atlas page switches', () => {
