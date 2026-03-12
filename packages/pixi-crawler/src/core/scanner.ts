@@ -11,7 +11,12 @@ import {
     BitmapText,
     ParticleContainer,
 } from 'pixi.js';
-import { createId } from '@paralleldrive/cuid2';
+/** Lightweight unique-id generator — no external deps needed. */
+let _idCounter = 0;
+const _prefix = Math.random().toString(36).slice(2, 8);
+function createNodeId(): string {
+    return `cr_${_prefix}_${(++_idCounter).toString(36)}`;
+}
 import type {
     NodeMeta,
     NodeKind,
@@ -567,7 +572,7 @@ export class Scanner {
         let m = this.meta.get(node);
         if (!m) {
             m = {
-                uid: createId(),
+                uid: createNodeId(),
                 label: '',
                 kind: 'unknown',
                 childCount: 0,

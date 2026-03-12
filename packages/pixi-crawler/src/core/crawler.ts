@@ -56,8 +56,11 @@ export class Crawler {
     this.scanner = new Scanner();
     this.recorder = new Recorder(this.config.historySize);
 
-    // Create placeholder overlay - will be loaded from UI module if needed
+    // Overlay is loaded asynchronously from the UI module to keep core lightweight
     this.overlay = null;
+    if (this.config.overlayEnabled) {
+      this._loadOverlay();
+    }
 
     // Install waterfall spy (replaces old GL draw count spy)
     this._waterfall = new WaterfallSpy();
@@ -133,6 +136,25 @@ export class Crawler {
       b,
       h,
     );
+  }
+
+  // ── Overlay lazy-loading ─────────────────────────────────────
+
+  private async _loadOverlay(): Promise<void> {
+    try {
+      const { Overlay } = await import("../ui/overlay.js");
+      if (this._destroyed) return;
+      (this as any).overlay = new Overlay(this._app);
+      this._app.stage.addChild(this.overlay.highlightContainer);
+      this._app.stage.addChild(this.overlay.container);
+      console.log(
+        "%c[crawler]%c overlay loaded",
+        "color:#4fc3f7;font-weight:bold",
+        "color:#888",
+      );
+    } catch (err) {
+      console.warn("[crawler] failed to load overlay module:", err);
+    }
   }
 
   // ── Tick ───────────────────────────────────────────────────

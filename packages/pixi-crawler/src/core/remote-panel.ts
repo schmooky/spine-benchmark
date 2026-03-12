@@ -485,7 +485,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
     flameDirty = true;
   }
 
-  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escHtml(s) { var d = String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); return d.replace(/\x22/g,'&quot;'); }
 
   // ── Render health summary ──
   function renderHealth(d) {
@@ -1030,7 +1030,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
 })();
 </script>
 </body>
-</html>\`;
+</html>`;
 
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
