@@ -21,10 +21,47 @@ export type {
   Issue,
 } from "./types.js";
 
+/**
+ * Minimal shape of the lazily-loaded Overlay (avoids importing the full UI module at init).
+ * Methods match packages/pixi-crawler/src/ui/overlay.ts public API.
+ */
+interface OverlayLike {
+  readonly container: Container;
+  readonly highlightContainer: Container;
+  visible: boolean;
+  update(
+    snapshot: FrameSnapshot | null,
+    recent: FrameSnapshot[],
+    recentIssues: { issue: Issue; nodeLabel: string }[],
+    isRecording: boolean,
+    problemNodes: { node: Container; meta: NodeMeta }[],
+    impactThreshold: number,
+  ): void;
+  toggle(): void;
+  toggleGraph(): void;
+  toggleIssues(): void;
+  toggleHighlights(): void;
+  toggleAnalysis(): void;
+  selectPrev(): void;
+  selectNext(): void;
+  destroy(): void;
+}
+
+/**
+ * Main entry point - attaches to a PixiJS Application and runs
+ * continuous scene-graph analysis with an optional on-screen overlay
+ * and a remote diagnostic panel.
+ *
+ * ```ts
+ * import { Crawler } from '@spine-benchmark/pixi-crawler';
+ * const crawler = new Crawler(app, { overlayEnabled: true });
+ * ```
+ */
 export class Crawler {
   readonly scanner: Scanner;
   readonly recorder: Recorder;
-  readonly overlay: any; // Lazy-loaded Overlay from UI module
+  /** On-screen diagnostic overlay (lazy-loaded from the UI module, initially `null`). */
+  readonly overlay: OverlayLike | null;
   /** Mutable at runtime - change thresholds on the fly */
   config: CrawlerConfig;
 
@@ -92,12 +129,6 @@ export class Crawler {
     this._keyHandler = (e) => this._onKey(e);
     globalThis.addEventListener("keydown", this._keyHandler);
 
-    if (!this.config.overlayEnabled) {
-      if (this.overlay) {
-        this.overlay.visible = false;
-      }
-    }
-
     // Print controls to console
     const h = "color:#888;font-weight:normal";
     const b = "color:#fff;font-weight:bold";
@@ -144,9 +175,10 @@ export class Crawler {
     try {
       const { Overlay } = await import("../ui/overlay.js");
       if (this._destroyed) return;
-      (this as any).overlay = new Overlay(this._app);
-      this._app.stage.addChild(this.overlay.highlightContainer);
-      this._app.stage.addChild(this.overlay.container);
+      const ol: OverlayLike = new Overlay(this._app);
+      (this as { overlay: OverlayLike | null }).overlay = ol;
+      this._app.stage.addChild(ol.highlightContainer);
+      this._app.stage.addChild(ol.container);
       console.log(
         "%c[crawler]%c overlay loaded",
         "color:#4fc3f7;font-weight:bold",

@@ -43,7 +43,7 @@ interface SpineAttachment {
     worldVerticesLength?: number;
     /** Bone indices for weighted meshes. null = unweighted. */
     bones?: number[] | null;
-    /** Present on MeshAttachment — triangle index array */
+    /** Present on MeshAttachment - triangle index array */
     triangles?: number[];
 }
 
@@ -58,6 +58,7 @@ interface SpineAtlasPage {
     height: number;
 }
 
+/** Duck-typed Spine runtime shape - avoids hard dep on @esotericsoftware/spine-core. */
 export interface SpineLike {
     skeleton?: {
         slots: SpineSlot[];

@@ -271,7 +271,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
     <div id="main-panel">
       <div id="health-section">
         <div id="health-title">Frame Health</div>
-        <div id="health-message">—</div>
+        <div id="health-message">-</div>
         <div id="budget-info"></div>
       </div>
       <div id="problems-section">
@@ -490,7 +490,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
   // ── Render health summary ──
   function renderHealth(d) {
     if (!d) {
-      healthMessage.textContent = '—';
+      healthMessage.textContent = '-';
       healthMessage.className = '';
       budgetInfo.innerHTML = '';
       return;
@@ -720,7 +720,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
       rows += '<td>' + typeLabel + '</td>';
       rows += '<td style="text-align:right">' + e.vertexCount.toLocaleString() + '</td>';
       rows += '<td><div class="waterfall-bar" style="width:' + pct + '%"></div></td>';
-      rows += '<td>' + (breakBadges || '<span style="color:var(--fg3)">—</span>') + '</td>';
+      rows += '<td>' + (breakBadges || '<span style="color:var(--fg3)">-</span>') + '</td>';
       rows += '</tr>';
     }
     waterfallBody.innerHTML = rows;

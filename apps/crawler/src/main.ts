@@ -4,7 +4,7 @@ import { Application, Assets, Container, Graphics, Text, TextStyle } from 'pixi.
 import { Crawler } from '@spine-benchmark/pixi-crawler';
 
 /**
- * Pixi Crawler Demo — Spine slot-machine test scene
+ * Pixi Crawler Demo - Spine slot-machine test scene
  *
  * Loads real Spine skeletons from the TPT atlas: backgrounds, reelgrid,
  * symbol grid with active animations, win sequences, meter, etc.
@@ -101,7 +101,7 @@ const ALL_JSONS = [
   const reels = makeSpine('Reelgrid', 'state_landscape', true, cx, cy, 0.8);
   if (reels) reelLayer.addChild(reels);
 
-  // ── Layer 2: Symbol grid — 5×3 reel layout with active animations ──
+  // ── Layer 2: Symbol grid - 5×3 reel layout with active animations ──
   const symbolLayer = new Container();
   symbolLayer.label = 'SymbolGrid';
   world.addChild(symbolLayer);
@@ -116,19 +116,19 @@ const ALL_JSONS = [
 
   // Symbol pool with active animations
   const symbolPool: [string, string][] = [
-    // Row 0 — mostly highs with active loops
+    // Row 0 - mostly highs with active loops
     ['sym_H1', 'char_idle_loop_regular'],
     ['sym_M2', 'char_idle_loop_regular'],
     ['sym_WR', 'book_hover_loop'],
     ['sym_M3', 'char_idle_loop_regular'],
     ['sym_M4', 'char_idle_loop_regular'],
-    // Row 1 — mix of highs doing win anims + expanding
+    // Row 1 - mix of highs doing win anims + expanding
     ['sym_M2', 'fire_loop'],
     ['sym_H1', 'fire_loop'],
     ['sym_M3', 'expand_from_middle'],
     ['sym_M4', 'highlighted_fade_in'],
     ['sym_WR', 'attention3_loop'],
-    // Row 2 — lows with some highlights
+    // Row 2 - lows with some highlights
     ['sym_F5', 'mb'],
     ['sym_F6', 'highlighted_fade_in'],
     ['sym_F7', 'static'],
@@ -225,14 +225,14 @@ const ALL_JSONS = [
     winLayer.addChild(initWin);
   }
 
-  // Near-win loop (often most expensive — lots of bones)
+  // Near-win loop (often most expensive - lots of bones)
   const nearWin = makeSpine('Near_Win', 'loop', true, cx + 250, cy + 100, 0.35);
   if (nearWin) {
     nearWin.label = 'NearWin_Loop';
     winLayer.addChild(nearWin);
   }
 
-  // ── Layer 8: Present Highlighted Symbol (huge — 1013 bones!) ──
+  // ── Layer 8: Present Highlighted Symbol (huge - 1013 bones!) ──
   const presentHL = makeSpine(
     'Present_Highlighted_Symbol', 'present_highlighted_symbol', true,
     cx - 200, cy + 150, 0.25,
@@ -292,7 +292,7 @@ const ALL_JSONS = [
   // ── HUD ──
   const hudText = new Text({
     text: [
-      'PIXI CRAWLER DEMO — Spine Slot Machine Scene',
+      'PIXI CRAWLER DEMO - Spine Slot Machine Scene',
       '~  overlay   G  graph   I  issues   H  highlights',
       'R  record   P  report   D  analysis   W  remote panel',
     ].join('\n'),
@@ -323,7 +323,7 @@ const ALL_JSONS = [
   }, 0);
 
   console.log(
-    '%c[demo]%c scene ready — %d spine skeletons across %d layers. Press ~ for overlay.',
+    '%c[demo]%c scene ready - %d spine skeletons across %d layers. Press ~ for overlay.',
     'color:#4fc3f7;font-weight:bold',
     'color:#888',
     totalSpines,

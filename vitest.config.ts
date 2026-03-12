@@ -26,7 +26,8 @@ export default defineConfig({
       'packages/metrics-pipeline/src/**/*.test.ts',
       'packages/metrics-reporting/src/**/*.test.ts',
       'packages/constraint-tools/src/**/*.test.ts',
-      'packages/mesh-tools/src/**/*.test.ts'
+      'packages/mesh-tools/src/**/*.test.ts',
+      'packages/pixi-crawler/src/**/*.test.ts'
     ],
     coverage: {
       provider: 'v8',

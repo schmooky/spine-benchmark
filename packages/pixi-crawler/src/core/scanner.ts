@@ -32,7 +32,40 @@ import type {
 } from './types.js';
 import { ISSUE_IMPACT, classifyImpactLevel } from './types.js';
 import { isSpine, analyzeSpine } from './spine-analyzer.js';
+import type { SpineLike } from './spine-analyzer.js';
 import { SpineBudgetTracker } from './spine-budget-tracker.js';
+
+// ── Type guard helpers for duck-typing into PixiJS internals ──
+// Centralised here so breakage from PixiJS internal changes surfaces in one place.
+
+/** Safely read graphics context instructions (PixiJS v8 internal). */
+function getGraphicsInstructionCount(node: Container): number {
+    const ctx = (node as unknown as { _context?: { instructions?: unknown[] } })._context;
+    return ctx?.instructions?.length ?? 0;
+}
+
+/** Check whether a node is an isolated render group (PixiJS v8). */
+function hasRenderGroup(node: Container): boolean {
+    return !!(node as unknown as { isRenderGroup?: boolean }).isRenderGroup;
+}
+
+/** Read skeleton data name from a Spine-like node. */
+function getSkeletonName(node: Container): string {
+    return (node as unknown as SpineLike).skeleton?.data?.name ?? 'unknown';
+}
+
+/** Get active animation track count from a Spine-like node. */
+function getActiveTrackCount(node: Container): number {
+    const spine = node as unknown as SpineLike;
+    const tracks = spine.state?.tracks;
+    if (!tracks) return 0;
+    return tracks.filter(t => t != null).length;
+}
+
+/** Read texture source UID, returning a stable string key. */
+function getTextureSourceKey(src: unknown): string {
+    return String((src as { uid?: number }).uid ?? 'tex');
+}
 
 /**
  * The Scanner traverses the PixiJS scene graph and collects metadata.
@@ -183,10 +216,7 @@ export class Scanner {
             // Estimate graphics mask complexity via internal instructions
             let estimatedComplexity = 1;
             if (maskNode instanceof Graphics) {
-                const ctx = (maskNode as unknown as { _context?: { instructions?: unknown[] } })._context;
-                if (ctx?.instructions) {
-                    estimatedComplexity = Math.max(1, ctx.instructions.length);
-                }
+                estimatedComplexity = Math.max(1, getGraphicsInstructionCount(maskNode));
             }
 
             maskAnalysis = {
@@ -211,7 +241,7 @@ export class Scanner {
         if (hasFilters) this._totalFilters++;
 
         // ── Render group isolation ──
-        const isolated = !!(node as unknown as { isRenderGroup?: boolean }).isRenderGroup;
+        const isolated = hasRenderGroup(node);
 
         // ── Draw calls + spine analysis ──
         let drawCalls = 0;
@@ -246,8 +276,7 @@ export class Scanner {
 
         // ── Census: spine skeleton names ──
         if (kind === 'spine' && isSpine(node)) {
-            const spineObj = node as unknown as { skeleton?: { data?: { name?: string } } };
-            const skelName = spineObj.skeleton?.data?.name ?? 'unknown';
+            const skelName = getSkeletonName(node);
             this._spineCounts.set(skelName, (this._spineCounts.get(skelName) ?? 0) + 1);
         }
 
@@ -256,7 +285,7 @@ export class Scanner {
             const spr = node as Sprite;
             const src = spr.texture?.source;
             if (src) {
-                const key = String((src as unknown as { uid?: number }).uid ?? 'tex');
+                const key = getTextureSourceKey(src);
                 this._textureCounts.set(key, (this._textureCounts.get(key) ?? 0) + 1);
                 if (!this._textureSizes.has(key)) {
                     this._textureSizes.set(key, { width: src.width, height: src.height });
@@ -406,16 +435,12 @@ export class Scanner {
 
             // Spine with active animation tracks while hidden
             if (kind === 'spine' && isSpine(node)) {
-                const spineObj = node as unknown as { state?: { tracks?: (unknown | null)[] } };
-                const tracks = spineObj.state?.tracks;
-                if (tracks) {
-                    const activeTracks = tracks.filter(t => t != null).length;
-                    if (activeTracks > 0) {
-                        issues.push(
-                            this._issue('warn', 'SPINE_HIDDEN_UPDATING',
-                                `Invisible spine with ${activeTracks} active animation tracks - wasting CPU`),
-                        );
-                    }
+                const activeTracks = getActiveTrackCount(node);
+                if (activeTracks > 0) {
+                    issues.push(
+                        this._issue('warn', 'SPINE_HIDDEN_UPDATING',
+                            `Invisible spine with ${activeTracks} active animation tracks - wasting CPU`),
+                    );
                 }
             }
 
@@ -471,8 +496,7 @@ export class Scanner {
             };
 
             if (visible) {
-                const spineObj = node as unknown as { skeleton?: { data?: { name?: string } } };
-                const skelName = spineObj.skeleton?.data?.name ?? 'unknown';
+                const skelName = getSkeletonName(node);
                 this.budgetTracker.recordBudget(skelName, spineBudget);
                 this._visibleSpineBudgets.push({ skeletonName: skelName, budget: spineBudget });
             }
