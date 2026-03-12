@@ -5,13 +5,14 @@ export class BackgroundManager {
   private bgSprite: Sprite | null = null;
   private container: Container;
   private textureId: string | null = null;
+  private boundResizeHandler: () => void;
 
   constructor(app: Application) {
     this.app = app;
-    
+
     // Create a container that will be positioned at the bottom of the render stack
     this.container = new Container();
-    
+
     // Add the container to the stage
     // Insert at index 0 to ensure it's behind everything else
     if (this.app.stage.children.length > 0) {
@@ -19,9 +20,10 @@ export class BackgroundManager {
     } else {
       this.app.stage.addChild(this.container);
     }
-    
-    // Listen for resize events to update the background size
-    window.addEventListener('resize', this.resizeBackground.bind(this));
+
+    // Store bound reference so removeEventListener can match it
+    this.boundResizeHandler = this.resizeBackground.bind(this);
+    window.addEventListener('resize', this.boundResizeHandler);
   }
 
   /**
@@ -107,7 +109,7 @@ export class BackgroundManager {
    */
   public destroy(): void {
     this.clearBackground();
-    window.removeEventListener('resize', this.resizeBackground.bind(this));
+    window.removeEventListener('resize', this.boundResizeHandler);
     this.app.stage.removeChild(this.container);
     this.container.destroy();
   }

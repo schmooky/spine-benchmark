@@ -57,10 +57,14 @@ function countDrawCallsFlushesAndTextures(
   return { drawCalls, flushes, textures: pages.size };
 }
 
+// Throttle expensive stats computation to reduce observer-effect overhead
+const STATS_UPDATE_INTERVAL = 250; // 4 updates/sec
+
 export function useCanvasStats(spineInstance: Spine | null): CanvasStats {
   const [stats, setStats] = useState<CanvasStats>(EMPTY_STATS);
   const frameTimesRef = useRef<number[]>([]);
   const lastTimeRef = useRef(0);
+  const lastStatsUpdateRef = useRef(0);
 
   useEffect(() => {
     if (!spineInstance) {
@@ -72,6 +76,7 @@ export function useCanvasStats(spineInstance: Spine | null): CanvasStats {
     let running = true;
     frameTimesRef.current = [];
     lastTimeRef.current = performance.now();
+    lastStatsUpdateRef.current = 0;
 
     const tick = () => {
       if (!running) return;
@@ -80,20 +85,26 @@ export function useCanvasStats(spineInstance: Spine | null): CanvasStats {
       const delta = now - lastTimeRef.current;
       lastTimeRef.current = now;
 
+      // Always collect frame times for accurate FPS averaging
       const frameTimes = frameTimesRef.current;
       frameTimes.push(delta);
       if (frameTimes.length > FPS_SAMPLES) {
         frameTimes.shift();
       }
 
-      const avgDelta = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
-      const fps = avgDelta > 0 ? Math.round(1000 / avgDelta) : 0;
+      // Only compute expensive draw call stats and trigger React update at throttled interval
+      if (now - lastStatsUpdateRef.current >= STATS_UPDATE_INTERVAL) {
+        lastStatsUpdateRef.current = now;
 
-      try {
-        const { drawCalls, flushes, textures } = countDrawCallsFlushesAndTextures(spineInstance.skeleton);
-        setStats({ fps, drawCalls, flushes, textures });
-      } catch {
-        setStats((prev) => ({ ...prev, fps }));
+        const avgDelta = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+        const fps = avgDelta > 0 ? Math.round(1000 / avgDelta) : 0;
+
+        try {
+          const { drawCalls, flushes, textures } = countDrawCallsFlushesAndTextures(spineInstance.skeleton);
+          setStats({ fps, drawCalls, flushes, textures });
+        } catch {
+          setStats((prev) => ({ ...prev, fps }));
+        }
       }
 
       rafId = requestAnimationFrame(tick);

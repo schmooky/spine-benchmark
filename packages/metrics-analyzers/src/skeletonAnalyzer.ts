@@ -1,6 +1,5 @@
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
-import { PERFORMANCE_FACTORS } from "@spine-benchmark/metrics-factors";
-import { calculateBoneScore, calculateMaxDepth } from "@spine-benchmark/metrics-scoring";
+import { calculateMaxDepth } from "@spine-benchmark/metrics-scoring";
 
 export interface BoneNode {
   name: string;
@@ -14,7 +13,6 @@ export interface SkeletonMetrics {
   totalBones: number;
   rootBones: number;
   maxDepth: number;
-  score: number;
 }
 
 export interface SkeletonAnalysis {
@@ -47,15 +45,11 @@ export function analyzeSkeletonStructure(spineInstance: Spine): SkeletonAnalysis
   
   const maxDepth = calculateMaxDepth(boneTree);
   const totalBones = skeleton.bones.length;
-  
-  // Calculate bone score
-  const boneScore = calculateBoneScore(totalBones, maxDepth);
-  
+
   const metrics: SkeletonMetrics = {
     totalBones,
     rootBones: rootBones.length,
-    maxDepth,
-    score: boneScore
+    maxDepth
   };
   
   return {

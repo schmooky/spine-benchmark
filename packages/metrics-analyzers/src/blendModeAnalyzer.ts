@@ -1,6 +1,4 @@
 import { Animation, BlendMode, Physics, Spine } from "@esotericsoftware/spine-pixi-v8";
-import { PERFORMANCE_FACTORS } from "@spine-benchmark/metrics-factors";
-import { calculateBlendModeScore } from "@spine-benchmark/metrics-scoring";
 import type { ActiveComponents } from "@spine-benchmark/metrics-sampling";
 
 export interface BlendModeMetrics {
@@ -10,7 +8,6 @@ export interface BlendModeMetrics {
   nonNormalBlendModeCount: number; // For compatibility
   additiveCount: number; // For compatibility
   multiplyCount: number; // For compatibility
-  score: number;
 }
 
 export interface GlobalBlendModeAnalysis {
@@ -109,17 +106,13 @@ export function analyzeBlendModesForAnimation(
   });
   animationState.apply(skeleton);
   
-  // Calculate blend mode score based on maximum concurrent blend modes
-  const blendModeScore = calculateBlendModeScore(maxNonNormalCount, maxAdditiveCount);
-  
   return {
     activeNonNormalCount: maxNonNormalCount,
     nonNormalBlendModeCount: maxNonNormalCount, // For compatibility
     activeAdditiveCount: maxAdditiveCount,
     additiveCount: maxAdditiveCount, // For compatibility
     activeMultiplyCount: maxMultiplyCount,
-    multiplyCount: maxMultiplyCount, // For compatibility
-    score: blendModeScore
+    multiplyCount: maxMultiplyCount // For compatibility
   };
 }
 
@@ -156,17 +149,13 @@ export function analyzeGlobalBlendModes(spineInstance: Spine): GlobalBlendModeAn
   const multiplyCount = Array.from(slotsWithNonNormalBlendMode.values())
     .filter(mode => mode === BlendMode.Multiply).length;
   
-  // Calculate blend mode score
-  const blendModeScore = calculateBlendModeScore(slotsWithNonNormalBlendMode.size, additiveCount);
-  
   const metrics: BlendModeMetrics = {
     activeNonNormalCount: slotsWithNonNormalBlendMode.size,
     nonNormalBlendModeCount: slotsWithNonNormalBlendMode.size,
     activeAdditiveCount: additiveCount,
     additiveCount,
     activeMultiplyCount: multiplyCount,
-    multiplyCount,
-    score: blendModeScore
+    multiplyCount
   };
   
   return {

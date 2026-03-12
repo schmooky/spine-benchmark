@@ -1,6 +1,4 @@
 import { Animation, DeformTimeline, MeshAttachment, Spine } from "@esotericsoftware/spine-pixi-v8";
-import { PERFORMANCE_FACTORS } from "@spine-benchmark/metrics-factors";
-import { calculateMeshScore } from "@spine-benchmark/metrics-scoring";
 import type { ActiveComponents } from "@spine-benchmark/metrics-sampling";
 
 export interface MeshMetrics {
@@ -11,7 +9,6 @@ export interface MeshMetrics {
   avgVerticesPerMesh: number;
   highVertexMeshes: number;
   complexMeshes: number;
-  score: number;
 }
 
 export interface MeshInfo {
@@ -109,14 +106,9 @@ export function analyzeMeshesForAnimation(
     deformedMeshCount,
     avgVerticesPerMesh: activeMeshCount > 0 ? totalVertices / activeMeshCount : 0,
     highVertexMeshes: 0, // Will be calculated if needed
-    complexMeshes: 0,    // Will be calculated if needed
-    score: 0
+    complexMeshes: 0     // Will be calculated if needed
   };
-  
-  // Calculate mesh score
-  const meshScore = calculateMeshScore(meshComplexityMetrics);
-  meshComplexityMetrics.score = meshScore;
-  
+
   return meshComplexityMetrics;
 }
 
@@ -202,14 +194,9 @@ export function analyzeGlobalMeshes(spineInstance: Spine): GlobalMeshAnalysis {
     deformedMeshCount,
     avgVerticesPerMesh: totalMeshCount > 0 ? totalVertices / totalMeshCount : 0,
     highVertexMeshes: meshInfos.filter(mesh => mesh.vertices > 50).length,
-    complexMeshes: meshInfos.filter(mesh => mesh.vertices > 20 && (mesh.isDeformed || mesh.boneWeights > 0)).length,
-    score: 0
+    complexMeshes: meshInfos.filter(mesh => mesh.vertices > 20 && (mesh.isDeformed || mesh.boneWeights > 0)).length
   };
-  
-  // Calculate mesh score using logarithmic scale
-  const meshScore = calculateMeshScore(metrics);
-  metrics.score = meshScore;
-  
+
   return {
     meshes: meshInfos,
     metrics

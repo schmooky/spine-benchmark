@@ -19,14 +19,12 @@ import {
   ConstraintMetrics,
   GlobalPhysicsAnalysis
 } from "@spine-benchmark/metrics-analyzers";
-import { calculateOverallScore } from "@spine-benchmark/metrics-scoring";
 import { getActiveComponentsForAnimation } from "@spine-benchmark/metrics-sampling";
 import type { ActiveComponents } from "@spine-benchmark/metrics-sampling";
 
 export interface AnimationAnalysis {
   name: string;
   duration: number;
-  overallScore: number;
   meshMetrics: MeshMetrics;
   clippingMetrics: ClippingMetrics;
   blendModeMetrics: BlendModeMetrics;
@@ -42,7 +40,6 @@ export interface AnalysisStatistics {
   animationsWithTransform: number;
   animationsWithPath: number;
   highVertexAnimations: number;
-  poorPerformingAnimations: number;
 }
 
 export interface SpineAnalysisResult {
@@ -55,9 +52,6 @@ export interface SpineAnalysisResult {
   globalClipping: GlobalClippingAnalysis;
   globalBlendMode: GlobalBlendModeAnalysis;
   globalPhysics: GlobalPhysicsAnalysis;
-  medianScore: number;
-  bestAnimation: AnimationAnalysis | null;
-  worstAnimation: AnimationAnalysis | null;
   stats: AnalysisStatistics;
 }
 
@@ -114,21 +108,9 @@ export function analyzeSingleAnimation(
   // Analyze constraints for this animation
   const constraintMetrics = analyzePhysicsForAnimation(spineInstance, animation, activeComponents);
 
-  // Calculate overall performance score for this animation
-  const componentScores = {
-    boneScore: analyzeSkeleton(spineInstance).metrics.score, // Bone score is same for all animations
-    meshScore: meshMetrics.score,
-    clippingScore: clippingMetrics.score,
-    blendModeScore: blendModeMetrics.score,
-    constraintScore: constraintMetrics.score
-  };
-
-  const overallScore = calculateOverallScore(componentScores);
-
   return {
     name: animation.name,
     duration: animation.duration,
-    overallScore,
     meshMetrics,
     clippingMetrics,
     blendModeMetrics,
@@ -166,39 +148,7 @@ export function calculateStatistics(animationAnalyses: AnimationAnalysis[]): Ana
     animationsWithIK: animationAnalyses.filter(a => a.activeComponents.hasIK).length,
     animationsWithTransform: animationAnalyses.filter(a => a.activeComponents.hasTransform).length,
     animationsWithPath: animationAnalyses.filter(a => a.activeComponents.hasPath).length,
-    highVertexAnimations: animationAnalyses.filter(a => a.meshMetrics.totalVertices > 500).length,
-    poorPerformingAnimations: animationAnalyses.filter(a => a.overallScore < 55).length
-  };
-}
-
-/**
- * Sort animation analyses by score
- * @param animationAnalyses - Array of AnimationAnalysis objects
- * @returns Sorted array with best and worst animations
- */
-export function sortAnalyses(animationAnalyses: AnimationAnalysis[]): {
-  sorted: AnimationAnalysis[];
-  best: AnimationAnalysis | null;
-  worst: AnimationAnalysis | null;
-  medianScore: number;
-} {
-  // Calculate median score
-  const scores = animationAnalyses.map(a => a.overallScore);
-  scores.sort((a, b) => a - b);
-  const medianScore = scores.length > 0
-    ? scores[Math.floor(scores.length / 2)]
-    : 100;
-
-  // Find best and worst performing animations
-  const sortedAnalyses = [...animationAnalyses].sort((a, b) => b.overallScore - a.overallScore);
-  const bestAnimation = sortedAnalyses.length > 0 ? sortedAnalyses[0] : null;
-  const worstAnimation = sortedAnalyses.length > 0 ? sortedAnalyses[sortedAnalyses.length - 1] : null;
-
-  return {
-    sorted: sortedAnalyses,
-    best: bestAnimation,
-    worst: worstAnimation,
-    medianScore
+    highVertexAnimations: animationAnalyses.filter(a => a.meshMetrics.totalVertices > 500).length
   };
 }
 
@@ -209,7 +159,6 @@ export function sortAnalyses(animationAnalyses: AnimationAnalysis[]): {
  * @param globalData - Global analysis data
  * @param animationData - Animation analysis data
  * @param statistics - Calculated statistics
- * @param sortedData - Sorted animation data
  * @returns Complete SpineAnalysisResult
  */
 export function aggregateResults(
@@ -222,13 +171,7 @@ export function aggregateResults(
     globalPhysics: GlobalPhysicsAnalysis;
   },
   animationData: AnimationAnalysis[],
-  statistics: AnalysisStatistics,
-  sortedData: {
-    sorted: AnimationAnalysis[];
-    best: AnimationAnalysis | null;
-    worst: AnimationAnalysis | null;
-    medianScore: number;
-  }
+  statistics: AnalysisStatistics
 ): SpineAnalysisResult {
   return {
     skeletonName: spineInstance.skeleton.data.name || 'Unnamed',
@@ -240,9 +183,6 @@ export function aggregateResults(
     globalClipping: globalData.globalClipping,
     globalBlendMode: globalData.globalBlendMode,
     globalPhysics: globalData.globalPhysics,
-    medianScore: sortedData.medianScore,
-    bestAnimation: sortedData.best,
-    worstAnimation: sortedData.worst,
     stats: statistics
   };
 }
