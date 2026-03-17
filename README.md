@@ -50,43 +50,6 @@ npm run test       # run tests
 | `packages/workbench-core` | Compatibility aggregator for workbench tooling |
 | `packages/spinefolio` | PixiJS v8 Spine widget library |
 
-## Impact Model (Current)
-
-The benchmark UI classifies performance by impact cost (not weighted component score).
-It tracks worst-case impact across animations in two buckets:
-
-- Rendering impact
-- Computational impact
-
-Rendering impact cost:
-
-```text
-renderCost = (activeNonNormalBlendModes * 3)
-           + (activeClipMasks * 5)
-           + (totalVertices / 200)
-```
-
-Computational impact cost:
-
-```text
-computeCost = (activePhysics * 4)
-            + (activeIK * 2)
-            + (activeTransform * 1.5)
-            + (activePath * 2.5)
-            + (deformedMeshes * 1.5)
-            + (weightedMeshes * 2)
-```
-
-Impact levels:
-
-| Cost | Level |
-|---:|---|
-| `< 3` | Minimal |
-| `3 - <8` | Low |
-| `8 - <15` | Moderate |
-| `15 - <25` | High |
-| `>= 25` | Very high |
-
 ## Build Specific Workspaces
 
 ```bash
