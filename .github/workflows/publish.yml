@@ -76,7 +76,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     strategy:
       matrix:
         package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
@@ -95,23 +94,16 @@ jobs:
       - name: Build
         run: npm run build --workspace @spine-benchmark/${{ matrix.package }}
 
-      - name: Publish to npm
+      - name: Publish
         run: npm publish --workspace @spine-benchmark/${{ matrix.package }} --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish to GitHub Packages
-        run: |
-          npm config set @spine-benchmark:registry https://npm.pkg.github.com
-          npm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
-          npm publish --workspace @spine-benchmark/${{ matrix.package }} --access public --registry https://npm.pkg.github.com
 
   publish:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -126,20 +118,13 @@ jobs:
       - name: Build
         run: npm run build --workspace @spine-benchmark/${{ inputs.package }}
 
-      - name: Publish to npm
+      - name: Publish
         if: ${{ !inputs.dry-run }}
         run: npm publish --workspace @spine-benchmark/${{ inputs.package }} --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish to GitHub Packages
-        if: ${{ !inputs.dry-run }}
-        run: |
-          npm config set @spine-benchmark:registry https://npm.pkg.github.com
-          npm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
-          npm publish --workspace @spine-benchmark/${{ inputs.package }} --access public --registry https://npm.pkg.github.com
-
-      - name: Dry run report
+      - name: Dry run
         if: ${{ inputs.dry-run }}
         run: |
           echo "📦 Dry run for @spine-benchmark/${{ inputs.package }}"
