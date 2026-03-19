@@ -31,8 +31,83 @@ on:
         type: boolean
         default: false
 
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/*/package.json'
+
 jobs:
+  detect-changes:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.detect.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect version bumps
+        id: detect
+        run: |
+          CHANGED=$(git diff HEAD~1 HEAD --name-only | grep 'packages/.*/package.json' || true)
+          PACKAGES=()
+          for FILE in $CHANGED; do
+            PKG=$(echo "$FILE" | cut -d/ -f2)
+            OLD=$(git show HEAD~1:"$FILE" | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version" 2>/dev/null || echo "")
+            NEW=$(node -p "require('./$FILE').version")
+            if [ "$OLD" != "$NEW" ]; then
+              echo "✅ $PKG: $OLD → $NEW"
+              PACKAGES+=("$PKG")
+            else
+              echo "⏭️  $PKG: version unchanged ($NEW), skipping"
+            fi
+          done
+          JSON=$(printf '%s\n' "${PACKAGES[@]}" | jq -R . | jq -sc .)
+          echo "packages=$JSON" >> "$GITHUB_OUTPUT"
+
+  auto-publish:
+    needs: detect-changes
+    if: |
+      github.event_name == 'push' &&
+      needs.detect-changes.outputs.packages != '[]' &&
+      needs.detect-changes.outputs.packages != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build --workspace @spine-benchmark/${{ matrix.package }}
+
+      - name: Publish to npm
+        run: npm publish --workspace @spine-benchmark/${{ matrix.package }} --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to GitHub Packages
+        run: |
+          npm config set @spine-benchmark:registry https://npm.pkg.github.com
+          npm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
+          npm publish --workspace @spine-benchmark/${{ matrix.package }} --access public --registry https://npm.pkg.github.com
+
   publish:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,38 +119,28 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          registry-url: 'https://registry.npmjs.org'
 
       - run: npm ci
 
-      - name: Build package
+      - name: Build
         run: npm run build --workspace @spine-benchmark/${{ inputs.package }}
 
       - name: Publish to npm
         if: ${{ !inputs.dry-run }}
-        run: |
-          cd packages/${{ inputs.package }}
-          npm publish --access public
+        run: npm publish --workspace @spine-benchmark/${{ inputs.package }} --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Setup GitHub Packages auth
-        if: ${{ !inputs.dry-run }}
-        run: |
-          echo "@spine-benchmark:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
 
       - name: Publish to GitHub Packages
         if: ${{ !inputs.dry-run }}
         run: |
-          cd packages/${{ inputs.package }}
-          npm publish --access public --registry https://npm.pkg.github.com
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm config set @spine-benchmark:registry https://npm.pkg.github.com
+          npm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
+          npm publish --workspace @spine-benchmark/${{ inputs.package }} --access public --registry https://npm.pkg.github.com
 
       - name: Dry run report
         if: ${{ inputs.dry-run }}
         run: |
           echo "📦 Dry run for @spine-benchmark/${{ inputs.package }}"
-          cd packages/${{ inputs.package }}
-          echo "Package contents:"
-          npm pack --dry-run
+          npm pack --workspace @spine-benchmark/${{ inputs.package }} --dry-run
