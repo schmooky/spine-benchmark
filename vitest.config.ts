@@ -14,7 +14,8 @@ export default defineConfig({
       '@spine-benchmark/metrics-sampling': r('packages/metrics-sampling/src/index.ts'),
       '@spine-benchmark/metrics-analyzers': r('packages/metrics-analyzers/src/index.ts'),
       '@spine-benchmark/metrics-pipeline': r('packages/metrics-pipeline/src/index.ts'),
-      '@spine-benchmark/metrics-reporting': r('packages/metrics-reporting/src/index.ts')
+      '@spine-benchmark/metrics-reporting': r('packages/metrics-reporting/src/index.ts'),
+      '@spine-benchmark/metrics-impact-formula': r('packages/metrics-impact-formula/src/index.ts')
     }
   },
   test: {
@@ -28,6 +29,7 @@ export default defineConfig({
       'packages/metrics-scoring/src/**/*.test.ts',
       'packages/metrics-pipeline/src/**/*.test.ts',
       'packages/metrics-reporting/src/**/*.test.ts',
+      'packages/metrics-impact-formula/src/**/*.test.ts',
       'packages/constraint-tools/src/**/*.test.ts',
       'packages/mesh-tools/src/**/*.test.ts',
       'packages/pixi-crawler/src/**/*.test.ts'
@@ -39,7 +41,8 @@ export default defineConfig({
         'packages/metrics-factors/src/**/*.ts',
         'packages/metrics-scoring/src/**/*.ts',
         'packages/metrics-pipeline/src/**/*.ts',
-        'packages/metrics-reporting/src/**/*.ts'
+        'packages/metrics-reporting/src/**/*.ts',
+        'packages/metrics-impact-formula/src/**/*.ts'
       ],
       exclude: [
         '**/*.test.ts'

@@ -1,0 +1,30 @@
+{
+  "name": "@spine-benchmark/metrics-impact-formula",
+  "version": "0.1.0",
+  "description": "Canonical Rendering / Computational Impact formulas shared by every Spine Benchmark scorer. Zero runtime dependencies so leaf consumers (e.g. pixi-crawler) can pull it in without dragging in the analysis pipeline.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
