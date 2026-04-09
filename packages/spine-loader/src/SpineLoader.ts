@@ -100,7 +100,10 @@ export class SpineLoader {
       const atlasLoader = new AtlasAttachmentLoader(spineAtlas);
       const skeletonJson = new SkeletonJson(atlasLoader);
       const skeletonDataObj = skeletonJson.readSkeletonData(skeletonData);
-      
+
+      // Workaround for spine-pixi-v8: see initializeSequenceAttachments doc.
+      this.initializeSequenceAttachments(skeletonDataObj);
+
       // Create spine instance with autoUpdate disabled until initialised.
       const spineInstance = new Spine({ skeletonData: skeletonDataObj, autoUpdate: false });
       spineInstance.skeleton.setToSetupPose();
@@ -491,7 +494,10 @@ export class SpineLoader {
       console.log(skeletonJson)
      skeletonData = skeletonJson.readSkeletonData(data);
     }
-    
+
+    // Workaround for spine-pixi-v8: see initializeSequenceAttachments doc.
+    this.initializeSequenceAttachments(skeletonData!);
+
     // Create spine instance.
     // Disable autoUpdate initially so the ticker doesn't fire before the
     // skeleton has been fully initialised with a world-transform pass.
@@ -510,5 +516,60 @@ export class SpineLoader {
     spineInstance.autoUpdate = true;
 
     return spineInstance;
+  }
+
+  /**
+   * Workaround for a spine-pixi-v8 initialization gap with sequence attachments.
+   *
+   * Spine 4.2 introduced "sequence" attachments - region/mesh attachments that
+   * cycle through N atlas regions over time (animated sprite frames). The
+   * runtime stores the resolved frame regions on `attachment.sequence.regions[]`,
+   * and `Sequence.apply(slot, attachment)` is the thing that copies
+   * `regions[setupIndex]` into `attachment.region` so the renderer has something
+   * to draw.
+   *
+   * The catch: `Sequence.apply` is only ever called from inside
+   * `AnimationState.apply()` when a `SequenceTimeline` runs - i.e. on the next
+   * animation tick, not at construction time. spine-pixi-v8's
+   * `AtlasAttachmentLoader.newRegionAttachment` / `newMeshAttachment` paths
+   * populate `sequence.regions[]` but leave `attachment.region` itself
+   * `undefined`. If anything renders the spine instance before the first tick
+   * (e.g. our viewer's first paint), the renderer dereferences
+   * `attachment.region.texture._source` on `undefined` and crashes deep inside
+   * the batcher / RenderTargetSystem with the cryptic
+   * `Cannot read properties of undefined (reading '_source')`.
+   *
+   * Mirror what `Sequence.apply` would do, eagerly, before the first render:
+   * for every attachment with a sequence and no current region, copy the
+   * setup-frame region into `attachment.region` and call `updateRegion()`.
+   * Subsequent SequenceTimeline applies (if any) take over from frame 2 onward
+   * and behave normally.
+   */
+  private initializeSequenceAttachments(skeletonData: SkeletonData): void {
+    for (const skin of skeletonData.skins) {
+      // Skin.attachments is an array indexed by slot index, each entry an
+      // object keyed by attachment name. We iterate every entry defensively;
+      // some slot indices may be unset (sparse).
+      const slotMap = (skin as unknown as { attachments: Array<Record<string, any>> }).attachments;
+      if (!slotMap) continue;
+      for (let slotIndex = 0; slotIndex < slotMap.length; slotIndex++) {
+        const attachmentsAtSlot = slotMap[slotIndex];
+        if (!attachmentsAtSlot) continue;
+        for (const name in attachmentsAtSlot) {
+          const attachment = attachmentsAtSlot[name];
+          const sequence = attachment?.sequence;
+          if (!sequence || attachment.region != null) continue;
+          const regions = sequence.regions;
+          if (!regions || regions.length === 0) continue;
+          const setupIndex = Math.min(sequence.setupIndex ?? 0, regions.length - 1);
+          const setupRegion = regions[setupIndex];
+          if (!setupRegion) continue;
+          attachment.region = setupRegion;
+          if (typeof attachment.updateRegion === 'function') {
+            attachment.updateRegion();
+          }
+        }
+      }
+    }
   }
 }
