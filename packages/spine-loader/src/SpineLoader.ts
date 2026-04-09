@@ -273,49 +273,59 @@ export class SpineLoader {
       const imageNames = this.extractImageNamesFromAtlas(atlasText);
       console.log("Image names referenced in atlas:", imageNames);
       
-      // Create asset bundle
-      const assetBundle: Record<string, any> = {};
-      
-      // Process each image file
-      const blobUrls: string[] = [];
+      // Decode each image file directly via the browser's native image
+      // decoder. createImageBitmap dispatches on the actual file bytes
+      // rather than the URL extension, so png/jpg/jpeg/webp all work
+      // uniformly. We then hand the resulting ImageBitmap to Texture.from,
+      // which wraps it as a real ImageSource.
+      //
+      // We deliberately bypass Pixi's Assets loader-parser chain for
+      // raster images here. That chain dispatches on URL extension, and
+      // base64 data: URLs (which the previous implementation used) have
+      // no extension. The result on .webp pages was that loadBundle came
+      // back with a half-initialised Texture object whose `_source` was
+      // never populated; the truthy check below passed, then the renderer
+      // exploded inside Batcher.break on the first frame trying to read
+      // `texture._source`. createImageBitmap + Texture.from sidesteps the
+      // parser chain entirely.
+      //
+      // Compressed textures (.ktx2 / .basis) still go through the Pixi
+      // loader because they need the dedicated transcoders.
+      const textures: Record<string, Texture> = {};
+      const compressedAssetBundle: Record<string, any> = {};
+      const compressedBlobUrls: string[] = [];
+
       for (const imageFile of imageFiles) {
         const fileName = this.getFileName(imageFile.name);
+        const dotIdx = fileName.lastIndexOf('.');
+        const baseName = dotIdx > 0 ? fileName.substring(0, dotIdx) : '';
         const isCompressed = fileName.endsWith('.ktx2') || fileName.endsWith('.basis');
 
-        let src: string;
-        let assetEntry: Record<string, any>;
-
         if (isCompressed) {
-          // Compressed textures need blob URLs + parser hint for PixiJS loader detection
           const blobUrl = URL.createObjectURL(imageFile);
-          blobUrls.push(blobUrl);
-          src = blobUrl;
+          compressedBlobUrls.push(blobUrl);
           const parser = fileName.endsWith('.ktx2') ? 'loadKTX2' : 'loadBasis';
-          assetEntry = { src, loadParser: parser };
+          const entry = { src: blobUrl, loadParser: parser };
+          compressedAssetBundle[fileName] = entry;
+          if (baseName) compressedAssetBundle[baseName] = entry;
         } else {
-          const base64 = await this.fileToBase64(imageFile);
-          src = base64;
-          assetEntry = { src, data: { type: imageFile.type || 'image/png' } };
-        }
-
-        // Store with filename as key
-        assetBundle[fileName] = assetEntry;
-
-        // Also store without extension for better matching
-        const fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
-        if (fileNameWithoutExt) {
-          assetBundle[fileNameWithoutExt] = assetEntry;
+          // createImageBitmap throws on a corrupted / wrong-format file,
+          // which is what we want - it surfaces a real "this image is not
+          // a valid png/jpg/webp" error to the user instead of silently
+          // producing a stub texture that explodes at render time.
+          const bitmap = await createImageBitmap(imageFile);
+          const texture = Texture.from(bitmap);
+          textures[fileName] = texture;
+          if (baseName) textures[baseName] = texture;
         }
       }
-      
-      // Load textures
-      const bundleName = `spineAssets-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      Assets.addBundle(bundleName, assetBundle);
-      const textures = await Assets.loadBundle(bundleName);
 
-      // Revoke blob URLs after loading (textures are already uploaded to GPU)
-      for (const blobUrl of blobUrls) {
-        URL.revokeObjectURL(blobUrl);
+      if (Object.keys(compressedAssetBundle).length > 0) {
+        const bundleName = `spineCompressed-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        Assets.addBundle(bundleName, compressedAssetBundle);
+        const compressedTextures = await Assets.loadBundle(bundleName);
+        Object.assign(textures, compressedTextures);
+        for (const blobUrl of compressedBlobUrls) URL.revokeObjectURL(blobUrl);
       }
 
       // Create spine asset
@@ -403,15 +413,6 @@ export class SpineLoader {
     return imageNames;
   }
   
-  private fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
   private readFileAsText(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
