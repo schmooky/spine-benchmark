@@ -212,27 +212,69 @@ export class CameraContainer extends Container {
       this.addChild(this.slotHighlightGraphics);
     }
 
-    // Fit & center view around the spine
-    const padding = 20;
-    let bounds = spine.getBounds();
-    if (bounds.width === 0 || bounds.height === 0) {
-      // fallback to data size halves if bounds unavailable
-      bounds.width = spine.skeleton?.data?.width ? spine.skeleton.data.width / 2 : 200;
-      bounds.height = spine.skeleton?.data?.height ? spine.skeleton.data.height / 2 : 200;
+    // Fit & center view around the spine.
+    //
+    // Source of truth for the bounding box is `skeleton.data.width /
+    // height` - the design-time bounds the artist authored. These are
+    // stable across animations and across setup-pose visibility, unlike
+    // `spine.getBounds()` which only reflects whatever attachments are
+    // currently visible at the moment of the call (and is sometimes
+    // 0x0 in pixi-spine v8 for skeletons that use sequence attachments).
+    // Using getBounds() here would zoom the camera onto the tiny visible
+    // footprint of the setup pose, then leave the now-playing animation
+    // extending far outside the viewport.
+    const data = spine.skeleton?.data;
+    let boundsW = data?.width && data.width > 0 ? data.width : 0;
+    let boundsH = data?.height && data.height > 0 ? data.height : 0;
+
+    // Fall back to live bounds only when the skeleton header doesn't
+    // carry design bounds (rare; some older exports omit them).
+    if (!boundsW || !boundsH) {
+      const live = spine.getBounds();
+      if (!boundsW && live.width > 0) boundsW = live.width;
+      if (!boundsH && live.height > 0) boundsH = live.height;
     }
 
-    const scaleX = (this.app.screen.width - padding * 2) / bounds.width;
-    const scaleY = (this.app.screen.height - padding * 2) / bounds.height;
-    let scale = Math.min(scaleX, scaleY);
+    // Last-resort fallback so the camera doesn't divide by zero on
+    // pathological inputs.
+    if (!boundsW) boundsW = 200;
+    if (!boundsH) boundsH = 200;
 
     spine.scale.set(1);
+
+    // Re-center the spine within the camera so the DESIGN bounding box
+    // (which can be offset from the skeleton's local origin via
+    // `data.x / data.y`) lands centered at the camera origin. For
+    // skeletons authored symmetrically around their local origin this
+    // is a no-op; for asymmetric exports it stops the spine from
+    // drifting to one side of the viewport.
+    if (data) {
+      spine.position.set(
+        -((data.x ?? 0) + boundsW / 2),
+        -((data.y ?? 0) + boundsH / 2),
+      );
+    } else {
+      spine.position.set(0, 0);
+    }
+
+    const padding = 40;
+    const scaleX = (this.app.screen.width - padding * 2) / boundsW;
+    const scaleY = (this.app.screen.height - padding * 2) / boundsH;
+
+    // Round DOWN to the nearest 0.05 so we never overshoot the
+    // available space. The previous `ceil` could push the spine slightly
+    // outside the padded area on small screens.
+    let scale = Math.floor(Math.min(scaleX, scaleY) * 20) / 20;
+
+    // Clamp so tiny skeletons don't get blown up to absurd resolutions
+    // and giant skeletons don't collapse to a smudge.
+    scale = Math.max(0.05, Math.min(scale, 10));
 
     const x = this.app.screen.width / 2;
     const y = this.app.screen.height / 2;
 
     gsap.to(this, { x, y, duration: 1, ease: "power2.out" });
 
-    scale = Number((Math.ceil(scale * 20) / 20).toFixed(2));
     this.scale.set(scale);
     this.setCanvasScaleDebugInfo(scale);
   }
