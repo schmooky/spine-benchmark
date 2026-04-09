@@ -90,9 +90,17 @@ export function useSpineApp(app: Application | null, pixiHostRef: React.RefObjec
       app.renderer.resize(width, height);
 
       // If the canvas size actually changed, re-center the spine so
-      // lookAtChild uses the correct viewport dimensions.
+      // lookAtChild uses the correct viewport dimensions. Skip the call
+      // if the camera container's recorded `currentSpine` reference is
+      // stale (e.g. has already been removed from the container by a
+      // bundle swap that's mid-flight) - lookAtChild's own guard handles
+      // it gracefully, but checking here avoids the wasted work.
       const cc = cameraContainerRef.current;
-      if (cc?.currentSpine && (prevW !== width || prevH !== height)) {
+      if (
+        cc?.currentSpine &&
+        cc.currentSpine.parent === cc &&
+        (prevW !== width || prevH !== height)
+      ) {
         cc.lookAtChild(cc.currentSpine);
       }
     }
