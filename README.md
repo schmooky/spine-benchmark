@@ -48,7 +48,9 @@ npm run test       # run tests
 | `packages/render-tools` | Camera/background/debug rendering tools |
 | `packages/file-tools` | File and drag-drop processing helpers |
 | `packages/workbench-core` | Compatibility aggregator for workbench tooling |
-| `packages/spinefolio` | PixiJS v8 Spine widget library |
+| `packages/metrics-impact-formula` | Canonical RI / CI scoring formulas (single source of truth) |
+| `packages/pixi-crawler` | Real-time PixiJS scene-graph profiler (published) |
+| `packages/spinefolio` | PixiJS v8 Spine widget library (published) |
 
 ## Build Specific Workspaces
 
@@ -73,12 +75,36 @@ const result = SpineAnalyzer.analyze(spineInstance);
 console.log(result.skeleton.metrics.totalBones);
 ```
 
+## Releases
+
+Every package under `packages/` is published to npm by [changesets](https://github.com/changesets/changesets) on every merge to `main`. The flow:
+
+1. **Authoring a change.** When you open a PR that ships user-visible changes, run `npx changeset` from the repo root and pick the affected packages plus the bump kind (`patch` / `minor` / `major`). Commit the generated `.changeset/*.md` file in your PR.
+2. **Version PR.** When your PR merges, the release workflow opens (or updates) a "chore: version packages" PR that applies the bumps, regenerates each affected package's `CHANGELOG.md`, and removes the consumed `.changeset` files.
+3. **Publish.** When the version PR is merged, the workflow runs `npm run release` which builds every publishable package in topological order and publishes the bumped ones to npm.
+
+### Dependency-graph cascade
+
+Bumping a producer package cascades to its consumers. For example, a release of `@spine-benchmark/metrics-impact-formula` automatically forces a patch bump of `@spine-benchmark/pixi-crawler` (and every other workspace package that depends on it). This means a published `pixi-crawler@x.y.z` always references the matching `metrics-impact-formula` version - the npm registry never has a mismatched pair.
+
+The cascade is governed by `updateInternalDependencies: "patch"` in `.changeset/config.json`.
+
+### Per-package changelogs
+
+After the first release, each package gets its own `CHANGELOG.md` (e.g. `packages/pixi-crawler/CHANGELOG.md`) maintained by changesets. Treat those as the canonical "what shipped when" for each library.
+
+### Apps are not published
+
+`@spine-benchmark/site` (the public benchmark site) and `@spine-benchmark/crawler-demo` are deployed, not published to npm, so they are listed in `.changeset/config.json:ignore` and never receive version bumps.
+
 ## Contributing
 
 1. Create a branch from `main`.
 2. Make focused changes.
-3. Run `npm run test`.
-4. Open a PR with a short summary.
+3. Run `npm run test` (the formula-duplication and fancy-Unicode lint guards run as part of this).
+4. If your change ships user-visible behavior, run `npx changeset` and commit the resulting `.md` file.
+5. Open a PR with a short summary.
+6. See `AGENTS.md` for the full house style and the load-bearing constraints (heatmap/crawler scoring parity, single source of truth for impact math, ASCII-only punctuation).
 
 ## License
 

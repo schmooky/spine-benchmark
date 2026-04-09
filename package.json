@@ -40,9 +40,16 @@
     "check:no-fancy-unicode": "node scripts/check-no-fancy-unicode.mjs",
     "check:lint": "npm run check:no-duplicate-formulas && npm run check:no-fancy-unicode",
     "test": "npm run check:lint && vitest run",
-    "test:coverage": "npm run check:lint && vitest run --coverage"
+    "test:coverage": "npm run check:lint && vitest run --coverage",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "version-packages": "changeset version && npm install --package-lock-only",
+    "build:all": "node scripts/build-all-publishable.mjs",
+    "release": "npm run build:all && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
     "@vitest/coverage-v8": "^3.2.4",
     "vitest": "^3.2.4"
   }

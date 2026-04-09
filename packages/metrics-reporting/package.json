@@ -20,8 +20,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-impact-formula": "file:../metrics-impact-formula",
-    "@spine-benchmark/metrics-pipeline": "file:../metrics-pipeline"
+    "@spine-benchmark/metrics-impact-formula": "^0.1.0",
+    "@spine-benchmark/metrics-pipeline": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
