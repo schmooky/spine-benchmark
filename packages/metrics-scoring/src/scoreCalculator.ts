@@ -1,3 +1,10 @@
+import {
+  classifyImpactLevel,
+  computationalImpactCost,
+  type ImpactLevel,
+  renderingImpactCost,
+} from '@spine-benchmark/metrics-impact-formula';
+
 interface AnimationAnalysisLike {
   blendModeMetrics: { activeNonNormalCount: number };
   clippingMetrics: { activeMaskCount: number };
@@ -27,20 +34,27 @@ export function calculateMaxDepth(nodes: any[]): number {
  * Impact result used for rendering/computational impact display
  */
 export interface ImpactResult {
-  level: string;
+  level: ImpactLevel;
   cost: number;
   color: string;
 }
 
+const IMPACT_COLOR: Record<ImpactLevel, string> = {
+  minimal: '#34D399',
+  low: '#A3E635',
+  moderate: '#FBBF24',
+  high: '#FB923C',
+  veryHigh: '#F87171',
+};
+
 /**
- * Converts a raw cost number into an impact level with color
+ * Converts a raw cost number into an impact level with color.
+ * Level + brackets come from `@spine-benchmark/metrics-impact-formula`;
+ * the color palette is the only piece this package owns.
  */
 export function getImpactFromCost(cost: number): ImpactResult {
-  if (cost < 3) return { level: 'minimal', cost, color: '#34D399' };
-  if (cost < 8) return { level: 'low', cost, color: '#A3E635' };
-  if (cost < 15) return { level: 'moderate', cost, color: '#FBBF24' };
-  if (cost < 25) return { level: 'high', cost, color: '#FB923C' };
-  return { level: 'veryHigh', cost, color: '#F87171' };
+  const level = classifyImpactLevel(cost);
+  return { level, cost, color: IMPACT_COLOR[level] };
 }
 
 /**
@@ -63,7 +77,11 @@ export function getImpactBadgeClass(level: string): string {
  */
 export function worstRenderingImpact(animations: AnimationAnalysisLike[]): ImpactResult {
   return animations.reduce((worst, a) => {
-    const cost = (a.blendModeMetrics.activeNonNormalCount * 3) + (a.clippingMetrics.activeMaskCount * 5) + (a.meshMetrics.totalVertices / 200);
+    const cost = renderingImpactCost({
+      activeNonNormalBlends: a.blendModeMetrics.activeNonNormalCount,
+      activeClippingMasks: a.clippingMetrics.activeMaskCount,
+      totalVertices: a.meshMetrics.totalVertices,
+    });
     return cost > worst.cost ? getImpactFromCost(cost) : worst;
   }, getImpactFromCost(0));
 }
@@ -74,23 +92,18 @@ export function worstRenderingImpact(animations: AnimationAnalysisLike[]): Impac
  */
 export function worstComputationalImpact(animations: AnimationAnalysisLike[]): ImpactResult {
   return animations.reduce((worst, a) => {
-    const meshCount = Math.max(a.meshMetrics.activeMeshCount ?? 0, 1);
-    const averageVerticesPerMesh = a.meshMetrics.totalVertices / meshCount;
-
-    const constraintCost =
-      (a.constraintMetrics.activePhysicsCount * 0.7) +
-      (a.constraintMetrics.activePathCount * 0.55) +
-      (a.constraintMetrics.activeIkCount * 0.35) +
-      (a.constraintMetrics.activeTransformCount * 0.2);
-
-    const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
-    const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
-    const meshComputationCost =
-      (a.meshMetrics.deformedMeshCount * deformedMeshWeight) +
-      (a.meshMetrics.weightedMeshCount * weightedMeshWeight) +
-      (a.meshMetrics.totalVertices / 2000);
-
-    const cost = constraintCost + meshComputationCost;
+    const cost = computationalImpactCost({
+      constraints: {
+        physics: a.constraintMetrics.activePhysicsCount,
+        path: a.constraintMetrics.activePathCount,
+        ik: a.constraintMetrics.activeIkCount,
+        transform: a.constraintMetrics.activeTransformCount,
+      },
+      totalVertices: a.meshMetrics.totalVertices,
+      activeMeshCount: a.meshMetrics.activeMeshCount ?? 0,
+      weightedMeshCount: a.meshMetrics.weightedMeshCount,
+      deformedMeshCount: a.meshMetrics.deformedMeshCount,
+    });
     return cost > worst.cost ? getImpactFromCost(cost) : worst;
   }, getImpactFromCost(0));
 }

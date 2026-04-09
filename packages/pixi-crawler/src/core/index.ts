@@ -80,7 +80,7 @@ export type {
   SpineBudgetHistory,
   /** Aggregate budget across all visible Spine skeletons in a frame. */
   AggregateBudget,
-  /** Impact classification: `'minimal'` | `'low'` | `'moderate'` | `'high'` | `'very-high'`. */
+  /** Impact classification: `'minimal'` | `'low'` | `'moderate'` | `'high'` | `'veryHigh'`. */
   ImpactLevel,
 } from './types.js';
 
@@ -104,7 +104,7 @@ export { DEFAULT_IMPACT_BRACKETS } from './types.js';
  * @param score - The RI, CI, or combined budget score to classify.
  * @param brackets - Optional `[low, moderate, high, veryHigh]` thresholds.
  *                   Defaults to `[3, 8, 15, 25]`.
- * @returns One of `'minimal'` | `'low'` | `'moderate'` | `'high'` | `'very-high'`.
+ * @returns One of `'minimal'` | `'low'` | `'moderate'` | `'high'` | `'veryHigh'`.
  */
 export { classifyImpactLevel } from './types.js';
 

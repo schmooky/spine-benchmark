@@ -329,7 +329,7 @@ export function DrawCallInspectorRouteView() {
                     aria-pressed={selectedSlotIndex === slot.index}
                   >
                     <span className="dc-inspector-row-index">{slot.index}</span>
-                    <span className="dc-inspector-row-attachment" title={`${slot.slotName} → ${slot.attachmentName}`}>
+                    <span className="dc-inspector-row-attachment" title={`${slot.slotName} -> ${slot.attachmentName}`}>
                       {slot.attachmentName}
                     </span>
                     <span

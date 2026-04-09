@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useCommandPalette } from '../hooks/useCommandPalette';
 import { Command, CommandCategory } from '../utils/commandRegistry';
 import './CommandPalette.css';
@@ -157,7 +158,9 @@ export const CommandPalette: React.FC = () => {
             <div className="command-palette-footer">
               <div className="command-palette-shortcuts">
                 <span className="shortcut">
-                  <kbd>↑</kbd><kbd>↓</kbd> {t('commandPalette.shortcuts.navigate')}
+                  <kbd aria-hidden="true"><ArrowUp size={12} /></kbd>
+                  <kbd aria-hidden="true"><ArrowDown size={12} /></kbd>
+                  {t('commandPalette.shortcuts.navigate')}
                 </span>
                 <span className="shortcut">
                   <kbd>{t('ui.keys.enter')}</kbd> {t('commandPalette.shortcuts.select')}

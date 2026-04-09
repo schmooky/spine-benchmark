@@ -15,11 +15,12 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "npm run build --workspace @spine-benchmark/metrics-factors",
+    "prebuild": "npm run build --workspace @spine-benchmark/metrics-impact-formula && npm run build --workspace @spine-benchmark/metrics-factors",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@spine-benchmark/metrics-impact-formula": "file:../metrics-impact-formula",
     "@spine-benchmark/metrics-factors": "file:../metrics-factors"
   },
   "devDependencies": {

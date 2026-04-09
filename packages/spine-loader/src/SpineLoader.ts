@@ -355,7 +355,7 @@ export class SpineLoader {
       });
 
       if (match) {
-        console.log(`Atlas image substitution: "${atlasName}" → "${match}"`);
+        console.log(`Atlas image substitution: "${atlasName}" -> "${match}"`);
         // Replace only the page-header line (the image filename line before "size:")
         // Use a line-level replace to avoid accidentally replacing region names
         rewritten = rewritten.split('\n').map(line => {

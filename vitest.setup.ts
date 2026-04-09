@@ -1,5 +1,5 @@
 /**
- * Global vitest setup — browser global stubs.
+ * Global vitest setup  -  browser global stubs.
  *
  * Several packages (constraint-tools, pixi-crawler) transitively import
  * spine-pixi-v8 which accesses browser globals (navigator, document)

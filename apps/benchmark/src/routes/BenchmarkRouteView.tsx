@@ -118,7 +118,7 @@ export function BenchmarkRouteView() {
                     className="dc-inspector-stat-value"
                     style={{ '--dc-stat-color': rendering?.color ?? 'var(--sb-accent)' } as React.CSSProperties}
                   >
-                    {rendering ? Math.round(rendering.cost) : '–'}
+                    {rendering ? Math.round(rendering.cost) : '-'}
                   </span>
                   <span className="dc-inspector-stat-label">{t('benchmark.summary.renderingImpact')}</span>
                 </div>
@@ -127,7 +127,7 @@ export function BenchmarkRouteView() {
                     className="dc-inspector-stat-value"
                     style={{ '--dc-stat-color': computational?.color ?? 'var(--sb-accent)' } as React.CSSProperties}
                   >
-                    {computational ? Math.round(computational.cost) : '–'}
+                    {computational ? Math.round(computational.cost) : '-'}
                   </span>
                   <span className="dc-inspector-stat-label">{t('benchmark.summary.computationalImpact')}</span>
                 </div>

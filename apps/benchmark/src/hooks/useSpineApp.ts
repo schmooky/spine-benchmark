@@ -114,7 +114,7 @@ export function useSpineApp(app: Application | null, pixiHostRef: React.RefObjec
 
     const host = pixiHostRef.current;
     if (!element || !host) {
-      // No slot — hide the canvas
+      // No slot  -  hide the canvas
       if (host) {
         host.style.display = 'none';
       }

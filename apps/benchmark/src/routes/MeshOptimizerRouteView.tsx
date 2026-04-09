@@ -499,7 +499,7 @@ export function MeshOptimizerRouteView() {
                     aria-pressed={selectedMeshIndex === mesh.index}
                   >
                     <span className="mesh-inspector-row-index">{mesh.index}</span>
-                    <span className="mesh-inspector-row-name" title={`${mesh.slotName} → ${mesh.attachmentName}`}>
+                    <span className="mesh-inspector-row-name" title={`${mesh.slotName} -> ${mesh.attachmentName}`}>
                       {mesh.attachmentName}
                     </span>
                     <span className="mesh-inspector-row-stat">{mesh.vertexCount}</span>

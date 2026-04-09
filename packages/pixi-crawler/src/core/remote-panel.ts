@@ -265,7 +265,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
   </div>
   <div id="flamechart-strip">
     <canvas id="flamechart-canvas"></canvas>
-    <div id="flamechart-hint">← → step · Space pause · Home/End jump</div>
+    <div id="flamechart-hint"><- -> step · Space pause · Home/End jump</div>
   </div>
   <div id="content">
     <div id="main-panel">
@@ -526,7 +526,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
       var total = (agg.totalRI || 0) + (agg.totalCI || 0);
       var riPct = total > 0 ? ((agg.totalRI || 0) / total) * 100 : 50;
       var ciPct = total > 0 ? ((agg.totalCI || 0) / total) * 100 : 50;
-      var levelClass = agg.level === 'high' ? 'error' : agg.level === 'moderate' ? 'warning' : 'ok';
+      var levelClass = (agg.level === 'high' || agg.level === 'veryHigh') ? 'error' : agg.level === 'moderate' ? 'warning' : 'ok';
 
       budgetHtml += '<div class="budget-line">';
       budgetHtml += '<div class="budget-label">RI</div>';
@@ -675,7 +675,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
         var explain = ISSUE_EXPLAIN[issue.code];
         if (explain) {
           html += '<div class="detail-issue-msg">' + escHtml(explain.what) + '</div>';
-          html += '<div class="detail-issue-fix">→ ' + escHtml(explain.fix) + '</div>';
+          html += '<div class="detail-issue-fix">-> ' + escHtml(explain.fix) + '</div>';
         } else if (issue.message) {
           html += '<div class="detail-issue-msg">' + escHtml(issue.message) + '</div>';
         }

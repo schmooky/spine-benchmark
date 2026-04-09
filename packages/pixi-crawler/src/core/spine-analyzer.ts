@@ -3,20 +3,27 @@
  * to compute actual draw call fragmentation from blend mode transitions,
  * atlas page switches, and clipping boundaries.
  *
- * RI/CI formulas are aligned with @spine-benchmark/metrics-reporting
- * and @spine-benchmark/metrics-scoring (impactReportModel / scoreCalculator).
+ * RI/CI numbers come from `@spine-benchmark/metrics-impact-formula`, the
+ * single source of truth shared with the offline benchmark. This file MUST
+ * NOT contain any hardcoded scoring constants  -  if you find yourself reaching
+ * for a magic number, add it to the leaf package instead so the live
+ * crawler readings stay 1:1 with the offline analysis.
  */
 
 import type { Container } from 'pixi.js';
+import {
+    classifyImpactLevel,
+    computationalImpactCost as sharedComputationalImpactCost,
+    renderingImpactCost as sharedRenderingImpactCost,
+    type ImpactLevel,
+} from '@spine-benchmark/metrics-impact-formula';
 import type {
     SpineAnalysis,
     SpineSlotInfo,
     SpineBatchBreak,
     RenderingImpact,
     ComputationalImpact,
-    ImpactLevel,
 } from './types.js';
-import { classifyImpactLevel } from './types.js';
 
 // ── Duck-typed Spine runtime interfaces ─────────────────────
 // Avoids hard dependency on @esotericsoftware/spine-core.
@@ -25,12 +32,31 @@ interface SpineSlot {
     data: {
         name: string;
         blendMode: number; // BlendMode enum: 0=Normal,1=Additive,2=Multiply,3=Screen
-        visible: boolean;
     };
     color: { a: number };
     attachment: SpineAttachment | null;
+    /** Owning bone. `bone.active === false` means the slot is currently hidden. */
+    bone?: { active?: boolean };
     /** Deform values applied to the slot's attachment. Non-empty when actively deformed. */
     deform?: number[];
+}
+
+/**
+ * Canonical "is this slot currently rendering?" predicate. Aligned with the
+ * benchmark heatmap (`apps/benchmark/src/hooks/useAnimationHeatmap.ts`) so
+ * that feeding the same skeleton into the crawler and the heatmap at the
+ * same instant produces identical RI/CI inputs (and therefore identical
+ * scores via the shared formula package).
+ *
+ * Earlier versions read `slot.data.visible`, which does not exist on the
+ * real `spine-core` `SlotData` shape  -  the read returned `undefined` and
+ * the crawler treated every slot as invisible against live Spine instances,
+ * silently zeroing out RI / CI in production.
+ */
+function isSlotActive(slot: SpineSlot): boolean {
+    if ((slot.color?.a ?? 1) <= 0) return false;
+    if (slot.bone && slot.bone.active === false) return false;
+    return true;
 }
 
 interface SpineAttachment {
@@ -77,51 +103,35 @@ export interface SpineLike {
 }
 
 // ═════════════════════════════════════════════════════════════
-// RI formula (matches metrics-reporting/impactReportModel.ts)
-//
-//   RI = (activeNonNormalBlendModes × 3)
-//      + (activeMaskCount × 5)
-//      + (totalVertices / 200)
-//
-// Impact thresholds: <3 minimal, <8 low, <15 moderate, <25 high, ≥25 very-high
+// Adapters: walk a live skeleton/draw order, hand the resulting counts
+// to the shared formula. No constants live here.
 // ═════════════════════════════════════════════════════════════
 
-function calculateRI(
-    blendModeTransitions: number,
+function buildRenderingImpact(
+    activeNonNormalBlends: number,
     clippingMasks: number,
     totalVertices: number,
     brackets?: [number, number, number, number],
 ): RenderingImpact {
-    const total = (blendModeTransitions * 3) + (clippingMasks * 5) + (totalVertices / 200);
+    const total = sharedRenderingImpactCost({
+        activeNonNormalBlends,
+        activeClippingMasks: clippingMasks,
+        totalVertices,
+    });
 
     return {
-        blendModes: blendModeTransitions,
+        // `blendModes` semantics: count of CURRENTLY VISIBLE slots whose
+        // blend mode is non-normal  -  same definition the heatmap uses.
+        // Earlier versions stored draw-call-side `blendModeTransitions` here,
+        // which produced different numbers from the offline benchmark even
+        // though the formula constants matched.
+        blendModes: activeNonNormalBlends,
         clippingMasks,
         vertices: totalVertices,
         total,
         level: classifyImpactLevel(total, brackets),
     };
 }
-
-// ═════════════════════════════════════════════════════════════
-// CI formula (matches metrics-reporting/impactReportModel.ts)
-//
-//   constraintCost = (physics × 0.7) + (path × 0.55)
-//                  + (ik × 0.35) + (transform × 0.2)
-//
-//   avgVerts = totalVertices / activeMeshCount  (0 if no meshes)
-//
-//   deformedMeshWeight = 0.08 + min(0.5, avgVerts / 500)
-//   weightedMeshWeight = 0.1  + min(0.55, avgVerts / 450)
-//
-//   meshCost = (deformedMeshCount × deformedMeshWeight)
-//            + (weightedMeshCount × weightedMeshWeight)
-//            + (totalVertices / 2000)
-//
-//   CI = constraintCost + meshCost
-//
-// Impact thresholds: <3 minimal, <8 low, <15 moderate, <25 high, ≥25 very-high
-// ═════════════════════════════════════════════════════════════
 
 interface MeshStats {
     totalVertices: number;
@@ -137,16 +147,37 @@ interface ConstraintCounts {
     physics: number;
 }
 
+/**
+ * Spine `Constraint.active` defaults to `true` and may be toggled by the
+ * runtime (e.g. inactive skin slots, mix-out of constraint controllers).
+ * The benchmark heatmap counts active constraints only  -  the crawler must
+ * do the same or it will overshoot CI on skeletons with deactivated
+ * constraints, breaking parity with the offline benchmark.
+ */
+function isConstraintActive(constraint: unknown): boolean {
+    if (!constraint || typeof constraint !== 'object') return false;
+    const candidate = constraint as { active?: boolean };
+    if (typeof candidate.active === 'boolean') return candidate.active;
+    return true;
+}
+
+function countActive(list: unknown[] | undefined): number {
+    if (!list) return 0;
+    let n = 0;
+    for (const c of list) if (isConstraintActive(c)) n++;
+    return n;
+}
+
 function analyzeConstraints(skeleton: SpineLike['skeleton']): ConstraintCounts {
     if (!skeleton) {
         return { ik: 0, transform: 0, path: 0, physics: 0 };
     }
 
     return {
-        ik: skeleton.ikConstraints?.length ?? 0,
-        transform: skeleton.transformConstraints?.length ?? 0,
-        path: skeleton.pathConstraints?.length ?? 0,
-        physics: skeleton.physicsConstraints?.length ?? 0,
+        ik: countActive(skeleton.ikConstraints),
+        transform: countActive(skeleton.transformConstraints),
+        path: countActive(skeleton.pathConstraints),
+        physics: countActive(skeleton.physicsConstraints),
     };
 }
 
@@ -163,7 +194,7 @@ function analyzeMeshes(drawOrder: SpineSlot[]): MeshStats {
     for (const slot of drawOrder) {
         const att = slot.attachment;
         if (!att) continue;
-        if (!slot.data.visible || slot.color.a <= 0) continue;
+        if (!isSlotActive(slot)) continue;
 
         // Is it a mesh? Check for triangles array (MeshAttachment)
         const isMesh = att.triangles != null;
@@ -190,7 +221,7 @@ function analyzeMeshes(drawOrder: SpineSlot[]): MeshStats {
     return { totalVertices, activeMeshCount, weightedMeshCount, deformedMeshCount };
 }
 
-function calculateCI(
+function buildComputationalImpact(
     skeleton: SpineLike['skeleton'],
     drawOrder: SpineSlot[],
     brackets?: [number, number, number, number],
@@ -198,24 +229,18 @@ function calculateCI(
     const c = analyzeConstraints(skeleton);
     const m = analyzeMeshes(drawOrder);
 
-    // Constraint cost (canonical weights from metrics-reporting)
-    const constraintCost =
-        (c.physics * 0.7) +
-        (c.path * 0.55) +
-        (c.ik * 0.35) +
-        (c.transform * 0.2);
-
-    // Mesh computation cost (vertex-count-scaled weights from metrics-reporting)
-    const avgVerts = m.activeMeshCount > 0 ? m.totalVertices / m.activeMeshCount : 0;
-    const deformedMeshWeight = 0.08 + Math.min(0.5, avgVerts / 500);
-    const weightedMeshWeight = 0.1 + Math.min(0.55, avgVerts / 450);
-
-    const meshCost =
-        (m.deformedMeshCount * deformedMeshWeight) +
-        (m.weightedMeshCount * weightedMeshWeight) +
-        (m.totalVertices / 2000);
-
-    const total = constraintCost + meshCost;
+    const total = sharedComputationalImpactCost({
+        constraints: {
+            physics: c.physics,
+            path: c.path,
+            ik: c.ik,
+            transform: c.transform,
+        },
+        totalVertices: m.totalVertices,
+        activeMeshCount: m.activeMeshCount,
+        weightedMeshCount: m.weightedMeshCount,
+        deformedMeshCount: m.deformedMeshCount,
+    });
 
     return {
         physics: c.physics,
@@ -274,14 +299,18 @@ export function analyzeSpine(
     let pageSwitches = 0;
     let inClipping = false;
 
-    // Also accumulate RI mesh data during the draw-order walk
+    // RI inputs accumulated during the draw-order walk. Definitions match
+    // the heatmap: only currently visible slots count, blend mode is read
+    // off `slot.data.blendMode`, vertex totals come from real attachment
+    // worldVerticesLength.
     let totalVertices = 0;
     let clippingMasks = 0;
+    let activeNonNormalBlends = 0;
 
     for (const slot of drawOrder) {
         const slotData = slot.data;
         const attachment = slot.attachment;
-        const visible = slotData.visible && slot.color.a > 0;
+        const visible = isSlotActive(slot);
 
         // Classify attachment
         let attachmentType: SpineSlotInfo['attachmentType'] = 'none';
@@ -323,6 +352,13 @@ export function analyzeSpine(
         });
 
         if (!visible || !attachment) continue;
+
+        // RI input: count slots whose blend mode is non-normal. The crawler
+        // also tracks `blendTransitions` separately for draw-call counting,
+        // but the formula expects active-non-normal counts (heatmap parity).
+        if (slotData.blendMode !== 0 && attachmentType !== 'clipping') {
+            activeNonNormalBlends++;
+        }
 
         // Clipping handling
         if (attachmentType === 'clipping') {
@@ -393,11 +429,14 @@ export function analyzeSpine(
         prevSlotName = slotData.name;
     }
 
-    // Calculate RI using real vertex counts accumulated above
-    const renderingImpact = calculateRI(blendTransitions, clippingMasks, totalVertices, brackets);
+    // RI uses real per-slot counts accumulated during the draw-order walk
+    // above (active non-normal blend slots, active clipping masks, sum of
+    // visible mesh vertices)  -  same definition the heatmap uses.
+    const renderingImpact = buildRenderingImpact(activeNonNormalBlends, clippingMasks, totalVertices, brackets);
 
-    // Calculate CI by reading constraints + mesh properties from skeleton/drawOrder
-    const computationalImpact = calculateCI(skeleton, drawOrder, brackets);
+    // CI reads constraints + mesh properties from skeleton/drawOrder and
+    // delegates the math to the shared formula package.
+    const computationalImpact = buildComputationalImpact(skeleton, drawOrder, brackets);
 
     return {
         totalSlots: drawOrder.length,

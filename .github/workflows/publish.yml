@@ -58,7 +58,7 @@ jobs:
             OLD=$(git show HEAD~1:"$FILE" | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version" 2>/dev/null || echo "")
             NEW=$(node -p "require('./$FILE').version")
             if [ "$OLD" != "$NEW" ]; then
-              echo "✅ $PKG: $OLD → $NEW"
+              echo "✅ $PKG: $OLD -> $NEW"
               PACKAGES+=("$PKG")
             else
               echo "⏭️  $PKG: version unchanged ($NEW), skipping"

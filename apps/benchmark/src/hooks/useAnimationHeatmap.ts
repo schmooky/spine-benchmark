@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
+import {
+  computationalImpactCost as sharedComputationalImpactCost,
+  renderingImpactCost as sharedRenderingImpactCost,
+} from '@spine-benchmark/metrics-impact-formula';
 import { AnimationSampler } from '../core/utils/animationSampler';
 import { collectSnapshot, LiveSlotInfo } from './useDrawCallInspector';
 import { ClippingAttachment, MeshAttachment } from '@esotericsoftware/spine-core';
@@ -59,32 +63,26 @@ function countActiveConstraints(skeleton: {
   return result;
 }
 
-function renderingImpactCost(input: Pick<FrameImpactInputs, 'nonNormalBlends' | 'clippingMasks' | 'totalVertices'>): number {
-  return (
-    input.nonNormalBlends * 3 +
-    input.clippingMasks * 5 +
-    input.totalVertices / 200
-  );
+// Per-frame heatmap costs delegate to the shared formula package so the
+// in-app heatmap matches the offline benchmark and the live crawler exactly.
+function renderingImpactCost(
+  input: Pick<FrameImpactInputs, 'nonNormalBlends' | 'clippingMasks' | 'totalVertices'>,
+): number {
+  return sharedRenderingImpactCost({
+    activeNonNormalBlends: input.nonNormalBlends,
+    activeClippingMasks: input.clippingMasks,
+    totalVertices: input.totalVertices,
+  });
 }
 
 function computationalImpactCost(input: FrameImpactInputs): number {
-  const meshCount = Math.max(input.activeMeshCount, 1);
-  const averageVerticesPerMesh = input.totalVertices / meshCount;
-
-  const constraintCost =
-    input.constraints.physics * 0.7 +
-    input.constraints.path * 0.55 +
-    input.constraints.ik * 0.35 +
-    input.constraints.transform * 0.2;
-
-  const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
-  const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
-  const meshComputationCost =
-    input.deformedMeshCount * deformedMeshWeight +
-    input.weightedMeshCount * weightedMeshWeight +
-    input.totalVertices / 2000;
-
-  return constraintCost + meshComputationCost;
+  return sharedComputationalImpactCost({
+    constraints: input.constraints,
+    totalVertices: input.totalVertices,
+    activeMeshCount: input.activeMeshCount,
+    weightedMeshCount: input.weightedMeshCount,
+    deformedMeshCount: input.deformedMeshCount,
+  });
 }
 
 export interface FrameMetrics {

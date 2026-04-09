@@ -9,7 +9,7 @@ import { parseImageUrlList } from '../utils/remoteAssetBundle';
 import { copyTextToClipboard } from '../utils/clipboard';
 import { useToast } from '../hooks/ToastContext';
 
-/* ── Asset-picker props (all optional — omit for header-only routes) ── */
+/* ── Asset-picker props (all optional  -  omit for header-only routes) ── */
 
 interface AssetPickerProps {
   assets: StoredAsset[];

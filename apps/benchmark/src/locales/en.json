@@ -421,7 +421,7 @@
         "animation": {
           "new": "New in B",
           "removed": "Removed from B",
-          "delta": "A {{baseline}} → B {{current}} (Δ {{delta}})"
+          "delta": "A {{baseline}} -> B {{current}} (Δ {{delta}})"
         }
       },
       "advisor": {
@@ -1523,7 +1523,7 @@
     }
   },
   "zSlice": {
-    "subtitle": "Visualize skeleton layers in an exploded 3D view — split by draw call batch, bone depth, or custom grouping.",
+    "subtitle": "Visualize skeleton layers in an exploded 3D view  -  split by draw call batch, bone depth, or custom grouping.",
     "modes": {
       "drawCall": "Draw Calls",
       "treeDepth": "Tree Depth",
