@@ -1,33 +1,169 @@
 import '@esotericsoftware/spine-pixi-v8';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
-import { Application, Assets, Container, Graphics, Text, TextStyle } from 'pixi.js';
+import {
+  Application,
+  Assets,
+  BlurFilter,
+  Container,
+  Graphics,
+  Sprite,
+  Text,
+  TextStyle,
+} from 'pixi.js';
 import { Crawler } from '@spine-benchmark/pixi-crawler';
 
 /**
- * Pixi Crawler Demo - Spine slot-machine test scene
+ * Pixi Crawler Demo - issue showcase
  *
- * Loads real Spine skeletons from the TPT atlas: backgrounds, reelgrid,
- * symbol grid with active animations, win sequences, meter, etc.
+ * The demo intentionally builds a scene where every crawler issue category
+ * has a labeled subgroup that triggers it. Open the overlay (~) and walk
+ * through the issue list - each entry should highlight a specific cell.
  *
- * Controls:
+ * Keyboard:
  *   ~   Toggle overlay         G   Toggle graph (FPS / DC / Budget)
  *   I   Toggle issues list     H   Toggle highlights
  *   R   Start/stop recording   P   Export report
  *   D   Toggle analysis mode   W   Open remote waterfall panel
  *   < > Cycle selected node
+ *
+ * Assets are pulled from packages/spinefolio/assets at vite-build time
+ * (see vite.config.ts:viteStaticCopy). To extend the demo with your own
+ * skeletons, drop them into apps/crawler/public/assets/user/ and reference
+ * them in the USER_ASSETS section near the bottom of this file.
  */
 
-const ATLAS = 'assets/TPT_spine.atlas';
+// ─────────────────────────────────────────────────────────────────
+// Asset registration
+// ─────────────────────────────────────────────────────────────────
 
-// ── All skeletons we want to register with the asset loader ──
-const ALL_JSONS = [
-  'Backgrounds', 'Reelgrid', 'Logo', 'Meter_Panel', 'Meter_Symbol',
-  'Master_Symbol', 'Symbol_Highlight', 'Symbol_Expansion',
-  'Big_Win', 'Initial_Win', 'Near_Win', 'Splash',
-  'Present_Highlighted_Symbol', 'FS_Intro', 'FS_Outro',
-  'sym_M2', 'sym_M3', 'sym_M4', 'sym_H1', 'sym_WR',
-  'sym_F5', 'sym_F6', 'sym_F7', 'sym_F8', 'sym_F9', 'sym_F10',
+interface SkeletonRef {
+  alias: string;
+  jsonPath: string;
+  atlasAlias: string;
+}
+
+const ATLASES: Record<string, string> = {
+  spineboy: 'assets/spineboy/spineboy.atlas',
+  high: 'assets/high.atlas',
+  low: 'assets/low.atlas',
+};
+
+const SKELETONS: SkeletonRef[] = [
+  { alias: 'spineboy', jsonPath: 'assets/spineboy/spineboy.json', atlasAlias: 'spineboy' },
+  { alias: 'high_1', jsonPath: 'assets/high_1.json', atlasAlias: 'high' },
+  { alias: 'high_2', jsonPath: 'assets/high_2.json', atlasAlias: 'high' },
+  { alias: 'low_1', jsonPath: 'assets/low_1.json', atlasAlias: 'low' },
+  { alias: 'low_2', jsonPath: 'assets/low_2.json', atlasAlias: 'low' },
+  { alias: 'scatter', jsonPath: 'assets/scatter.json', atlasAlias: 'high' },
 ];
+
+// ─────────────────────────────────────────────────────────────────
+// Layout helpers
+// ─────────────────────────────────────────────────────────────────
+
+interface Cell {
+  col: number;
+  row: number;
+  title: string;
+  /** Crawler issue codes the cell is intended to trigger. Used in the label. */
+  triggers: string[];
+}
+
+const CELL_W = 280;
+const CELL_H = 240;
+const COLS = 4;
+const ROWS = 3;
+const GUTTER = 16;
+
+function cellPos(col: number, row: number, app: Application): { x: number; y: number } {
+  const totalW = COLS * CELL_W + (COLS - 1) * GUTTER;
+  const totalH = ROWS * CELL_H + (ROWS - 1) * GUTTER;
+  const startX = (app.screen.width - totalW) / 2;
+  const startY = (app.screen.height - totalH) / 2;
+  return {
+    x: startX + col * (CELL_W + GUTTER),
+    y: startY + row * (CELL_H + GUTTER),
+  };
+}
+
+function cellLabel(cell: Cell): Container {
+  const wrap = new Container();
+  wrap.label = `Label_${cell.title}`;
+
+  const title = new Text({
+    text: cell.title,
+    style: new TextStyle({
+      fontFamily: '"Courier New", monospace',
+      fontSize: 12,
+      fill: 0xb0e0ff,
+      fontWeight: 'bold',
+    }),
+  });
+  title.position.set(0, 0);
+
+  const triggers = new Text({
+    text: cell.triggers.join('  '),
+    style: new TextStyle({
+      fontFamily: '"Courier New", monospace',
+      fontSize: 9,
+      fill: 0x666666,
+      lineHeight: 12,
+    }),
+  });
+  triggers.position.set(0, 16);
+
+  wrap.addChild(title);
+  wrap.addChild(triggers);
+  return wrap;
+}
+
+function cellFrame(): Graphics {
+  const g = new Graphics();
+  g.rect(0, 0, CELL_W, CELL_H);
+  g.stroke({ color: 0x222a36, width: 1 });
+  g.label = 'CellFrame';
+  return g;
+}
+
+function cellRoot(cell: Cell, app: Application): Container {
+  const root = new Container();
+  const { x, y } = cellPos(cell.col, cell.row, app);
+  root.position.set(x, y);
+  root.label = `Cell_${cell.title}`;
+  root.addChild(cellFrame());
+  root.addChild(cellLabel(cell));
+  return root;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Spine factory
+// ─────────────────────────────────────────────────────────────────
+
+function makeSpine(
+  ref: SkeletonRef,
+  anim: string | null,
+  loop: boolean,
+  scale = 1,
+): Spine | null {
+  try {
+    const s = Spine.from({ skeleton: ref.alias, atlas: ref.atlasAlias, autoUpdate: true });
+    s.label = ref.alias;
+    s.scale.set(scale);
+    if (anim) {
+      const anims = s.skeleton.data.animations.map((a) => a.name);
+      const target = anims.includes(anim) ? anim : anims[0];
+      if (target) s.state.setAnimation(0, target, loop);
+    }
+    return s;
+  } catch (err) {
+    console.warn(`[demo] Failed to instantiate ${ref.alias}:`, err);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Bootstrap
+// ─────────────────────────────────────────────────────────────────
 
 (async () => {
   const app = new Application();
@@ -42,259 +178,431 @@ const ALL_JSONS = [
 
   document.getElementById('pixi-container')!.appendChild(app.canvas);
 
-  const sw = () => app.screen.width;
-  const sh = () => app.screen.height;
-
-  // ── Register & load all assets ──
-  Assets.add({ alias: 'tpt-atlas', src: ATLAS });
-  for (const name of ALL_JSONS) {
-    Assets.add({ alias: name, src: `assets/${name}.json` });
+  // Register all assets, then load.
+  for (const [alias, src] of Object.entries(ATLASES)) {
+    Assets.add({ alias, src });
   }
-  await Assets.load(['tpt-atlas', ...ALL_JSONS]);
-  console.log('%c[demo]%c all assets loaded', 'color:#4fc3f7;font-weight:bold', 'color:#888');
-
-  // Helper: create a Spine, set anim, return it
-  function makeSpine(
-    alias: string, anim: string, loop: boolean,
-    x: number, y: number, scale = 1,
-  ): Spine | null {
-    try {
-      const s = Spine.from({ skeleton: alias, atlas: 'tpt-atlas', autoUpdate: true });
-      s.label = alias;
-      s.scale.set(scale);
-      s.position.set(x, y);
-      const anims = s.skeleton.data.animations.map((a: any) => a.name);
-      if (anims.includes(anim)) {
-        s.state.setAnimation(0, anim, loop);
-      } else if (anims.length > 0) {
-        s.state.setAnimation(0, anims[0], loop);
-        console.warn(`[demo] ${alias}: "${anim}" missing, using "${anims[0]}"`);
-      }
-      return s;
-    } catch (err) {
-      console.warn(`[demo] Failed: ${alias}`, err);
-      return null;
-    }
+  for (const sk of SKELETONS) {
+    Assets.add({ alias: sk.alias, src: sk.jsonPath });
   }
+  await Assets.load([...Object.keys(ATLASES), ...SKELETONS.map((s) => s.alias)]);
 
-  // ── World ──
+  console.log('%c[demo]%c assets loaded', 'color:#4fc3f7;font-weight:bold', 'color:#888');
+
   const world = new Container();
-  world.label = 'World';
+  world.label = 'Showcase';
   app.stage.addChild(world);
 
-  const cx = sw() / 2;
-  const cy = sh() / 2;
+  // ─────────────────────────────────────────────────────────────
+  // Cell (0, 0) - clean spine baseline
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 0,
+      row: 0,
+      title: '01 Clean Spine',
+      triggers: ['(no issues)'],
+    };
+    const root = cellRoot(cell, app);
+    const ref = SKELETONS.find((s) => s.alias === 'spineboy')!;
+    const sp = makeSpine(ref, 'walk', true, 0.18);
+    if (sp) {
+      sp.position.set(CELL_W / 2, CELL_H - 30);
+      sp.label = 'CleanSpineboy';
+      root.addChild(sp);
+    }
+    world.addChild(root);
+  }
 
-  // ── Layer 0: Background ──
-  const bgLayer = new Container();
-  bgLayer.label = 'BackgroundLayer';
-  world.addChild(bgLayer);
+  // ─────────────────────────────────────────────────────────────
+  // Cell (1, 0) - multi-atlas spine (uses two pages -> page switches)
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 1,
+      row: 0,
+      title: '02 Multi-atlas mix',
+      triggers: ['SPINE_ATLAS_THRASH', 'SPINE_MULTI_ATLAS'],
+    };
+    const root = cellRoot(cell, app);
+    const high = SKELETONS.find((s) => s.alias === 'high_1')!;
+    const low = SKELETONS.find((s) => s.alias === 'low_1')!;
+    const a = makeSpine(high, 'idle', true, 0.45);
+    const b = makeSpine(low, 'idle', true, 0.45);
+    if (a) {
+      a.position.set(CELL_W * 0.32, CELL_H - 30);
+      a.label = 'HighOne';
+      root.addChild(a);
+    }
+    if (b) {
+      b.position.set(CELL_W * 0.68, CELL_H - 30);
+      b.label = 'LowOne';
+      root.addChild(b);
+    }
+    world.addChild(root);
+  }
 
-  const bg = makeSpine('Backgrounds', 'basegame', true, cx, cy, 1);
-  if (bg) bgLayer.addChild(bg);
+  // ─────────────────────────────────────────────────────────────
+  // Cell (2, 0) - hidden but updating spine
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 2,
+      row: 0,
+      title: '03 Hidden updating',
+      triggers: ['SPINE_HIDDEN_UPDATING', 'INVISIBLE_SUBTREE'],
+    };
+    const root = cellRoot(cell, app);
+    const wrapper = new Container();
+    wrapper.label = 'HiddenWrapper';
+    wrapper.visible = false; // INVISIBLE_SUBTREE
+    const ref = SKELETONS.find((s) => s.alias === 'spineboy')!;
+    const sp = makeSpine(ref, 'run', true, 0.2);
+    if (sp) {
+      // SPINE_HIDDEN_UPDATING: autoUpdate stays on while parent is hidden
+      sp.position.set(CELL_W / 2, CELL_H - 30);
+      sp.label = 'HiddenSpineboyTicking';
+      wrapper.addChild(sp);
+    }
+    // Some hint visible to the user that the cell is "intentionally empty"
+    const hint = new Text({
+      text: '(invisible subtree\n  ticks every frame)',
+      style: new TextStyle({
+        fontFamily: '"Courier New", monospace',
+        fontSize: 11,
+        fill: 0x444444,
+        align: 'center',
+      }),
+    });
+    hint.anchor.set(0.5);
+    hint.position.set(CELL_W / 2, CELL_H / 2);
+    root.addChild(wrapper);
+    root.addChild(hint);
+    world.addChild(root);
+  }
 
-  // ── Layer 1: Reelgrid ──
-  const reelLayer = new Container();
-  reelLayer.label = 'ReelgridLayer';
-  world.addChild(reelLayer);
+  // ─────────────────────────────────────────────────────────────
+  // Cell (3, 0) - high-RI spine (lots of vertices)
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 3,
+      row: 0,
+      title: '04 High RI scatter',
+      triggers: ['SPINE_HIGH_RI', 'SPINE_HIGH_BUDGET'],
+    };
+    const root = cellRoot(cell, app);
+    const ref = SKELETONS.find((s) => s.alias === 'scatter')!;
+    const sp = makeSpine(ref, 'idle', true, 0.55);
+    if (sp) {
+      sp.position.set(CELL_W / 2, CELL_H - 30);
+      sp.label = 'HighRIScatter';
+      root.addChild(sp);
+    }
+    world.addChild(root);
+  }
 
-  const reels = makeSpine('Reelgrid', 'state_landscape', true, cx, cy, 0.8);
-  if (reels) reelLayer.addChild(reels);
+  // ─────────────────────────────────────────────────────────────
+  // Cell (0, 1) - simple mask (single MASK_BREAK)
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 0,
+      row: 1,
+      title: '05 Simple mask',
+      triggers: ['MASK_BREAK'],
+    };
+    const root = cellRoot(cell, app);
+    const masked = new Container();
+    masked.label = 'SimpleMaskedContent';
+    const mask = new Graphics();
+    mask.circle(0, 0, 50);
+    mask.fill({ color: 0xffffff });
+    mask.label = 'SimpleMask';
+    masked.mask = mask;
+    masked.addChild(mask);
 
-  // ── Layer 2: Symbol grid - 5×3 reel layout with active animations ──
-  const symbolLayer = new Container();
-  symbolLayer.label = 'SymbolGrid';
-  world.addChild(symbolLayer);
+    const fill = new Graphics();
+    fill.rect(-60, -60, 120, 120);
+    fill.fill({ color: 0x4fc3f7, alpha: 0.85 });
+    fill.label = 'MaskedFill';
+    masked.addChild(fill);
 
-  // 5 columns × 3 rows of symbols, mix of high/mid/low
-  const REEL_COLS = 5;
-  const REEL_ROWS = 3;
-  const SYM_W = 130;
-  const SYM_H = 130;
-  const gridStartX = cx - ((REEL_COLS - 1) * SYM_W) / 2;
-  const gridStartY = cy - ((REEL_ROWS - 1) * SYM_H) / 2 - 20;
+    masked.position.set(CELL_W / 2, CELL_H / 2 + 10);
+    root.addChild(masked);
+    world.addChild(root);
+  }
 
-  // Symbol pool with active animations
-  const symbolPool: [string, string][] = [
-    // Row 0 - mostly highs with active loops
-    ['sym_H1', 'char_idle_loop_regular'],
-    ['sym_M2', 'char_idle_loop_regular'],
-    ['sym_WR', 'book_hover_loop'],
-    ['sym_M3', 'char_idle_loop_regular'],
-    ['sym_M4', 'char_idle_loop_regular'],
-    // Row 1 - mix of highs doing win anims + expanding
-    ['sym_M2', 'fire_loop'],
-    ['sym_H1', 'fire_loop'],
-    ['sym_M3', 'expand_from_middle'],
-    ['sym_M4', 'highlighted_fade_in'],
-    ['sym_WR', 'attention3_loop'],
-    // Row 2 - lows with some highlights
-    ['sym_F5', 'mb'],
-    ['sym_F6', 'highlighted_fade_in'],
-    ['sym_F7', 'static'],
-    ['sym_F8', 'mb'],
-    ['sym_F9', 'highlighted_fade_in'],
-  ];
+  // ─────────────────────────────────────────────────────────────
+  // Cell (1, 1) - nested mask (mask inside masked ancestor)
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 1,
+      row: 1,
+      title: '06 Nested mask',
+      triggers: ['MASK_NESTED', 'MASK_BREAK'],
+    };
+    const root = cellRoot(cell, app);
 
-  for (let row = 0; row < REEL_ROWS; row++) {
-    for (let col = 0; col < REEL_COLS; col++) {
-      const idx = row * REEL_COLS + col;
-      const [alias, anim] = symbolPool[idx];
-      const x = gridStartX + col * SYM_W;
-      const y = gridStartY + row * SYM_H;
-      const sym = makeSpine(alias, anim, true, x, y, 0.3);
-      if (sym) {
-        sym.label = `Sym_${row}_${col}_${alias}`;
-        symbolLayer.addChild(sym);
+    const outerMasked = new Container();
+    outerMasked.label = 'OuterMasked';
+    const outerMask = new Graphics();
+    outerMask.circle(0, 0, 70);
+    outerMask.fill({ color: 0xffffff });
+    outerMask.label = 'OuterMask';
+    outerMasked.mask = outerMask;
+    outerMasked.addChild(outerMask);
+
+    const innerMasked = new Container();
+    innerMasked.label = 'InnerMasked';
+    const innerMask = new Graphics();
+    innerMask.rect(-40, -40, 80, 80);
+    innerMask.fill({ color: 0xffffff });
+    innerMask.label = 'InnerMask';
+    innerMasked.mask = innerMask;
+    innerMasked.addChild(innerMask);
+
+    const innerFill = new Graphics();
+    innerFill.rect(-80, -80, 160, 160);
+    innerFill.fill({ color: 0xff6699, alpha: 0.85 });
+    innerFill.label = 'InnerFill';
+    innerMasked.addChild(innerFill);
+    outerMasked.addChild(innerMasked);
+
+    outerMasked.position.set(CELL_W / 2, CELL_H / 2 + 10);
+    root.addChild(outerMasked);
+    world.addChild(root);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Cell (2, 1) - filter break
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 2,
+      row: 1,
+      title: '07 Filter break',
+      triggers: ['FILTER_BREAK'],
+    };
+    const root = cellRoot(cell, app);
+    const filtered = new Container();
+    filtered.label = 'BlurredContent';
+    const fill = new Graphics();
+    fill.roundRect(-60, -60, 120, 120, 12);
+    fill.fill({ color: 0xa3e635 });
+    fill.label = 'BlurredFill';
+    filtered.addChild(fill);
+    filtered.filters = [new BlurFilter({ strength: 6 })];
+    filtered.position.set(CELL_W / 2, CELL_H / 2 + 10);
+    root.addChild(filtered);
+    world.addChild(root);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Cell (3, 1) - blend break (additive Graphics)
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 3,
+      row: 1,
+      title: '08 Blend break',
+      triggers: ['BLEND_BREAK'],
+    };
+    const root = cellRoot(cell, app);
+    const additive = new Graphics();
+    additive.circle(0, 0, 55);
+    additive.fill({ color: 0xff8800, alpha: 0.6 });
+    additive.blendMode = 'add';
+    additive.label = 'AdditiveBlob';
+    additive.position.set(CELL_W / 2 - 25, CELL_H / 2 + 10);
+    root.addChild(additive);
+
+    const additive2 = new Graphics();
+    additive2.circle(0, 0, 45);
+    additive2.fill({ color: 0xffaa00, alpha: 0.6 });
+    additive2.blendMode = 'screen';
+    additive2.label = 'ScreenBlob';
+    additive2.position.set(CELL_W / 2 + 25, CELL_H / 2 + 10);
+    root.addChild(additive2);
+    world.addChild(root);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Cell (0, 2) - deep nesting
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 0,
+      row: 2,
+      title: '09 Deep nesting',
+      triggers: ['DEEP_NESTING'],
+    };
+    const root = cellRoot(cell, app);
+    let parent: Container = root;
+    for (let d = 0; d < 22; d++) {
+      const child = new Container();
+      child.label = `Nest_${d}`;
+      parent.addChild(child);
+      parent = child;
+    }
+    const leaf = new Graphics();
+    leaf.circle(0, 0, 18);
+    leaf.fill({ color: 0xff5577 });
+    leaf.label = 'DeepLeaf';
+    leaf.position.set(CELL_W / 2, CELL_H / 2 + 10);
+    parent.addChild(leaf);
+    world.addChild(root);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Cell (1, 2) - excessive children + empty containers
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 1,
+      row: 2,
+      title: '10 Excessive children',
+      triggers: ['EXCESSIVE_CHILDREN', 'EMPTY_CONTAINER'],
+    };
+    const root = cellRoot(cell, app);
+    const swarm = new Container();
+    swarm.label = 'SwarmContainer';
+    for (let i = 0; i < 140; i++) {
+      // Half are real graphics, half are deliberately empty containers
+      // so EMPTY_CONTAINER fires as well.
+      if (i % 2 === 0) {
+        const dot = new Graphics();
+        dot.circle(0, 0, 3);
+        dot.fill({ color: 0xa3e635 });
+        dot.position.set(20 + (i % 12) * 18, 60 + Math.floor(i / 12) * 14);
+        dot.label = `SwarmDot_${i}`;
+        swarm.addChild(dot);
+      } else {
+        const empty = new Container();
+        empty.label = `EmptyChild_${i}`;
+        swarm.addChild(empty);
       }
     }
+    root.addChild(swarm);
+    world.addChild(root);
   }
 
-  // ── Layer 3: Symbol effects (highlight frames, expansion overlays) ──
-  const fxLayer = new Container();
-  fxLayer.label = 'SymbolFXLayer';
-  world.addChild(fxLayer);
+  // ─────────────────────────────────────────────────────────────
+  // Cell (2, 2) - zero alpha but visible
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 2,
+      row: 2,
+      title: '11 Zero alpha visible',
+      triggers: ['ZERO_ALPHA_VISIBLE'],
+    };
+    const root = cellRoot(cell, app);
+    const ghost = new Graphics();
+    ghost.roundRect(-60, -60, 120, 120, 8);
+    ghost.fill({ color: 0xfb923c });
+    ghost.alpha = 0; // visible=true, alpha=0
+    ghost.visible = true;
+    ghost.label = 'TransparentBox';
+    ghost.position.set(CELL_W / 2, CELL_H / 2 + 10);
+    root.addChild(ghost);
 
-  // Highlight frame on a few positions
-  const hlPositions = [
-    [0, 2], [1, 1], [1, 3], [2, 1], [2, 4],
-  ];
-  for (const [row, col] of hlPositions) {
-    const x = gridStartX + col * SYM_W;
-    const y = gridStartY + row * SYM_H;
-    const hl = makeSpine('Symbol_Highlight', 'regular_fade_in', false, x, y, 0.3);
-    if (hl) {
-      hl.label = `SymHL_${row}_${col}`;
-      fxLayer.addChild(hl);
+    const hint = new Text({
+      text: '(alpha=0 with visible=true\n  still walked + transformed)',
+      style: new TextStyle({
+        fontFamily: '"Courier New", monospace',
+        fontSize: 10,
+        fill: 0x444444,
+        align: 'center',
+      }),
+    });
+    hint.anchor.set(0.5);
+    hint.position.set(CELL_W / 2, CELL_H / 2 + 10);
+    root.addChild(hint);
+    world.addChild(root);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Cell (3, 2) - frequent reorder
+  // ─────────────────────────────────────────────────────────────
+  {
+    const cell: Cell = {
+      col: 3,
+      row: 2,
+      title: '12 Frequent reorder',
+      triggers: ['FREQUENT_REORDER'],
+    };
+    const root = cellRoot(cell, app);
+    const stack = new Container();
+    stack.label = 'ReorderStack';
+    const layers: Graphics[] = [];
+    for (let i = 0; i < 6; i++) {
+      const g = new Graphics();
+      g.roundRect(-35, -35, 70, 70, 6);
+      g.fill({ color: [0xfb923c, 0x4fc3f7, 0xa3e635, 0xff6699, 0xffd166, 0xb084ff][i] });
+      g.alpha = 0.6;
+      g.position.set(CELL_W / 2 + (i - 2.5) * 8, CELL_H / 2 + 10 + (i - 2.5) * 8);
+      g.label = `ReorderTile_${i}`;
+      stack.addChild(g);
+      layers.push(g);
     }
+    root.addChild(stack);
+
+    // Reorder children every frame to trigger FREQUENT_REORDER
+    let tick = 0;
+    app.ticker.add(() => {
+      tick++;
+      if (tick % 4 === 0) {
+        const idx = tick % layers.length;
+        stack.swapChildren(layers[idx], layers[(idx + 1) % layers.length]);
+      }
+    });
+    world.addChild(root);
   }
 
-  // Expansion overlays on column 2
-  for (let row = 0; row < REEL_ROWS; row++) {
-    const x = gridStartX + 2 * SYM_W;
-    const y = gridStartY + row * SYM_H;
-    const expandAnim = row === 0 ? 'expand_from_top' : row === 1 ? 'expand_from_middle' : 'expand_from_bottom';
-    const exp = makeSpine('Symbol_Expansion', expandAnim, false, x, y, 0.3);
-    if (exp) {
-      exp.label = `SymExpand_${row}`;
-      fxLayer.addChild(exp);
-    }
+  // ─────────────────────────────────────────────────────────────
+  // Off-screen object (deliberately positioned outside the viewport)
+  // Triggers OFF_SCREEN. Lives outside the grid so it doesn't visually
+  // collide with the labelled cells.
+  // ─────────────────────────────────────────────────────────────
+  {
+    const offscreen = new Sprite();
+    offscreen.label = 'OffScreenSprite';
+    const off = new Graphics();
+    off.rect(0, 0, 80, 80);
+    off.fill({ color: 0x666666 });
+    off.label = 'OffScreenFill';
+    const wrap = new Container();
+    wrap.label = 'OffScreenContainer';
+    wrap.addChild(off);
+    wrap.position.set(-500, -500); // far outside any viewport
+    world.addChild(wrap);
   }
 
-  // ── Layer 4: Meter panel + meter symbol ──
-  const meterLayer = new Container();
-  meterLayer.label = 'MeterLayer';
-  world.addChild(meterLayer);
+  // ─────────────────────────────────────────────────────────────
+  // USER_ASSETS
+  // Drop your own Spine bundles into apps/crawler/public/assets/user/
+  // and instantiate them here. They will be served at /assets/user/<file>.
+  // Example:
+  //
+  //   Assets.add({ alias: 'my-atlas', src: 'assets/user/my.atlas' });
+  //   Assets.add({ alias: 'my-skel',  src: 'assets/user/my.json'  });
+  //   await Assets.load(['my-atlas', 'my-skel']);
+  //   const my = Spine.from({ skeleton: 'my-skel', atlas: 'my-atlas' });
+  //   my.position.set(window.innerWidth - 200, 200);
+  //   app.stage.addChild(my);
+  // ─────────────────────────────────────────────────────────────
 
-  const meter = makeSpine('Meter_Panel', 'state_landscape', true, cx + 340, cy - 200, 0.35);
-  if (meter) meterLayer.addChild(meter);
-
-  const meterSym = makeSpine('Meter_Symbol', 'fire_loop', true, cx + 340, cy - 140, 0.3);
-  if (meterSym) meterLayer.addChild(meterSym);
-
-  // ── Layer 5: Master symbol (multiplier indicator) ──
-  const master = makeSpine('Master_Symbol', 'mb', true, cx - 340, cy - 200, 0.4);
-  if (master) {
-    master.label = 'MasterSymbol';
-    world.addChild(master);
-  }
-
-  // ── Layer 6: Logo at top ──
-  const logo = makeSpine('Logo', 'popup', false, cx, 50, 0.45);
-  if (logo) {
-    logo.label = 'Logo';
-    world.addChild(logo);
-  }
-
-  // ── Layer 7: Win celebration (Big_Win doing char_idle_loops) ──
-  const winLayer = new Container();
-  winLayer.label = 'WinLayer';
-  world.addChild(winLayer);
-
-  const bigWin = makeSpine('Big_Win', 'char_idle_loops', true, cx, cy, 0.55);
-  if (bigWin) {
-    bigWin.alpha = 0.7; // semi-transparent so we see symbols behind
-    bigWin.label = 'BigWin_CharLoops';
-    winLayer.addChild(bigWin);
-  }
-
-  // Initial win overlay
-  const initWin = makeSpine('Initial_Win', 'initial_win', true, cx, cy + 60, 0.45);
-  if (initWin) {
-    initWin.label = 'InitialWin';
-    winLayer.addChild(initWin);
-  }
-
-  // Near-win loop (often most expensive - lots of bones)
-  const nearWin = makeSpine('Near_Win', 'loop', true, cx + 250, cy + 100, 0.35);
-  if (nearWin) {
-    nearWin.label = 'NearWin_Loop';
-    winLayer.addChild(nearWin);
-  }
-
-  // ── Layer 8: Present Highlighted Symbol (huge - 1013 bones!) ──
-  const presentHL = makeSpine(
-    'Present_Highlighted_Symbol', 'present_highlighted_symbol', true,
-    cx - 200, cy + 150, 0.25,
-  );
-  if (presentHL) {
-    presentHL.label = 'PresentHighlightedSymbol';
-    world.addChild(presentHL);
-  }
-
-  // ── Extra low symbols scattered for F10 ──
-  const f10 = makeSpine('sym_F10', 'mb', true, cx + 320, cy + 220, 0.3);
-  if (f10) { f10.label = 'sym_F10_extra'; world.addChild(f10); }
-
-  // ── Some extra Graphics for blend-break / mask testing ──
-  const extraContainer = new Container();
-  extraContainer.label = 'ExtraEffects';
-  world.addChild(extraContainer);
-
-  const addBox = new Graphics();
-  addBox.roundRect(0, 0, 60, 60, 8);
-  addBox.fill({ color: 0xff6600, alpha: 0.5 });
-  addBox.blendMode = 'add';
-  addBox.label = 'AdditiveBlendBox';
-  addBox.position.set(20, sh() - 80);
-  extraContainer.addChild(addBox);
-
-  const maskedGroup = new Container();
-  maskedGroup.label = 'MaskedGroup';
-  const mask = new Graphics();
-  mask.circle(0, 0, 30);
-  mask.fill({ color: 0xffffff });
-  maskedGroup.mask = mask;
-  maskedGroup.addChild(mask);
-  const maskedContent = new Graphics();
-  maskedContent.rect(-40, -40, 80, 80);
-  maskedContent.fill({ color: 0x00ff88, alpha: 0.6 });
-  maskedContent.label = 'MaskedContent';
-  maskedGroup.addChild(maskedContent);
-  maskedGroup.position.set(110, sh() - 50);
-  extraContainer.addChild(maskedGroup);
-
-  // Deep nesting
-  let nestParent: Container = extraContainer;
-  for (let d = 0; d < 8; d++) {
-    const child = new Container();
-    child.label = `DeepNest_${d}`;
-    nestParent.addChild(child);
-    nestParent = child;
-  }
-  const deepLeaf = new Graphics();
-  deepLeaf.rect(0, 0, 20, 20);
-  deepLeaf.fill({ color: 0xff0000 });
-  deepLeaf.label = 'DeepLeaf';
-  deepLeaf.position.set(200, sh() - 70);
-  nestParent.addChild(deepLeaf);
-
-  // ── HUD ──
+  // ─────────────────────────────────────────────────────────────
+  // HUD
+  // ─────────────────────────────────────────────────────────────
   const hudText = new Text({
     text: [
-      'PIXI CRAWLER DEMO - Spine Slot Machine Scene',
-      '~  overlay   G  graph   I  issues   H  highlights',
-      'R  record   P  report   D  analysis   W  remote panel',
+      'PIXI CRAWLER ISSUE SHOWCASE',
+      'each cell triggers a specific crawler issue category',
+      '~ overlay   G graph   I issues   H highlights',
+      'R record    P report  D analysis W remote panel',
     ].join('\n'),
     style: new TextStyle({
       fontFamily: '"Courier New", monospace',
@@ -306,27 +614,21 @@ const ALL_JSONS = [
   });
   hudText.label = 'HUDText';
   hudText.position.set(8, 8);
-  world.addChild(hudText);
+  app.stage.addChild(hudText);
 
-  // ── Init Crawler ──
+  // ─────────────────────────────────────────────────────────────
+  // Crawler init
+  // ─────────────────────────────────────────────────────────────
   const crawler = new Crawler(app, {
     scanInterval: 10,
     overlayEnabled: true,
   });
-
   (globalThis as any).crawler = crawler;
 
-  const totalSpines = world.children.reduce(function countSpines(acc: number, c: any): number {
-    const isSp = c.skeleton && c.state ? 1 : 0;
-    const kids = c.children ? c.children.reduce(countSpines, 0) : 0;
-    return acc + isSp + kids;
-  }, 0);
-
   console.log(
-    '%c[demo]%c scene ready - %d spine skeletons across %d layers. Press ~ for overlay.',
+    '%c[demo]%c showcase ready - %d top-level cells. Press ~ for overlay.',
     'color:#4fc3f7;font-weight:bold',
     'color:#888',
-    totalSpines,
     world.children.length,
   );
 })();
