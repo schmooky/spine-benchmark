@@ -10,10 +10,6 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: "stats.js", // Or wherever your stats.js is
-          dest: "", // '' means place it in root of dist/
-        },
-        {
           src: "assets/favicon-96x96.png",
           dest: "",
         },
