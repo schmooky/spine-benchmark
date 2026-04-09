@@ -173,14 +173,28 @@ export class CameraContainer extends Container {
   }
 
   public lookAtChild(spine: Spine): void {
+    // Defensive: callers (notably the ResizeObserver-driven re-center in
+    // useSpineApp) can fire `lookAtChild` while React is mid-flight on a
+    // bundle swap, when `currentSpine` references a Spine that has just
+    // been removed from this container by a previous `clearSpine()` (or
+    // by an upload race / hot-reload cycle). pixi's `getChildIndex` is a
+    // hard throw on a non-child, so we'd crash with "The supplied
+    // Container must be a child of the caller". Bail out if the spine
+    // isn't a real child of this container right now - the next bundle's
+    // useEffect will call us again with a properly-parented spine.
+    if (spine.parent !== this) {
+      this.currentSpine = null;
+      return;
+    }
+
     this.currentSpine = spine;
-    
+
     // Remove debug container from previous spine if exists
     const existingParent = this.debugRenderer.getContainer().parent;
     if (existingParent) {
       existingParent.removeChild(this.debugRenderer.getContainer());
     }
-    
+
     // Remove slot highlight from previous parent
     if (this.slotHighlightGraphics.parent) {
       this.slotHighlightGraphics.parent.removeChild(this.slotHighlightGraphics);
@@ -188,7 +202,8 @@ export class CameraContainer extends Container {
 
     // Add debug container AFTER the spine to ensure it renders on top
     if (this.currentSpine) {
-      // Get the index of the spine in this container
+      // Get the index of the spine in this container - safe now because
+      // we verified `spine.parent === this` above.
       const spineIndex = this.getChildIndex(this.currentSpine);
       // Add debug container right after the spine
       this.addChildAt(this.debugRenderer.getContainer(), spineIndex + 1);
