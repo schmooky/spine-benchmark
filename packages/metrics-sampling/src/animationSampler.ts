@@ -87,10 +87,30 @@ export class AnimationSampler {
         callback(time, skeleton);
       }
     } finally {
-      // Restore original animation state if needed
-      if (preserveState && originalState) {
+      // Restore the spine to a clean known state. The sampling loop above
+      // mutates EVERYTHING - bone world transforms, slot colors, slot
+      // attachments, sequence indices - and leaves the skeleton frozen at
+      // whatever the last sampled frame produced. If we don't reset it, the
+      // viewer will paint that arbitrary post-sampling state until the next
+      // animation tick (and for slots that the next animation doesn't
+      // touch, FOREVER). Bones can end up far off-screen if the last
+      // sampled animation moved them, which is exactly the
+      // "spine loads but I can't see it" symptom.
+      //
+      // The fix is two steps, in this order:
+      //   1. Always clear the sampling track and reset the skeleton to its
+      //      setup pose, so bones / slots / attachments are at their
+      //      authoring-time defaults.
+      //   2. If a real animation was playing before sampling started,
+      //      re-apply it on top so users who triggered analysis mid-playback
+      //      don't see their playback get yanked. This is best-effort and
+      //      only fires when there's an animation to restore.
+      if (preserveState) {
         state.clearTrack(0);
-        if (originalState.animationName) {
+        skeleton.setToSetupPose();
+        skeleton.updateWorldTransform(Physics.update);
+
+        if (originalState && originalState.animationName) {
           state.setAnimation(0, originalState.animationName, originalState.loop);
           const restoredTrack = state.getCurrent(0);
           if (restoredTrack) {
@@ -98,6 +118,7 @@ export class AnimationSampler {
             restoredTrack.animationLast = originalState.trackTime;
             state.update(0);
             state.apply(skeleton);
+            skeleton.updateWorldTransform(Physics.update);
           }
         }
       }
