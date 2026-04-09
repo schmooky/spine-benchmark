@@ -53,8 +53,24 @@ export const AnimationControls: React.FC<AnimationControlsProps> = ({
     setAnimations(animationNames);
 
     if (animationNames.length > 0) {
-      setCurrentAnimation(animationNames[0]);
-      playAnimation(animationNames[0], false);
+      // Pick a sensible default animation:
+      //   1. Exact match against common idle / loop names
+      //   2. Any animation whose name contains "idle" or "loop"
+      //   3. Fall back to the first animation
+      // Then play it looped, so skeletons whose setup pose is mostly
+      // invisible (e.g. "win effect" bundles where most slots have alpha=0
+      // until an animation drives them) actually show something at rest
+      // instead of leaving the user staring at a blank canvas. The user
+      // can still switch animations and toggle loop from the UI.
+      const exactMatches = ['idle', 'idle_loop', 'loop', 'default', 'main', 'stand'];
+      const lowered = animationNames.map(n => n.toLowerCase());
+      let pickIdx = lowered.findIndex(n => exactMatches.includes(n));
+      if (pickIdx < 0) pickIdx = lowered.findIndex(n => /idle|loop/i.test(n));
+      if (pickIdx < 0) pickIdx = 0;
+      const picked = animationNames[pickIdx];
+
+      setCurrentAnimation(picked);
+      playAnimation(picked, true);
     }
 
     const skinNames = spineInstance.skeleton.data.skins.map(s => s.name);
