@@ -62,7 +62,22 @@ Reason: AI agents (this one included) drift toward em-dashes and arrows by defau
 
 The check lives at `scripts/check-no-fancy-unicode.mjs` and runs as part of `npm test`. If you must reference one of these characters in documentation about itself, the only allowlisted file is `AGENTS.md` (this file).
 
-### 5. Commit attribution
+### 5. Releases go through changesets
+
+Every publishable workspace package is released by [changesets](https://github.com/changesets/changesets). When you make a change that should ship to consumers:
+
+1. Run `npx changeset` from the repo root.
+2. Pick the affected packages and the bump kind (`patch` / `minor` / `major`).
+3. Write a one-line summary aimed at a consumer reading the changelog. Lead with the verb.
+4. Commit the resulting `.changeset/*.md` file as part of your PR.
+
+You do **not** need to write a changeset for every package the cascade will touch - changesets handles the dep graph for you. If you bump `metrics-impact-formula`, every workspace package that depends on it gets an automatic patch bump in the same release, so the npm registry never has a published `pixi-crawler` referencing a stale `metrics-impact-formula`. This is governed by `updateInternalDependencies: "patch"` in `.changeset/config.json`.
+
+If your change is purely internal (build tooling, lint config, refactor with no behavior change), skip the changeset entirely. Don't ship empty changesets to suppress the changesets/action prompt - the absence of a changeset is the correct signal.
+
+The full release flow lives in `.github/workflows/release.yml`. It opens a "chore: version packages" PR after each merge to `main`; merging that PR triggers the actual `npm publish`.
+
+### 6. Commit attribution
 
 Commits made by AI agents on behalf of the maintainer must be attributed to the maintainer, not to the agent. Use:
 
@@ -121,9 +136,9 @@ Vitest configuration lives in the root `vitest.config.ts`. Adding a new test fil
 ## Things to do before you commit
 
 1. Run `npm test` from the repo root. Both linter checks and every vitest suite must pass.
-2. If you touched a published package (`@spine-benchmark/pixi-crawler` or `@spine-benchmark/spinefolio` or `@spine-benchmark/metrics-impact-formula`), bump its `version` according to the change you made.
+2. If your change ships user-visible behavior, run `npx changeset` and commit the generated `.changeset/*.md` file. Do not edit `package.json` versions by hand - changesets does that in the version PR.
 3. Use the maintainer's name + email for the commit (see "Commit attribution" above).
-4. Write the commit subject in conventional-commit form (`fix: ...`, `feat: ...`, `chore: ...`, `docs: ...`). semantic-release reads this to decide version bumps.
+4. Write the commit subject in conventional-commit form (`fix: ...`, `feat: ...`, `chore: ...`, `docs: ...`).
 
 ## Things to never do
 
@@ -133,3 +148,5 @@ Vitest configuration lives in the root `vitest.config.ts`. Adding a new test fil
 - Never use Unicode em-dashes or arrows in any tracked file except this one.
 - Never bypass `npm test` with `--no-verify` on a commit. If a hook fails, fix the underlying issue.
 - Never publish a workspace package with `file:..` deps. Use semver ranges so the npm registry copy resolves correctly.
+- Never bump a package's `version` field by hand. Add a changeset and let the version PR do it - bypassing changesets desynchronizes the dep cascade and the changelog.
+- Never run `npm publish` locally for a workspace package. Releases go through the CI workflow exclusively.

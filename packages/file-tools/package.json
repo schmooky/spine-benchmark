@@ -19,8 +19,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/asset-store": "file:../asset-store",
-    "@spine-benchmark/spine-loader": "file:../spine-loader"
+    "@spine-benchmark/asset-store": "^0.1.0",
+    "@spine-benchmark/spine-loader": "^0.1.0"
   },
   "peerDependencies": {
     "pixi.js": "^8.16.0"

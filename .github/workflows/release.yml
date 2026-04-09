@@ -1,0 +1,82 @@
+name: Release
+
+# Auto-publish flow driven by changesets.
+#
+# How it works:
+#   1. Contributor opens a PR. If the PR ships user-visible changes they
+#      run `npx changeset` locally and commit the resulting .changeset/*.md
+#      file. The file states which packages bump and how.
+#   2. PR is reviewed and merged into main.
+#   3. This workflow runs. If there are any pending changeset .md files,
+#      changesets/action opens (or updates) a PR titled "Version Packages"
+#      that applies the version bumps, regenerates each affected package's
+#      CHANGELOG.md, and removes the consumed .changeset files.
+#   4. When the "Version Packages" PR is merged into main, this workflow
+#      runs again. This time there are no pending changesets, so the
+#      action runs `npm run release` (build-all-publishable + changeset
+#      publish), which publishes every newly-bumped package to npm.
+#
+# The dep-graph cascade is handled by changesets itself: bumping
+# @spine-benchmark/metrics-impact-formula causes every workspace package
+# that depends on it to receive a patch bump in the same release, so the
+# npm registry never has a published consumer referencing an old version
+# of the leaf package. See `.changeset/config.json:updateInternalDependencies`.
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      # changesets/action needs these to open the Version Packages PR.
+      contents: write
+      pull-requests: write
+      # required by setup-node when publishing
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # changesets needs full history to compute "what changed since
+          # the last release tag".
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint guards (formula duplication, fancy unicode)
+        run: npm run check:lint
+
+      - name: Test
+        run: npx vitest run
+
+      - name: Create Release Pull Request or Publish
+        uses: changesets/action@v1
+        with:
+          # Opens or updates the "Version Packages" PR with pending bumps.
+          version: npm run version-packages
+          # When run on a commit that already has the bumps applied (i.e.
+          # right after the Version Packages PR is merged), runs the
+          # release script which builds all dist/ folders topologically
+          # and publishes the bumped packages to npm.
+          publish: npm run release
+          # Title contributors will see for the auto-opened version PR.
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

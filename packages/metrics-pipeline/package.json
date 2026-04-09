@@ -20,9 +20,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-analyzers": "file:../metrics-analyzers",
-    "@spine-benchmark/metrics-scoring": "file:../metrics-scoring",
-    "@spine-benchmark/metrics-sampling": "file:../metrics-sampling"
+    "@spine-benchmark/metrics-analyzers": "^0.1.0",
+    "@spine-benchmark/metrics-scoring": "^0.1.0",
+    "@spine-benchmark/metrics-sampling": "^0.1.0"
   },
   "peerDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101"
