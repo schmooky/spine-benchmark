@@ -12,11 +12,11 @@
     <div class="anim-metrics">
       <div class="metrics-row">
         <div class="metric">
-          <div class="metric-label">Rendering</div>
+          <div class="metric-label">Rendering (GPU)</div>
           <div class="metric-value v-{{this.rendering.level}}">{{fixed this.rendering.cost 1}}</div>
         </div>
         <div class="metric">
-          <div class="metric-label">Computational</div>
+          <div class="metric-label">Computational (CPU)</div>
           <div class="metric-value v-{{this.computational.level}}">{{fixed this.computational.cost 1}}</div>
         </div>
         <div class="metric">
@@ -24,8 +24,19 @@
           <div class="metric-value">{{fixed this.totalCost 1}}</div>
         </div>
       </div>
+
+      <!-- RI/CI impact bar -->
+      <div class="impact-bar">
+        <div class="impact-bar-segment ri" style="width: {{riPercent this}}%"></div>
+        <div class="impact-bar-segment ci" style="width: {{ciPercent this}}%"></div>
+      </div>
+      <div class="impact-bar-legend">
+        <span class="ri-label">RI {{fixed this.rendering.cost 1}}</span>
+        <span class="ci-label">CI {{fixed this.computational.cost 1}}</span>
+      </div>
+
       {{#if this.hotspots}}
-      <div class="metrics-row">
+      <div class="metrics-row" style="margin-top:4px">
         <div class="metric">
           <div class="metric-label">Page Breaks</div>
           <div class="metric-value">{{this.hotspots.pageBreaks}}</div>

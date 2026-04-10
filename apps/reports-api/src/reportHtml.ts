@@ -115,6 +115,22 @@ Handlebars.registerHelper('allFeatures', (active: string[]) => {
   return all.map(f => ({ name: f, on: (active || []).includes(f) }));
 });
 
+Handlebars.registerHelper('riPercent', (anim: any) => {
+  const ri = anim.rendering?.cost ?? 0;
+  const ci = anim.computational?.cost ?? 0;
+  const total = ri + ci;
+  if (total === 0) return 50;
+  return Math.round((ri / total) * 100);
+});
+
+Handlebars.registerHelper('ciPercent', (anim: any) => {
+  const ri = anim.rendering?.cost ?? 0;
+  const ci = anim.computational?.cost ?? 0;
+  const total = ri + ci;
+  if (total === 0) return 50;
+  return Math.round((ci / total) * 100);
+});
+
 // ── Render function ─────────────────────────────────────────────
 
 export async function renderReport(id: string): Promise<string> {
