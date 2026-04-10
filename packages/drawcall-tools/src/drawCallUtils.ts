@@ -117,7 +117,15 @@ function computeDrawCalls(items: DrawItem[]): DrawCallResult {
       return;
     }
     const blendChanged = item.blend !== previous.blend;
-    const pageChanged = item.page !== previous.page;
+    // Only count a page break when BOTH pages are known. If either is
+    // 'unknown' (e.g. a sequence attachment whose prefix doesn't match
+    // any atlas region name), we can't tell whether a page change
+    // actually occurred. Counting 'unknown' as a distinct page would
+    // produce false page breaks on single-page atlases.
+    const pageChanged =
+      item.page !== previous.page &&
+      item.page !== 'unknown' &&
+      previous.page !== 'unknown';
     if (blendChanged || pageChanged) {
       drawCalls += 1;
       if (blendChanged) blendBreaks += 1;
