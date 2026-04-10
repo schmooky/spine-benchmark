@@ -9,7 +9,7 @@
  */
 import { nanoid } from 'nanoid';
 import { config } from './config.js';
-import { putJson, putFile, getJson, presignGet, listPrefix, deleteObject } from './s3.js';
+import { putJson, putFile, getJson, getBuffer, listPrefix, deleteObject } from './s3.js';
 
 export interface FileHash {
   name: string;
@@ -88,27 +88,31 @@ export async function createReport(
 /**
  * Fetch a report's metadata. Returns null if expired or not found.
  */
-export async function getReport(id: string): Promise<{
-  meta: ReportMeta;
-  analysisUrl: string;
-  screenshotUrls: string[];
-} | null> {
+export async function getReport(id: string): Promise<ReportMeta | null> {
   const prefix = `reports/${id}`;
   const meta = await getJson<ReportMeta>(`${prefix}/meta.json`);
   if (!meta) return null;
+  if (new Date(meta.expiresAt) < new Date()) return null;
+  return meta;
+}
 
-  // Check TTL
-  if (new Date(meta.expiresAt) < new Date()) {
-    return null;
-  }
+/**
+ * Fetch the analysis JSON for a report.
+ */
+export async function getAnalysis(id: string): Promise<unknown | null> {
+  return getJson(`reports/${id}/analysis.json`);
+}
 
-  const analysisUrl = await presignGet(`${prefix}/analysis.json`);
-  const screenshotUrls: string[] = [];
-  for (const key of meta.screenshotKeys) {
-    screenshotUrls.push(await presignGet(key));
-  }
-
-  return { meta, analysisUrl, screenshotUrls };
+/**
+ * Fetch a screenshot buffer for a report.
+ */
+export async function getScreenshot(id: string, index: number): Promise<{ buffer: Buffer; contentType: string } | null> {
+  // Find the key from the meta
+  const meta = await getReport(id);
+  if (!meta) return null;
+  const key = meta.screenshotKeys[index];
+  if (!key) return null;
+  return getBuffer(key);
 }
 
 /**
@@ -124,7 +128,6 @@ export async function cleanupExpired(): Promise<number> {
     if (!meta) continue;
     if (new Date(meta.expiresAt) >= new Date()) continue;
 
-    // Expired. Delete all objects under this report's prefix.
     const prefix = metaKey.replace('/meta.json', '');
     const reportKeys = await listPrefix(prefix);
     for (const key of reportKeys) {

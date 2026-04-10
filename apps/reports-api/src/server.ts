@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import { config } from './config.js';
-import { createReport, getReport, cleanupExpired } from './reports.js';
+import { createReport, getReport, getAnalysis, getScreenshot, cleanupExpired } from './reports.js';
 import type { FileHash, CreateReportInput } from './reports.js';
 
 const app = express();
@@ -86,15 +86,53 @@ app.post('/api/reports', upload.array('screenshots', 5), async (req, res) => {
 
 app.get('/api/reports/:id', async (req, res) => {
   try {
-    const report = await getReport(req.params.id);
-    if (!report) {
+    const meta = await getReport(req.params.id);
+    if (!meta) {
       res.status(404).json({ error: 'Report not found or expired' });
       return;
     }
-    res.json(report);
+    // Return meta + proxy URLs (same origin, no CORS issues)
+    res.json({
+      meta,
+      analysisUrl: `/api/reports/${meta.id}/analysis`,
+      screenshotUrls: meta.screenshotKeys.map((_: string, i: number) =>
+        `/api/reports/${meta.id}/screenshot/${i}`
+      ),
+    });
   } catch (err) {
     console.error('[reports-api] get failed:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Proxy the analysis JSON from S3 (avoids CORS on pre-signed URLs)
+app.get('/api/reports/:id/analysis', async (req, res) => {
+  try {
+    const data = await getAnalysis(req.params.id);
+    if (!data) {
+      res.status(404).json({ error: 'Analysis not found' });
+      return;
+    }
+    res.json(data);
+  } catch (err) {
+    console.error('[reports-api] get analysis failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Proxy screenshots from S3
+app.get('/api/reports/:id/screenshot/:index', async (req, res) => {
+  try {
+    const index = parseInt(req.params.index, 10);
+    const result = await getScreenshot(req.params.id, index);
+    if (!result) {
+      res.status(404).end();
+      return;
+    }
+    res.type(result.contentType).send(result.buffer);
+  } catch (err) {
+    console.error('[reports-api] get screenshot failed:', err);
+    res.status(500).end();
   }
 });
 

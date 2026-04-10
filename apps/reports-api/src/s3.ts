@@ -5,7 +5,6 @@ import {
   DeleteObjectCommand,
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { config } from './config.js';
 
 export const s3 = new S3Client({
@@ -71,14 +70,25 @@ export async function getJson<T = unknown>(key: string): Promise<T | null> {
 }
 
 /**
- * Generate a pre-signed URL for reading an S3 object (1 hour expiry).
+ * Read a binary buffer from S3.
  */
-export async function presignGet(key: string): Promise<string> {
-  return getSignedUrl(
-    s3,
-    new GetObjectCommand({ Bucket: BUCKET, Key: key }),
-    { expiresIn: 3600 },
-  );
+export async function getBuffer(key: string): Promise<{ buffer: Buffer; contentType: string } | null> {
+  try {
+    const result = await s3.send(
+      new GetObjectCommand({ Bucket: BUCKET, Key: key }),
+    );
+    const bytes = await result.Body?.transformToByteArray();
+    if (!bytes) return null;
+    return {
+      buffer: Buffer.from(bytes),
+      contentType: result.ContentType || 'application/octet-stream',
+    };
+  } catch (err: any) {
+    if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
+      return null;
+    }
+    throw err;
+  }
 }
 
 /**
