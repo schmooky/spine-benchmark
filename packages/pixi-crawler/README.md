@@ -156,7 +156,7 @@ type RenderingImpact = {
   level: ImpactLevel;
 };
 
-type ImpactLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'very-high';
+type ImpactLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'veryHigh';
 ```
 
 ### Functions

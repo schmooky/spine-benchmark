@@ -25,8 +25,6 @@ export class SpineLoader {
    */
   public async loadSpineFromUrls(jsonUrl: string, atlasUrl: string): Promise<Spine | null> {
     try {
-      console.log('Loading Spine files from URLs:', { jsonUrl, atlasUrl });
-      
       // Generate unique aliases for caching
       const timestamp = Date.now();
       const atlasAlias = `atlas-${timestamp}-${atlasUrl}`;
@@ -45,8 +43,7 @@ export class SpineLoader {
       
       // Extract and add image assets
       const imageUrls = this.extractImageUrlsFromAtlas(atlasText, atlasUrl);
-      console.log('Extracted image URLs:', imageUrls);
-      
+
       // Add image assets
       for (const [imageName, imageUrl] of Object.entries(imageUrls)) {
         const imageAlias = `${timestamp}-${imageName}`;
@@ -66,10 +63,10 @@ export class SpineLoader {
       
       // Check for Spine version compatibility
       if (skeletonData && skeletonData.spine && skeletonData.spine.startsWith('4.1')) {
-        console.log('Updating Spine version from 4.1 to 4.2.0');
+        console.warn('[spine-loader] Rewriting skeleton Spine version from 4.1 to 4.2.0');
         skeletonData.spine = '4.2.0';
       }
-      
+
       // Create texture atlas
       const spineAtlas = new TextureAtlas(atlasText);
       
@@ -86,7 +83,6 @@ export class SpineLoader {
           const altTexture = await Assets.load(altAlias);
           
           if (!altTexture) {
-            console.error(`Missing texture for page: ${pageName}`);
             throw new Error(`Missing texture for page: ${pageName}`);
           }
           
@@ -112,7 +108,6 @@ export class SpineLoader {
       return spineInstance;
       
     } catch (error) {
-      console.error('Error loading Spine files from URLs:', error);
       throw error;
     } finally {
       // Note: We don't unload assets here as they might be needed for the spine instance
@@ -192,8 +187,7 @@ export class SpineLoader {
   public async loadSpineFiles(files: FileList): Promise<Spine | null> {
     try {
       const acceptedFiles = Array.from(files);
-      console.log('Processing files:', acceptedFiles.map(f => (f as any).fullPath || f.name).join(', '));
-      
+
       // Initialize tracking variables
       let atlasFile: File | undefined;
       let jsonFile: File | undefined;
@@ -203,17 +197,13 @@ export class SpineLoader {
       // First pass - categorize files
       acceptedFiles.forEach((file) => {
         const fileName = file.name;
-        const fullPath = (file as any).fullPath || file.name;
-        
+
         if (fileName.endsWith('.atlas')) {
           atlasFile = file;
-          console.log("Atlas file found:", fullPath);
         } else if (fileName.endsWith('.json')) {
           jsonFile = file;
-          console.log("JSON file found:", fullPath);
         } else if (fileName.endsWith('.skel')) {
           skelFile = file;
-          console.log("Skel file found:", fullPath);
         } else if (file.type.startsWith('image/') ||
                   fileName.endsWith('.png') ||
                   fileName.endsWith('.jpg') ||
@@ -222,9 +212,6 @@ export class SpineLoader {
                   fileName.endsWith('.ktx2') ||
                   fileName.endsWith('.basis')) {
           imageFiles.push(file);
-          console.log("Image file found:", fullPath);
-        } else {
-          console.log("Unrecognized file type:", fullPath);
         }
       });
       
@@ -251,30 +238,21 @@ export class SpineLoader {
       const isBinary = !!skelFile;
       
       if (skelFile) {
-        console.log('Binary Format')
-        // Binary format
         skeletonData = await this.readFileAsArrayBuffer(skelFile);
       } else if (jsonFile) {
-        console.log('JSON Format')
-        // JSON format
         const jsonText = await this.readFileAsText(jsonFile);
         try {
           skeletonData = JSON.parse(jsonText);
           
           // Check for Spine 4.1 vs 4.2 version
           if (skeletonData && skeletonData.spine && skeletonData.spine.startsWith('4.1')) {
-            console.log('Updating Spine version from 4.1 to 4.2.0');
+            console.warn('[spine-loader] Rewriting skeleton Spine version from 4.1 to 4.2.0');
             skeletonData.spine = '4.2.0';
           }
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
+        } catch {
           throw new Error("Invalid JSON format in skeleton file");
         }
       }
-      
-      // Extract image names from atlas
-      const imageNames = this.extractImageNamesFromAtlas(atlasText);
-      console.log("Image names referenced in atlas:", imageNames);
       
       // Decode each image file directly via the browser's native image
       // decoder. createImageBitmap dispatches on the actual file bytes
@@ -335,7 +313,6 @@ export class SpineLoader {
       return await this.createSpineAsset(skeletonData, atlasText, textures, isBinary);
 
     } catch (error) {
-      console.error('Error loading Spine files:', error);
       throw error;
     }
   }
@@ -368,7 +345,7 @@ export class SpineLoader {
       });
 
       if (match) {
-        console.log(`Atlas image substitution: "${atlasName}" -> "${match}"`);
+        console.warn(`[spine-loader] Atlas image substitution: "${atlasName}" -> "${match}"`);
         // Replace only the page-header line (the image filename line before "size:")
         // Use a line-level replace to avoid accidentally replacing region names
         rewritten = rewritten.split('\n').map(line => {
@@ -408,11 +385,12 @@ export class SpineLoader {
       }
     }
     
-    // Add the last image name if we have one
-    if (currentName && !imageNames.includes(currentName)) {
-      imageNames.push(currentName);
-    }
-    
+    // Note: do NOT push currentName at EOF here. A `currentName` set
+    // after the last `size:` line is a REGION name, not a page name.
+    // The previous implementation pushed it and misidentified the first
+    // region of the last page as a second page (e.g. `1_bell_blick` was
+    // listed alongside `symbols.webp`).
+
     return imageNames;
   }
   
@@ -440,8 +418,6 @@ export class SpineLoader {
     textures: Record<string, Texture>,
     isBinary: boolean
   ): Promise<Spine> {
-    console.log(`Creating ${isBinary ? 'Binary' : 'JSON'} Spine Asset`);
-
     // Create atlas
     const spineAtlas = new TextureAtlas(atlasText);
     
@@ -467,9 +443,7 @@ export class SpineLoader {
       }
 
       if (!texture) {
-        console.error(`Missing texture for page: ${pageName}`);
-        console.log("Available textures:", Object.keys(textures).join(", "));
-        throw new Error(`Missing texture for page: ${pageName}`);
+        throw new Error(`Missing texture for page: ${pageName} (available: ${Object.keys(textures).join(', ')})`);
       }
 
       // Create SpineTexture from the PIXI Texture
@@ -487,12 +461,10 @@ export class SpineLoader {
 
     if(isBinary) {
       const skeletonBinary = new SkeletonBinary(atlasLoader);
-      console.log(skeletonBinary)
-     skeletonData = skeletonBinary.readSkeletonData(data);
+      skeletonData = skeletonBinary.readSkeletonData(data);
     } else {
       const skeletonJson = new SkeletonJson(atlasLoader);
-      console.log(skeletonJson)
-     skeletonData = skeletonJson.readSkeletonData(data);
+      skeletonData = skeletonJson.readSkeletonData(data);
     }
 
     // Workaround for spine-pixi-v8: see initializeSequenceAttachments doc.

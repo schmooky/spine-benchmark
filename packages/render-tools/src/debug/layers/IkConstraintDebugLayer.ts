@@ -1,5 +1,6 @@
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer.js';
+import type { DebugBone, DebugIkConstraint } from '../spine-debug-types.js';
 
 export interface IkConstraintDebugOptions extends DebugLayerOptions {
   boneColor?: number;
@@ -67,7 +68,7 @@ export class IkConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawStartCircle(firstBone: any): void {
+  private drawStartCircle(firstBone: DebugBone): void {
     if (!this.isCircleVisible(firstBone.worldX, firstBone.worldY, this.startCircleRadius)) return;
 
     const g = this.graphics;
@@ -87,7 +88,7 @@ export class IkConstraintDebugLayer extends DebugLayer {
       .circle(firstBone.worldX, firstBone.worldY, this.startCircleRadius);
   }
 
-  private drawBoneChain(bones: any[]): void {
+  private drawBoneChain(bones: DebugBone[]): void {
     const g = this.graphics;
     
     g.stroke({ 
@@ -108,7 +109,7 @@ export class IkConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawTarget(lastBone: any, target: any): void {
+  private drawTarget(lastBone: DebugBone, target: DebugBone): void {
     const tx = target.worldX;
     const ty = target.worldY;
 

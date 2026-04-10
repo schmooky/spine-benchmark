@@ -4,8 +4,8 @@
   "description": "Spine Benchmark web application",
   "type": "module",
   "scripts": {
-    "predev": "npm run build --workspace @spine-benchmark/metrics-impact-formula && npm run build --workspace @spine-benchmark/metrics && npm run build --workspace @spine-benchmark/asset-store && npm run build --workspace @spine-benchmark/mesh-tools && npm run build --workspace @spine-benchmark/constraint-tools && npm run build --workspace @spine-benchmark/drawcall-tools && npm run build --workspace @spine-benchmark/render-tools && npm run build --workspace @spine-benchmark/spine-loader && npm run build --workspace @spine-benchmark/file-tools",
-    "prebuild": "npm run build --workspace @spine-benchmark/metrics-impact-formula && npm run build --workspace @spine-benchmark/metrics && npm run build --workspace @spine-benchmark/asset-store && npm run build --workspace @spine-benchmark/mesh-tools && npm run build --workspace @spine-benchmark/constraint-tools && npm run build --workspace @spine-benchmark/drawcall-tools && npm run build --workspace @spine-benchmark/render-tools && npm run build --workspace @spine-benchmark/spine-loader && npm run build --workspace @spine-benchmark/file-tools",
+    "predev": "node ../../scripts/build-all-publishable.mjs",
+    "prebuild": "node ../../scripts/build-all-publishable.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
     "sync:locales": "node scripts/sync-locales.mjs",
     "dev": "vite",
