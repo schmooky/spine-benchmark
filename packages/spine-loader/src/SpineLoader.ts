@@ -152,9 +152,10 @@ export class SpineLoader {
           const altTexture = await Assets.load(altAlias);
           
           if (!altTexture) {
-            throw new Error(`Missing texture for page: ${pageName}`);
+            console.warn(`[spine-loader] Missing texture for page: ${pageName} - slots on this page will not render`);
+            continue;
           }
-          
+
           page.setTexture(SpineTexture.from(altTexture.source));
         } else {
           page.setTexture(SpineTexture.from(texture.source));
@@ -333,9 +334,9 @@ export class SpineLoader {
           const base = dotIdx > 0 ? p.substring(0, dotIdx) : p;
           return `"${p}" (or ${base}.<png|jpg|webp|ktx2|…>)`;
         }).join(', ');
-        throw new Error(
-          `Bundle is incomplete. The atlas references ${missingPages.length} texture page(s) that were not uploaded: ${expected}. ` +
-          `Please include all texture pages listed in the .atlas file.`
+        console.warn(
+          `[spine-loader] ${missingPages.length} atlas page(s) not provided: ${expected}. ` +
+          `Slots using regions from those pages will not render.`,
         );
       }
 
@@ -599,12 +600,13 @@ export class SpineLoader {
       }
 
       if (!texture) {
-        throw new Error(`Missing texture for page: ${pageName} (available: ${Object.keys(textures).join(', ')})`);
+        console.warn(`[spine-loader] Missing texture for page: ${pageName} - slots on this page will not render`);
+        continue;
       }
 
       // Create SpineTexture from the PIXI Texture
       const spineTexture = SpineTexture.from(texture.source);
-      
+
       // Set the texture for the page
       page.setTexture(spineTexture);
     }
