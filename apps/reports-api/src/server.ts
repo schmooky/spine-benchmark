@@ -4,7 +4,7 @@ import multer from 'multer';
 import { config } from './config.js';
 import { createReport, getReport, getAnalysis, getScreenshot, cleanupExpired } from './reports.js';
 import type { FileHash, CreateReportInput } from './reports.js';
-import { buildReportHtml } from './reportHtml.js';
+import { renderReport } from './reportHtml.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 50 } });
@@ -146,8 +146,14 @@ app.post('/api/cleanup', async (_req, res) => {
 
 // ── Report viewer ───────────────────────────────────────────────
 
-app.get('/report/:id', (_req, res) => {
-  res.type('html').send(buildReportHtml(_req.params.id));
+app.get('/report/:id', async (req, res) => {
+  try {
+    const html = await renderReport(req.params.id);
+    res.type('html').send(html);
+  } catch (err) {
+    console.error('[reports-api] render report failed:', err);
+    res.status(500).type('html').send('<html><body>Failed to render report</body></html>');
+  }
 });
 
 // ── Start ───────────────────────────────────────────────────────
