@@ -25,7 +25,7 @@
         </div>
       </div>
 
-      <!-- RI/CI impact bar -->
+      <!-- RI/CI proportion bar -->
       <div class="impact-bar">
         <div class="impact-bar-segment ri" style="width: {{riPercent this}}%"></div>
         <div class="impact-bar-segment ci" style="width: {{ciPercent this}}%"></div>
@@ -35,8 +35,11 @@
         <span class="ci-label">CI {{fixed this.computational.cost 1}}</span>
       </div>
 
+      <!-- Per-frame RI/CI heatmap timeline -->
+      {{{heatmapSvg this.name @root.analysis.animationTimelines}}}
+
       {{#if this.hotspots}}
-      <div class="metrics-row" style="margin-top:4px">
+      <div class="metrics-row" style="margin-top:6px">
         <div class="metric">
           <div class="metric-label">Page Breaks</div>
           <div class="metric-value">{{this.hotspots.pageBreaks}}</div>

@@ -77,12 +77,15 @@ export function useShareReport() {
       // Capture canvas screenshot
       const screenshot = await captureScreenshot();
 
-      // Capture animation GIFs
+      // Capture animation GIFs + per-frame RI/CI timelines
       let animationGifs = new Map<string, Blob>();
+      let animationTimelines: Record<string, Array<{ time: number; ri: number; ci: number }>> = {};
       if (spineInstance) {
         addToast('Capturing animation previews...', 'info');
         try {
-          animationGifs = await captureAllAnimationGifs(spineInstance);
+          const capture = await captureAllAnimationGifs(spineInstance);
+          animationGifs = capture.gifs;
+          animationTimelines = capture.timelines;
         } catch (err) {
           console.warn('[share] GIF capture failed, continuing without previews:', err);
         }
@@ -90,10 +93,16 @@ export function useShareReport() {
 
       addToast('Uploading report...', 'info');
 
+      // Enrich the analysis with per-frame timeline data
+      const enrichedReport = {
+        ...report,
+        animationTimelines,
+      };
+
       // Build the form data
       const formData = new FormData();
 
-      formData.append('analysis', JSON.stringify(report));
+      formData.append('analysis', JSON.stringify(enrichedReport));
       formData.append('meta', JSON.stringify({
         skeletonName: report.skeleton.name || analysisResult.skeletonName || '(unnamed)',
         spineVersion: (analysisResult as any).spineVersion || '4.2',
@@ -101,7 +110,6 @@ export function useShareReport() {
         worstCiLevel: report.summary.computational.worst.level,
         totalAnimations: report.overview.totalAnimations,
         fileHashes,
-        // Animation names in order, so the backend knows which GIF belongs to which animation
         animationNames: report.animations.map(a => a.name),
       }));
 
