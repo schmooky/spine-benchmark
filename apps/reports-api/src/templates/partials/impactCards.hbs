@@ -1,0 +1,12 @@
+<div class="cards">
+  <div class="card">
+    <div class="card-label">Worst Rendering Impact (GPU)</div>
+    <div class="card-value v-{{analysis.summary.rendering.worst.level}}">{{fixed analysis.summary.rendering.worst.cost 1}}</div>
+    <div style="margin-top:4px"><span class="badge badge-{{analysis.summary.rendering.worst.level}}">{{analysis.summary.rendering.worst.level}}</span></div>
+  </div>
+  <div class="card">
+    <div class="card-label">Worst Computational Impact (CPU)</div>
+    <div class="card-value v-{{analysis.summary.computational.worst.level}}">{{fixed analysis.summary.computational.worst.cost 1}}</div>
+    <div style="margin-top:4px"><span class="badge badge-{{analysis.summary.computational.worst.level}}">{{analysis.summary.computational.worst.level}}</span></div>
+  </div>
+</div>

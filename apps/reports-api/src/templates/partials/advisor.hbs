@@ -1,0 +1,16 @@
+{{#if analysis.advisor}}
+<h2>Optimization Advisor</h2>
+{{#each analysis.advisor}}
+<div class="advisor-item sev-{{this.severity}}">
+  <div style="flex:1">
+    <div class="advisor-title">{{advisorTitle this.id}}</div>
+    <div class="advisor-desc">{{advisorDesc this.id}}</div>
+    {{#if this.affectedAnimations.length}}
+    <div class="advisor-anims">
+      {{#each this.affectedAnimations}}<span>{{this}}</span>{{/each}}
+    </div>
+    {{/if}}
+  </div>
+</div>
+{{/each}}
+{{/if}}

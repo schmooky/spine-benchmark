@@ -1,0 +1,20 @@
+{{#if (gt analysis.animations.length 1)}}
+<h2>Quick Comparison</h2>
+<table>
+  <thead>
+    <tr><th>Animation</th><th>Duration</th><th class="num">RI</th><th class="num">CI</th><th class="num">Total</th><th>Level</th></tr>
+  </thead>
+  <tbody>
+    {{#each analysis.animations}}
+    <tr class="{{rowClass this}}">
+      <td>{{this.name}}</td>
+      <td class="num">{{fixed this.durationSec 2}}s</td>
+      <td class="num">{{fixed this.rendering.cost 1}}</td>
+      <td class="num">{{fixed this.computational.cost 1}}</td>
+      <td class="num" style="font-weight:600">{{fixed this.totalCost 1}}</td>
+      <td><span class="badge badge-{{rowLevel this}}">{{rowLevel this}}</span></td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+{{/if}}
