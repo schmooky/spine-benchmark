@@ -1,6 +1,7 @@
 import { Graphics } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer.js';
+import type { DebugPhysicsConstraint } from '../spine-debug-types.js';
 
 export interface PhysicsConstraintDebugOptions extends DebugLayerOptions {
   boundsColor?: number;
@@ -80,7 +81,7 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawBounds(constraint: any): void {
+  private drawBounds(constraint: DebugPhysicsConstraint): void {
     const g = this.graphics;
     const bone = constraint.bone;
     const x = bone.worldX;
@@ -102,7 +103,7 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawGravity(constraint: any): void {
+  private drawGravity(constraint: DebugPhysicsConstraint): void {
     const g = this.graphics;
     const bone = constraint.bone;
     const x = bone.worldX;
@@ -135,7 +136,7 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawWind(constraint: any): void {
+  private drawWind(constraint: DebugPhysicsConstraint): void {
     const g = this.graphics;
     const bone = constraint.bone;
     const x = bone.worldX;
@@ -163,7 +164,7 @@ export class PhysicsConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawMotion(constraint: any): void {
+  private drawMotion(constraint: DebugPhysicsConstraint): void {
     const g = this.graphics;
     const bone = constraint.bone;
     const x = bone.worldX;
