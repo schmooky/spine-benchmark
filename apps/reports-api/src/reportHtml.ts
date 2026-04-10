@@ -115,6 +115,69 @@ Handlebars.registerHelper('allFeatures', (active: string[]) => {
   return all.map(f => ({ name: f, on: (active || []).includes(f) }));
 });
 
+/**
+ * Generates an inline SVG heatmap of per-frame RI/CI over the animation
+ * timeline. Two stacked area charts: orange for RI, blue for CI.
+ */
+Handlebars.registerHelper('heatmapSvg', (animName: string, timelines: Record<string, Array<{ time: number; ri: number; ci: number }>>) => {
+  const data = timelines?.[animName];
+  if (!data || data.length < 2) return '';
+
+  const W = 300;
+  const H = 48;
+  const PAD = 1;
+
+  // Find max for scale
+  const maxVal = Math.max(1, ...data.map(d => d.ri + d.ci));
+
+  // Build RI area path (bottom)
+  const riPoints: string[] = [];
+  const ciPoints: string[] = []; // CI stacked on top of RI
+  for (let i = 0; i < data.length; i++) {
+    const x = PAD + (i / (data.length - 1)) * (W - PAD * 2);
+    const riH = (data[i].ri / maxVal) * (H - 4);
+    const totalH = ((data[i].ri + data[i].ci) / maxVal) * (H - 4);
+    riPoints.push(`${x.toFixed(1)},${(H - 2 - riH).toFixed(1)}`);
+    ciPoints.push(`${x.toFixed(1)},${(H - 2 - totalH).toFixed(1)}`);
+  }
+
+  // Close paths along the bottom
+  const baseline = `${(W - PAD).toFixed(1)},${H - 2} ${PAD},${H - 2}`;
+
+  // Threshold lines
+  const lines: string[] = [];
+  const thresholds = [
+    { val: 3, label: 'low', color: '#A3E63533' },
+    { val: 8, label: 'mod', color: '#FBBF2433' },
+    { val: 15, label: 'high', color: '#FB923C33' },
+    { val: 25, label: 'vHigh', color: '#F8717133' },
+  ];
+  for (const t of thresholds) {
+    if (t.val < maxVal) {
+      const y = H - 2 - (t.val / maxVal) * (H - 4);
+      lines.push(`<line x1="${PAD}" y1="${y.toFixed(1)}" x2="${W - PAD}" y2="${y.toFixed(1)}" stroke="${t.color}" stroke-width="1" stroke-dasharray="2,2"/>`);
+    }
+  }
+
+  const svg = `<div class="heatmap">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="${H}">
+      <rect width="${W}" height="${H}" fill="#0E1117" rx="3"/>
+      ${lines.join('\n      ')}
+      <polygon points="${ciPoints.join(' ')} ${baseline}" fill="#60A5FA" opacity="0.3"/>
+      <polyline points="${ciPoints.join(' ')}" fill="none" stroke="#60A5FA" stroke-width="1.5" opacity="0.7"/>
+      <polygon points="${riPoints.join(' ')} ${baseline}" fill="#FB923C" opacity="0.4"/>
+      <polyline points="${riPoints.join(' ')}" fill="none" stroke="#FB923C" stroke-width="1.5" opacity="0.8"/>
+    </svg>
+    <div class="heatmap-labels">
+      <span class="ri-label">RI</span>
+      <span class="ci-label">CI</span>
+      <span class="heatmap-max">max ${maxVal.toFixed(1)}</span>
+    </div>
+  </div>`;
+
+  return new Handlebars.SafeString(svg);
+});
+
 Handlebars.registerHelper('riPercent', (anim: any) => {
   const ri = anim.rendering?.cost ?? 0;
   const ci = anim.computational?.cost ?? 0;
