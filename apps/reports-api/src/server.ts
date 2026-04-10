@@ -208,8 +208,8 @@ app.get('/report/:id', (_req, res) => {
 
 // ── Start ───────────────────────────────────────────────────────
 
-app.listen(config.port, () => {
-  console.log(`[reports-api] listening on :${config.port}`);
+app.listen(config.port, '0.0.0.0', () => {
+  console.log(`[reports-api] listening on 0.0.0.0:${config.port}`);
   console.log(`[reports-api] public URL: ${config.publicUrl}`);
   console.log(`[reports-api] report TTL: ${config.reportTtlDays} days`);
 });

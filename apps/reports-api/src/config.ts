@@ -5,12 +5,15 @@
 
 function required(name: string): string {
   const value = process.env[name];
-  if (!value) throw new Error(`Missing required env var: ${name}`);
+  if (!value) {
+    console.error(`[reports-api] WARNING: missing env var ${name} - S3 operations will fail until it is set`);
+    return '';
+  }
   return value;
 }
 
 export const config = {
-  port: Number(process.env.PORT || '3001'),
+  port: Number(process.env.PORT || '3000'),
 
   // S3 / S3-compatible storage (Timeweb S3, MinIO, AWS, etc.)
   s3: {
@@ -23,7 +26,7 @@ export const config = {
 
   // Public base URL for generating share links.
   // In production this is the deployed reports-api URL.
-  publicUrl: required('PUBLIC_URL'),
+  publicUrl: process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || '3000'}`,
 
   // Report TTL in days. Reports older than this are eligible for cleanup.
   reportTtlDays: Number(process.env.REPORT_TTL_DAYS || '7'),
