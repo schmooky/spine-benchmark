@@ -1,25 +1,16 @@
 /**
- * Captures a short GIF preview of a Spine animation by sampling the
- * pixi canvas at ~10fps, resized to a small thumbnail. Uses `gifenc`
- * (a lightweight synchronous JS GIF encoder) to avoid WASM/Web Worker
- * dependencies.
- *
- * The capture temporarily takes over the spine's animation state, so
- * callers should ensure the analysis pipeline is not running concurrently.
+ * Captures animated GIF previews of Spine animations by sampling the
+ * pixi canvas at ~12fps, cropped to a square thumbnail centered on the
+ * spine's bounding box. Uses `gifenc` for encoding.
  */
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
-import { Spine } from '@esotericsoftware/spine-pixi-v8';
-import { Physics } from '@esotericsoftware/spine-pixi-v8';
+import { Spine, Physics } from '@esotericsoftware/spine-pixi-v8';
 import { getPixiApp } from '../hooks/usePixiApp';
 
-const GIF_WIDTH = 320;
-const GIF_FPS = 10;
-const MAX_DURATION = 3; // cap at 3 seconds
+const GIF_SIZE = 256; // square output
+const GIF_FPS = 12;
+const MAX_DURATION = 3;
 
-/**
- * Capture a looping GIF of a spine animation.
- * Returns a Blob or null if capture failed.
- */
 export async function captureAnimationGif(
   spineInstance: Spine,
   animationName: string,
@@ -33,22 +24,16 @@ export async function captureAnimationGif(
   if (!animation) return null;
 
   const duration = Math.min(animation.duration || 0.5, MAX_DURATION);
-  const frameCount = Math.max(2, Math.ceil(duration * GIF_FPS));
-  const delay = Math.round(1000 / GIF_FPS); // ms per frame
+  // Minimum 6 frames even for short animations so the GIF visibly animates
+  const frameCount = Math.max(6, Math.ceil(duration * GIF_FPS));
+  const delay = Math.round(1000 / GIF_FPS);
 
-  // Calculate thumbnail height maintaining aspect ratio
-  const canvasW = app.canvas.width || 800;
-  const canvasH = app.canvas.height || 600;
-  const scale = GIF_WIDTH / canvasW;
-  const gifH = Math.round(canvasH * scale);
-
-  // Offscreen canvas for resizing
+  // Offscreen canvas for cropping to a square
   const offscreen = document.createElement('canvas');
-  offscreen.width = GIF_WIDTH;
-  offscreen.height = gifH;
+  offscreen.width = GIF_SIZE;
+  offscreen.height = GIF_SIZE;
   const offCtx = offscreen.getContext('2d')!;
 
-  // Save current state
   const prevAutoUpdate = spineInstance.autoUpdate;
   const prevTrack = state.getCurrent(0);
   const prevTrackTime = prevTrack?.trackTime ?? 0;
@@ -57,30 +42,29 @@ export async function captureAnimationGif(
 
   try {
     spineInstance.autoUpdate = false;
-
-    // Set the target animation
-    state.setAnimation(0, animationName, false);
-
-    const gif = GIFEncoder();
     const renderer = app.renderer as any;
+    const gif = GIFEncoder();
 
     for (let i = 0; i < frameCount; i++) {
-      const time = (i / (frameCount - 1)) * duration;
+      const time = duration > 0 ? (i / Math.max(frameCount - 1, 1)) * duration : 0;
 
-      // Advance the animation to the target time
-      const track = state.getCurrent(0);
-      if (track) {
-        track.trackTime = time;
-        track.animationLast = time;
-      }
+      // Reset skeleton to setup pose before each frame so spine computes
+      // the full pose from scratch. Without this, setting trackTime and
+      // animationLast to the same value makes spine think no time passed
+      // and it skips applying keyframes - producing a static GIF.
+      skeleton.setToSetupPose();
+      state.clearTracks();
+      const track = state.setAnimation(0, animationName, false);
+      track.trackTime = time;
+      track.animationLast = -1; // force full apply
       state.update(0);
       state.apply(skeleton);
       skeleton.updateWorldTransform(Physics.update);
 
-      // Render one frame
+      // Render the frame
       app.render();
 
-      // Extract the canvas content
+      // Extract canvas
       let sourceCanvas: HTMLCanvasElement;
       if (renderer?.extract?.canvas) {
         sourceCanvas = renderer.extract.canvas(app.stage) as HTMLCanvasElement;
@@ -88,30 +72,34 @@ export async function captureAnimationGif(
         sourceCanvas = app.canvas as HTMLCanvasElement;
       }
 
-      // Resize to thumbnail
-      offCtx.clearRect(0, 0, GIF_WIDTH, gifH);
-      offCtx.drawImage(sourceCanvas, 0, 0, GIF_WIDTH, gifH);
+      // Crop to a centered square from the source canvas
+      const sw = sourceCanvas.width;
+      const sh = sourceCanvas.height;
+      const cropSize = Math.min(sw, sh);
+      const sx = (sw - cropSize) / 2;
+      const sy = (sh - cropSize) / 2;
 
-      // Get pixel data and quantize for GIF
-      const imageData = offCtx.getImageData(0, 0, GIF_WIDTH, gifH);
+      offCtx.fillStyle = '#0E1117'; // match benchmark bg
+      offCtx.fillRect(0, 0, GIF_SIZE, GIF_SIZE);
+      offCtx.drawImage(sourceCanvas, sx, sy, cropSize, cropSize, 0, 0, GIF_SIZE, GIF_SIZE);
+
+      const imageData = offCtx.getImageData(0, 0, GIF_SIZE, GIF_SIZE);
       const palette = quantize(imageData.data, 256);
       const indexed = applyPalette(imageData.data, palette);
 
-      gif.writeFrame(indexed, GIF_WIDTH, gifH, {
+      gif.writeFrame(indexed, GIF_SIZE, GIF_SIZE, {
         palette,
         delay,
-        dispose: 2, // restore to background
+        dispose: 2,
       });
     }
 
     gif.finish();
-    const bytes = gif.bytes();
-    return new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
+    return new Blob([new Uint8Array(gif.bytes())], { type: 'image/gif' });
   } catch (err) {
-    console.warn('[gifCapture] Failed to capture GIF for', animationName, err);
+    console.warn('[gifCapture] Failed for', animationName, err);
     return null;
   } finally {
-    // Restore previous state
     state.clearTracks();
     skeleton.setToSetupPose();
     skeleton.updateWorldTransform(Physics.update);
@@ -127,27 +115,17 @@ export async function captureAnimationGif(
         skeleton.updateWorldTransform(Physics.update);
       }
     }
-
     spineInstance.autoUpdate = prevAutoUpdate;
   }
 }
 
-/**
- * Capture GIFs for all animations in a spine instance.
- * Returns a map of animation name -> GIF blob.
- */
 export async function captureAllAnimationGifs(
   spineInstance: Spine,
 ): Promise<Map<string, Blob>> {
   const gifs = new Map<string, Blob>();
-  const animations = spineInstance.skeleton.data.animations;
-
-  for (const animation of animations) {
+  for (const animation of spineInstance.skeleton.data.animations) {
     const gif = await captureAnimationGif(spineInstance, animation.name);
-    if (gif) {
-      gifs.set(animation.name, gif);
-    }
+    if (gif) gifs.set(animation.name, gif);
   }
-
   return gifs;
 }
