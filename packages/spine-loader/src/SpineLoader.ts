@@ -44,6 +44,30 @@ export class SpineLoader {
       // Extract and add image assets
       const imageUrls = this.extractImageUrlsFromAtlas(atlasText, atlasUrl);
 
+      // Pre-flight: verify every atlas page has a resolvable URL.
+      // extractImageUrlsFromAtlas populates keys for both "page.png" and "page"
+      // (base without extension), so we only need to check that at least one
+      // matching key exists for each page name declared in the atlas.
+      const urlAtlasPageNames = this.extractImageNamesFromAtlas(atlasText);
+      const availableUrlKeys = Object.keys(imageUrls);
+      const missingUrlPages = urlAtlasPageNames.filter(pageName => {
+        if (availableUrlKeys.includes(pageName)) return false;
+        const dotIdx = pageName.lastIndexOf('.');
+        const pageBase = dotIdx > 0 ? pageName.substring(0, dotIdx) : pageName;
+        return !availableUrlKeys.includes(pageBase);
+      });
+      if (missingUrlPages.length > 0) {
+        const expected = missingUrlPages.map(p => {
+          const dotIdx = p.lastIndexOf('.');
+          const base = dotIdx > 0 ? p.substring(0, dotIdx) : p;
+          return `"${p}" (or ${base}.<png|jpg|webp|…>)`;
+        }).join(', ');
+        throw new Error(
+          `Atlas references ${missingUrlPages.length} texture page(s) that could not be resolved: ${expected}. ` +
+          `Ensure all texture pages are available at the same base URL as the atlas.`
+        );
+      }
+
       // Add image assets
       for (const [imageName, imageUrl] of Object.entries(imageUrls)) {
         const imageAlias = `${timestamp}-${imageName}`;
@@ -227,9 +251,88 @@ export class SpineLoader {
       if (imageFiles.length === 0) {
         throw new Error('Missing image files. Please include image files referenced by your atlas.');
       }
-      
-      // Read atlas content and rewrite image references to match actual uploaded files
+
+      // --- Pre-flight bundle validation ---
+
+      // 1. Atlas page coverage: every page name in the atlas must be matched by
+      //    an uploaded image file (exact filename OR same base name with a
+      //    different extension, since rewriteAtlasImageNames handles the swap).
       const rawAtlasText = await this.readFileAsText(atlasFile);
+      const atlasPageNames = this.extractImageNamesFromAtlas(rawAtlasText);
+      const uploadedFileNames = imageFiles.map(f => this.getFileName(f.name));
+
+      const missingPages = atlasPageNames.filter(pageName => {
+        // Exact match
+        if (uploadedFileNames.includes(pageName)) return false;
+        // Base-name match (different extension)
+        const dotIdx = pageName.lastIndexOf('.');
+        const pageBase = dotIdx > 0 ? pageName.substring(0, dotIdx) : pageName;
+        return !uploadedFileNames.some(f => {
+          const fDot = f.lastIndexOf('.');
+          const fBase = fDot > 0 ? f.substring(0, fDot) : f;
+          return fBase === pageBase;
+        });
+      });
+
+      if (missingPages.length > 0) {
+        const expected = missingPages.map(p => {
+          const dotIdx = p.lastIndexOf('.');
+          const base = dotIdx > 0 ? p.substring(0, dotIdx) : p;
+          return `"${p}" (or ${base}.<png|jpg|webp|ktx2|…>)`;
+        }).join(', ');
+        throw new Error(
+          `Bundle is incomplete. The atlas references ${missingPages.length} texture page(s) that were not uploaded: ${expected}. ` +
+          `Please include all texture pages listed in the .atlas file.`
+        );
+      }
+
+      // 2. JSON-only checks (not applicable to binary .skel bundles).
+      if (jsonFile) {
+        const jsonText = await this.readFileAsText(jsonFile);
+        let parsedSkel: any;
+        try {
+          parsedSkel = JSON.parse(jsonText);
+        } catch {
+          // Invalid JSON will be caught again below with a proper message; skip checks.
+          parsedSkel = null;
+        }
+
+        if (parsedSkel) {
+          // 2a. Spine version check.
+          const spineVersion: string | undefined = parsedSkel?.skeleton?.spine;
+          if (spineVersion) {
+            if (!spineVersion.startsWith('4.2') && !spineVersion.startsWith('4.1')) {
+              console.warn(
+                `[spine-loader] Pre-flight warning: skeleton was exported with Spine ${spineVersion}. ` +
+                `This runtime targets Spine 4.2 (4.1 is auto-rewritten). ` +
+                `Behaviour may be incorrect or the loader may crash.`
+              );
+            }
+          }
+
+          // 2b. Sequence attachment check.
+          const skins: any[] = parsedSkel?.skins ?? [];
+          const hasSequence = skins.some(skin => {
+            const attachments: Record<string, any> = skin?.attachments ?? {};
+            return Object.values(attachments).some(slotAttachments =>
+              Object.values(slotAttachments as Record<string, any>).some(
+                (att: any) => att && 'sequence' in att
+              )
+            );
+          });
+          if (hasSequence) {
+            console.warn(
+              '[spine-loader] Pre-flight note: skeleton contains sequence attachments (Spine 4.2 feature). ' +
+              'Ensure you are using a Spine 4.2-compatible runtime.'
+            );
+          }
+        }
+      }
+
+      // --- End pre-flight validation ---
+
+      // Read atlas content and rewrite image references to match actual uploaded files
+      // (rawAtlasText was already read above during pre-flight validation)
       const imageFileNames = imageFiles.map(f => this.getFileName(f.name));
       const atlasText = this.rewriteAtlasImageNames(rawAtlasText, imageFileNames);
 

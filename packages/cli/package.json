@@ -1,0 +1,45 @@
+{
+  "name": "@spine-benchmark/cli",
+  "version": "0.1.0",
+  "description": "Command-line Spine animation analyzer - computes RI/CI impact scores, per-animation breakdown, and optimization advice from skeleton + atlas files",
+  "type": "module",
+  "bin": {
+    "spine-benchmark": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "spine",
+    "animation",
+    "benchmark",
+    "performance",
+    "profiler",
+    "cli"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@esotericsoftware/spine-core": "^4.2.101",
+    "@spine-benchmark/metrics-impact-formula": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

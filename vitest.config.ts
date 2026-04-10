@@ -1,49 +1,51 @@
 import { defineConfig } from 'vitest/config';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const r = (...segments: string[]) => path.resolve(dirname, ...segments);
 
+// Auto-derive workspace packages that have a src/index.ts entry point.
+const packageDirs = fs.readdirSync(r('packages'), { withFileTypes: true })
+  .filter(entry => entry.isDirectory())
+  .map(entry => entry.name)
+  .filter(dir => fs.existsSync(r('packages', dir, 'src', 'index.ts')));
+
+// Build resolve.alias: package name -> absolute src/index.ts path.
+const workspaceAlias: Record<string, string> = {};
+for (const dir of packageDirs) {
+  const pkgJsonPath = r('packages', dir, 'package.json');
+  if (!fs.existsSync(pkgJsonPath)) continue;
+  const { name } = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8')) as { name?: string };
+  if (name) {
+    workspaceAlias[name] = r('packages', dir, 'src', 'index.ts');
+  }
+}
+
+// Build test.include: one glob per package + the apps/benchmark entry.
+const testInclude: string[] = [
+  'apps/benchmark/test/**/*.test.ts',
+  ...packageDirs.map(dir => `packages/${dir}/src/**/*.test.ts`),
+];
+
+// Build test.coverage.include: source files for all workspace packages.
+const coverageInclude: string[] = packageDirs.map(dir => `packages/${dir}/src/**/*.ts`);
+
 export default defineConfig({
   resolve: {
-    alias: {
-      '@spine-benchmark/metrics': r('packages/metrics/src/index.ts'),
-      '@spine-benchmark/metrics-factors': r('packages/metrics-factors/src/index.ts'),
-      '@spine-benchmark/metrics-scoring': r('packages/metrics-scoring/src/index.ts'),
-      '@spine-benchmark/metrics-sampling': r('packages/metrics-sampling/src/index.ts'),
-      '@spine-benchmark/metrics-analyzers': r('packages/metrics-analyzers/src/index.ts'),
-      '@spine-benchmark/metrics-pipeline': r('packages/metrics-pipeline/src/index.ts'),
-      '@spine-benchmark/metrics-reporting': r('packages/metrics-reporting/src/index.ts'),
-      '@spine-benchmark/metrics-impact-formula': r('packages/metrics-impact-formula/src/index.ts')
-    }
+    alias: workspaceAlias,
   },
   test: {
     environment: 'node',
     setupFiles: [
       'vitest.setup.ts',
     ],
-    include: [
-      'apps/benchmark/test/**/*.test.ts',
-      'packages/metrics-factors/src/**/*.test.ts',
-      'packages/metrics-scoring/src/**/*.test.ts',
-      'packages/metrics-pipeline/src/**/*.test.ts',
-      'packages/metrics-reporting/src/**/*.test.ts',
-      'packages/metrics-impact-formula/src/**/*.test.ts',
-      'packages/constraint-tools/src/**/*.test.ts',
-      'packages/mesh-tools/src/**/*.test.ts',
-      'packages/pixi-crawler/src/**/*.test.ts'
-    ],
+    include: testInclude,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: [
-        'packages/metrics-factors/src/**/*.ts',
-        'packages/metrics-scoring/src/**/*.ts',
-        'packages/metrics-pipeline/src/**/*.ts',
-        'packages/metrics-reporting/src/**/*.ts',
-        'packages/metrics-impact-formula/src/**/*.ts'
-      ],
+      include: coverageInclude,
       exclude: [
         '**/*.test.ts'
       ],

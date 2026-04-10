@@ -1,13 +1,14 @@
 name: CI
 
 on:
-  push:
-    branches: [main, master, v3]
   pull_request:
-    branches: [main, master, v3]
+
+concurrency:
+  group: ci-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,24 +20,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Build all packages
-        run: |
-          npm run build:metrics-factors
-          npm run build:metrics-scoring
-          npm run build:metrics-sampling
-          npm run build:metrics-analyzers
-          npm run build:metrics-pipeline
-          npm run build:metrics-reporting
-          npm run build:metrics
-          npm run build:asset-store
-          npm run build:spine-loader
-          npm run build:mesh-tools
-          npm run build:render-tools
-          npm run build:constraint-tools
-          npm run build:drawcall-tools
-          npm run build:file-tools
-          npm run build:workbench-core
-          npm run build:pixi-crawler
+      - name: Lint
+        run: npm run check:lint
 
-      - name: Run tests
-        run: npm test
+      - name: Test
+        run: npx vitest run

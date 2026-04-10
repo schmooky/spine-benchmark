@@ -1,0 +1,137 @@
+/**
+ * Report lifecycle: create, read, list, cleanup.
+ *
+ * Storage layout in S3:
+ *   reports/<id>/meta.json       - report metadata (analysis summary, file hashes, timestamps)
+ *   reports/<id>/analysis.json   - full analysis payload
+ *   reports/<id>/screenshot.png  - canvas screenshot (optional)
+ *   reports/<id>/screenshot2.png - additional screenshots (optional)
+ */
+import { nanoid } from 'nanoid';
+import { config } from './config.js';
+import { putJson, putFile, getJson, presignGet, listPrefix, deleteObject } from './s3.js';
+
+export interface FileHash {
+  name: string;
+  /** SHA-256 hex digest computed client-side */
+  sha256: string;
+  size: number;
+}
+
+export interface ReportMeta {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  skeletonName: string;
+  spineVersion: string;
+  worstRiLevel: string;
+  worstCiLevel: string;
+  totalAnimations: number;
+  fileHashes: FileHash[];
+  screenshotKeys: string[];
+}
+
+export interface CreateReportInput {
+  analysis: unknown;
+  skeletonName: string;
+  spineVersion: string;
+  worstRiLevel: string;
+  worstCiLevel: string;
+  totalAnimations: number;
+  fileHashes: FileHash[];
+}
+
+/**
+ * Create a new report. Returns the report ID and share URL.
+ */
+export async function createReport(
+  input: CreateReportInput,
+  screenshots: Array<{ buffer: Buffer; mimetype: string; originalname: string }>,
+): Promise<{ id: string; url: string; expiresAt: string }> {
+  const id = nanoid(12);
+  const prefix = `reports/${id}`;
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + config.reportTtlDays * 24 * 60 * 60 * 1000);
+
+  // Upload analysis payload
+  await putJson(`${prefix}/analysis.json`, input.analysis);
+
+  // Upload screenshots
+  const screenshotKeys: string[] = [];
+  for (let i = 0; i < screenshots.length; i++) {
+    const ss = screenshots[i];
+    const ext = ss.mimetype === 'image/png' ? 'png' : ss.mimetype === 'image/webp' ? 'webp' : 'jpg';
+    const key = `${prefix}/screenshot${i > 0 ? i + 1 : ''}.${ext}`;
+    await putFile(key, ss.buffer, ss.mimetype);
+    screenshotKeys.push(key);
+  }
+
+  // Build and upload metadata
+  const meta: ReportMeta = {
+    id,
+    createdAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+    skeletonName: input.skeletonName,
+    spineVersion: input.spineVersion,
+    worstRiLevel: input.worstRiLevel,
+    worstCiLevel: input.worstCiLevel,
+    totalAnimations: input.totalAnimations,
+    fileHashes: input.fileHashes,
+    screenshotKeys,
+  };
+  await putJson(`${prefix}/meta.json`, meta);
+
+  const url = `${config.publicUrl}/report/${id}`;
+  return { id, url, expiresAt: expiresAt.toISOString() };
+}
+
+/**
+ * Fetch a report's metadata. Returns null if expired or not found.
+ */
+export async function getReport(id: string): Promise<{
+  meta: ReportMeta;
+  analysisUrl: string;
+  screenshotUrls: string[];
+} | null> {
+  const prefix = `reports/${id}`;
+  const meta = await getJson<ReportMeta>(`${prefix}/meta.json`);
+  if (!meta) return null;
+
+  // Check TTL
+  if (new Date(meta.expiresAt) < new Date()) {
+    return null;
+  }
+
+  const analysisUrl = await presignGet(`${prefix}/analysis.json`);
+  const screenshotUrls: string[] = [];
+  for (const key of meta.screenshotKeys) {
+    screenshotUrls.push(await presignGet(key));
+  }
+
+  return { meta, analysisUrl, screenshotUrls };
+}
+
+/**
+ * Delete all expired reports from S3. Designed to run on a cron (e.g. daily).
+ */
+export async function cleanupExpired(): Promise<number> {
+  const keys = await listPrefix('reports/');
+  const metaKeys = keys.filter(k => k.endsWith('/meta.json'));
+  let deleted = 0;
+
+  for (const metaKey of metaKeys) {
+    const meta = await getJson<ReportMeta>(metaKey);
+    if (!meta) continue;
+    if (new Date(meta.expiresAt) >= new Date()) continue;
+
+    // Expired. Delete all objects under this report's prefix.
+    const prefix = metaKey.replace('/meta.json', '');
+    const reportKeys = await listPrefix(prefix);
+    for (const key of reportKeys) {
+      await deleteObject(key);
+    }
+    deleted++;
+  }
+
+  return deleted;
+}
