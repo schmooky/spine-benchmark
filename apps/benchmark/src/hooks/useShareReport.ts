@@ -93,12 +93,13 @@ export function useShareReport() {
 
       const result: ShareResult = await response.json();
 
-      // Copy link to clipboard
+      // Open report in a new tab and copy link to clipboard
+      window.open(result.url, '_blank', 'noopener');
       try {
         await navigator.clipboard.writeText(result.url);
-        addToast('Report link copied to clipboard!', 'success');
+        addToast('Report opened and link copied to clipboard!', 'success');
       } catch {
-        addToast(`Report created: ${result.url}`, 'success');
+        addToast('Report opened in new tab', 'success');
       }
 
       return result;
