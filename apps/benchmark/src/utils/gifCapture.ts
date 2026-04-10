@@ -106,7 +106,7 @@ export async function captureAnimationGif(
 
     gif.finish();
     const bytes = gif.bytes();
-    return new Blob([bytes], { type: 'image/gif' });
+    return new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
   } catch (err) {
     console.warn('[gifCapture] Failed to capture GIF for', animationName, err);
     return null;
