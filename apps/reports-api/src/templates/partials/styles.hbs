@@ -105,22 +105,9 @@
   .row-danger { background: rgba(248,113,113,0.06); border-left: 2px solid var(--sb-error); }
   .row-warning { background: rgba(251,191,36,0.06); border-left: 2px solid var(--sb-warning); }
 
-  /* Impact bar - RI/CI split visualization */
-  .impact-bar { height: 6px; border-radius: 3px; background: var(--sb-bg-3); display: flex; overflow: hidden; margin: 8px 0 4px; }
-  .impact-bar-segment { height: 100%; min-width: 2px; }
-  .impact-bar-segment.ri { background: #FB923C; border-radius: 3px 0 0 3px; }
-  .impact-bar-segment.ci { background: #60A5FA; border-radius: 0 3px 3px 0; }
-  .impact-bar-legend { display: flex; justify-content: space-between; font-size: 9px; font-family: var(--sb-font-mono); color: var(--sb-text-muted); }
-  .impact-bar-legend .ri-label { color: #FB923C; }
-  .impact-bar-legend .ci-label { color: #60A5FA; }
-
-  /* Heatmap timeline */
-  .heatmap { margin: 8px 0 4px; }
-  .heatmap svg { display: block; border-radius: var(--sb-radius-sm); border: 1px solid var(--sb-border); }
-  .heatmap-labels { display: flex; gap: 10px; font-size: 9px; font-family: var(--sb-font-mono); margin-top: 2px; }
-  .heatmap-labels .ri-label { color: #FB923C; }
-  .heatmap-labels .ci-label { color: #60A5FA; }
-  .heatmap-labels .heatmap-max { margin-left: auto; color: var(--sb-text-muted); }
+  /* d3 heatmap timeline */
+  .heatmap { margin: 8px 0 6px; }
+  .heatmap svg { display: block; }
 
   /* File hashes */
   .hashes { background: var(--sb-bg-2); border: 1px solid var(--sb-border); border-radius: var(--sb-radius-md); padding: 12px 14px; font-family: var(--sb-font-mono); font-size: 10px; }

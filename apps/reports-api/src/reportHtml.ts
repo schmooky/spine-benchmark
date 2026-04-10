@@ -222,12 +222,16 @@ export async function renderReport(id: string): Promise<string> {
     });
   }
 
+  // Embed timeline data as JSON for d3.js heatmap rendering
+  const timelineJson = JSON.stringify(analysis.animationTimelines || {});
+
   return reportTemplate({
     meta,
     analysis,
     mainScreenshot,
     gifMap,
     publicUrl: config.publicUrl,
+    timelineJson,
   });
 }
 
