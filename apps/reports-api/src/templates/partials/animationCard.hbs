@@ -25,18 +25,8 @@
         </div>
       </div>
 
-      <!-- RI/CI proportion bar -->
-      <div class="impact-bar">
-        <div class="impact-bar-segment ri" style="width: {{riPercent this}}%"></div>
-        <div class="impact-bar-segment ci" style="width: {{ciPercent this}}%"></div>
-      </div>
-      <div class="impact-bar-legend">
-        <span class="ri-label">RI {{fixed this.rendering.cost 1}}</span>
-        <span class="ci-label">CI {{fixed this.computational.cost 1}}</span>
-      </div>
-
-      <!-- Per-frame RI/CI heatmap timeline -->
-      {{{heatmapSvg this.name @root.analysis.animationTimelines}}}
+      <!-- d3 heatmap rendered client-side from embedded timeline data -->
+      <div class="heatmap" data-anim="{{this.name}}"></div>
 
       {{#if this.hotspots}}
       <div class="metrics-row" style="margin-top:6px">
