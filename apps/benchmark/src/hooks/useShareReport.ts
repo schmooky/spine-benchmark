@@ -26,7 +26,20 @@ async function hashFile(file: File): Promise<{ name: string; sha256: string; siz
 async function captureScreenshot(): Promise<Blob | null> {
   try {
     const app = getPixiApp();
-    if (!app?.canvas) return null;
+    if (!app) return null;
+
+    // Use pixi's extract API which correctly reads from the WebGL
+    // framebuffer. Direct canvas.toBlob returns a black image on WebGL
+    // unless preserveDrawingBuffer was set at init time (which it isn't).
+    const renderer = app.renderer as any;
+    if (renderer?.extract?.canvas) {
+      const extractedCanvas = renderer.extract.canvas(app.stage) as HTMLCanvasElement;
+      return new Promise<Blob | null>((resolve) => {
+        extractedCanvas.toBlob((blob: Blob | null) => resolve(blob), 'image/png');
+      });
+    }
+
+    // Fallback: try direct canvas (works for Canvas2D renderer)
     const canvas = app.canvas as HTMLCanvasElement;
     return new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/png');
@@ -45,6 +58,7 @@ export function useShareReport() {
   const share = useCallback(async (
     analysisResult: SpineAnalysisResult,
     droppedFiles?: File[],
+    supplemental?: import('../core/SpineAnalyzer').ImpactSupplementalMetrics,
   ): Promise<ShareResult | null> => {
     if (!REPORTS_API) {
       addToast('Share feature is not configured (VITE_REPORTS_API_URL not set)', 'warning');
@@ -53,8 +67,9 @@ export function useShareReport() {
 
     setIsSharing(true);
     try {
-      // Build the impact report model for the share
-      const report = buildImpactReportModel(analysisResult);
+      // Build the impact report model for the share.
+      // Pass supplemental metrics (draw-call data from the inspector) if available.
+      const report = buildImpactReportModel(analysisResult, { supplemental });
 
       // Hash source files
       const fileHashes = droppedFiles

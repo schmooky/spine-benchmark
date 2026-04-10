@@ -158,7 +158,7 @@ export const Summary: React.FC<SummaryProps> = ({ data, supplemental, droppedFil
               type="button"
               className="secondary-btn"
               disabled={shareReport.isSharing}
-              onClick={() => shareReport.share(data, droppedFiles)}
+              onClick={() => shareReport.share(data, droppedFiles, supplemental)}
             >
               <Share2 size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
               {shareReport.isSharing ? 'Sharing...' : 'Share Report'}
