@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { Share2 } from 'lucide-react';
 import {
   buildImpactDeltaModel,
   buildImpactReportModel,
@@ -11,10 +12,12 @@ import {
   type SpineAnalysisResult,
 } from '../../core/SpineAnalyzer';
 import { getImpactBadgeClass } from '../../core/utils/scoreCalculator';
+import { useShareReport } from '../../hooks/useShareReport';
 
 interface SummaryProps {
   data: SpineAnalysisResult;
   supplemental?: ImpactSupplementalMetrics;
+  droppedFiles?: File[];
 }
 
 const IMPACT_LABEL_KEYS: Record<ImpactLevel, string> = {
@@ -110,7 +113,8 @@ function featureLabel(t: TFunction, key: 'physics' | 'ik' | 'clipping' | 'blend'
   }
 }
 
-export const Summary: React.FC<SummaryProps> = ({ data, supplemental }) => {
+export const Summary: React.FC<SummaryProps> = ({ data, supplemental, droppedFiles }) => {
+  const shareReport = useShareReport();
   const { t } = useTranslation();
   const [baseline, setBaseline] = useState<ImpactReportModel | null>(null);
 
@@ -147,6 +151,17 @@ export const Summary: React.FC<SummaryProps> = ({ data, supplemental }) => {
           {baseline && (
             <button type="button" className="secondary-btn" onClick={() => setBaseline(null)}>
               {t('analysis.summary.delta.actions.clearBaseline')}
+            </button>
+          )}
+          {shareReport.isAvailable && (
+            <button
+              type="button"
+              className="secondary-btn"
+              disabled={shareReport.isSharing}
+              onClick={() => shareReport.share(data, droppedFiles)}
+            >
+              <Share2 size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
+              {shareReport.isSharing ? 'Sharing...' : 'Share Report'}
             </button>
           )}
         </div>
