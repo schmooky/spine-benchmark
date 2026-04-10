@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react';
+import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import type { SpineAnalysisResult } from '../core/SpineAnalyzer';
 import { getPixiApp } from './usePixiApp';
 import { useToast } from './ToastContext';
 import {
   buildImpactReportModel,
-  type ImpactReportModel,
 } from '../core/SpineAnalyzer';
+import type { ImpactSupplementalMetrics } from '../core/SpineAnalyzer';
+import { captureAllAnimationGifs } from '../utils/gifCapture';
 
 const REPORTS_API = import.meta.env.VITE_REPORTS_API_URL;
 
@@ -27,10 +29,6 @@ async function captureScreenshot(): Promise<Blob | null> {
   try {
     const app = getPixiApp();
     if (!app) return null;
-
-    // Use pixi's extract API which correctly reads from the WebGL
-    // framebuffer. Direct canvas.toBlob returns a black image on WebGL
-    // unless preserveDrawingBuffer was set at init time (which it isn't).
     const renderer = app.renderer as any;
     if (renderer?.extract?.canvas) {
       const extractedCanvas = renderer.extract.canvas(app.stage) as HTMLCanvasElement;
@@ -38,8 +36,6 @@ async function captureScreenshot(): Promise<Blob | null> {
         extractedCanvas.toBlob((blob: Blob | null) => resolve(blob), 'image/png');
       });
     }
-
-    // Fallback: try direct canvas (works for Canvas2D renderer)
     const canvas = app.canvas as HTMLCanvasElement;
     return new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/png');
@@ -57,8 +53,9 @@ export function useShareReport() {
 
   const share = useCallback(async (
     analysisResult: SpineAnalysisResult,
+    spineInstance?: Spine | null,
     droppedFiles?: File[],
-    supplemental?: import('../core/SpineAnalyzer').ImpactSupplementalMetrics,
+    supplemental?: ImpactSupplementalMetrics,
   ): Promise<ShareResult | null> => {
     if (!REPORTS_API) {
       addToast('Share feature is not configured (VITE_REPORTS_API_URL not set)', 'warning');
@@ -67,8 +64,9 @@ export function useShareReport() {
 
     setIsSharing(true);
     try {
-      // Build the impact report model for the share.
-      // Pass supplemental metrics (draw-call data from the inspector) if available.
+      addToast('Preparing report...', 'info');
+
+      // Build the impact report model
       const report = buildImpactReportModel(analysisResult, { supplemental });
 
       // Hash source files
@@ -78,6 +76,19 @@ export function useShareReport() {
 
       // Capture canvas screenshot
       const screenshot = await captureScreenshot();
+
+      // Capture animation GIFs
+      let animationGifs = new Map<string, Blob>();
+      if (spineInstance) {
+        addToast('Capturing animation previews...', 'info');
+        try {
+          animationGifs = await captureAllAnimationGifs(spineInstance);
+        } catch (err) {
+          console.warn('[share] GIF capture failed, continuing without previews:', err);
+        }
+      }
+
+      addToast('Uploading report...', 'info');
 
       // Build the form data
       const formData = new FormData();
@@ -90,10 +101,18 @@ export function useShareReport() {
         worstCiLevel: report.summary.computational.worst.level,
         totalAnimations: report.overview.totalAnimations,
         fileHashes,
+        // Animation names in order, so the backend knows which GIF belongs to which animation
+        animationNames: report.animations.map(a => a.name),
       }));
 
+      // Main screenshot
       if (screenshot) {
         formData.append('screenshots', screenshot, 'screenshot.png');
+      }
+
+      // Animation GIFs (named by animation for the backend to store)
+      for (const [animName, gifBlob] of animationGifs) {
+        formData.append('screenshots', gifBlob, `anim_${animName}.gif`);
       }
 
       const response = await fetch(`${REPORTS_API}/api/reports`, {
@@ -108,7 +127,6 @@ export function useShareReport() {
 
       const result: ShareResult = await response.json();
 
-      // Open report in a new tab and copy link to clipboard
       window.open(result.url, '_blank', 'noopener');
       try {
         await navigator.clipboard.writeText(result.url);
