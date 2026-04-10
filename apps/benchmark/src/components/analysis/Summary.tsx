@@ -11,6 +11,7 @@ import {
   type ImpactSupplementalMetrics,
   type SpineAnalysisResult,
 } from '../../core/SpineAnalyzer';
+import type { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 import { useShareReport } from '../../hooks/useShareReport';
 
@@ -18,6 +19,7 @@ interface SummaryProps {
   data: SpineAnalysisResult;
   supplemental?: ImpactSupplementalMetrics;
   droppedFiles?: File[];
+  spineInstance?: Spine | null;
 }
 
 const IMPACT_LABEL_KEYS: Record<ImpactLevel, string> = {
@@ -113,7 +115,7 @@ function featureLabel(t: TFunction, key: 'physics' | 'ik' | 'clipping' | 'blend'
   }
 }
 
-export const Summary: React.FC<SummaryProps> = ({ data, supplemental, droppedFiles }) => {
+export const Summary: React.FC<SummaryProps> = ({ data, supplemental, droppedFiles, spineInstance }) => {
   const shareReport = useShareReport();
   const { t } = useTranslation();
   const [baseline, setBaseline] = useState<ImpactReportModel | null>(null);
@@ -158,7 +160,7 @@ export const Summary: React.FC<SummaryProps> = ({ data, supplemental, droppedFil
               type="button"
               className="secondary-btn"
               disabled={shareReport.isSharing}
-              onClick={() => shareReport.share(data, droppedFiles, supplemental)}
+              onClick={() => shareReport.share(data, spineInstance, droppedFiles, supplemental)}
             >
               <Share2 size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
               {shareReport.isSharing ? 'Sharing...' : 'Share Report'}

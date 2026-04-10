@@ -152,7 +152,7 @@ export function BenchmarkRouteView() {
               </div>
 
               <div className="benchmark-sidebar-content">
-                <Summary data={benchmarkData} supplemental={supplementalImpact} />
+                <Summary data={benchmarkData} supplemental={supplementalImpact} spineInstance={spineInstance} />
                 <hr className="benchmark-section-divider" />
                 <MeshAnalysis data={benchmarkData} />
                 <hr className="benchmark-section-divider" />
