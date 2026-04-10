@@ -1,6 +1,8 @@
 import {
   AtlasAttachmentLoader,
   Physics,
+  RegionAttachment,
+  MeshAttachment,
   SkeletonBinary,
   SkeletonData,
   SkeletonJson,
@@ -9,6 +11,49 @@ import {
   TextureAtlas,
 } from '@esotericsoftware/spine-pixi-v8';
 import { Application, Assets, Texture } from 'pixi.js';
+
+/**
+ * Lenient attachment loader that skips missing atlas regions instead of
+ * throwing. In production game pipelines, a shared atlas often covers
+ * many skeletons, and any individual skeleton may reference regions
+ * that live in a different atlas or haven't been packed yet. spine-core's
+ * default AtlasAttachmentLoader hard-throws on any lookup miss, which
+ * makes the entire skeleton fail to parse. This subclass catches those
+ * throws and returns an attachment with no region - the slot renders
+ * nothing for that attachment, which matches real runtime behavior.
+ */
+class LenientAtlasAttachmentLoader extends AtlasAttachmentLoader {
+  private missingRegions: string[] = [];
+
+  newRegionAttachment(skin: any, name: string, path: string, sequence: any): RegionAttachment {
+    try {
+      return super.newRegionAttachment(skin, name, path, sequence);
+    } catch (err: any) {
+      if (err?.message?.includes('Region not found')) {
+        this.missingRegions.push(path);
+        // Return an attachment with no region. It won't render but won't crash.
+        return new RegionAttachment(name, path);
+      }
+      throw err;
+    }
+  }
+
+  newMeshAttachment(skin: any, name: string, path: string, sequence: any): MeshAttachment {
+    try {
+      return super.newMeshAttachment(skin, name, path, sequence);
+    } catch (err: any) {
+      if (err?.message?.includes('Region not found')) {
+        this.missingRegions.push(path);
+        return new MeshAttachment(name, path);
+      }
+      throw err;
+    }
+  }
+
+  getMissingRegions(): string[] {
+    return this.missingRegions;
+  }
+}
 
 export class SpineLoader {
   private app: Application;
@@ -117,9 +162,17 @@ export class SpineLoader {
       }
       
       // Create attachment loader and skeleton
-      const atlasLoader = new AtlasAttachmentLoader(spineAtlas);
+      const atlasLoader = new LenientAtlasAttachmentLoader(spineAtlas);
       const skeletonJson = new SkeletonJson(atlasLoader);
       const skeletonDataObj = skeletonJson.readSkeletonData(skeletonData);
+
+      if (atlasLoader.getMissingRegions().length > 0) {
+        console.warn(
+          `[spine-loader] ${atlasLoader.getMissingRegions().length} atlas region(s) not found and skipped: ` +
+          atlasLoader.getMissingRegions().slice(0, 10).join(', ') +
+          (atlasLoader.getMissingRegions().length > 10 ? '...' : ''),
+        );
+      }
 
       // Workaround for spine-pixi-v8: see initializeSequenceAttachments doc.
       this.initializeSequenceAttachments(skeletonDataObj);
@@ -557,7 +610,7 @@ export class SpineLoader {
     }
 
     // Create attachment loader
-    const atlasLoader = new AtlasAttachmentLoader(spineAtlas);
+    const atlasLoader = new LenientAtlasAttachmentLoader(spineAtlas);
 
     // Create skeleton data
     let skeletonData: SkeletonData | undefined = undefined;
@@ -568,6 +621,14 @@ export class SpineLoader {
     } else {
       const skeletonJson = new SkeletonJson(atlasLoader);
       skeletonData = skeletonJson.readSkeletonData(data);
+    }
+
+    if (atlasLoader.getMissingRegions().length > 0) {
+      console.warn(
+        `[spine-loader] ${atlasLoader.getMissingRegions().length} atlas region(s) not found and skipped: ` +
+        atlasLoader.getMissingRegions().slice(0, 10).join(', ') +
+        (atlasLoader.getMissingRegions().length > 10 ? '...' : ''),
+      );
     }
 
     // Workaround for spine-pixi-v8: see initializeSequenceAttachments doc.
