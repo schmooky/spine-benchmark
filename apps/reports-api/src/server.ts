@@ -57,6 +57,7 @@ app.post('/api/reports', upload.array('screenshots', 50), async (req, res) => {
       worstCiLevel: meta.worstCiLevel,
       totalAnimations: meta.totalAnimations,
       fileHashes: meta.fileHashes || [],
+      animationNames: meta.animationNames || [],
     };
 
     const screenshots = ((req.files || []) as Express.Multer.File[]).map(f => ({
@@ -66,18 +67,6 @@ app.post('/api/reports', upload.array('screenshots', 50), async (req, res) => {
     }));
 
     const result = await createReport(input, screenshots);
-
-    // Store animation names in the meta so the report viewer can match
-    // GIFs to animations. This is an addendum after createReport.
-    if (meta.animationNames && meta.animationNames.length > 0) {
-      const { putJson, getJson } = await import('./s3.js');
-      const storedMeta = await getJson<any>(`reports/${result.id}/meta.json`);
-      if (storedMeta) {
-        storedMeta.animationNames = meta.animationNames;
-        await putJson(`reports/${result.id}/meta.json`, storedMeta);
-      }
-    }
-
     res.status(201).json(result);
   } catch (err) {
     console.error('[reports-api] create failed:', err);
