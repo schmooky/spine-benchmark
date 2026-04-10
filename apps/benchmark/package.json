@@ -4,8 +4,8 @@
   "description": "Spine Benchmark web application",
   "type": "module",
   "scripts": {
-    "predev": "node ../../scripts/build-all-publishable.mjs",
-    "prebuild": "node ../../scripts/build-all-publishable.mjs",
+    "predev": "node ../../scripts/build-all-publishable.mjs --for benchmark",
+    "prebuild": "node ../../scripts/build-all-publishable.mjs --for benchmark",
     "check:i18n": "node scripts/check-i18n.mjs",
     "sync:locales": "node scripts/sync-locales.mjs",
     "dev": "vite",

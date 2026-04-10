@@ -15,7 +15,6 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "npm run build --workspace @spine-benchmark/metrics-analyzers",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },

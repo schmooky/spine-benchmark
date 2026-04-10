@@ -15,7 +15,6 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "npm run build --workspace @spine-benchmark/metrics-impact-formula && npm run build --workspace @spine-benchmark/metrics-factors",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },
