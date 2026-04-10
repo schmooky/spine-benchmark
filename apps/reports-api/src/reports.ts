@@ -29,6 +29,7 @@ export interface ReportMeta {
   totalAnimations: number;
   fileHashes: FileHash[];
   screenshotKeys: string[];
+  animationNames?: string[];
 }
 
 export interface CreateReportInput {
@@ -39,6 +40,7 @@ export interface CreateReportInput {
   worstCiLevel: string;
   totalAnimations: number;
   fileHashes: FileHash[];
+  animationNames?: string[];
 }
 
 /**
@@ -60,7 +62,7 @@ export async function createReport(
   const screenshotKeys: string[] = [];
   for (let i = 0; i < screenshots.length; i++) {
     const ss = screenshots[i];
-    const ext = ss.mimetype === 'image/png' ? 'png' : ss.mimetype === 'image/webp' ? 'webp' : 'jpg';
+    const ext = ss.mimetype === 'image/png' ? 'png' : ss.mimetype === 'image/gif' ? 'gif' : ss.mimetype === 'image/webp' ? 'webp' : 'jpg';
     const key = `${prefix}/screenshot${i > 0 ? i + 1 : ''}.${ext}`;
     await putFile(key, ss.buffer, ss.mimetype);
     screenshotKeys.push(key);
@@ -78,6 +80,7 @@ export async function createReport(
     totalAnimations: input.totalAnimations,
     fileHashes: input.fileHashes,
     screenshotKeys,
+    animationNames: input.animationNames,
   };
   await putJson(`${prefix}/meta.json`, meta);
 
