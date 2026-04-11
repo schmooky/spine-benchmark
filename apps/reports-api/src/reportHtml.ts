@@ -39,6 +39,7 @@ for (const name of partialNames) {
 
 const reportTemplate = Handlebars.compile(loadTemplate('report.hbs'));
 const expiredTemplate = Handlebars.compile(loadTemplate('expired.hbs'));
+const encryptedTemplate = Handlebars.compile(loadTemplate('encryptedReport.hbs'));
 
 // ── Helpers ─────────────────────────────────────────────────────
 
@@ -236,11 +237,18 @@ export async function renderReport(id: string): Promise<string> {
 }
 
 /**
+ * Render the encrypted-report shell. The client-side JS in the template
+ * fetches the encrypted envelope from /api/reports/:id/envelope, prompts
+ * for the password, decrypts in the browser via SubtleCrypto, and renders
+ * the report. The server never sees the plaintext.
+ */
+export function renderEncryptedReport(id: string): string {
+  return encryptedTemplate({ id });
+}
+
+/**
  * Legacy sync entry point (for backward compat with server.ts import).
- * The new renderReport is async because it fetches from S3.
  */
 export function buildReportHtml(_id: string): string {
-  // This is no longer used - the route handler calls renderReport directly.
-  // Kept as a stub to avoid breaking the import.
   return '<!DOCTYPE html><html><body>Loading...</body></html>';
 }
