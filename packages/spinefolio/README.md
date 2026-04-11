@@ -19,6 +19,27 @@ A powerful, feature-rich widget for rendering [Spine](http://esotericsoftware.co
 npm install @spine-benchmark/spinefolio
 ```
 
+### About the bundled dependencies
+
+Spinefolio's `dist` is a self-contained bundle: PixiJS and
+`@esotericsoftware/spine-pixi-v8` are inlined into the ESM output so
+you can drop `spinefolio.module.js` into an HTML page or reports
+server with a single `<script type="module">` or `import()` and it
+just works.
+
+That means the npm package declares PixiJS as an **optional peer
+dependency**. If your project already has PixiJS installed,
+Spinefolio will not pull in a second copy into `node_modules`, and
+you should import it normally. If your project does not have
+PixiJS, you don't need to install it - the bundle already contains
+what it needs.
+
+Consumers who want to share a single PixiJS instance at runtime
+(so `new PIXI.Application()` from your code produces objects that
+pass `instanceof` checks inside Spinefolio) should set up an import
+map or a bundler alias. A dedicated "externalized" build variant is
+tracked as future work.
+
 ## 🛠️ Monorepo Usage
 
 From the `spine-benchmark` root:

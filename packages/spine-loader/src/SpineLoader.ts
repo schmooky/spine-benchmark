@@ -193,56 +193,59 @@ export class SpineLoader {
   }
 
   /**
-   * Extract image URLs from atlas content, resolving relative paths
-   * @param atlasText The atlas file content
-   * @param atlasUrl The URL of the atlas file (used to resolve relative paths)
-   * @returns Map of image names to URLs
+   * Decide whether the line at `index` is a page-header line.
+   *
+   * A page header is any non-property line whose next non-blank
+   * line starts with `size:`. This is a robust definition for
+   * every atlas flavour we care about:
+   *
+   * - Modern Spine export (compact, tab-indented or unindented
+   *   properties): page name on its own, followed by `size:`.
+   * - Legacy v3 / v4 export: same, sometimes with an `index:` line
+   *   above the `size:`. The lookahead skips blanks so a stray
+   *   blank line between pages doesn't fool it.
+   * - Absolute URL page names (https://...) - worked-around: the
+   *   old check used line.includes(':'), which rejected any URL.
+   *   The lookahead form doesn't care what's in the page name.
+   *
+   * Region lines are rejected because the next non-blank line
+   * after a region starts with `bounds:` / `xy:` / `rotate:` -
+   * never `size:`.
+   */
+  private isPageHeaderLine(lines: string[], index: number): boolean {
+    const line = lines[index].trim();
+    if (line === '') return false;
+    // A page header never starts with a property key itself.
+    if (line.startsWith('size:')) return false;
+    for (let j = index + 1; j < lines.length; j++) {
+      const next = lines[j].trim();
+      if (next === '') continue;
+      return next.startsWith('size:');
+    }
+    return false;
+  }
+
+  /**
+   * Extract image URLs from atlas content, resolving relative paths.
+   * Returns a map keyed by both "name.ext" and "name" so callers can
+   * look up with or without the extension.
    */
   private extractImageUrlsFromAtlas(atlasText: string, atlasUrl: string): Record<string, string> {
     const lines = atlasText.split('\n');
     const imageUrls: Record<string, string> = {};
     const atlasBaseUrl = atlasUrl.substring(0, atlasUrl.lastIndexOf('/') + 1);
-    
-    let currentName = '';
-    
+
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      if (line === '') continue;
-      
-      if (line.startsWith('size:')) {
-        if (currentName) {
-          // Construct full URL for the image
-          const imageUrl = this.resolveImageUrl(currentName, atlasBaseUrl);
-          imageUrls[currentName] = imageUrl;
-          
-          // Also add without extension
-          const nameWithoutExt = currentName.substring(0, currentName.lastIndexOf('.'));
-          if (nameWithoutExt) {
-            imageUrls[nameWithoutExt] = imageUrl;
-          }
-        }
-        currentName = '';
-      } else if (currentName === '') {
-        // If we don't have a current name and this line is not a property,
-        // it must be an image name
-        if (!line.includes(':')) {
-          currentName = line;
-        }
+      if (!this.isPageHeaderLine(lines, i)) continue;
+      const name = lines[i].trim();
+      const imageUrl = this.resolveImageUrl(name, atlasBaseUrl);
+      imageUrls[name] = imageUrl;
+      const dotIdx = name.lastIndexOf('.');
+      if (dotIdx > 0) {
+        imageUrls[name.substring(0, dotIdx)] = imageUrl;
       }
     }
-    
-    // Add the last image name if we have one
-    if (currentName) {
-      const imageUrl = this.resolveImageUrl(currentName, atlasBaseUrl);
-      imageUrls[currentName] = imageUrl;
-      
-      const nameWithoutExt = currentName.substring(0, currentName.lastIndexOf('.'));
-      if (nameWithoutExt) {
-        imageUrls[nameWithoutExt] = imageUrl;
-      }
-    }
-    
+
     return imageUrls;
   }
 
@@ -515,39 +518,21 @@ export class SpineLoader {
     return rewritten;
   }
 
+  /**
+   * Extract page-header names from an atlas file.
+   *
+   * Implemented via `isPageHeaderLine` so this helper and its twin
+   * `extractImageUrlsFromAtlas` can't drift - both use the same
+   * lookahead rule. See `isPageHeaderLine` for the definition.
+   */
   private extractImageNamesFromAtlas(atlasText: string): string[] {
     const lines = atlasText.split('\n');
     const imageNames: string[] = [];
-    
-    // In spine atlas format, the image names are the first non-empty lines 
-    // before each "size:" line
-    let currentName = '';
-    
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      if (line === '') continue;
-      
-      if (line.startsWith('size:')) {
-        if (currentName && !imageNames.includes(currentName)) {
-          imageNames.push(currentName);
-        }
-        currentName = '';
-      } else if (currentName === '') {
-        // If we don't have a current name and this line is not a property,
-        // it must be an image name
-        if (!line.includes(':')) {
-          currentName = line;
-        }
-      }
+      if (!this.isPageHeaderLine(lines, i)) continue;
+      const name = lines[i].trim();
+      if (!imageNames.includes(name)) imageNames.push(name);
     }
-    
-    // Note: do NOT push currentName at EOF here. A `currentName` set
-    // after the last `size:` line is a REGION name, not a page name.
-    // The previous implementation pushed it and misidentified the first
-    // region of the last page as a second page (e.g. `1_bell_blick` was
-    // listed alongside `symbols.webp`).
-
     return imageNames;
   }
   
