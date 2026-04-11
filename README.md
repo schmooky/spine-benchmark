@@ -97,6 +97,38 @@ After the first release, each package gets its own `CHANGELOG.md` (e.g. `package
 
 `@spine-benchmark/site` (the public benchmark site) and `@spine-benchmark/crawler-demo` are deployed, not published to npm, so they are listed in `.changeset/config.json:ignore` and never receive version bumps.
 
+### Nightly snapshot releases from version branches
+
+Long-lived release branches (`v*`) publish throwaway preview releases to npm so reviewers can install work-in-progress packages without waiting for a merge to `main` or disturbing the `latest` dist-tag. This is driven by `.github/workflows/snapshot.yml` + `scripts/snapshot-release.mjs`.
+
+**When snapshots publish.** The workflow runs in three situations:
+
+- On every push to a `v*` branch, so each commit replaces the previous preview for that branch.
+- On a `0 3 * * *` cron, so long-lived branches stay fresh even with no new pushes.
+- On-demand via `Actions -> Snapshot Release -> Run workflow`, with an optional branch input so you can preview any branch by hand.
+
+**What gets published.** Only packages with a pending `.changeset/*.md` file on the branch. Version strings look like `2.3.0-v3-2-20260411143022` (`<base>-<sanitized-tag>-<timestamp>`) and never overwrite an existing version. No git commit, no tag, no writeback to the branch - the version bump only lives on the runner.
+
+**Dist-tag naming.** The dist-tag is derived from the branch name with everything outside `[a-z0-9-]` collapsed to a hyphen, so `v3.2` -> `v3-2`, `release/hotfix` -> `release-hotfix`. Publishes from `main` are refused by the script; use the regular release workflow instead.
+
+**How reviewers install a snapshot.**
+
+```bash
+# Latest snapshot for branch v3.2
+npm i @spine-benchmark/spinefolio@v3-2
+
+# Or pin a specific timestamped version for reproducibility
+npm i @spine-benchmark/spinefolio@2.3.0-v3-2-20260411143022
+```
+
+**Producing a snapshot locally.** For debugging the flow without publishing (for example, to see what versions the script would produce), the same script runs from the repo root:
+
+```bash
+SNAPSHOT_TAG=v3-2 GITHUB_TOKEN=<gh-pat> npm run snapshot
+```
+
+The `GITHUB_TOKEN` is only needed because `@changesets/changelog-github` queries the GitHub API to attribute changelog entries; any classic PAT with `read:user` and `repo:status` scopes works. The runner on CI gets it for free. The script refuses to run against `main` and no-ops cleanly when there are no pending changesets, so you can't accidentally publish from the wrong branch.
+
 ## Contributing
 
 1. Create a branch from `main`.
