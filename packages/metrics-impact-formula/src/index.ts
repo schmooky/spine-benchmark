@@ -24,20 +24,22 @@
 // ──────────────────────────────────────────────────────────────
 
 /**
- * Canonical impact level union. Use the camelCase `'veryHigh'` literal
- * everywhere  -  it matches the i18n locale keys (`en.json` / `ru.json`)
- * and the offline scorer.
+ * Canonical impact level union. Use the kebab-case `'very-high'` literal
+ * everywhere - it reads naturally as a multi-word identifier next to the
+ * single-word levels, matches the CSS class names used by the offline
+ * report viewer (`impact-very-high`, `badge-very-high`), and keeps the
+ * crawler and the offline scorer in lockstep.
  */
-export type ImpactLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'veryHigh';
+export type ImpactLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'very-high';
 
 /**
- * Default bracket boundaries `[low, moderate, high, veryHigh]`.
+ * Default bracket boundaries `[low, moderate, high, very-high]`.
  *
  *   score < 3   -> minimal
  *   score < 8   -> low
  *   score < 15  -> moderate
  *   score < 25  -> high
- *   score ≥ 25  -> veryHigh
+ *   score >= 25 -> very-high
  *
  * Raise these for high-end targets (e.g. desktop GPU `[6, 16, 30, 50]`)
  * or lower them for constrained devices (e.g. mobile `[2, 5, 10, 18]`).
@@ -52,7 +54,7 @@ export function classifyImpactLevel(
   score: number,
   brackets: readonly [number, number, number, number] = DEFAULT_IMPACT_BRACKETS,
 ): ImpactLevel {
-  if (score >= brackets[3]) return 'veryHigh';
+  if (score >= brackets[3]) return 'very-high';
   if (score >= brackets[2]) return 'high';
   if (score >= brackets[1]) return 'moderate';
   if (score >= brackets[0]) return 'low';

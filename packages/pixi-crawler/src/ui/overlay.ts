@@ -1049,7 +1049,7 @@ export class Overlay {
       case 'low': return C.budgetLow;
       case 'moderate': return C.budgetModerate;
       case 'high': return C.budgetHigh;
-      case 'veryHigh': return C.budgetVeryHigh;
+      case 'very-high': return C.budgetVeryHigh;
     }
   }
 

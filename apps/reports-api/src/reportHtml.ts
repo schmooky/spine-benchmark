@@ -105,7 +105,7 @@ interface AnimationRow {
 }
 
 Handlebars.registerHelper('rowLevel', (anim: AnimationRow) => {
-  if (anim.rowTone === 'danger') return 'veryHigh';
+  if (anim.rowTone === 'danger') return 'very-high';
   if (anim.rowTone === 'warning') return 'high';
   return anim.rendering?.level || 'minimal';
 });

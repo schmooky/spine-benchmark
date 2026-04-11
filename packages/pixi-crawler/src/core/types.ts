@@ -324,12 +324,12 @@ export interface CrawlerConfig {
     riThreshold: number;
     /** CI threshold above which SPINE_HIGH_CI fires. Default 15 (= 'high' level) */
     ciThreshold: number;
-    /** Combined budget threshold above which SPINE_HIGH_BUDGET fires. Default 25 (= 'veryHigh' level) */
+    /** Combined budget threshold above which SPINE_HIGH_BUDGET fires. Default 25 (= 'very-high' level) */
     budgetThreshold: number;
     /**
-     * Impact level bracket boundaries [low, moderate, high, veryHigh].
+     * Impact level bracket boundaries [low, moderate, high, very-high].
      * Scores below [0] = minimal, [0]..[1] = low, [1]..[2] = moderate,
-     * [2]..[3] = high, ≥[3] = veryHigh.
+     * [2]..[3] = high, >=[3] = very-high.
      *
      * Default [3, 8, 15, 25] matches `@spine-benchmark/metrics-impact-formula`.
      * Raise these for high-end targets (e.g. desktop GPU [6, 16, 30, 50])

@@ -20,8 +20,8 @@ describe('classifyImpactLevel', () => {
     expect(classifyImpactLevel(14.999)).toBe('moderate');
     expect(classifyImpactLevel(15)).toBe('high');
     expect(classifyImpactLevel(24.999)).toBe('high');
-    expect(classifyImpactLevel(25)).toBe('veryHigh');
-    expect(classifyImpactLevel(1000)).toBe('veryHigh');
+    expect(classifyImpactLevel(25)).toBe('very-high');
+    expect(classifyImpactLevel(1000)).toBe('very-high');
   });
 
   it('honours custom brackets', () => {
@@ -30,7 +30,7 @@ describe('classifyImpactLevel', () => {
     expect(classifyImpactLevel(1, tight)).toBe('low');
     expect(classifyImpactLevel(2, tight)).toBe('moderate');
     expect(classifyImpactLevel(3, tight)).toBe('high');
-    expect(classifyImpactLevel(4, tight)).toBe('veryHigh');
+    expect(classifyImpactLevel(4, tight)).toBe('very-high');
   });
 
   it('exposes the canonical default brackets', () => {
@@ -42,7 +42,7 @@ describe('impactFromCost', () => {
   it('packages level + cost together', () => {
     expect(impactFromCost(0)).toEqual({ level: 'minimal', cost: 0 });
     expect(impactFromCost(8)).toEqual({ level: 'moderate', cost: 8 });
-    expect(impactFromCost(50)).toEqual({ level: 'veryHigh', cost: 50 });
+    expect(impactFromCost(50)).toEqual({ level: 'very-high', cost: 50 });
   });
 });
 

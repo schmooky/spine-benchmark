@@ -275,7 +275,7 @@ export function isSpine(node: Container): node is Container & SpineLike {
  * Perform deep analysis of a Spine's draw order to find DC fragmentation,
  * then compute RI and CI using the canonical metrics-reporting formulas.
  *
- * @param brackets Optional impact level brackets [low, moderate, high, veryHigh].
+ * @param brackets Optional impact level brackets [low, moderate, high, very-high].
  *                 Defaults to metrics-reporting values [3, 8, 15, 25].
  */
 export function analyzeSpine(

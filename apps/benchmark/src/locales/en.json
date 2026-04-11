@@ -391,7 +391,7 @@
         "low": "Low",
         "moderate": "Moderate",
         "high": "High",
-        "veryHigh": "Very High"
+        "very-high": "Very High"
       },
       "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
       "medianPerformanceLabel": "{{rating}} impact profile",

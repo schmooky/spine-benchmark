@@ -142,9 +142,9 @@ describe('classifyImpactLevel', () => {
         expect(classifyImpactLevel(24.9)).toBe('high');
     });
 
-    it('returns "veryHigh" for scores at or above the fourth bracket', () => {
-        expect(classifyImpactLevel(25)).toBe('veryHigh');
-        expect(classifyImpactLevel(100)).toBe('veryHigh');
+    it('returns "very-high" for scores at or above the fourth bracket', () => {
+        expect(classifyImpactLevel(25)).toBe('very-high');
+        expect(classifyImpactLevel(100)).toBe('very-high');
     });
 
     it('accepts custom brackets', () => {
@@ -153,7 +153,7 @@ describe('classifyImpactLevel', () => {
         expect(classifyImpactLevel(10, custom)).toBe('low');
         expect(classifyImpactLevel(20, custom)).toBe('moderate');
         expect(classifyImpactLevel(30, custom)).toBe('high');
-        expect(classifyImpactLevel(40, custom)).toBe('veryHigh');
+        expect(classifyImpactLevel(40, custom)).toBe('very-high');
     });
 
     it('uses DEFAULT_IMPACT_BRACKETS [3, 8, 15, 25] by default', () => {
@@ -522,8 +522,8 @@ describe('analyzeSpine - custom brackets propagation', () => {
         const defaultResult = analyzeSpine(node);
         expect(defaultResult.renderingImpact!.level).toBe('low');
 
-        // Tight brackets [1,2,3,4]: 6.04 -> "veryHigh".
+        // Tight brackets [1,2,3,4]: 6.04 -> "very-high".
         const tightResult = analyzeSpine(node, [1, 2, 3, 4]);
-        expect(tightResult.renderingImpact!.level).toBe('veryHigh');
+        expect(tightResult.renderingImpact!.level).toBe('very-high');
     });
 });

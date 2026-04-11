@@ -72,7 +72,7 @@ Entry point: [`apps/benchmark/src/main.tsx`](../apps/benchmark/src/main.tsx).
    converts those numbers into RI/CI costs.
 6. [`@spine-benchmark/metrics-scoring`](../packages/metrics-scoring/)
    classifies costs into impact levels (`minimal` | `low` | `moderate`
-   | `high` | `veryHigh`) using `DEFAULT_IMPACT_BRACKETS`.
+   | `high` | `very-high`) using `DEFAULT_IMPACT_BRACKETS`.
 7. [`@spine-benchmark/metrics-reporting`](../packages/metrics-reporting/)
    aggregates everything into an `ImpactReportModel`, which the UI
    renders (and which [`apps/reports-api`](../apps/reports-api/) can

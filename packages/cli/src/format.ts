@@ -27,7 +27,7 @@ function levelColor(level: ImpactLevel): string {
     case 'low': return GREEN;
     case 'moderate': return YELLOW;
     case 'high': return RED;
-    case 'veryHigh': return `${BOLD}${RED}`;
+    case 'very-high': return `${BOLD}${RED}`;
   }
 }
 

@@ -24,7 +24,7 @@ const IMPACT_COLOR: Record<ImpactLevel, string> = {
   low: '#A3E635',
   moderate: '#FBBF24',
   high: '#FB923C',
-  veryHigh: '#F87171',
+  'very-high': '#F87171',
 };
 
 /**
@@ -48,7 +48,7 @@ export function getImpactBadgeClass(level: string): string {
       return 'impact-moderate';
     case 'high':
       return 'impact-high';
-    case 'veryHigh':
+    case 'very-high':
       return 'impact-very-high';
     default:
       return 'impact-minimal';

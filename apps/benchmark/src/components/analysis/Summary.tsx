@@ -28,7 +28,7 @@ const IMPACT_LABEL_KEYS: Record<ImpactLevel, string> = {
   low: 'analysis.summary.impact.low',
   moderate: 'analysis.summary.impact.moderate',
   high: 'analysis.summary.impact.high',
-  veryHigh: 'analysis.summary.impact.veryHigh',
+  'very-high': 'analysis.summary.impact.very-high',
 };
 
 function metricLabel(t: TFunction, key: ImpactDeltaMetric['key']): string {

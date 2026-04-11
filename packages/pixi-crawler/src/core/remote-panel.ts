@@ -526,7 +526,7 @@ header h1{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap}
       var total = (agg.totalRI || 0) + (agg.totalCI || 0);
       var riPct = total > 0 ? ((agg.totalRI || 0) / total) * 100 : 50;
       var ciPct = total > 0 ? ((agg.totalCI || 0) / total) * 100 : 50;
-      var levelClass = (agg.level === 'high' || agg.level === 'veryHigh') ? 'error' : agg.level === 'moderate' ? 'warning' : 'ok';
+      var levelClass = (agg.level === 'high' || agg.level === 'very-high') ? 'error' : agg.level === 'moderate' ? 'warning' : 'ok';
 
       budgetHtml += '<div class="budget-line">';
       budgetHtml += '<div class="budget-label">RI</div>';
