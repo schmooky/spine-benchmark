@@ -25,7 +25,6 @@ import {
 import {
   classifyImpactLevel,
   computationalImpactCost,
-  impactFromCost,
   renderingImpactCost,
   type ImpactLevel,
 } from '@spine-benchmark/metrics-impact-formula';
