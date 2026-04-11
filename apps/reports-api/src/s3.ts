@@ -54,6 +54,18 @@ export async function putFile(
 /**
  * Read a JSON object from S3.
  */
+/**
+ * Narrow an unknown error to an object with the AWS SDK shape we
+ * actually care about. Duck-typed because importing the real
+ * `@aws-sdk/client-s3` error classes for a `instanceof` check is
+ * overkill for two fields.
+ */
+function isNotFoundError(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+  return e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404;
+}
+
 export async function getJson<T = unknown>(key: string): Promise<T | null> {
   try {
     const result = await s3.send(
@@ -61,10 +73,8 @@ export async function getJson<T = unknown>(key: string): Promise<T | null> {
     );
     const body = await result.Body?.transformToString();
     return body ? (JSON.parse(body) as T) : null;
-  } catch (err: any) {
-    if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
-      return null;
-    }
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
     throw err;
   }
 }
@@ -83,10 +93,8 @@ export async function getBuffer(key: string): Promise<{ buffer: Buffer; contentT
       buffer: Buffer.from(bytes),
       contentType: result.ContentType || 'application/octet-stream',
     };
-  } catch (err: any) {
-    if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
-      return null;
-    }
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
     throw err;
   }
 }
