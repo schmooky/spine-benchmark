@@ -1,16 +1,34 @@
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { config } from './config.js';
 import { createReport, getReport, getAnalysis, getScreenshot, cleanupExpired, createEncryptedReport, getEncryptedEnvelope, getEncryptedMeta, getPublicData } from './reports.js';
 import type { FileHash, CreateReportInput } from './reports.js';
 import { renderReport, renderEncryptedReport } from './reportHtml.js';
+
+// Resolve the Spinefolio dist directory via the installed package so the
+// encrypted report viewer can import the widget at `/assets/spinefolio.js`.
+const require = createRequire(import.meta.url);
+const spinefolioDistDir = dirname(require.resolve('@spine-benchmark/spinefolio/package.json')) + '/dist';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 50 } });
 
 app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json({ limit: '5mb' }));
+
+// Static Spinefolio bundle for the encrypted report viewer. We explicitly
+// alias `/assets/spinefolio.js` to the ESM build so `import()` works.
+app.get('/assets/spinefolio.js', (_req, res) => {
+  res.type('application/javascript');
+  res.sendFile(join(spinefolioDistDir, 'spinefolio.module.js'));
+});
+app.get('/assets/spinefolio.css', (_req, res) => {
+  res.type('text/css');
+  res.sendFile(join(spinefolioDistDir, 'spinefolio.css'));
+});
 
 // ── Health ──────────────────────────────────────────────────────
 
