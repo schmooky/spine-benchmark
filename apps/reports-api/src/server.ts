@@ -219,7 +219,7 @@ app.get('/report/:id', async (req, res) => {
     // Check if this is an encrypted report first
     const encMeta = await getEncryptedMeta(req.params.id);
     if (encMeta?.encrypted) {
-      const html = renderEncryptedReport(req.params.id);
+      const html = await renderEncryptedReport(req.params.id);
       res.type('html').send(html);
       return;
     }

@@ -10,7 +10,7 @@ import Handlebars from 'handlebars';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getReport, getAnalysis } from './reports.js';
+import { getReport, getAnalysis, getPublicData } from './reports.js';
 import { config } from './config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -237,13 +237,58 @@ export async function renderReport(id: string): Promise<string> {
 }
 
 /**
- * Render the encrypted-report shell. The client-side JS in the template
- * fetches the encrypted envelope from /api/reports/:id/envelope, prompts
- * for the password, decrypts in the browser via SubtleCrypto, and renders
- * the report. The server never sees the plaintext.
+ * Render the encrypted-report page.
+ *
+ * Metrics and heatmaps are server-rendered via the same Handlebars
+ * partials as the regular report (matching the benchmark design tokens
+ * 1:1). The private assets (screenshots, animated previews, asset
+ * bundle) stay encrypted until the viewer enters the password - the
+ * client-side JS in the template fetches the envelope, decrypts in the
+ * browser via SubtleCrypto, and hydrates the empty slots. The server
+ * never sees the plaintext.
  */
-export function renderEncryptedReport(id: string): string {
-  return encryptedTemplate({ id });
+export async function renderEncryptedReport(id: string): Promise<string> {
+  const publicData = (await getPublicData(id)) as {
+    mode?: 'gif' | 'bundle';
+    report?: unknown;
+    animationTimelines?: Record<string, unknown>;
+    animationNames?: string[];
+    fileHashes?: Array<{ name: string; sha256: string; size: number }>;
+    meta?: {
+      skeletonName?: string;
+      spineVersion?: string;
+      totalAnimations?: number;
+      createdAt?: string;
+    };
+  } | null;
+
+  if (!publicData) return expiredTemplate({});
+
+  // Shape the public data into the same context the regular report uses
+  // so the partials can render it unchanged. `mainScreenshot` and
+  // `gifMap` are left empty - the client JS hydrates them after unlock.
+  const meta = {
+    id,
+    skeletonName: publicData.meta?.skeletonName || '(unnamed)',
+    spineVersion: publicData.meta?.spineVersion || '',
+    totalAnimations: publicData.meta?.totalAnimations || 0,
+    createdAt: publicData.meta?.createdAt || new Date().toISOString(),
+    expiresAt: '',
+    fileHashes: publicData.fileHashes || [],
+  };
+
+  const analysis = publicData.report || {};
+  const timelineJson = JSON.stringify(publicData.animationTimelines || {});
+
+  return encryptedTemplate({
+    meta,
+    analysis,
+    mainScreenshot: null,
+    gifMap: {},
+    mode: publicData.mode || 'gif',
+    isBundleMode: publicData.mode === 'bundle',
+    timelineJson,
+  });
 }
 
 /**
