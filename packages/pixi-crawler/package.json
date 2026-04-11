@@ -10,27 +10,23 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "development": "./src/index.ts"
+      }
     },
     "./core": {
       "import": {
         "types": "./dist/core/index.d.ts",
         "default": "./dist/core/index.js"
-      },
-      "development": "./src/core/index.ts"
+      }
     },
     "./ui": {
       "import": {
         "types": "./dist/ui/index.d.ts",
         "default": "./dist/ui/index.js"
-      },
-      "development": "./src/ui/index.ts"
+      }
     }
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

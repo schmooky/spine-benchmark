@@ -15,6 +15,7 @@ one.
 | [0000](./0000-record-architecture-decisions.md) | Accepted | Record architecture decisions |
 | [0001](./0001-single-source-of-truth-for-impact-math.md) | Accepted | Single source of truth for impact math |
 | [0002](./0002-heatmap-crawler-parity.md) | Accepted | Heatmap and crawler must produce identical scores |
+| [0003](./0003-split-three-monolith-files.md) | Proposed | Split three monolith files (App.tsx, CrawlerModUI.ts, pixi-spine-widget.ts) |
 
 ## Writing a new ADR
 

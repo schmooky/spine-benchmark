@@ -45,6 +45,9 @@
     "changeset:status": "changeset status",
     "version-packages": "changeset version && npm install --package-lock-only",
     "build:all": "node scripts/build-all-publishable.mjs",
+    "size": "node scripts/size-check.mjs",
+    "size:check": "node scripts/size-check.mjs --check",
+    "size:update": "node scripts/size-check.mjs --update",
     "release": "npm run build:all && changeset publish",
     "snapshot": "node scripts/snapshot-release.mjs",
     "prepare": "husky"
