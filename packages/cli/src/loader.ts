@@ -5,7 +5,7 @@
  * Returns a SkeletonData that can be fed into the analysis pipeline.
  */
 import { readFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { basename } from 'node:path';
 import {
   AtlasAttachmentLoader,
   SkeletonBinary,
