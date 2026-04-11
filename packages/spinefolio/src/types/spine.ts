@@ -2,6 +2,12 @@
 
 export interface SpineWidgetOptions {
   skeleton: string;
+  /**
+   * For opaque skeleton URLs (blob:, data:) Pixi can't auto-detect whether
+   * the payload is Spine JSON or a .skel binary. Set this to 'skel' when
+   * the blob holds a binary skeleton. Defaults to 'json'.
+   */
+  skeletonFormat?: 'json' | 'skel';
   atlas: string;
   images?: string; // Space-separated image URLs for atlas pages
   animation?: string;

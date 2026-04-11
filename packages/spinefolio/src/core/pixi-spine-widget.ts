@@ -11,6 +11,16 @@ import { Application, Assets, Container, Graphics } from 'pixi.js';
 import { MeshAttachment, RegionAttachment, Spine } from '@esotericsoftware/spine-pixi-v8';
 import type { SpineWidgetOptions } from '../types/spine';
 
+/**
+ * Matches URLs that have no file extension Pixi Assets can sniff for
+ * auto-detection - blob:, data:, and javascript:. For these we must force
+ * an explicit load parser on every Assets.add() call that uses them.
+ */
+function isOpaqueUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  return /^(blob:|data:|javascript:)/i.test(url);
+}
+
 type SpineAttachmentLike = {
   name: string;
 };
@@ -247,13 +257,38 @@ export class PixiSpineWidget {
     }
 
     try {
-      const atlasAssetData = await this.buildAtlasAssetData();
+      // Blob and data URLs have no file extension, so Pixi's auto-detection
+      // can't pick a parser for them. Explicitly force the right parser per
+      // asset, and for atlas pages we also pre-resolve each image into a
+      // TextureSource so the atlas parser's extension-based sub-load never
+      // runs on the opaque URL.
+      const skeletonUrl = this.options.skeleton;
+      const atlasUrl = this.options.atlas;
+      const skeletonIsOpaque = isOpaqueUrl(skeletonUrl);
+      const atlasIsOpaque = isOpaqueUrl(atlasUrl);
+
+      let atlasAssetData: Record<string, unknown> | undefined;
+      if (atlasIsOpaque) {
+        atlasAssetData = await this.buildOpaqueAtlasAssetData(atlasUrl);
+      } else {
+        atlasAssetData = await this.buildAtlasAssetData();
+      }
 
       // Add assets to the PixiJS Assets cache with unique aliases
-      Assets.add({ alias: this.skeletonAlias, src: this.options.skeleton });
+      Assets.add({
+        alias: this.skeletonAlias,
+        src: skeletonUrl,
+        // JSON skeletons need loadJson so Spine.from() gets a parsed object;
+        // .skel binaries go through spineSkeletonLoader (Uint8Array). Default
+        // to JSON for opaque URLs - callers can override via skeletonFormat.
+        ...(skeletonIsOpaque
+          ? { loadParser: this.options.skeletonFormat === 'skel' ? 'spineSkeletonLoader' : 'loadJson' }
+          : {}),
+      });
       Assets.add({
         alias: this.atlasAlias,
-        src: this.options.atlas,
+        src: atlasUrl,
+        ...(atlasIsOpaque ? { loadParser: 'spineTextureAtlasLoader' } : {}),
         ...(atlasAssetData ? { data: atlasAssetData } : {}),
       });
 
@@ -371,6 +406,45 @@ export class PixiSpineWidget {
       throw new Error(`Failed to fetch atlas for image mapping: ${response.status} ${response.statusText}`);
     }
     return response.text();
+  }
+
+  /**
+   * Variant of buildAtlasAssetData used when the atlas URL has no file
+   * extension (blob:/data:). We fetch the atlas text ourselves, parse out
+   * the page names, then pre-load each page image as a TextureSource so
+   * that the atlas parser's own sub-load (which is extension-gated and
+   * would fail on blob URLs) is bypassed entirely.
+   */
+  private async buildOpaqueAtlasAssetData(atlasUrl: string): Promise<Record<string, unknown> | undefined> {
+    const imageList = this.parseImagesList(this.options.images);
+    if (imageList.length === 0) {
+      throw new Error('Spinefolio: atlas URL is a blob/data URL but no images were provided.');
+    }
+
+    // Fetch the atlas text directly so we can inspect page names.
+    const response = await fetch(atlasUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch atlas: ${response.status} ${response.statusText}`);
+    }
+    const atlasText = await response.text();
+    const pageNames = this.extractAtlasPageNames(atlasText);
+    if (pageNames.length === 0) {
+      throw new Error('Spinefolio: failed to parse atlas page names from opaque atlas.');
+    }
+
+    // Pre-load each atlas page image as a Pixi Texture and hand its source
+    // to the atlas parser via data.images so the extension-based sub-load
+    // never runs. Force loadTextures so blob URLs succeed.
+    const textureMap: Record<string, unknown> = {};
+    for (let i = 0; i < pageNames.length; i++) {
+      const url = imageList[Math.min(i, imageList.length - 1)];
+      const pageAlias = `${this.atlasAlias}__page_${i}`;
+      Assets.add({ alias: pageAlias, src: url, loadParser: 'loadTextures' });
+      const texture = await Assets.load(pageAlias);
+      textureMap[pageNames[i]] = (texture as { source: unknown }).source ?? texture;
+    }
+
+    return { images: textureMap };
   }
 
   private async buildAtlasAssetData(): Promise<Record<string, unknown> | undefined> {
