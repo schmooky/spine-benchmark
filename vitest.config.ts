@@ -23,9 +23,10 @@ for (const dir of packageDirs) {
   }
 }
 
-// Build test.include: one glob per package + the apps/benchmark entry.
+// Build test.include: one glob per package + the apps that have tests.
 const testInclude: string[] = [
   'apps/benchmark/test/**/*.test.ts',
+  'apps/reports-api/test/**/*.test.ts',
   ...packageDirs.map(dir => `packages/${dir}/src/**/*.test.ts`),
 ];
 
