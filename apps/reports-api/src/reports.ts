@@ -55,8 +55,16 @@ export async function getEncryptedEnvelope(id: string): Promise<unknown | null> 
   return getJson(`reports/${id}/envelope.json`);
 }
 
-export async function getEncryptedMeta(id: string): Promise<{ id: string; createdAt: string; expiresAt: string; encrypted: boolean } | null> {
-  const meta = await getJson<any>(`reports/${id}/meta.json`);
+interface EncryptedMeta {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  encrypted: boolean;
+  version?: number;
+}
+
+export async function getEncryptedMeta(id: string): Promise<EncryptedMeta | null> {
+  const meta = await getJson<EncryptedMeta>(`reports/${id}/meta.json`);
   if (!meta) return null;
   if (new Date(meta.expiresAt) < new Date()) return null;
   return meta;
@@ -92,6 +100,26 @@ export interface CreateReportInput {
   totalAnimations: number;
   fileHashes: FileHash[];
   animationNames?: string[];
+}
+
+/**
+ * Narrow view of the analysis JSON as consumed by the report HTML
+ * renderer. The full `SpineAnalysisResult` type from
+ * `@spine-benchmark/metrics-reporting` has many more fields, but
+ * we only strictly need these to generate the page. Handlebars
+ * partials still receive the whole blob untyped - this interface
+ * is the contract for the TypeScript code path only.
+ */
+export interface AnalysisPayload {
+  animationTimelines?: Record<string, Array<{ time: number; ri: number; ci: number }>>;
+  animations?: unknown[];
+  skeleton?: unknown;
+  globalMesh?: unknown;
+  globalClipping?: unknown;
+  globalBlendMode?: unknown;
+  globalPhysics?: unknown;
+  stats?: unknown;
+  [extraKey: string]: unknown;
 }
 
 /**
@@ -153,8 +181,8 @@ export async function getReport(id: string): Promise<ReportMeta | null> {
 /**
  * Fetch the analysis JSON for a report.
  */
-export async function getAnalysis(id: string): Promise<unknown | null> {
-  return getJson(`reports/${id}/analysis.json`);
+export async function getAnalysis(id: string): Promise<AnalysisPayload | null> {
+  return getJson<AnalysisPayload>(`reports/${id}/analysis.json`);
 }
 
 /**

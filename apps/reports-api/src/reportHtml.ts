@@ -93,13 +93,24 @@ Handlebars.registerHelper('advisorDesc', (id: string) => {
   return ADVISOR_INFO[id]?.desc || '';
 });
 
-Handlebars.registerHelper('rowLevel', (anim: any) => {
+// Narrow shape of the animation-row objects the Handlebars helpers
+// receive. Handlebars itself is untyped at render time, so this
+// interface only protects the helper bodies - a missing field is
+// silently rendered as empty, which is the right behaviour for an
+// HTML template.
+interface AnimationRow {
+  rowTone?: 'danger' | 'warning' | string;
+  rendering?: { level?: string; cost?: number };
+  computational?: { level?: string; cost?: number };
+}
+
+Handlebars.registerHelper('rowLevel', (anim: AnimationRow) => {
   if (anim.rowTone === 'danger') return 'veryHigh';
   if (anim.rowTone === 'warning') return 'high';
   return anim.rendering?.level || 'minimal';
 });
 
-Handlebars.registerHelper('rowClass', (anim: any) => {
+Handlebars.registerHelper('rowClass', (anim: AnimationRow) => {
   if (anim.rowTone === 'danger') return 'row-danger';
   if (anim.rowTone === 'warning') return 'row-warning';
   return '';
@@ -179,7 +190,7 @@ Handlebars.registerHelper('heatmapSvg', (animName: string, timelines: Record<str
   return new Handlebars.SafeString(svg);
 });
 
-Handlebars.registerHelper('riPercent', (anim: any) => {
+Handlebars.registerHelper('riPercent', (anim: AnimationRow) => {
   const ri = anim.rendering?.cost ?? 0;
   const ci = anim.computational?.cost ?? 0;
   const total = ri + ci;
@@ -187,7 +198,7 @@ Handlebars.registerHelper('riPercent', (anim: any) => {
   return Math.round((ri / total) * 100);
 });
 
-Handlebars.registerHelper('ciPercent', (anim: any) => {
+Handlebars.registerHelper('ciPercent', (anim: AnimationRow) => {
   const ri = anim.rendering?.cost ?? 0;
   const ci = anim.computational?.cost ?? 0;
   const total = ri + ci;
@@ -201,7 +212,7 @@ export async function renderReport(id: string): Promise<string> {
   const meta = await getReport(id);
   if (!meta) return expiredTemplate({});
 
-  const analysis = await getAnalysis(id) as any;
+  const analysis = await getAnalysis(id);
   if (!analysis) return expiredTemplate({});
 
   // Build screenshot URLs (proxied through this server, same origin)
@@ -213,7 +224,7 @@ export async function renderReport(id: string): Promise<string> {
 
   // Build GIF map: animation name -> screenshot URL
   const gifMap: Record<string, string> = {};
-  const animNames = (meta as any).animationNames as string[] | undefined;
+  const animNames = meta.animationNames;
   if (animNames) {
     animNames.forEach((name: string, i: number) => {
       const gifIdx = i + 1; // index 0 is the main screenshot
