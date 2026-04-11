@@ -1,0 +1,58 @@
+name: Feature request
+description: Suggest a new analyzer, report field, benchmark tool, or UI affordance.
+title: 'feat: '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check the open issues and the roadmap for anything that already covers this idea. Concrete use cases beat generic "it would be nice if..." framings every time.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the real-world situation that motivated this request. Skip the solution for now - just the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Your best idea for how the benchmark, a metric, a report section, or a package API should handle this. Sketches, pseudo-API, or screenshots of other tools that got it right are all welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you looked at and why you ruled them out. (This saves a lot of back-and-forth.)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the monorepo would this touch?
+      options:
+        - Benchmark UI (apps/benchmark)
+        - Reports / shareable reports
+        - Metrics / scoring formulas
+        - Spine loader / asset handling
+        - spinefolio widget library
+        - pixi-crawler
+        - Build / CI / release tooling
+        - Unsure / cross-cutting
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, links to related issues, or anything else that would help shape the design.
+    validations:
+      required: false

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Updates and discussion (Telegram)
+    url: https://t.me/spine_benchmark
+    about: Release announcements, quick questions, and general chatter.
+  - name: Benchmark the site directly
+    url: https://spine.schmooky.dev/
+    about: Drag-drop your skeleton into the hosted benchmark instead of filing a bug.

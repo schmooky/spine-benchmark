@@ -1,0 +1,98 @@
+# Config for actions/labeler. Labels are applied to PRs based on which
+# paths the PR touches. Keep this list in sync with the monorepo layout -
+# when you add a new workspace package under packages/, add a matching
+# entry here so the triage queue picks it up automatically.
+#
+# Syntax reference:
+#   https://github.com/actions/labeler#create-labelsyml
+
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - '.github/actions/**'
+          - '.github/dependabot.yml'
+          - '.github/labeler.yml'
+          - '.husky/**'
+          - 'scripts/**'
+
+area/docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'logo.svg'
+          - '.github/ISSUE_TEMPLATE/**'
+          - '.github/pull_request_template.md'
+
+area/benchmark-app:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'apps/benchmark/**'
+          - 'apps/site/**'
+
+area/reports-api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'apps/reports-api/**'
+          - 'apps/benchmark/src/utils/shareEncryption.ts'
+
+area/crawler-demo:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'apps/crawler-demo/**'
+
+area/metrics:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/metrics/**'
+          - 'packages/metrics-*/**'
+
+area/impact-formula:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/metrics-impact-formula/**'
+
+area/spinefolio:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/spinefolio/**'
+
+area/pixi-crawler:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/pixi-crawler/**'
+
+area/tools:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/asset-store/**'
+          - 'packages/spine-loader/**'
+          - 'packages/mesh-tools/**'
+          - 'packages/render-tools/**'
+          - 'packages/constraint-tools/**'
+          - 'packages/drawcall-tools/**'
+          - 'packages/file-tools/**'
+          - 'packages/workbench-core/**'
+
+area/i18n:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'apps/benchmark/src/locales/**'
+          - 'apps/site/src/locales/**'
+
+area/release:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.changeset/**'
+          - 'scripts/snapshot-release.mjs'
+          - 'scripts/build-all-publishable.mjs'
+
+area/tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.test.ts'
+          - '**/*.test.tsx'
+          - '**/*.spec.ts'
+          - '**/*.spec.tsx'
+          - 'vitest.config.ts'
+          - 'vitest.setup.ts'
