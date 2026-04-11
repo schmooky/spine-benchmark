@@ -1,0 +1,40 @@
+name: Release Drafter
+
+# Maintains a repo-level draft GitHub Release on every push to main,
+# assembled from merged PR titles + labels via .github/release-drafter.yml.
+# Also applies semantic labels to PRs so they get categorised when they
+# eventually merge.
+#
+# Note: changesets still owns per-package versioning and per-package
+# changelogs. Release Drafter fills in the "what changed at the repo
+# level" gap, including changes to apps/ that never get a changeset.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-drafter
+  cancel-in-progress: false
+
+jobs:
+  update_release_draft:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@6a93d829887aa2e0748befe2e808c66c0ec6e4c7 # v6
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -58,6 +58,22 @@ Node 20+ is required. The repo uses npm workspaces; no extra package manager.
   fail the `check:i18n` check. Add the key to `apps/benchmark/src/locales/en.json`
   and `ru.json`, then reference it via `t(...)`.
 
+## GitHub Actions are pinned to SHAs
+
+Every third-party action in `.github/workflows/` is pinned to a
+full commit SHA with the human version as a trailing comment, e.g.
+`actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4`.
+This is a supply-chain hardening step recommended by the OpenSSF
+Scorecard: a moving tag like `@v4` could be repointed at a
+malicious commit by a compromised maintainer account, but a SHA
+cannot. Dependabot keeps the SHAs fresh - you will see regular
+`chore(ci)` PRs bumping them. Approve those like any other
+dependency bump.
+
+If you are adding a new action, resolve its major-version tag to
+a SHA with `git ls-remote` and commit both the SHA and the version
+comment in the same `uses:` line.
+
 ## Releases
 
 Every published package is versioned and shipped by
@@ -83,3 +99,19 @@ Use the issue forms:
 
 For security issues, please follow [`SECURITY.md`](./SECURITY.md) and do
 not open a public issue.
+
+## Crediting contributors
+
+This project follows the [all-contributors](https://allcontributors.org)
+spec. Anyone who helps - code, docs, design, reviews, bug reports,
+ideas - gets credited in the README.
+
+To add someone (or yourself), comment on any issue or PR:
+
+```
+@all-contributors please add @their-github-handle for code, doc
+```
+
+The bot opens a PR updating `.all-contributorsrc` and the README
+contributors block. Valid contribution types are listed at
+https://allcontributors.org/docs/en/emoji-key.
