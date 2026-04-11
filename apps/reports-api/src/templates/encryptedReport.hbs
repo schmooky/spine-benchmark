@@ -546,35 +546,105 @@
     });
   }
 
+  // Parse an atlas file's text and return its page image filenames in order.
+  // The atlas format begins each page block with a bare filename line, then
+  // key:value metadata lines. We emit a filename iff the next non-empty line
+  // looks like `key: value`.
+  function extractAtlasPageNames(atlasText) {
+    var lines = atlasText.split(/\r?\n/);
+    var pages = [];
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line || line.indexOf(':') !== -1) continue;
+      var next = '';
+      for (var j = i + 1; j < lines.length; j++) {
+        var nl = lines[j].trim();
+        if (nl) { next = nl; break; }
+      }
+      if (next.indexOf(':') === -1) continue;
+      pages.push(line);
+    }
+    return pages;
+  }
+
   async function mountSpinefolio(encodedFiles) {
     var container = document.getElementById('spinefolio-container');
     if (!container) return;
+    container.innerHTML = '<div style="padding:20px;color:var(--sb-text-muted);font-size:11px">Loading bundle viewer...</div>';
+
     try {
-      var blobUrls = {};
+      // Build blob URLs keyed by filename for quick lookup.
+      var blobByName = {};
       encodedFiles.forEach(function(f) {
-        blobUrls[f.name] = URL.createObjectURL(b64toBlob(f.data, f.type));
+        blobByName[f.name] = URL.createObjectURL(b64toBlob(f.data, f.type));
       });
-      var atlasFile = encodedFiles.find(function(f) { return f.name.endsWith('.atlas'); });
-      var skelFile = encodedFiles.find(function(f) { return f.name.endsWith('.json') || f.name.endsWith('.skel'); });
+
+      var atlasFile = encodedFiles.find(function(f) { return /\.atlas$/i.test(f.name); });
+      var skelFile = encodedFiles.find(function(f) { return /\.(json|skel)$/i.test(f.name); });
       if (!atlasFile || !skelFile) {
         container.innerHTML = '<div style="padding:20px;color:#F87171">Bundle missing atlas or skeleton file.</div>';
         return;
       }
+
+      // Decode the atlas text to figure out the page filenames so we can
+      // hand Spinefolio a blob-URL list in the exact order it expects.
+      var atlasText = new TextDecoder().decode(b64decode(atlasFile.data));
+      var pageNames = extractAtlasPageNames(atlasText);
+      var imageUrls;
+      if (pageNames.length === 0) {
+        // Fallback: grab the first image-like file from the bundle.
+        var fallback = encodedFiles.find(function(f) { return /^image\//.test(f.type) || /\.(png|webp|jpe?g)$/i.test(f.name); });
+        if (!fallback) {
+          container.innerHTML = '<div style="padding:20px;color:#F87171">Bundle missing atlas page images.</div>';
+          return;
+        }
+        imageUrls = blobByName[fallback.name];
+      } else {
+        var urls = [];
+        for (var i = 0; i < pageNames.length; i++) {
+          var url = blobByName[pageNames[i]];
+          if (!url) {
+            container.innerHTML = '<div style="padding:20px;color:#F87171">Bundle missing image: ' + escapeHtml(pageNames[i]) + '</div>';
+            return;
+          }
+          urls.push(url);
+        }
+        imageUrls = urls.join(' ');
+      }
+
       var mod;
       try {
         mod = await import('/assets/spinefolio.js');
       } catch (e) {
-        container.innerHTML = '<div style="padding:20px;color:#FBBF24">Bundle viewer not available yet. Live Spinefolio integration pending.</div>';
+        container.innerHTML = '<div style="padding:20px;color:#F87171">Failed to load Spinefolio: ' + escapeHtml(e.message || String(e)) + '</div>';
         return;
       }
-      mod.createSpineWidget(container, {
-        skeleton: blobUrls[skelFile.name],
-        atlas: blobUrls[atlasFile.name],
+
+      container.innerHTML = '';
+      var factory = mod.create || mod.default && mod.default.create;
+      var widgetOptions = {
+        skeleton: blobByName[skelFile.name],
+        atlas: blobByName[atlasFile.name],
+        images: imageUrls,
+        animation: (publicData && publicData.animationNames && publicData.animationNames[0]) || undefined,
+        loop: true,
         showControls: true,
+        enablePan: true,
+        enableZoom: true,
         fitToContainer: true,
-      });
+        onError: function(err) {
+          container.innerHTML = '<div style="padding:20px;color:#F87171">Spinefolio error: ' + escapeHtml((err && err.message) || String(err)) + '</div>';
+        },
+      };
+      if (factory) {
+        factory(container, widgetOptions);
+      } else if (mod.createSpineWidget) {
+        mod.createSpineWidget(container, widgetOptions);
+      } else {
+        container.innerHTML = '<div style="padding:20px;color:#F87171">Spinefolio module has no create() export.</div>';
+      }
     } catch (err) {
-      container.innerHTML = '<div style="padding:20px;color:#F87171">Failed to load bundle: ' + (err.message || err) + '</div>';
+      container.innerHTML = '<div style="padding:20px;color:#F87171">Failed to load bundle: ' + escapeHtml((err && err.message) || String(err)) + '</div>';
     }
   }
 
