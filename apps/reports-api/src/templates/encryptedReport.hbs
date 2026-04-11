@@ -547,9 +547,12 @@
   }
 
   // Parse an atlas file's text and return its page image filenames in order.
-  // The atlas format begins each page block with a bare filename line, then
-  // key:value metadata lines. We emit a filename iff the next non-empty line
-  // looks like `key: value`.
+  // Page blocks start with a bare filename line followed by page-level
+  // metadata (size/format/filter/repeat/pma/scale). Region blocks also start
+  // with a bare name line but their metadata keys are different (xy/bounds/
+  // offsets/...), so we gate on the page metadata key to avoid mistaking
+  // region names for pages.
+  var ATLAS_PAGE_METADATA = { size: 1, format: 1, filter: 1, repeat: 1, pma: 1, scale: 1 };
   function extractAtlasPageNames(atlasText) {
     var lines = atlasText.split(/\r?\n/);
     var pages = [];
@@ -562,7 +565,10 @@
         if (nl) { next = nl; break; }
       }
       if (next.indexOf(':') === -1) continue;
-      pages.push(line);
+      var key = next.split(':')[0].trim();
+      if (ATLAS_PAGE_METADATA[key] && pages.indexOf(line) === -1) {
+        pages.push(line);
+      }
     }
     return pages;
   }
@@ -600,14 +606,21 @@
         }
         imageUrls = blobByName[fallback.name];
       } else {
+        // Pair each page with its blob; pages whose image isn't in the
+        // bundle are skipped with a console warning rather than aborting,
+        // so the widget can still load with whatever pages did resolve.
         var urls = [];
         for (var i = 0; i < pageNames.length; i++) {
           var url = blobByName[pageNames[i]];
           if (!url) {
-            container.innerHTML = '<div style="padding:20px;color:#F87171">Bundle missing image: ' + escapeHtml(pageNames[i]) + '</div>';
-            return;
+            console.warn('[report] atlas page missing from bundle:', pageNames[i]);
+            continue;
           }
           urls.push(url);
+        }
+        if (urls.length === 0) {
+          container.innerHTML = '<div style="padding:20px;color:#F87171">Bundle has no atlas page images.</div>';
+          return;
         }
         imageUrls = urls.join(' ');
       }
