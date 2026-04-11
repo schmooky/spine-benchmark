@@ -57,15 +57,7 @@ describe('SpineLoader.extractImageNamesFromAtlas', () => {
     expect(extract(atlas)).toEqual(['spineboy.png']);
   });
 
-  // KNOWN QUIRK: the parser has no "page boundary" logic. Between
-  // pages, `currentName` is still set to the first region of the
-  // previous page (because regions don't clear currentName - only
-  // a `size:` line does). That means the second page's name is
-  // rejected as "currentName already set", and the first region
-  // of the prior page gets pushed as the second page's name
-  // instead. Every atlas fixture in the repo is single-page, so
-  // this has never shipped as a user-visible bug.
-  it('[known quirk] mis-parses a multi-page atlas by pushing region names as page names', () => {
+  it('parses a multi-page atlas with a blank line between pages', () => {
     const atlas = [
       'page1.png',
       '\tsize: 1024, 1024',
@@ -80,12 +72,39 @@ describe('SpineLoader.extractImageNamesFromAtlas', () => {
       '\tbounds: 0, 0, 32, 32',
     ].join('\n');
 
-    const result = extract(atlas);
-    expect(result).toContain('page1.png');
-    // page2.png is silently dropped; the leftover region name is
-    // pushed in its place.
-    expect(result).not.toContain('page2.png');
-    expect(result).toContain('region_a');
+    expect(extract(atlas)).toEqual(['page1.png', 'page2.png']);
+  });
+
+  it('parses a multi-page atlas with no blank separator between pages', () => {
+    // Defensive: some exporters don't emit a blank line before the
+    // next page header. The lookahead rule doesn't rely on blanks.
+    const atlas = [
+      'page1.png',
+      '\tsize: 1024, 1024',
+      '\tfilter: Linear, Linear',
+      'region_a',
+      '\tbounds: 0, 0, 64, 64',
+      'page2.png',
+      '\tsize: 1024, 1024',
+      '\tfilter: Linear, Linear',
+      'region_b',
+      '\tbounds: 0, 0, 32, 32',
+    ].join('\n');
+
+    expect(extract(atlas)).toEqual(['page1.png', 'page2.png']);
+  });
+
+  it('does not mis-identify a trailing region as a page (no EOF push)', () => {
+    const atlas = [
+      'sheet.png',
+      '\tsize: 2, 2',
+      '\tfilter: Linear, Linear',
+      'last_region',
+      '\tbounds: 0, 0, 1, 1',
+    ].join('\n');
+
+    // Only the page header is returned. The trailing region is not.
+    expect(extract(atlas)).toEqual(['sheet.png']);
   });
 
   it('does not mistake the last region name for a page (the regression the comment in the source warns about)', () => {
@@ -163,12 +182,7 @@ describe('SpineLoader.extractImageUrlsFromAtlas', () => {
     expect(urls['page1']).toBe(urls['page1.webp']);
   });
 
-  // KNOWN QUIRK: the parser's "is this a region line?" check is
-  // `line.includes(':')`, which rejects absolute http(s) URLs as page
-  // names because they contain a colon after the scheme. In practice
-  // page names are relative filenames next to the atlas, so this has
-  // never bitten anyone, but it's worth pinning.
-  it('[known quirk] absolute URL page names are dropped because of the colon check', () => {
+  it('accepts absolute http(s) URL page names and keeps them as-is', () => {
     const atlas = [
       'https://cdn.example.test/spineboy.png',
       '\tsize: 1, 1',
@@ -178,18 +192,38 @@ describe('SpineLoader.extractImageUrlsFromAtlas', () => {
     ].join('\n');
 
     const urls = extract(atlas, 'https://example.test/a.atlas');
-    // Today: the URL is rejected by the colon check, no entry is made,
-    // and the subsequent `size:` line finds no currentName to push.
-    expect(urls['https://cdn.example.test/spineboy.png']).toBeUndefined();
+    expect(urls['https://cdn.example.test/spineboy.png']).toBe(
+      'https://cdn.example.test/spineboy.png',
+    );
+    // Dual-keyed: basename lookup still works.
+    expect(urls['https://cdn.example.test/spineboy']).toBe(
+      'https://cdn.example.test/spineboy.png',
+    );
   });
 
-  // KNOWN QUIRK: extractImageUrlsFromAtlas still pushes `currentName`
-  // at EOF, while its twin extractImageNamesFromAtlas does NOT. That
-  // asymmetry means extractImageUrlsFromAtlas registers a trailing
-  // region name as a fake page URL. See the comment in
-  // extractImageNamesFromAtlas for context on why pushing at EOF is
-  // wrong. When the twin is harmonised, update this test.
-  it('[known quirk] currently registers the last region name as a page URL at EOF', () => {
+  it('resolves a multi-page atlas with distinct URLs per page', () => {
+    const atlas = [
+      'page1.png',
+      '\tsize: 1, 1',
+      '\tfilter: Linear, Linear',
+      'region_a',
+      '\tbounds: 0, 0, 1, 1',
+      '',
+      'page2.webp',
+      '\tsize: 1, 1',
+      '\tfilter: Linear, Linear',
+      'region_b',
+      '\tbounds: 0, 0, 1, 1',
+    ].join('\n');
+
+    const urls = extract(atlas, 'https://example.test/multi.atlas');
+    expect(urls['page1.png']).toBe('https://example.test/page1.png');
+    expect(urls['page2.webp']).toBe('https://example.test/page2.webp');
+    expect(urls['page1']).toBe(urls['page1.png']);
+    expect(urls['page2']).toBe(urls['page2.webp']);
+  });
+
+  it('does not register a trailing region as a fake page URL at EOF', () => {
     const atlas = [
       'sheet.png',
       '\tsize: 2, 2',
@@ -199,9 +233,8 @@ describe('SpineLoader.extractImageUrlsFromAtlas', () => {
     ].join('\n');
 
     const urls = extract(atlas, 'https://example.test/a.atlas');
-    // SHOULD be only `sheet.png`/`sheet`, but the EOF push registers
-    // the trailing region as a page URL too.
-    expect(urls['last_region']).toBe('https://example.test/last_region');
+    expect(urls['last_region']).toBeUndefined();
+    expect(urls['sheet.png']).toBe('https://example.test/sheet.png');
   });
 });
 
