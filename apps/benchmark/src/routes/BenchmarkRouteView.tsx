@@ -152,7 +152,18 @@ export function BenchmarkRouteView() {
               </div>
 
               <div className="benchmark-sidebar-content">
-                <Summary data={benchmarkData} supplemental={supplementalImpact} spineInstance={spineInstance} />
+                <Summary
+                  data={benchmarkData}
+                  supplemental={supplementalImpact}
+                  spineInstance={spineInstance}
+                  droppedFiles={
+                    selectedAsset
+                      ? selectedAsset.files.map(
+                          (f) => new File([f.buffer], f.name, { type: f.type }),
+                        )
+                      : undefined
+                  }
+                />
                 <hr className="benchmark-section-divider" />
                 <MeshAnalysis data={benchmarkData} />
                 <hr className="benchmark-section-divider" />
