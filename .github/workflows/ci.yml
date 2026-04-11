@@ -18,9 +18,9 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
@@ -30,5 +30,16 @@ jobs:
       - name: Lint
         run: npm run check:lint
 
-      - name: Test
-        run: npx vitest run
+      - name: Test with coverage
+        run: npx vitest run --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
+        with:
+          # Public-repo uploads don't strictly need a token, but adding
+          # one lifts rate limits and makes fork PRs upload cleanly.
+          # Configure in repo secrets as CODECOV_TOKEN (optional).
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: false

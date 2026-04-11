@@ -1,0 +1,64 @@
+name: Stale
+
+# Gentle reaper for issues and PRs that have gone quiet. Conservative
+# timings: nothing closes without a warning, and security/pinned items
+# are exempt. Runs once a day at 08:00 UTC.
+#
+# Turn off individual items with the "pinned" or "security" label, or
+# by setting the exempt-all-milestones option below.
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: stale
+  cancel-in-progress: false
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9
+        with:
+          # --- issues ---
+          days-before-issue-stale: 60
+          days-before-issue-close: 14
+          stale-issue-label: stale
+          exempt-issue-labels: 'pinned,security,help wanted,good first issue,blocked'
+          stale-issue-message: |
+            This issue has been quiet for 60 days. It will be closed in
+            14 more days if there is no further activity. Drop a comment
+            (even just "still relevant") to keep it open, or add the
+            `pinned` label if it should never go stale.
+          close-issue-message: |
+            Closing as stale. If this is still relevant, please reopen
+            with an updated reproduction or add a comment and we'll pick
+            it back up. Thanks for filing.
+
+          # --- pull requests ---
+          days-before-pr-stale: 30
+          days-before-pr-close: 14
+          stale-pr-label: stale
+          exempt-pr-labels: 'pinned,security,blocked,dependencies'
+          stale-pr-message: |
+            This PR has been quiet for 30 days. It will be closed in 14
+            more days if there is no further activity. Push a commit, or
+            leave a comment, to keep it open.
+          close-pr-message: |
+            Closing as stale. Feel free to reopen when you're ready to
+            continue. Nothing is lost - the branch still exists and the
+            history is intact.
+
+          # Draft PRs are a "work in progress" signal, not neglect.
+          exempt-draft-pr: true
+
+          # Never act on more than 100 items per run. Prevents accidental
+          # mass-closure if something goes wrong upstream.
+          operations-per-run: 100

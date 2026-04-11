@@ -7,9 +7,20 @@
 <p align="center">
   <a href="https://github.com/schmooky/spine-benchmark/actions/workflows/ci.yml"><img src="https://github.com/schmooky/spine-benchmark/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/schmooky/spine-benchmark/actions/workflows/release.yml"><img src="https://github.com/schmooky/spine-benchmark/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
+  <a href="https://github.com/schmooky/spine-benchmark/actions/workflows/codeql.yml"><img src="https://github.com/schmooky/spine-benchmark/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" /></a>
+  <a href="https://codecov.io/gh/schmooky/spine-benchmark"><img src="https://codecov.io/gh/schmooky/spine-benchmark/branch/main/graph/badge.svg" alt="Codecov" /></a>
+  <a href="https://securityscorecards.dev/viewer/?uri=github.com/schmooky/spine-benchmark"><img src="https://api.securityscorecards.dev/projects/github.com/schmooky/spine-benchmark/badge" alt="OpenSSF Scorecard" /></a>
+  <a href="https://www.bestpractices.dev/projects/0"><img src="https://www.bestpractices.dev/projects/0/badge" alt="OpenSSF Best Practices" /></a>
+  <br />
   <a href="https://www.npmjs.com/package/@spine-benchmark/spinefolio"><img src="https://img.shields.io/npm/v/@spine-benchmark/spinefolio?label=spinefolio" alt="spinefolio version" /></a>
+  <a href="https://www.npmjs.com/package/@spine-benchmark/spinefolio"><img src="https://img.shields.io/npm/dm/@spine-benchmark/spinefolio?label=downloads" alt="spinefolio downloads" /></a>
+  <a href="https://bundlephobia.com/package/@spine-benchmark/spinefolio"><img src="https://img.shields.io/bundlephobia/minzip/@spine-benchmark/spinefolio?label=minzip" alt="spinefolio bundle size" /></a>
   <a href="https://www.npmjs.com/package/@spine-benchmark/pixi-crawler"><img src="https://img.shields.io/npm/v/@spine-benchmark/pixi-crawler?label=pixi-crawler" alt="pixi-crawler version" /></a>
+  <a href="https://www.npmjs.com/package/@spine-benchmark/pixi-crawler"><img src="https://img.shields.io/npm/dm/@spine-benchmark/pixi-crawler?label=downloads" alt="pixi-crawler downloads" /></a>
+  <a href="https://bundlephobia.com/package/@spine-benchmark/pixi-crawler"><img src="https://img.shields.io/bundlephobia/minzip/@spine-benchmark/pixi-crawler?label=minzip" alt="pixi-crawler bundle size" /></a>
+  <br />
   <a href="https://github.com/schmooky/spine-benchmark/blob/main/LICENSE"><img src="https://img.shields.io/github/license/schmooky/spine-benchmark" alt="License" /></a>
+  <a href="#contributors"><img src="https://img.shields.io/github/all-contributors/schmooky/spine-benchmark?color=ee8449" alt="All Contributors" /></a>
   <a href="https://t.me/spine_benchmark"><img src="https://img.shields.io/badge/updates-telegram-229ED9?logo=telegram&logoColor=white" alt="Telegram updates" /></a>
 </p>
 
@@ -138,6 +149,15 @@ SNAPSHOT_TAG=v3-2 GITHUB_TOKEN=<gh-pat> npm run snapshot
 
 The `GITHUB_TOKEN` is only needed because `@changesets/changelog-github` queries the GitHub API to attribute changelog entries; any classic PAT with `read:user` and `repo:status` scopes works. The runner on CI gets it for free. The script refuses to run against `main` and no-ops cleanly when there are no pending changesets, so you can't accidentally publish from the wrong branch.
 
+## Docs
+
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) - how the pieces fit together end to end.
+- [`docs/adr/`](./docs/adr/) - architecture decision records (the "why").
+- [`AGENTS.md`](./AGENTS.md) - house style and load-bearing constraints.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) - contribution workflow.
+- [`SUPPORT.md`](./SUPPORT.md) - where to ask questions, file bugs, etc.
+- [`SECURITY.md`](./SECURITY.md) - private vulnerability disclosure.
+
 ## Contributing
 
 1. Create a branch from `main`.
@@ -146,6 +166,22 @@ The `GITHUB_TOKEN` is only needed because `@changesets/changelog-github` queries
 4. If your change ships user-visible behavior, run `npx changeset` and commit the resulting `.md` file.
 5. Open a PR with a short summary.
 6. See `AGENTS.md` for the full house style and the load-bearing constraints (heatmap/crawler scoring parity, single source of truth for impact math, ASCII-only punctuation).
+
+## Contributors
+
+Thanks go to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://allcontributors.org)
+specification. Contributions of any kind welcome - see
+[`CONTRIBUTING.md`](./CONTRIBUTING.md#crediting-contributors) for how
+to get your name on the list.
 
 ## License
 
