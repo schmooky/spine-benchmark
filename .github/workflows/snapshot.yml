@@ -83,3 +83,7 @@ jobs:
           SNAPSHOT_TAG: ${{ steps.tag.outputs.tag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sign preview releases with npm provenance too (same as the
+          # main release workflow), so reviewers can verify a snapshot
+          # genuinely came out of this repo's CI and not somewhere else.
+          NPM_CONFIG_PROVENANCE: 'true'

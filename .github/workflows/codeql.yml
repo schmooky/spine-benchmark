@@ -1,0 +1,60 @@
+name: CodeQL
+
+# GitHub-native static analysis for JavaScript/TypeScript across the
+# whole monorepo. Findings land under the "Security" tab of the repo and
+# are attached as annotations on PRs that introduce a regression. The
+# scan runs on PRs, on pushes to main, and on a weekly cron so the
+# baseline stays fresh even during quiet weeks.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Mondays 07:00 UTC - same slot as dependabot, so "weekly review" is
+    # one pass across deps + SAST.
+    - cron: '0 7 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      # required to upload SARIF results to the Security tab.
+      security-events: write
+      # required for workflows in private repositories (no-op on public).
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - javascript-typescript
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # "security-and-quality" is the richer pack. Swap to "security-extended"
+          # if the quality rules become too chatty on this codebase.
+          queries: security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'

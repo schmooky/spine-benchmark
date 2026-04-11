@@ -4,6 +4,15 @@
 
 # Spine Benchmark
 
+<p align="center">
+  <a href="https://github.com/schmooky/spine-benchmark/actions/workflows/ci.yml"><img src="https://github.com/schmooky/spine-benchmark/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/schmooky/spine-benchmark/actions/workflows/release.yml"><img src="https://github.com/schmooky/spine-benchmark/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
+  <a href="https://www.npmjs.com/package/@spine-benchmark/spinefolio"><img src="https://img.shields.io/npm/v/@spine-benchmark/spinefolio?label=spinefolio" alt="spinefolio version" /></a>
+  <a href="https://www.npmjs.com/package/@spine-benchmark/pixi-crawler"><img src="https://img.shields.io/npm/v/@spine-benchmark/pixi-crawler?label=pixi-crawler" alt="pixi-crawler version" /></a>
+  <a href="https://github.com/schmooky/spine-benchmark/blob/main/LICENSE"><img src="https://img.shields.io/github/license/schmooky/spine-benchmark" alt="License" /></a>
+  <a href="https://t.me/spine_benchmark"><img src="https://img.shields.io/badge/updates-telegram-229ED9?logo=telegram&logoColor=white" alt="Telegram updates" /></a>
+</p>
+
 Spine Benchmark is a monorepo for analyzing and optimizing Spine 4.2 animations.
 It includes a browser workbench, reusable metrics packages, and runtime tooling.
 
