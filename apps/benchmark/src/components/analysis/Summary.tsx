@@ -14,6 +14,7 @@ import {
 import type { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 import { useShareReport } from '../../hooks/useShareReport';
+import { ShareModal, type ShareOptions } from '../ShareModal';
 
 interface SummaryProps {
   data: SpineAnalysisResult;
@@ -160,12 +161,19 @@ export const Summary: React.FC<SummaryProps> = ({ data, supplemental, droppedFil
               type="button"
               className="secondary-btn"
               disabled={shareReport.isSharing}
-              onClick={() => shareReport.share(data, spineInstance, droppedFiles, supplemental)}
+              onClick={shareReport.openModal}
             >
               <Share2 size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
-              {shareReport.isSharing ? 'Sharing...' : 'Share Report'}
+              {shareReport.isSharing ? t('share.sharing') : t('share.button')}
             </button>
           )}
+          <ShareModal
+            isOpen={shareReport.isModalOpen}
+            onClose={shareReport.closeModal}
+            onShare={(options: ShareOptions) => shareReport.share(options, data, spineInstance, droppedFiles, supplemental).then(() => undefined)}
+            hasDroppedFiles={!!droppedFiles && droppedFiles.length > 0}
+            isSharing={shareReport.isSharing}
+          />
         </div>
         {baseline ? (
           <p className="subtle-text">

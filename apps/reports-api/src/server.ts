@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import { config } from './config.js';
-import { createReport, getReport, getAnalysis, getScreenshot, cleanupExpired } from './reports.js';
+import { createReport, getReport, getAnalysis, getScreenshot, cleanupExpired, createEncryptedReport, getEncryptedEnvelope, getEncryptedMeta, getPublicData } from './reports.js';
 import type { FileHash, CreateReportInput } from './reports.js';
-import { renderReport } from './reportHtml.js';
+import { renderReport, renderEncryptedReport } from './reportHtml.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 50 } });
@@ -74,6 +74,49 @@ app.post('/api/reports', upload.array('screenshots', 50), async (req, res) => {
   }
 });
 
+// ── Create encrypted report ─────────────────────────────────────
+
+app.post('/api/reports/encrypted', async (req, res) => {
+  try {
+    const { publicData, envelope, ttlDays } = req.body || {};
+    if (!publicData || typeof publicData !== 'object') {
+      res.status(400).json({ error: 'Missing publicData field' });
+      return;
+    }
+    if (!envelope || typeof envelope !== 'object') {
+      res.status(400).json({ error: 'Missing envelope field' });
+      return;
+    }
+    const result = await createEncryptedReport(publicData, envelope, Number(ttlDays) || 7);
+    res.status(201).json(result);
+  } catch (err) {
+    console.error('[reports-api] encrypted create failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/reports/:id/public', async (req, res) => {
+  try {
+    const data = await getPublicData(req.params.id);
+    if (!data) { res.status(404).json({ error: 'Not found' }); return; }
+    res.json(data);
+  } catch (err) {
+    console.error('[reports-api] get public failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/reports/:id/envelope', async (req, res) => {
+  try {
+    const envelope = await getEncryptedEnvelope(req.params.id);
+    if (!envelope) { res.status(404).json({ error: 'Not found' }); return; }
+    res.json(envelope);
+  } catch (err) {
+    console.error('[reports-api] get envelope failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── Get report ──────────────────────────────────────────────────
 
 app.get('/api/reports/:id', async (req, res) => {
@@ -137,6 +180,14 @@ app.post('/api/cleanup', async (_req, res) => {
 
 app.get('/report/:id', async (req, res) => {
   try {
+    // Check if this is an encrypted report first
+    const encMeta = await getEncryptedMeta(req.params.id);
+    if (encMeta?.encrypted) {
+      const html = renderEncryptedReport(req.params.id);
+      res.type('html').send(html);
+      return;
+    }
+    // Fall back to the legacy (pre-encryption) report viewer
     const html = await renderReport(req.params.id);
     res.type('html').send(html);
   } catch (err) {

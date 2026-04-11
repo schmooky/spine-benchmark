@@ -11,6 +11,57 @@ import { nanoid } from 'nanoid';
 import { config } from './config.js';
 import { putJson, putFile, getJson, getBuffer, listPrefix, deleteObject } from './s3.js';
 
+/**
+ * Create a hybrid report: public metrics (visible to anyone with the
+ * link) + encrypted envelope (GIFs, screenshot, asset bundle - unlocked
+ * with the user's password).
+ *
+ * The server stores both blobs unchanged and serves them back. It never
+ * sees the private data's plaintext.
+ *
+ * TTL is in days, clamped to [1, 90] to prevent abuse.
+ */
+export async function createEncryptedReport(
+  publicData: unknown,
+  envelope: unknown,
+  ttlDays: number,
+): Promise<{ id: string; url: string; expiresAt: string }> {
+  const id = nanoid(12);
+  const now = new Date();
+  const clampedTtl = Math.max(1, Math.min(90, Math.round(ttlDays || config.reportTtlDays)));
+  const expiresAt = new Date(now.getTime() + clampedTtl * 24 * 60 * 60 * 1000);
+
+  const meta = {
+    id,
+    version: 3,
+    encrypted: true,
+    createdAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+  };
+
+  await putJson(`reports/${id}/public.json`, publicData);
+  await putJson(`reports/${id}/envelope.json`, envelope);
+  await putJson(`reports/${id}/meta.json`, meta);
+
+  const url = `${config.publicUrl}/report/${id}`;
+  return { id, url, expiresAt: expiresAt.toISOString() };
+}
+
+export async function getPublicData(id: string): Promise<unknown | null> {
+  return getJson(`reports/${id}/public.json`);
+}
+
+export async function getEncryptedEnvelope(id: string): Promise<unknown | null> {
+  return getJson(`reports/${id}/envelope.json`);
+}
+
+export async function getEncryptedMeta(id: string): Promise<{ id: string; createdAt: string; expiresAt: string; encrypted: boolean } | null> {
+  const meta = await getJson<any>(`reports/${id}/meta.json`);
+  if (!meta) return null;
+  if (new Date(meta.expiresAt) < new Date()) return null;
+  return meta;
+}
+
 export interface FileHash {
   name: string;
   /** SHA-256 hex digest computed client-side */

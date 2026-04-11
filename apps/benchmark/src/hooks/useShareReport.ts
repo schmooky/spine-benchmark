@@ -8,6 +8,9 @@ import {
 } from '../core/SpineAnalyzer';
 import type { ImpactSupplementalMetrics } from '../core/SpineAnalyzer';
 import { captureAllAnimationGifs } from '../utils/gifCapture';
+import { encryptJson } from '../utils/shareEncryption';
+import { encodeFiles } from '../utils/encodeFiles';
+import type { ShareOptions } from '../components/ShareModal';
 
 const REPORTS_API = import.meta.env.VITE_REPORTS_API_URL;
 
@@ -45,13 +48,31 @@ async function captureScreenshot(): Promise<Blob | null> {
   }
 }
 
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buf = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
+  }
+  return btoa(binary);
+}
+
 export function useShareReport() {
   const [isSharing, setIsSharing] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { addToast } = useToast();
 
   const isAvailable = !!REPORTS_API;
 
+  const openModal = useCallback(() => setIsModalOpen(true), []);
+  const closeModal = useCallback(() => {
+    if (!isSharing) setIsModalOpen(false);
+  }, [isSharing]);
+
   const share = useCallback(async (
+    options: ShareOptions,
     analysisResult: SpineAnalysisResult,
     spineInstance?: Spine | null,
     droppedFiles?: File[],
@@ -66,18 +87,15 @@ export function useShareReport() {
     try {
       addToast('Preparing report...', 'info');
 
-      // Build the impact report model
       const report = buildImpactReportModel(analysisResult, { supplemental });
 
-      // Hash source files
       const fileHashes = droppedFiles
         ? await Promise.all(droppedFiles.map(hashFile))
         : [];
 
-      // Capture canvas screenshot
       const screenshot = await captureScreenshot();
 
-      // Capture animation GIFs + per-frame RI/CI timelines
+      // Capture GIFs + timelines (always, for both modes)
       let animationGifs = new Map<string, Blob>();
       let animationTimelines: Record<string, Array<{ time: number; ri: number; ci: number }>> = {};
       if (spineInstance) {
@@ -87,45 +105,64 @@ export function useShareReport() {
           animationGifs = capture.gifs;
           animationTimelines = capture.timelines;
         } catch (err) {
-          console.warn('[share] GIF capture failed, continuing without previews:', err);
+          console.warn('[share] GIF capture failed:', err);
         }
       }
 
-      addToast('Uploading report...', 'info');
+      // Convert GIFs to base64 for inline embedding in the encrypted payload
+      const gifsBase64: Record<string, string> = {};
+      for (const [name, blob] of animationGifs) {
+        gifsBase64[name] = await blobToBase64(blob);
+      }
 
-      // Enrich the analysis with per-frame timeline data
-      const enrichedReport = {
-        ...report,
+      // For bundle mode, encode all dropped files as base64
+      let encodedBundle = null;
+      if (options.exportMode === 'bundle' && droppedFiles && droppedFiles.length > 0) {
+        addToast('Encoding asset bundle...', 'info');
+        encodedBundle = await encodeFiles(droppedFiles);
+      }
+
+      // Split payload into PUBLIC (always visible: metrics, timelines)
+      // and PRIVATE (encrypted: GIFs, screenshot, asset bundle).
+      //
+      // Viewers can always see the analysis without a password. Only the
+      // visual content is locked behind the password, because that's what
+      // actually breaks NDAs - the metrics alone don't reveal the art.
+      const publicData = {
+        mode: options.exportMode,
+        report,
         animationTimelines,
+        animationNames: report.animations.map(a => a.name),
+        fileHashes,
+        meta: {
+          skeletonName: report.skeleton.name || analysisResult.skeletonName || '(unnamed)',
+          spineVersion: (analysisResult as any).spineVersion || '4.2',
+          worstRiLevel: report.summary.rendering.worst.level,
+          worstCiLevel: report.summary.computational.worst.level,
+          totalAnimations: report.overview.totalAnimations,
+          createdAt: new Date().toISOString(),
+          hasEncryptedAssets: !!screenshot || Object.keys(gifsBase64).length > 0 || !!encodedBundle,
+        },
       };
 
-      // Build the form data
-      const formData = new FormData();
+      const privateData = {
+        screenshot: screenshot ? await blobToBase64(screenshot) : null,
+        gifs: gifsBase64,
+        bundle: encodedBundle,
+      };
 
-      formData.append('analysis', JSON.stringify(enrichedReport));
-      formData.append('meta', JSON.stringify({
-        skeletonName: report.skeleton.name || analysisResult.skeletonName || '(unnamed)',
-        spineVersion: (analysisResult as any).spineVersion || '4.2',
-        worstRiLevel: report.summary.rendering.worst.level,
-        worstCiLevel: report.summary.computational.worst.level,
-        totalAnimations: report.overview.totalAnimations,
-        fileHashes,
-        animationNames: report.animations.map(a => a.name),
-      }));
+      addToast('Encrypting...', 'info');
+      const envelope = await encryptJson(privateData, options.password);
 
-      // Main screenshot
-      if (screenshot) {
-        formData.append('screenshots', screenshot, 'screenshot.png');
-      }
-
-      // Animation GIFs (named by animation for the backend to store)
-      for (const [animName, gifBlob] of animationGifs) {
-        formData.append('screenshots', gifBlob, `anim_${animName}.gif`);
-      }
-
-      const response = await fetch(`${REPORTS_API}/api/reports`, {
+      addToast('Uploading...', 'info');
+      const response = await fetch(`${REPORTS_API}/api/reports/encrypted`, {
         method: 'POST',
-        body: formData,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          publicData,
+          envelope,
+          ttlDays: options.ttlDays,
+        }),
       });
 
       if (!response.ok) {
@@ -138,11 +175,12 @@ export function useShareReport() {
       window.open(result.url, '_blank', 'noopener');
       try {
         await navigator.clipboard.writeText(result.url);
-        addToast('Report opened and link copied to clipboard!', 'success');
+        addToast('Report opened and link copied!', 'success');
       } catch {
         addToast('Report opened in new tab', 'success');
       }
 
+      setIsModalOpen(false);
       return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to share report';
@@ -153,5 +191,5 @@ export function useShareReport() {
     }
   }, [addToast]);
 
-  return { share, isSharing, isAvailable };
+  return { share, isSharing, isAvailable, isModalOpen, openModal, closeModal };
 }

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spine Benchmark Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  {{> styles}}
+  <style>
+    .loading { text-align: center; padding: 120px 20px; color: var(--sb-text-muted); }
+    .locked-banner {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--sb-bg-2);
+      border: 1px solid var(--sb-border);
+      border-left: 3px solid var(--sb-accent);
+      border-radius: var(--sb-radius-md);
+      padding: 12px 16px;
+      margin-bottom: 20px;
+    }
+    .locked-banner-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--sb-accent-dim); color: var(--sb-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .locked-banner-text { flex: 1; font-size: 12px; color: var(--sb-text-secondary); }
+    .locked-banner-text strong { color: var(--sb-text); }
+    .locked-banner-input-row {
+      display: flex; gap: 6px; margin-top: 8px; max-width: 320px;
+    }
+    .locked-banner-input {
+      flex: 1;
+      background: var(--sb-bg-1);
+      border: 1px solid var(--sb-border);
+      border-radius: var(--sb-radius-md);
+      padding: 6px 10px;
+      color: var(--sb-text);
+      font-family: var(--sb-font-mono);
+      font-size: 11px;
+      outline: none;
+    }
+    .locked-banner-input:focus { border-color: var(--sb-accent); }
+    .locked-banner-btn {
+      background: var(--sb-accent);
+      color: var(--sb-bg-0);
+      border: none;
+      border-radius: var(--sb-radius-md);
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .locked-banner-btn:hover { background: var(--sb-accent-hover); }
+    .locked-banner-error { color: var(--sb-error); font-size: 10px; margin-top: 6px; }
+    .locked-banner-ok { color: var(--sb-success); font-size: 11px; }
+
+    .anim-placeholder-locked {
+      width: 180px; height: 180px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px;
+      color: var(--sb-text-muted);
+      font-size: 10px;
+      background: var(--sb-bg-0);
+      border-right: 1px solid var(--sb-border);
+      text-align: center;
+      padding: 12px;
+    }
+    .anim-placeholder-locked .lock-icon { font-size: 20px; opacity: 0.5; }
+
+    .bundle-viewer { background: var(--sb-bg-1); border: 1px solid var(--sb-border); border-radius: var(--sb-radius-lg); padding: 12px; margin-bottom: 24px; }
+    .bundle-viewer-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--sb-text-secondary); margin-bottom: 8px; font-weight: 600; }
+    #spinefolio-container { width: 100%; height: 400px; position: relative; border-radius: var(--sb-radius-md); overflow: hidden; background: var(--sb-bg-0); }
+  </style>
+</head>
+<body>
+<div class="page" id="report-root"><div class="loading">Loading report...</div></div>
+
+<script id="report-id" type="text/plain">{{id}}</script>
+<script>
+(function() {
+  var REPORT_ID = document.getElementById('report-id').textContent.trim();
+  var SAVED_KEY = 'spine-benchmark:saved-password';
+
+  var root = document.getElementById('report-root');
+  var publicData = null;
+  var envelope = null;
+  var privateData = null; // filled in after successful decrypt
+
+  // ── Crypto helpers ───────────────────────────────────────────
+  function b64decode(s) {
+    var bin = atob(s);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+  function b64toBlob(b64, type) {
+    var bytes = b64decode(b64);
+    return new Blob([bytes], { type: type || 'application/octet-stream' });
+  }
+
+  async function deriveKEK(password, salt, iterations) {
+    var passKey = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(password),
+      'PBKDF2', false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: salt, iterations: iterations, hash: 'SHA-256' },
+      passKey, { name: 'AES-GCM', length: 256 },
+      false, ['decrypt']
+    );
+  }
+
+  async function decryptEnvelope(env, password) {
+    var salt = b64decode(env.s);
+    var kwIv = b64decode(env.kwIv);
+    var kw = b64decode(env.kw);
+    var ctIv = b64decode(env.ctIv);
+    var ct = b64decode(env.ct);
+    var kek = await deriveKEK(password, salt, env.it);
+    var rawDek;
+    try {
+      rawDek = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: kwIv }, kek, kw);
+    } catch (e) { throw new Error('Invalid password'); }
+    var dek = await crypto.subtle.importKey('raw', rawDek, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ctIv }, dek, ct);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  // ── Load public data ─────────────────────────────────────────
+  async function boot() {
+    try {
+      var [pubRes, envRes] = await Promise.all([
+        fetch('/api/reports/' + REPORT_ID + '/public').then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('Report not found')); }),
+        fetch('/api/reports/' + REPORT_ID + '/envelope').then(function(r) { return r.ok ? r.json() : null; }),
+      ]);
+      publicData = pubRes;
+      envelope = envRes;
+    } catch (err) {
+      root.innerHTML = '<div class="loading">' + (err.message || 'Report not found or expired') + '</div>';
+      return;
+    }
+
+    renderAll();
+
+    // Try to auto-unlock with saved password
+    var saved = localStorage.getItem(SAVED_KEY);
+    if (saved && envelope) {
+      tryUnlock(saved, true);
+    }
+  }
+
+  function renderAll() {
+    var meta = publicData.meta || {};
+    var analysis = publicData.report || {};
+    root.innerHTML = '';
+
+    // Header
+    var header = h('div', { class: 'header' });
+    var hrow = h('div', { class: 'header-row' });
+    hrow.appendChild(h('div', { class: 'logo' }, [text('SB')]));
+    var h1 = h('h1');
+    h1.innerHTML = '<span>Spine Benchmark</span> ' + escapeHtml(meta.skeletonName || '(unnamed)');
+    hrow.appendChild(h1);
+    header.appendChild(hrow);
+    var hmeta = h('div', { class: 'header-meta' });
+    hmeta.innerHTML =
+      '<span>Spine ' + escapeHtml(meta.spineVersion || '') + '</span>' +
+      '<span>' + (meta.totalAnimations || 0) + ' animations</span>' +
+      (analysis.skeleton && analysis.skeleton.totalBones ? '<span>' + analysis.skeleton.totalBones + ' bones</span>' : '') +
+      (meta.hasEncryptedAssets ? '<span>&#128274; Encrypted</span>' : '');
+    header.appendChild(hmeta);
+    root.appendChild(header);
+
+    // Locked banner (password prompt) if we haven't decrypted yet
+    if (envelope && !privateData) {
+      root.appendChild(makeLockedBanner());
+    }
+
+    // Bundle viewer (if bundle mode and decrypted)
+    if (publicData.mode === 'bundle' && privateData && privateData.bundle) {
+      var bv = h('div', { class: 'bundle-viewer' });
+      bv.appendChild(h('div', { class: 'bundle-viewer-title' }, [text('Live preview (Spinefolio)')]));
+      var container = h('div', { id: 'spinefolio-container' });
+      bv.appendChild(container);
+      root.appendChild(bv);
+      setTimeout(function() { mountSpinefolio(privateData.bundle); }, 0);
+    }
+
+    // Hero screenshot (if decrypted and have it)
+    if (privateData && privateData.screenshot) {
+      var img = document.createElement('img');
+      img.className = 'hero-img';
+      img.src = 'data:image/png;base64,' + privateData.screenshot;
+      root.appendChild(img);
+    }
+
+    // Impact cards
+    var riW = (analysis.summary && analysis.summary.rendering && analysis.summary.rendering.worst) || { cost: 0, level: 'minimal' };
+    var ciW = (analysis.summary && analysis.summary.computational && analysis.summary.computational.worst) || { cost: 0, level: 'minimal' };
+    var cards = h('div', { class: 'cards' });
+    cards.appendChild(makeCard('Worst Rendering Impact (GPU)', riW.cost, riW.level));
+    cards.appendChild(makeCard('Worst Computational Impact (CPU)', ciW.cost, ciW.level));
+    root.appendChild(cards);
+
+    // Hotspots
+    if (analysis.hotspots) {
+      var h2a = h('h2'); h2a.textContent = 'Performance Hotspots';
+      root.appendChild(h2a);
+      var spots = h('div', { class: 'hotspots' });
+      [
+        ['Page Breaks', analysis.hotspots.peakPageBreaks],
+        ['Blend Switches', analysis.hotspots.peakBlendSwitches],
+        ['Peak Vertices', analysis.hotspots.peakMeshDensity],
+        ['Constraints', analysis.hotspots.peakConstraintLoad],
+        ['Physics', analysis.hotspots.peakPhysicsConstraints],
+        ['IK Chains', analysis.hotspots.peakIkConstraints],
+      ].forEach(function(item) {
+        var sp = h('div', { class: 'hotspot' });
+        var val = h('div', { class: 'hotspot-val' }); val.textContent = item[1] || 0;
+        var lbl = h('div', { class: 'hotspot-label' }); lbl.textContent = item[0];
+        sp.appendChild(val); sp.appendChild(lbl);
+        spots.appendChild(sp);
+      });
+      root.appendChild(spots);
+    }
+
+    // Per-animation cards with d3 heatmaps
+    if (analysis.animations && analysis.animations.length > 0) {
+      var h2b = h('h2'); h2b.textContent = 'Animation Details';
+      root.appendChild(h2b);
+      var grid = h('div', { class: 'anim-grid' });
+      analysis.animations.forEach(function(anim) {
+        grid.appendChild(makeAnimCard(anim));
+      });
+      root.appendChild(grid);
+    }
+
+    // Footer
+    var footer = h('div', { class: 'footer' });
+    footer.innerHTML = 'Encrypted Spine Benchmark Report | ID ' + REPORT_ID + ' | Created ' + new Date(meta.createdAt || Date.now()).toLocaleDateString();
+    root.appendChild(footer);
+
+    // Render d3 heatmaps (timelines are public so always available)
+    setTimeout(function() { renderHeatmaps(publicData.animationTimelines || {}); }, 0);
+  }
+
+  function makeLockedBanner() {
+    var banner = h('div', { class: 'locked-banner' });
+    banner.appendChild(h('div', { class: 'locked-banner-icon' }, [text('\uD83D\uDD12')]));
+    var textEl = h('div', { class: 'locked-banner-text' });
+    textEl.innerHTML = '<strong>Assets are encrypted.</strong> Enter the password to unlock animated previews and the asset bundle. The metrics below are visible without a password.';
+    var inputRow = h('div', { class: 'locked-banner-input-row' });
+    var input = h('input', { class: 'locked-banner-input', type: 'password', placeholder: 'Password' });
+    var btn = h('button', { class: 'locked-banner-btn', type: 'button' }, [text('Unlock')]);
+    var err = h('div', { class: 'locked-banner-error' });
+    inputRow.appendChild(input); inputRow.appendChild(btn);
+    textEl.appendChild(inputRow); textEl.appendChild(err);
+    banner.appendChild(textEl);
+
+    btn.addEventListener('click', function() { tryUnlock(input.value, false, err); });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') tryUnlock(input.value, false, err);
+    });
+    return banner;
+  }
+
+  async function tryUnlock(password, silent, errEl) {
+    try {
+      privateData = await decryptEnvelope(envelope, password);
+      // Success - save if not silent (user explicitly unlocked)
+      if (!silent) {
+        localStorage.setItem(SAVED_KEY, password);
+      }
+      renderAll();
+    } catch (err) {
+      if (errEl) errEl.textContent = 'Invalid password';
+      // silent auto-unlock failure: keep the saved password around but don't error
+    }
+  }
+
+  function makeCard(label, value, level) {
+    var c = h('div', { class: 'card' });
+    var l = h('div', { class: 'card-label' }); l.textContent = label;
+    var v = h('div', { class: 'card-value v-' + level }); v.textContent = (value || 0).toFixed(1);
+    var b = h('div', null, [h('span', { class: 'badge badge-' + level }, [text(level)])]);
+    b.style.marginTop = '4px';
+    c.appendChild(l); c.appendChild(v); c.appendChild(b);
+    return c;
+  }
+
+  function makeAnimCard(anim) {
+    var card = h('div', { class: 'anim-card' });
+    var header = h('div', { class: 'anim-header' });
+    var title = h('h3'); title.textContent = anim.name;
+    header.appendChild(title);
+    var level = anim.rowTone === 'danger' ? 'veryHigh' : anim.rowTone === 'warning' ? 'high' : (anim.rendering && anim.rendering.level) || 'minimal';
+    var durEl = h('span', { class: 'dur' });
+    durEl.innerHTML = (anim.durationSec || 0).toFixed(2) + 's <span class="badge badge-' + level + '">' + level + '</span>';
+    header.appendChild(durEl);
+    card.appendChild(header);
+
+    var body = h('div', { class: 'anim-body' });
+
+    // GIF or locked placeholder
+    if (privateData && privateData.gifs && privateData.gifs[anim.name]) {
+      var img = document.createElement('img');
+      img.className = 'anim-gif';
+      img.src = 'data:image/gif;base64,' + privateData.gifs[anim.name];
+      body.appendChild(img);
+    } else if (envelope) {
+      var locked = h('div', { class: 'anim-placeholder-locked' });
+      locked.innerHTML = '<div class="lock-icon">&#128274;</div><div>Preview locked<br/>Enter password to unlock</div>';
+      body.appendChild(locked);
+    } else {
+      var ph = h('div', { class: 'anim-placeholder' });
+      ph.textContent = 'No preview';
+      body.appendChild(ph);
+    }
+
+    var metrics = h('div', { class: 'anim-metrics' });
+    var row1 = h('div', { class: 'metrics-row' });
+    row1.appendChild(makeMetric('Rendering (GPU)', (anim.rendering && anim.rendering.cost) || 0, (anim.rendering && anim.rendering.level) || 'minimal'));
+    row1.appendChild(makeMetric('Computational (CPU)', (anim.computational && anim.computational.cost) || 0, (anim.computational && anim.computational.level) || 'minimal'));
+    row1.appendChild(makeMetric('Total', anim.totalCost || 0));
+    metrics.appendChild(row1);
+
+    // d3 heatmap (always rendered from public timelines)
+    var heat = h('div', { class: 'heatmap' });
+    heat.setAttribute('data-anim', anim.name);
+    metrics.appendChild(heat);
+
+    if (anim.hotspots) {
+      var row2 = h('div', { class: 'metrics-row' });
+      row2.style.marginTop = '6px';
+      row2.appendChild(makeMetric('Page Breaks', anim.hotspots.pageBreaks || 0));
+      row2.appendChild(makeMetric('Blend Switches', anim.hotspots.blendSwitches || 0));
+      row2.appendChild(makeMetric('Vertices', anim.hotspots.meshDensity || 0));
+      row2.appendChild(makeMetric('Constraints', anim.hotspots.constraints || 0));
+      metrics.appendChild(row2);
+    }
+
+    body.appendChild(metrics);
+    card.appendChild(body);
+    return card;
+  }
+
+  function makeMetric(label, value, level) {
+    var m = h('div', { class: 'metric' });
+    var l = h('div', { class: 'metric-label' }); l.textContent = label;
+    var v = h('div', { class: 'metric-value' + (level ? ' v-' + level : '') });
+    v.textContent = typeof value === 'number' ? value.toFixed(1) : value;
+    m.appendChild(l); m.appendChild(v);
+    return m;
+  }
+
+  function h(tag, attrs, children) {
+    var el = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === 'class') el.className = attrs[k];
+      else el.setAttribute(k, attrs[k]);
+    }
+    if (children) children.forEach(function(c) { el.appendChild(c); });
+    return el;
+  }
+  function text(s) { return document.createTextNode(s); }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderHeatmaps(timelines) {
+    document.querySelectorAll('.heatmap[data-anim]').forEach(function(el) {
+      if (el.querySelector('svg')) return; // already rendered
+      var name = el.getAttribute('data-anim');
+      var data = timelines[name];
+      if (!data || data.length < 2) return;
+      var W = el.clientWidth || 300;
+      var H = 64;
+      var M = { top: 4, right: 8, bottom: 18, left: 28 };
+      var w = W - M.left - M.right;
+      var ht = H - M.top - M.bottom;
+      var maxVal = Math.max(1, d3.max(data, function(d) { return d.ri + d.ci; }));
+      var x = d3.scaleLinear().domain([0, data[data.length - 1].time]).range([0, w]);
+      var y = d3.scaleLinear().domain([0, maxVal]).range([ht, 0]);
+      var svg = d3.select(el).append('svg').attr('width', W).attr('height', H)
+        .style('border-radius', '3px').style('border', '1px solid rgba(240,246,252,0.08)');
+      svg.append('rect').attr('width', W).attr('height', H).attr('fill', '#0E1117');
+      var g = svg.append('g').attr('transform', 'translate(' + M.left + ',' + M.top + ')');
+      [[3, 'rgba(163,230,53,0.2)'], [8, 'rgba(251,191,36,0.2)'], [15, 'rgba(251,146,60,0.2)'], [25, 'rgba(248,113,113,0.25)']].forEach(function(t) {
+        if (t[0] < maxVal) {
+          g.append('line').attr('x1', 0).attr('x2', w).attr('y1', y(t[0])).attr('y2', y(t[0]))
+            .attr('stroke', t[1]).attr('stroke-width', 1).attr('stroke-dasharray', '2,3');
+        }
+      });
+      var areaTotal = d3.area().x(function(d) { return x(d.time); }).y0(ht).y1(function(d) { return y(d.ri + d.ci); }).curve(d3.curveMonotoneX);
+      var areaRI = d3.area().x(function(d) { return x(d.time); }).y0(ht).y1(function(d) { return y(d.ri); }).curve(d3.curveMonotoneX);
+      g.append('path').datum(data).attr('d', areaTotal).attr('fill', '#60A5FA').attr('opacity', 0.25);
+      g.append('path').datum(data).attr('d', areaRI).attr('fill', '#FB923C').attr('opacity', 0.35);
+      var lineRI = d3.line().x(function(d) { return x(d.time); }).y(function(d) { return y(d.ri); }).curve(d3.curveMonotoneX);
+      var lineTotal = d3.line().x(function(d) { return x(d.time); }).y(function(d) { return y(d.ri + d.ci); }).curve(d3.curveMonotoneX);
+      g.append('path').datum(data).attr('d', lineRI).attr('fill', 'none').attr('stroke', '#FB923C').attr('stroke-width', 1.5).attr('opacity', 0.9);
+      g.append('path').datum(data).attr('d', lineTotal).attr('fill', 'none').attr('stroke', '#60A5FA').attr('stroke-width', 1.5).attr('opacity', 0.7);
+      var xAxis = d3.axisBottom(x).ticks(5).tickFormat(function(d) { return d + 's'; });
+      g.append('g').attr('transform', 'translate(0,' + ht + ')').call(xAxis)
+        .selectAll('text').attr('fill', '#545D68').attr('font-size', '8px');
+      g.selectAll('.domain, .tick line').attr('stroke', 'rgba(240,246,252,0.06)');
+      var yAxis = d3.axisLeft(y).ticks(3).tickFormat(d3.format('.0f'));
+      g.append('g').call(yAxis).selectAll('text').attr('fill', '#545D68').attr('font-size', '8px');
+      g.selectAll('.domain, .tick line').attr('stroke', 'rgba(240,246,252,0.06)');
+    });
+  }
+
+  async function mountSpinefolio(encodedFiles) {
+    var container = document.getElementById('spinefolio-container');
+    if (!container) return;
+    try {
+      var blobUrls = {};
+      encodedFiles.forEach(function(f) {
+        blobUrls[f.name] = URL.createObjectURL(b64toBlob(f.data, f.type));
+      });
+      var atlasFile = encodedFiles.find(function(f) { return f.name.endsWith('.atlas'); });
+      var skelFile = encodedFiles.find(function(f) { return f.name.endsWith('.json') || f.name.endsWith('.skel'); });
+      if (!atlasFile || !skelFile) {
+        container.innerHTML = '<div style="padding:20px;color:#F87171">Bundle missing atlas or skeleton file.</div>';
+        return;
+      }
+      var mod;
+      try {
+        mod = await import('/assets/spinefolio.js');
+      } catch (e) {
+        container.innerHTML = '<div style="padding:20px;color:#FBBF24">Bundle viewer not available yet. Live Spinefolio integration pending.</div>';
+        return;
+      }
+      mod.createSpineWidget(container, {
+        skeleton: blobUrls[skelFile.name],
+        atlas: blobUrls[atlasFile.name],
+        showControls: true,
+        fitToContainer: true,
+      });
+    } catch (err) {
+      container.innerHTML = '<div style="padding:20px;color:#F87171">Failed to load bundle: ' + (err.message || err) + '</div>';
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
