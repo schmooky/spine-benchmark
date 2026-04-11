@@ -10,51 +10,102 @@
   {{> styles}}
   <style>
     .loading { text-align: center; padding: 120px 20px; color: var(--sb-text-muted); }
-    .locked-banner {
-      display: flex; align-items: center; gap: 12px;
-      background: var(--sb-bg-2);
-      border: 1px solid var(--sb-border);
-      border-left: 3px solid var(--sb-accent);
-      border-radius: var(--sb-radius-md);
-      padding: 12px 16px;
-      margin-bottom: 20px;
-    }
-    .locked-banner-icon {
-      width: 32px; height: 32px; border-radius: 8px;
-      background: var(--sb-accent-dim); color: var(--sb-accent);
+
+    /* Unlock modal overlay */
+    .unlock-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(8, 10, 14, 0.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; flex-shrink: 0;
+      z-index: 1000;
+      animation: unlock-fade-in 140ms ease-out;
     }
-    .locked-banner-text { flex: 1; font-size: 12px; color: var(--sb-text-secondary); }
-    .locked-banner-text strong { color: var(--sb-text); }
-    .locked-banner-input-row {
-      display: flex; gap: 6px; margin-top: 8px; max-width: 320px;
-    }
-    .locked-banner-input {
-      flex: 1;
+    @keyframes unlock-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .unlock-modal {
+      width: min(420px, calc(100vw - 32px));
       background: var(--sb-bg-1);
       border: 1px solid var(--sb-border);
+      border-radius: var(--sb-radius-lg);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+      padding: 24px;
+      color: var(--sb-text);
+    }
+    .unlock-modal-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 14px;
+    }
+    .unlock-modal-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--sb-accent-dim); color: var(--sb-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .unlock-modal-title {
+      font-size: 15px; font-weight: 600; color: var(--sb-text);
+    }
+    .unlock-modal-subtitle {
+      font-size: 11px; color: var(--sb-text-secondary); margin-top: 2px;
+    }
+    .unlock-modal-desc {
+      font-size: 12px; color: var(--sb-text-secondary);
+      line-height: 1.5; margin-bottom: 16px;
+    }
+    .unlock-modal-input {
+      width: 100%; box-sizing: border-box;
+      background: var(--sb-bg-0);
+      border: 1px solid var(--sb-border);
       border-radius: var(--sb-radius-md);
-      padding: 6px 10px;
+      padding: 10px 12px;
       color: var(--sb-text);
       font-family: var(--sb-font-mono);
-      font-size: 11px;
+      font-size: 12px;
       outline: none;
+      transition: border-color 120ms ease;
     }
-    .locked-banner-input:focus { border-color: var(--sb-accent); }
-    .locked-banner-btn {
-      background: var(--sb-accent);
-      color: var(--sb-bg-0);
+    .unlock-modal-input:focus { border-color: var(--sb-accent); }
+    .unlock-modal-error {
+      color: var(--sb-error); font-size: 11px;
+      margin-top: 8px; min-height: 14px;
+    }
+    .unlock-modal-actions {
+      display: flex; gap: 8px; margin-top: 16px;
+      justify-content: flex-end;
+    }
+    .unlock-btn {
       border: none;
       border-radius: var(--sb-radius-md);
-      padding: 6px 12px;
-      font-size: 11px;
+      padding: 9px 16px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
+      font-family: inherit;
+      transition: background 120ms ease, border-color 120ms ease;
     }
-    .locked-banner-btn:hover { background: var(--sb-accent-hover); }
-    .locked-banner-error { color: var(--sb-error); font-size: 10px; margin-top: 6px; }
-    .locked-banner-ok { color: var(--sb-success); font-size: 11px; }
+    .unlock-btn-primary {
+      background: var(--sb-accent);
+      color: var(--sb-bg-0);
+    }
+    .unlock-btn-primary:hover { background: var(--sb-accent-hover); }
+    .unlock-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .unlock-btn-secondary {
+      background: transparent;
+      color: var(--sb-text-secondary);
+      border: 1px solid var(--sb-border);
+    }
+    .unlock-btn-secondary:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
+    .unlock-relock {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: transparent;
+      border: 1px solid var(--sb-border);
+      color: var(--sb-text-secondary);
+      border-radius: var(--sb-radius-md);
+      padding: 4px 10px;
+      font-size: 10px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .unlock-relock:hover { color: var(--sb-text); }
 
     .anim-placeholder-locked {
       width: 180px; height: 180px;
@@ -88,6 +139,7 @@
   var publicData = null;
   var envelope = null;
   var privateData = null; // filled in after successful decrypt
+  var unlockModalEl = null; // currently mounted unlock modal, if any
 
   // ── Crypto helpers ───────────────────────────────────────────
   function b64decode(s) {
@@ -145,10 +197,16 @@
 
     renderAll();
 
-    // Try to auto-unlock with saved password
-    var saved = localStorage.getItem(SAVED_KEY);
-    if (saved && envelope) {
-      tryUnlock(saved, true);
+    if (envelope) {
+      // Try saved password silently; if it works, skip the modal. Otherwise open it.
+      var saved = localStorage.getItem(SAVED_KEY);
+      if (saved) {
+        tryUnlock(saved, true).then(function(ok) {
+          if (!ok) openUnlockModal();
+        });
+      } else {
+        openUnlockModal();
+      }
     }
   }
 
@@ -169,15 +227,29 @@
     hmeta.innerHTML =
       '<span>Spine ' + escapeHtml(meta.spineVersion || '') + '</span>' +
       '<span>' + (meta.totalAnimations || 0) + ' animations</span>' +
-      (analysis.skeleton && analysis.skeleton.totalBones ? '<span>' + analysis.skeleton.totalBones + ' bones</span>' : '') +
-      (meta.hasEncryptedAssets ? '<span>&#128274; Encrypted</span>' : '');
+      (analysis.skeleton && analysis.skeleton.totalBones ? '<span>' + analysis.skeleton.totalBones + ' bones</span>' : '');
+    if (envelope) {
+      var lockSpan = h('span');
+      lockSpan.innerHTML = privateData ? '&#128275; Unlocked' : '&#128274; Encrypted';
+      hmeta.appendChild(lockSpan);
+      if (privateData) {
+        var relockBtn = h('button', { class: 'unlock-relock', type: 'button' });
+        relockBtn.innerHTML = '&#128274; Lock';
+        relockBtn.addEventListener('click', function() {
+          privateData = null;
+          renderAll();
+          openUnlockModal();
+        });
+        hmeta.appendChild(relockBtn);
+      } else {
+        var unlockBtn = h('button', { class: 'unlock-relock', type: 'button' });
+        unlockBtn.innerHTML = '&#128273; Unlock';
+        unlockBtn.addEventListener('click', function() { openUnlockModal(); });
+        hmeta.appendChild(unlockBtn);
+      }
+    }
     header.appendChild(hmeta);
     root.appendChild(header);
-
-    // Locked banner (password prompt) if we haven't decrypted yet
-    if (envelope && !privateData) {
-      root.appendChild(makeLockedBanner());
-    }
 
     // Bundle viewer (if bundle mode and decrypted)
     if (publicData.mode === 'bundle' && privateData && privateData.bundle) {
@@ -247,37 +319,97 @@
     setTimeout(function() { renderHeatmaps(publicData.animationTimelines || {}); }, 0);
   }
 
-  function makeLockedBanner() {
-    var banner = h('div', { class: 'locked-banner' });
-    banner.appendChild(h('div', { class: 'locked-banner-icon' }, [text('\uD83D\uDD12')]));
-    var textEl = h('div', { class: 'locked-banner-text' });
-    textEl.innerHTML = '<strong>Assets are encrypted.</strong> Enter the password to unlock animated previews and the asset bundle. The metrics below are visible without a password.';
-    var inputRow = h('div', { class: 'locked-banner-input-row' });
-    var input = h('input', { class: 'locked-banner-input', type: 'password', placeholder: 'Password' });
-    var btn = h('button', { class: 'locked-banner-btn', type: 'button' }, [text('Unlock')]);
-    var err = h('div', { class: 'locked-banner-error' });
-    inputRow.appendChild(input); inputRow.appendChild(btn);
-    textEl.appendChild(inputRow); textEl.appendChild(err);
-    banner.appendChild(textEl);
+  function openUnlockModal() {
+    closeUnlockModal();
+    var backdrop = h('div', { class: 'unlock-backdrop' });
+    var modal = h('div', { class: 'unlock-modal' });
+    modal.addEventListener('click', function(e) { e.stopPropagation(); });
 
-    btn.addEventListener('click', function() { tryUnlock(input.value, false, err); });
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') tryUnlock(input.value, false, err);
+    var header = h('div', { class: 'unlock-modal-header' });
+    var icon = h('div', { class: 'unlock-modal-icon' });
+    icon.innerHTML = '&#128274;';
+    var titleWrap = h('div');
+    var title = h('div', { class: 'unlock-modal-title' }, [text('This report is encrypted')]);
+    var subtitle = h('div', { class: 'unlock-modal-subtitle' }, [text('Enter the password to unlock animated previews and the asset bundle.')]);
+    titleWrap.appendChild(title);
+    titleWrap.appendChild(subtitle);
+    header.appendChild(icon);
+    header.appendChild(titleWrap);
+    modal.appendChild(header);
+
+    var desc = h('div', { class: 'unlock-modal-desc' });
+    desc.textContent = 'The metrics and heatmaps are visible without a password. Only screenshots, animated previews, and the asset bundle are protected.';
+    modal.appendChild(desc);
+
+    var input = h('input', {
+      class: 'unlock-modal-input',
+      type: 'password',
+      placeholder: 'Password',
+      autocomplete: 'current-password',
     });
-    return banner;
+    modal.appendChild(input);
+
+    var err = h('div', { class: 'unlock-modal-error' });
+    modal.appendChild(err);
+
+    var actions = h('div', { class: 'unlock-modal-actions' });
+    var viewBtn = h('button', { class: 'unlock-btn unlock-btn-secondary', type: 'button' }, [text('View without assets')]);
+    var unlockBtn = h('button', { class: 'unlock-btn unlock-btn-primary', type: 'button' }, [text('Unlock')]);
+    actions.appendChild(viewBtn);
+    actions.appendChild(unlockBtn);
+    modal.appendChild(actions);
+
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+    unlockModalEl = backdrop;
+
+    var busy = false;
+    async function submit() {
+      if (busy) return;
+      var pw = input.value;
+      if (!pw) { input.focus(); return; }
+      busy = true;
+      unlockBtn.disabled = true;
+      unlockBtn.textContent = 'Unlocking...';
+      err.textContent = '';
+      var ok = await tryUnlock(pw, false);
+      if (ok) {
+        closeUnlockModal();
+      } else {
+        err.textContent = 'Invalid password. Try again or view without assets.';
+        unlockBtn.disabled = false;
+        unlockBtn.textContent = 'Unlock';
+        input.focus();
+        input.select();
+        busy = false;
+      }
+    }
+
+    unlockBtn.addEventListener('click', submit);
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') submit();
+      if (e.key === 'Escape') closeUnlockModal();
+    });
+    viewBtn.addEventListener('click', function() { closeUnlockModal(); });
+
+    setTimeout(function() { input.focus(); }, 20);
   }
 
-  async function tryUnlock(password, silent, errEl) {
+  function closeUnlockModal() {
+    if (unlockModalEl && unlockModalEl.parentNode) {
+      unlockModalEl.parentNode.removeChild(unlockModalEl);
+    }
+    unlockModalEl = null;
+  }
+
+  async function tryUnlock(password, silent) {
     try {
       privateData = await decryptEnvelope(envelope, password);
-      // Success - save if not silent (user explicitly unlocked)
-      if (!silent) {
-        localStorage.setItem(SAVED_KEY, password);
-      }
+      if (!silent) localStorage.setItem(SAVED_KEY, password);
       renderAll();
+      return true;
     } catch (err) {
-      if (errEl) errEl.textContent = 'Invalid password';
-      // silent auto-unlock failure: keep the saved password around but don't error
+      return false;
     }
   }
 
