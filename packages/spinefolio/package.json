@@ -59,5 +59,14 @@
     "terser": "^5.46.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/spinefolio"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/spinefolio#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

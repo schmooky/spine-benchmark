@@ -55,5 +55,14 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/pixi-crawler"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/pixi-crawler#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

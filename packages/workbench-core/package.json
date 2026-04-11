@@ -34,5 +34,14 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/workbench-core"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/workbench-core#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }
