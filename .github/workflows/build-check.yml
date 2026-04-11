@@ -33,3 +33,11 @@ jobs:
 
       - name: Build all publishable packages
         run: npm run build:all
+
+      - name: Bundle size report
+        # Informational on PRs - prints the gzipped size delta for the
+        # marquee published packages. Until the committed baseline has
+        # real numbers this is a "no baseline" report; once the baseline
+        # is populated (npm run size:update on main), switch this step
+        # to `npm run size:check` to enforce the 10% drift tolerance.
+        run: npm run size

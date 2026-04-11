@@ -1,0 +1,4 @@
+{
+  "_comment": "Gzipped byte sizes of built dist/ entries. Compared against by scripts/size-check.mjs --check. Regenerate with scripts/size-check.mjs --update after an intentional size change.",
+  "_tolerance": "10% drift tolerated per package; edit DRIFT_TOLERANCE_PCT in scripts/size-check.mjs to change."
+}
