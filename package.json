@@ -46,6 +46,7 @@
     "version-packages": "changeset version && npm install --package-lock-only",
     "build:all": "node scripts/build-all-publishable.mjs",
     "release": "npm run build:all && changeset publish",
+    "snapshot": "node scripts/snapshot-release.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
