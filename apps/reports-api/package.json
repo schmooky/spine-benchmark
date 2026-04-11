@@ -6,7 +6,7 @@
   "description": "Backend API for shareable Spine benchmark reports. Stores analysis data + screenshots to S3, returns share links with 7-day TTL.",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json && cp -r src/templates dist/templates",
+    "build": "npm run build --workspace @spine-benchmark/spinefolio && tsc -p tsconfig.json && cp -r src/templates dist/templates",
     "start": "node dist/server.js",
     "clean": "rm -rf dist"
   },
