@@ -243,8 +243,6 @@
 (function() {
   var REPORT_ID = document.getElementById('report-id').textContent.trim();
   var MODE = document.getElementById('report-mode').textContent.trim();
-  var SAVED_KEY = 'spine-benchmark:saved-password';
-
   var envelope = null;
   var privateData = null;
   var unlockModalEl = null;
@@ -546,7 +544,6 @@
   async function tryUnlock(password, silent) {
     try {
       privateData = await decryptEnvelope(envelope, password);
-      if (!silent) sessionStorage.setItem(SAVED_KEY, password);
       hydrateHero();
       if (MODE === 'bundle') {
         await hydrateBundlePerAnimation();
@@ -583,14 +580,7 @@
       else { openUnlockModal(); }
     });
 
-    // Silent auto-unlock with saved password; if it fails, show the modal.
-    var saved = sessionStorage.getItem(SAVED_KEY);
-    if (saved) {
-      var ok = await tryUnlock(saved, true);
-      if (!ok) openUnlockModal();
-    } else {
-      openUnlockModal();
-    }
+    openUnlockModal();
   }
 
   boot();
