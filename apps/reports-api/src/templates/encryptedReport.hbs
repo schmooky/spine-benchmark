@@ -546,7 +546,7 @@
   async function tryUnlock(password, silent) {
     try {
       privateData = await decryptEnvelope(envelope, password);
-      if (!silent) localStorage.setItem(SAVED_KEY, password);
+      if (!silent) sessionStorage.setItem(SAVED_KEY, password);
       hydrateHero();
       if (MODE === 'bundle') {
         await hydrateBundlePerAnimation();
@@ -584,7 +584,7 @@
     });
 
     // Silent auto-unlock with saved password; if it fails, show the modal.
-    var saved = localStorage.getItem(SAVED_KEY);
+    var saved = sessionStorage.getItem(SAVED_KEY);
     if (saved) {
       var ok = await tryUnlock(saved, true);
       if (!ok) openUnlockModal();

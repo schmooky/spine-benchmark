@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import multer from 'multer';
 import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
@@ -29,12 +30,14 @@ try {
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 50 } });
 
+const staticLimiter = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false });
+
 app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json({ limit: '5mb' }));
 
 // Static Spinefolio bundle for the encrypted report viewer. We explicitly
 // alias `/assets/spinefolio.js` to the ESM build so `import()` works.
-app.get('/assets/spinefolio.js', (_req, res) => {
+app.get('/assets/spinefolio.js', staticLimiter, (_req, res) => {
   if (!spinefolioDistDir) {
     res.status(503).type('application/javascript').send('// Spinefolio bundle not available on this server.');
     return;
@@ -42,7 +45,7 @@ app.get('/assets/spinefolio.js', (_req, res) => {
   res.type('application/javascript');
   res.sendFile(join(spinefolioDistDir, 'spinefolio.module.js'));
 });
-app.get('/assets/spinefolio.css', (_req, res) => {
+app.get('/assets/spinefolio.css', staticLimiter, (_req, res) => {
   if (!spinefolioDistDir) { res.status(503).end(); return; }
   res.type('text/css');
   res.sendFile(join(spinefolioDistDir, 'spinefolio.css'));
