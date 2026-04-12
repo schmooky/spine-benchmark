@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spine Watcher</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header id="header">
+      <div class="header-left">
+        <h1>Spine Watcher</h1>
+        <span id="app-version" class="dim"></span>
+      </div>
+      <div class="header-right">
+        <span id="update-badge" class="badge hidden"></span>
+      </div>
+    </header>
+
+    <!-- Setup Screen (shown when Spine CLI not found) -->
+    <div id="setup-screen" class="screen hidden">
+      <div class="setup-box">
+        <h2>Spine CLI Not Found</h2>
+        <p>The Spine executable was not found on your system PATH or in default install locations.</p>
+        <p>Please locate your Spine installation.</p>
+        <button id="btn-pick-spine" class="btn btn-primary">Select Spine Executable</button>
+      </div>
+    </div>
+
+    <!-- Welcome Screen (shown before file selection) -->
+    <div id="welcome-screen" class="screen">
+      <div class="setup-box">
+        <h2>Select a Spine Project</h2>
+        <p>Choose a .spine project file to watch. Metrics will update automatically on every save.</p>
+        <div id="spine-path-info" class="info-row hidden">
+          <span class="label">Spine CLI</span>
+          <span id="spine-path-value" class="value"></span>
+        </div>
+        <button id="btn-pick-project" class="btn btn-primary">Select .spine File</button>
+      </div>
+    </div>
+
+    <!-- Metrics Screen -->
+    <div id="metrics-screen" class="screen hidden">
+      <!-- Project Info -->
+      <div id="project-info">
+        <div class="info-row">
+          <span class="label">Project</span>
+          <span id="project-path" class="value"></span>
+        </div>
+        <div class="info-row">
+          <span class="label">Spine</span>
+          <span id="spine-version" class="value"></span>
+        </div>
+        <div class="info-row">
+          <span class="label">Updated</span>
+          <span id="last-updated" class="value"></span>
+        </div>
+        <button id="btn-change-project" class="btn btn-small">Change File</button>
+      </div>
+
+      <!-- Worst Case Summary -->
+      <div id="summary">
+        <div class="summary-card">
+          <span class="summary-label">Worst RI</span>
+          <span id="worst-ri-value" class="summary-value"></span>
+          <span id="worst-ri-badge" class="level-badge"></span>
+          <span id="worst-ri-anim" class="summary-anim"></span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Worst CI</span>
+          <span id="worst-ci-value" class="summary-value"></span>
+          <span id="worst-ci-badge" class="level-badge"></span>
+          <span id="worst-ci-anim" class="summary-anim"></span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Bones</span>
+          <span id="total-bones" class="summary-value"></span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Slots</span>
+          <span id="total-slots" class="summary-value"></span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Anims</span>
+          <span id="total-anims" class="summary-value"></span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Skins</span>
+          <span id="total-skins" class="summary-value"></span>
+        </div>
+      </div>
+
+      <!-- Diff -->
+      <div id="diff-section" class="hidden">
+        <h3>Changes since last save</h3>
+        <div id="diff-items"></div>
+      </div>
+
+      <!-- Animation Table -->
+      <div id="table-container">
+        <table id="anim-table">
+          <thead>
+            <tr>
+              <th class="col-name">Animation</th>
+              <th class="col-num">RI</th>
+              <th class="col-num">CI</th>
+              <th class="col-num">Total</th>
+              <th class="col-bar">Impact</th>
+              <th class="col-level">Level</th>
+            </tr>
+          </thead>
+          <tbody id="anim-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Version Warning -->
+    <div id="version-warning" class="screen hidden">
+      <div class="setup-box warning-box">
+        <h2>Unsupported Spine Version</h2>
+        <p>Spine version <strong id="warning-version"></strong> detected.</p>
+        <p>This tool only supports Spine 4.2+. Please upgrade your project.</p>
+        <p class="dim">Waiting for next save...</p>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <footer id="status-bar">
+      <span id="status-text" class="dim">Ready</span>
+    </footer>
+  </div>
+
+  <script src="main.js" type="module"></script>
+</body>
+</html>

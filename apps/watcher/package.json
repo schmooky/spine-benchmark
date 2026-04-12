@@ -2,31 +2,16 @@
   "name": "@spine-benchmark/watcher",
   "version": "0.1.0",
   "private": true,
-  "description": "Standalone Spine animation watcher - auto-exports and analyzes .spine projects on every save",
-  "type": "module",
-  "main": "./dist/main.js",
+  "description": "Standalone Spine animation watcher with native GUI - auto-exports and analyzes .spine projects on every save",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "build:bundle": "esbuild src/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/bundle.cjs --external:chokidar --external:fsevents",
-    "build:bin": "npm run build:bundle && pkg dist/bundle.cjs --targets node20-macos-arm64,node20-macos-x64,node20-win-x64 --output dist/spine-watcher",
-    "start": "node dist/main.js",
-    "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
-  "pkg": {
-    "assets": [
-      "node_modules/@esotericsoftware/**/*"
-    ],
-    "outputPath": "dist"
-  },
-  "dependencies": {
-    "@esotericsoftware/spine-core": "^4.2.101",
-    "@spine-benchmark/metrics-impact-formula": "^0.1.0",
-    "chokidar": "^4.0.3"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "build:sidecar": "npm run build --prefix sidecar && npm run build:bundle --prefix sidecar && node sidecar/scripts/build-sidecar.mjs",
+    "dev": "npm run build:sidecar && tauri dev",
+    "build": "npm run build:sidecar && tauri build"
   },
   "devDependencies": {
-    "@yao-pkg/pkg": "^6.0.0",
-    "esbuild": "^0.25.0",
-    "typescript": "^5.9.3"
+    "@tauri-apps/cli": "^2"
   }
 }

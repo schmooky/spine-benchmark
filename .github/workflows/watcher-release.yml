@@ -1,17 +1,11 @@
 name: Watcher Release
 
-# Builds standalone spine-watcher binaries for macOS and Windows and
-# uploads them as GitHub Release assets.
+# Builds Spine Watcher desktop app (Tauri + Node.js sidecar) for
+# macOS and Windows, then creates a GitHub Release with installers.
 #
-# Trigger: push a tag matching `watcher-v*` (e.g. `watcher-v0.1.0`).
-# After merging a version bump to main, tag the commit:
-#   git tag watcher-v0.1.0 && git push origin watcher-v0.1.0
-#
-# The workflow:
-#   1. Installs deps, builds the watcher TypeScript
-#   2. Bundles into a single CJS file with esbuild
-#   3. Compiles to standalone binaries with @yao-pkg/pkg
-#   4. Creates a GitHub Release with the binaries attached
+# Trigger: push a tag matching `watcher-v*` (e.g. `watcher-v0.2.0`).
+# After merging a version bump, tag the commit:
+#   git tag watcher-v0.2.0 && git push origin watcher-v0.2.0
 
 on:
   push:
@@ -25,20 +19,25 @@ concurrency:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
-            target: node20-macos-arm64
-            artifact: spine-watcher-macos-arm64
+            rust-target: aarch64-apple-darwin
+            pkg-target: node20-macos-arm64
+            label: macOS (Apple Silicon)
           - os: macos-latest
-            target: node20-macos-x64
-            artifact: spine-watcher-macos-x64
+            rust-target: x86_64-apple-darwin
+            pkg-target: node20-macos-x64
+            label: macOS (Intel)
           - os: windows-latest
-            target: node20-win-x64
-            artifact: spine-watcher-win-x64.exe
+            rust-target: x86_64-pc-windows-msvc
+            pkg-target: node20-win-x64
+            label: Windows (x64)
+    name: Build ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -49,70 +48,64 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install
+      - name: Install workspace deps
         run: npm ci
 
-      - name: Build watcher dependencies
+      - name: Build metrics-impact-formula
         run: npm run build --workspace @spine-benchmark/metrics-impact-formula
 
-      - name: Build watcher TypeScript
-        run: npm run build --workspace @spine-benchmark/watcher
+      - name: Build sidecar TypeScript
+        run: npm run build --prefix apps/watcher/sidecar
 
-      - name: Bundle with esbuild
-        run: npx esbuild apps/watcher/dist/main.js --bundle --platform=node --target=node20 --format=cjs --outfile=apps/watcher/dist/bundle.cjs
+      - name: Bundle sidecar with esbuild
+        run: npm run build:bundle --prefix apps/watcher/sidecar
 
-      - name: Compile binary
-        run: npx @yao-pkg/pkg apps/watcher/dist/bundle.cjs --target ${{ matrix.target }} --output apps/watcher/dist/${{ matrix.artifact }}
+      - name: Compile sidecar binary
+        run: node apps/watcher/sidecar/scripts/build-sidecar.mjs --target ${{ matrix.rust-target }}
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          name: ${{ matrix.artifact }}
-          path: apps/watcher/dist/${{ matrix.artifact }}
+          targets: ${{ matrix.rust-target }}
 
-  release:
-    needs: build
-    if: always() && !cancelled()
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - name: Rust cache
+        uses: swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2
         with:
-          path: binaries
-          merge-multiple: true
+          workspaces: apps/watcher/src-tauri
 
-      - name: List binaries
-        run: ls -la binaries/
+      - name: Install Tauri CLI
+        run: npm install --prefix apps/watcher
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Spine Watcher ${{ github.ref_name }}
-          body: |
+          projectPath: apps/watcher
+          tauriScript: npx tauri
+          tagName: ${{ github.ref_name }}
+          releaseName: Spine Watcher ${{ github.ref_name }}
+          releaseBody: |
             ## Spine Watcher
 
-            Standalone .spine file watcher and performance analyzer.
+            Standalone .spine file watcher and performance analyzer with native GUI.
 
             ### Download
 
             | Platform | File |
             |----------|------|
-            | macOS (Apple Silicon) | `spine-watcher-macos-arm64` |
-            | macOS (Intel) | `spine-watcher-macos-x64` |
-            | Windows (x64) | `spine-watcher-win-x64.exe` |
+            | macOS (Apple Silicon) | `.dmg` |
+            | macOS (Intel) | `.dmg` |
+            | Windows (x64) | `.msi` or `.exe` |
 
             ### First run
 
-            1. Download the binary for your platform
-            2. Make it executable: `chmod +x spine-watcher-*` (macOS)
-            3. Run it - it will ask you to locate your Spine installation
-            4. Pick a `.spine` project file to watch
-            5. Save changes in Spine Editor - metrics update automatically
+            1. Install and launch Spine Watcher
+            2. If Spine CLI is not found, select your Spine installation
+            3. Pick a `.spine` project file to watch
+            4. Save changes in Spine Editor - metrics update automatically
 
             Requires Spine 4.2+ projects.
-          files: binaries/*
-          draft: false
+          releaseDraft: false
           prerelease: false
+          args: --target ${{ matrix.rust-target }}
