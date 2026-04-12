@@ -30,7 +30,7 @@ jobs:
           - os: macos-latest
             target: node20-macos-arm64
             artifact: spine-watcher-macos-arm64
-          - os: macos-13
+          - os: macos-latest
             target: node20-macos-x64
             artifact: spine-watcher-macos-x64
           - os: windows-latest
@@ -72,6 +72,7 @@ jobs:
 
   release:
     needs: build
+    if: always() && !cancelled()
     runs-on: ubuntu-latest
     permissions:
       contents: write
