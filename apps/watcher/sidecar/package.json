@@ -7,7 +7,7 @@
   "main": "./dist/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "build:bundle": "esbuild src/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/bundle.cjs",
+    "build:bundle": "esbuild src/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/bundle.cjs --external:fsevents",
     "build:sidecar": "npm run build:bundle && node scripts/build-sidecar.mjs",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"
