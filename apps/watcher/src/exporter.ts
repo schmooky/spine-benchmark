@@ -39,8 +39,8 @@ export function exportSpineProject(spinePath: string, projectPath: string): Expo
     // Use the project's own export settings
     cmd = `"${spinePath}" --input "${projectPath}" --output "${outDir}" --export "${exportConfig}"`;
   } else {
-    // Default JSON export
-    cmd = `"${spinePath}" --input "${projectPath}" --output "${outDir}" --export json`;
+    // Default JSON export with atlas packing
+    cmd = `"${spinePath}" --input "${projectPath}" --output "${outDir}" --export json+pack`;
   }
 
   try {
