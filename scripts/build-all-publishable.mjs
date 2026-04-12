@@ -24,6 +24,7 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const SKIP_NAMES = new Set([
   '@spine-benchmark/site',
   '@spine-benchmark/crawler-demo',
+  '@spine-benchmark/watcher',
 ]);
 
 async function readJson(path) {

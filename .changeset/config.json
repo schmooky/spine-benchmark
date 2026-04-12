@@ -12,6 +12,7 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@spine-benchmark/site",
-    "@spine-benchmark/crawler-demo"
+    "@spine-benchmark/crawler-demo",
+    "@spine-benchmark/watcher"
   ]
 }
