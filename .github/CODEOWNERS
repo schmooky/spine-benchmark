@@ -5,21 +5,21 @@
 # See: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-security/customizing-your-repository/about-code-owners
 
 # Default owner for anything not covered below.
-*                                   @felafixu
+*                                   @schmooky
 
 # Release + snapshot + CI plumbing
-/.github/                           @felafixu
-/scripts/                           @felafixu
-/.changeset/                        @felafixu
+/.github/                           @schmooky
+/scripts/                           @schmooky
+/.changeset/                        @schmooky
 
 # Canonical impact formula - the single source of truth for RI/CI math.
-/packages/metrics-impact-formula/   @felafixu
+/packages/metrics-impact-formula/   @schmooky
 
 # Published libraries - extra care on the review loop because they ship
 # to npm and other projects depend on them.
-/packages/spinefolio/               @felafixu
-/packages/pixi-crawler/             @felafixu
+/packages/spinefolio/               @schmooky
+/packages/pixi-crawler/             @schmooky
 
 # Encrypted share / report backend touches a real crypto surface.
-/apps/reports-api/                  @felafixu
-/apps/benchmark/src/utils/shareEncryption.ts   @felafixu
+/apps/reports-api/                  @schmooky
+/apps/benchmark/src/utils/shareEncryption.ts   @schmooky
