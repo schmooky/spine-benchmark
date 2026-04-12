@@ -127,9 +127,15 @@
       </div>
     </div>
 
+    <!-- Log Panel (toggle with button in status bar) -->
+    <div id="log-panel" class="hidden">
+      <pre id="log-output"></pre>
+    </div>
+
     <!-- Status Bar -->
     <footer id="status-bar">
-      <span id="status-text" class="dim">Ready</span>
+      <span id="status-text" class="dim">Starting...</span>
+      <button id="btn-toggle-log" class="btn btn-tiny" title="Toggle log panel">Logs</button>
     </footer>
   </div>
 
