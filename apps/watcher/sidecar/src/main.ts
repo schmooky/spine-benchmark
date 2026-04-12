@@ -73,7 +73,7 @@ function computeDiff(current: AnalysisReport, previous: AnalysisReport): Record<
 
 async function handleInit(): Promise<void> {
   debug('handleInit()');
-  const version = '0.1.0';
+  const version = '0.3.0';
   emit({ event: 'version', version });
 
   // Check for updates (non-blocking)
