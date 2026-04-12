@@ -32,5 +32,5 @@ export const config = {
   reportTtlDays: Number(process.env.REPORT_TTL_DAYS || '7'),
 
   // CORS origin for the benchmark frontend.
-  corsOrigin: process.env.CORS_ORIGIN || '*',
+  corsOrigin: process.env.CORS_ORIGIN || false,
 };

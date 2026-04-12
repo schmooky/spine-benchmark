@@ -32,11 +32,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   isSharing,
 }) => {
   const { t } = useTranslation();
-  const [password, setPassword] = useState(() => localStorage.getItem(SAVED_PASSWORDS_KEY) || '');
+  const [password, setPassword] = useState(() => sessionStorage.getItem(SAVED_PASSWORDS_KEY) || '');
   const [showPassword, setShowPassword] = useState(false);
   const [ttlDays, setTtlDays] = useState<TtlOption>(7);
   const [exportMode, setExportMode] = useState<ExportMode>('gif');
-  const [savePassword, setSavePassword] = useState(!!localStorage.getItem(SAVED_PASSWORDS_KEY));
+  const [savePassword, setSavePassword] = useState(!!sessionStorage.getItem(SAVED_PASSWORDS_KEY));
 
   const handleGeneratePassword = useCallback(() => {
     setPassword(generateStrongPassword(20));
@@ -46,9 +46,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const handleSubmit = useCallback(async () => {
     if (!password.trim()) return;
     if (savePassword) {
-      localStorage.setItem(SAVED_PASSWORDS_KEY, password);
+      sessionStorage.setItem(SAVED_PASSWORDS_KEY, password);
     } else {
-      localStorage.removeItem(SAVED_PASSWORDS_KEY);
+      sessionStorage.removeItem(SAVED_PASSWORDS_KEY);
     }
     await onShare({ password, ttlDays, exportMode, savePassword });
   }, [password, ttlDays, exportMode, savePassword, onShare]);

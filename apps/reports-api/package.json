@@ -15,6 +15,7 @@
     "@spine-benchmark/spinefolio": "*",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.3.2",
     "handlebars": "^4.7.9",
     "multer": "^1.4.5-lts.2",
     "nanoid": "^5.1.5"
