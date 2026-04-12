@@ -1,10 +1,32 @@
 /**
  * Cross-platform native file dialogs via OS shell commands.
  * macOS: osascript (AppleScript)
- * Windows: PowerShell with System.Windows.Forms
+ * Windows: PowerShell with System.Windows.Forms (via temp .ps1 file)
  */
 import { execSync } from 'node:child_process';
-import { platform } from 'node:os';
+import { writeFileSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir, platform } from 'node:os';
+
+/**
+ * Run a PowerShell script by writing to a temp file and executing it.
+ * Avoids all escaping issues with inline -Command strings.
+ */
+function runPowerShell(script: string): string | null {
+  const ps1 = join(tmpdir(), `spine-watcher-dialog-${Date.now()}.ps1`);
+  try {
+    writeFileSync(ps1, script, 'utf8');
+    const result = execSync(
+      `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${ps1}"`,
+      { encoding: 'utf8', timeout: 120_000, windowsHide: true },
+    );
+    return result.trim() || null;
+  } catch {
+    return null;
+  } finally {
+    try { unlinkSync(ps1); } catch { /* ignore */ }
+  }
+}
 
 export function pickFile(prompt: string, extensions: string[]): string | null {
   const os = platform();
@@ -14,7 +36,6 @@ export function pickFile(prompt: string, extensions: string[]): string | null {
   } else if (os === 'win32') {
     return pickFileWindows(prompt, extensions);
   } else {
-    // Linux: try zenity, kdialog, or fallback
     return pickFileLinux(prompt, extensions);
   }
 }
@@ -26,29 +47,24 @@ function pickFileMac(prompt: string, extensions: string[]): string | null {
     const result = execSync(`osascript -e '${script}'`, { encoding: 'utf8' });
     return result.trim() || null;
   } catch {
-    return null; // user cancelled
+    return null;
   }
 }
 
 function pickFileWindows(prompt: string, extensions: string[]): string | null {
   const filter = extensions.map(e => `*.${e}`).join(';');
-  const ps = `
+  const script = `
 Add-Type -AssemblyName System.Windows.Forms
-$d = New-Object System.Windows.Forms.OpenFileDialog
-$d.Title = '${prompt.replace(/'/g, "''")}'
-$d.Filter = 'Spine files (${filter})|${filter}|All files (*.*)|*.*'
-$d.ShowHelp = $false
-if ($d.ShowDialog() -eq 'OK') { $d.FileName } else { '' }
+$dialog = New-Object System.Windows.Forms.OpenFileDialog
+$dialog.Title = "${prompt}"
+$dialog.Filter = "Spine files (${filter})|${filter}|All files (*.*)|*.*"
+$dialog.ShowHelp = $false
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+    Write-Output $dialog.FileName
+}
 `;
-  try {
-    const result = execSync(
-      `powershell -NoProfile -NonInteractive -Command "${ps.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`,
-      { encoding: 'utf8' },
-    );
-    return result.trim() || null;
-  } catch {
-    return null;
-  }
+  return runPowerShell(script);
 }
 
 function pickFileLinux(prompt: string, extensions: string[]): string | null {
@@ -76,23 +92,18 @@ export function pickExecutable(prompt: string): string | null {
       return null;
     }
   } else if (os === 'win32') {
-    const ps = `
+    const script = `
 Add-Type -AssemblyName System.Windows.Forms
-$d = New-Object System.Windows.Forms.OpenFileDialog
-$d.Title = '${prompt.replace(/'/g, "''")}'
-$d.Filter = 'Spine executable (Spine.exe;Spine.com)|Spine.exe;Spine.com|All files (*.*)|*.*'
-$d.ShowHelp = $false
-if ($d.ShowDialog() -eq 'OK') { $d.FileName } else { '' }
+$dialog = New-Object System.Windows.Forms.OpenFileDialog
+$dialog.Title = "${prompt}"
+$dialog.Filter = "Spine executable (Spine.exe, Spine.com)|Spine.exe;Spine.com|All files (*.*)|*.*"
+$dialog.ShowHelp = $false
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+    Write-Output $dialog.FileName
+}
 `;
-    try {
-      const result = execSync(
-        `powershell -NoProfile -NonInteractive -Command "${ps.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`,
-        { encoding: 'utf8' },
-      );
-      return result.trim() || null;
-    } catch {
-      return null;
-    }
+    return runPowerShell(script);
   } else {
     try {
       const result = execSync(

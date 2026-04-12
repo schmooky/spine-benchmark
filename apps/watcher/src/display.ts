@@ -1,6 +1,9 @@
 /**
  * Terminal display: spinner during export, metrics output, diff vs previous run.
  */
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { createInterface } from 'node:readline';
 import type { AnalysisReport } from './analyze.js';
 
 const RESET = '\x1b[0m';
@@ -63,7 +66,6 @@ export function printDiff(current: AnalysisReport, previous: AnalysisReport): vo
   if (Math.abs(riDelta) > 0.01) diffs.push(formatDelta('Worst RI', riDelta, true));
   if (Math.abs(ciDelta) > 0.01) diffs.push(formatDelta('Worst CI', ciDelta, true));
 
-  // Check for peak vertex changes across animations
   const currentMaxVerts = Math.max(0, ...current.animations.map(a => a.peakVertices));
   const previousMaxVerts = Math.max(0, ...previous.animations.map(a => a.peakVertices));
   const vertsDelta = currentMaxVerts - previousMaxVerts;
@@ -105,22 +107,52 @@ export function printUpdateAvailable(currentVersion: string, latestVersion: stri
   console.log('');
 }
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+/**
+ * Wait for user to press Enter. Essential on Windows where double-clicking
+ * an exe opens a console that closes instantly when the process exits.
+ */
+export function waitForKeypress(message = 'Press Enter to exit...'): Promise<void> {
+  return new Promise((res) => {
+    console.log(`\n  ${DIM}${message}${RESET}`);
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.once('line', () => { rl.close(); res(); });
+    // If stdin is not a TTY (piped), resolve immediately
+    if (!process.stdin.isTTY) { rl.close(); res(); }
+  });
+}
 
+// Version detection: works both from source (node dist/main.js) and
+// inside a pkg-compiled binary where import.meta.url is unavailable.
 let cachedVersion: string | null = null;
 
 function getAppVersion(): string {
   if (cachedVersion) return cachedVersion;
   try {
-    const dir = fileURLToPath(new URL('..', import.meta.url));
-    const pkg = JSON.parse(readFileSync(resolve(dir, 'package.json'), 'utf8'));
-    cachedVersion = pkg.version || '0.0.0';
+    // pkg sets process.pkg when running as a compiled binary.
+    // In that case, __dirname points to the snapshot filesystem.
+    // Fall back to reading from the exe's directory or hardcoded.
+    const candidates = [
+      // Running from source: package.json is one level up from dist/
+      resolve(__dirname, '..', 'package.json'),
+      // pkg snapshot: package.json next to the entry
+      resolve(__dirname, 'package.json'),
+    ];
+    for (const p of candidates) {
+      try {
+        const pkg = JSON.parse(readFileSync(p, 'utf8'));
+        if (pkg.version) {
+          cachedVersion = pkg.version as string;
+          return cachedVersion;
+        }
+      } catch {
+        // try next
+      }
+    }
   } catch {
-    cachedVersion = '0.0.0';
+    // ignore
   }
-  return cachedVersion!;
+  cachedVersion = '0.1.0';
+  return cachedVersion;
 }
 
 export { getAppVersion };
