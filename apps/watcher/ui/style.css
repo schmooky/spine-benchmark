@@ -319,14 +319,48 @@ header h1 {
   transition: width 0.3s ease;
 }
 
+/* Log Panel */
+#log-panel {
+  max-height: 200px;
+  overflow-y: auto;
+  background: #0d0d1a;
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+}
+
+#log-output {
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
 /* Status Bar */
 #status-bar {
   padding: 6px 16px;
   border-top: 1px solid var(--border);
   font-size: 11px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+.btn-tiny {
+  padding: 2px 8px;
+  font-size: 10px;
+  background: var(--bg-hover);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-tiny:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 .spinner {

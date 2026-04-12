@@ -12,6 +12,22 @@ const { open: openDialog } = window.__TAURI__.dialog;
 // DOM elements
 const $ = (id) => document.getElementById(id);
 
+// ── Logging ────────────────────────────────────────────────
+const LOG_MAX = 200;
+const logLines = [];
+
+function log(level, ...args) {
+  const ts = new Date().toLocaleTimeString();
+  const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
+  const line = `[${ts}] ${level}: ${msg}`;
+  logLines.push(line);
+  if (logLines.length > LOG_MAX) logLines.shift();
+  console[level === 'ERROR' ? 'error' : level === 'WARN' ? 'warn' : 'log'](line);
+  // Update log panel if visible
+  const logOutput = $('log-output');
+  if (logOutput) logOutput.textContent = logLines.join('\n');
+}
+
 const setupScreen = $('setup-screen');
 const welcomeScreen = $('welcome-screen');
 const metricsScreen = $('metrics-screen');
@@ -28,35 +44,57 @@ let sidecarChild = null;
 // ── Sidecar Management ──────────────────────────────────────
 
 async function startSidecar() {
+  log('INFO', 'Spawning sidecar: binaries/spine-watcher-sidecar');
   const command = Command.sidecar('binaries/spine-watcher-sidecar');
   sidecar = command;
 
   command.stdout.on('data', (line) => {
     if (!line.trim()) return;
+    log('INFO', 'sidecar stdout:', line.trim());
     try {
       const event = JSON.parse(line);
       handleEvent(event);
     } catch {
-      console.warn('Invalid sidecar output:', line);
+      log('WARN', 'Non-JSON sidecar output:', line);
     }
   });
 
   command.stderr.on('data', (line) => {
-    console.warn('Sidecar stderr:', line);
+    log('WARN', 'sidecar stderr:', line);
   });
 
   command.on('close', (data) => {
-    console.log('Sidecar exited:', data.code);
-    setStatus('Sidecar stopped');
+    log('INFO', 'Sidecar exited with code:', data.code, 'signal:', data.signal);
+    if (data.code !== 0) {
+      setStatus('Sidecar crashed (exit ' + data.code + '). Check logs.');
+    } else {
+      setStatus('Sidecar stopped');
+    }
   });
 
   command.on('error', (err) => {
-    console.error('Sidecar error:', err);
-    setStatus('Sidecar error');
+    log('ERROR', 'Sidecar error event:', err);
+    setStatus('Sidecar error: ' + stringifyError(err));
   });
 
-  sidecarChild = await command.spawn();
+  try {
+    sidecarChild = await command.spawn();
+    log('INFO', 'Sidecar spawned, pid:', sidecarChild.pid);
+  } catch (spawnErr) {
+    log('ERROR', 'Sidecar spawn failed:', spawnErr);
+    throw new Error('Spawn failed: ' + stringifyError(spawnErr));
+  }
   sendCommand({ cmd: 'init' });
+}
+
+function stringifyError(err) {
+  if (err === null || err === undefined) return '(unknown error)';
+  if (typeof err === 'string') return err;
+  if (err instanceof Error) return err.message + (err.stack ? '\n' + err.stack : '');
+  if (typeof err === 'object') {
+    try { return JSON.stringify(err); } catch { return String(err); }
+  }
+  return String(err);
 }
 
 function sendCommand(cmd) {
@@ -112,17 +150,28 @@ function handleEvent(event) {
       break;
 
     case 'export-error':
+      log('ERROR', 'Export failed:', event.message);
       setStatus('Export failed: ' + event.message);
+      // If we haven't shown metrics yet, go back to welcome so user can retry
+      if (metricsScreen.classList.contains('hidden')) {
+        showScreen('welcome');
+      }
       break;
 
     case 'watching':
+      log('INFO', 'Now watching:', event.path);
       if (metricsScreen.classList.contains('hidden')) {
         setStatus('Watching: ' + event.path);
       }
       break;
 
     case 'error':
+      log('ERROR', 'Sidecar error:', event.message);
       setStatus('Error: ' + event.message);
+      // If no screen is showing meaningful content, go back to welcome
+      if (metricsScreen.classList.contains('hidden') && versionWarning.classList.contains('hidden')) {
+        showScreen('welcome');
+      }
       break;
 
     case 'stopped':
@@ -272,7 +321,18 @@ async function pickProject() {
 
 // ── Init ────────────────────────────────────────────────────
 
+// Log panel toggle
+$('btn-toggle-log').addEventListener('click', () => {
+  const panel = $('log-panel');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) {
+    const logOutput = $('log-output');
+    logOutput.textContent = logLines.join('\n');
+    logOutput.scrollTop = logOutput.scrollHeight;
+  }
+});
+
 startSidecar().catch((err) => {
-  console.error('Failed to start sidecar:', err);
-  setStatus('Failed to start analysis engine: ' + err.message);
+  log('ERROR', 'Failed to start sidecar:', err);
+  setStatus('Failed to start analysis engine: ' + stringifyError(err));
 });
