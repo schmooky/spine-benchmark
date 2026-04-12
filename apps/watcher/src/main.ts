@@ -9,9 +9,7 @@
  * 4. Watch the file for saves
  * 5. On each save: export via Spine CLI -> analyze -> display metrics
  */
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { loadConfig, saveConfig } from './config.js';
 import { pickFile } from './dialog.js';
 import { resolveSpinePath } from './setup.js';
@@ -30,13 +28,18 @@ import {
   startSpinner,
   stopSpinner,
   getAppVersion,
+  waitForKeypress,
 } from './display.js';
-import { checkForUpdate, RELEASES_URL } from './updater.js';
+import { checkForUpdate } from './updater.js';
 
-const MIN_SPINE_VERSION = '4.2';
+const RESET = '\x1b[0m';
+const BOLD = '\x1b[1m';
+const DIM = '\x1b[2m';
+const RED = '\x1b[31m';
+const CYAN = '\x1b[36m';
 
 function isVersionSupported(version: string): boolean {
-  if (version === '(unknown)') return true; // give benefit of doubt for binary
+  if (version === '(unknown)') return true;
   const parts = version.split('.');
   const major = parseInt(parts[0] ?? '0', 10);
   const minor = parseInt(parts[1] ?? '0', 10);
@@ -48,8 +51,8 @@ async function main(): Promise<void> {
 
   clearScreen();
   console.log('');
-  console.log('  \x1b[1m\x1b[36mSPINE WATCHER\x1b[0m  \x1b[2mv' + version + '\x1b[0m');
-  console.log('  \x1b[2m' + '─'.repeat(60) + '\x1b[0m');
+  console.log(`  ${BOLD}${CYAN}SPINE WATCHER${RESET}  ${DIM}v${version}${RESET}`);
+  console.log(`  ${DIM}${'─'.repeat(60)}${RESET}`);
   console.log('');
 
   // Non-blocking update check
@@ -63,34 +66,38 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.includes('-h') || args.includes('--help')) {
     printHelp();
-    process.exit(0);
+    return;
   }
   if (args.includes('-v') || args.includes('--version')) {
     console.log(version);
-    process.exit(0);
+    return;
   }
 
   // Step 1: Locate Spine CLI
+  console.log(`  ${DIM}Looking for Spine CLI...${RESET}`);
   const spinePath = resolveSpinePath();
   if (!spinePath) {
-    console.error('  Could not locate Spine CLI. Please install Spine and try again.');
+    console.error('');
+    console.error(`  ${RED}Could not locate Spine CLI.${RESET}`);
+    console.error('  Please install Spine and try again.');
     console.error('  Download: https://esotericsoftware.com/spine-download');
+    await waitForKeypress();
     process.exit(1);
   }
-  console.log(`  \x1b[2mSpine CLI\x1b[0m  ${spinePath}`);
+  console.log(`  ${DIM}Spine CLI${RESET}  ${spinePath}`);
+  console.log('');
 
   // Step 2: Pick .spine project file
   let projectPath = args.find(a => a.endsWith('.spine'));
   if (!projectPath) {
-    const config = loadConfig();
-    console.log('');
-    console.log('  Select a .spine project file to watch...');
+    console.log(`  Select a .spine project file to watch...`);
     console.log('');
     projectPath = pickFile('Select .spine project to watch', ['spine']) ?? undefined;
   }
 
   if (!projectPath) {
-    console.error('  No .spine file selected. Exiting.');
+    console.error(`  ${RED}No .spine file selected.${RESET}`);
+    await waitForKeypress();
     process.exit(1);
   }
 
@@ -98,7 +105,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
   saveConfig({ ...config, lastProjectPath: projectPath });
 
-  console.log(`  \x1b[2mProject\x1b[0m    ${projectPath}`);
+  console.log(`  ${DIM}Project${RESET}    ${projectPath}`);
   console.log('');
 
   // Step 3: Initial export + analysis
@@ -113,7 +120,7 @@ async function main(): Promise<void> {
     } catch (err: unknown) {
       stopSpinner();
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(`\n  \x1b[31mExport failed:\x1b[0m ${msg}\n`);
+      console.error(`\n  ${RED}Export failed:${RESET} ${msg}\n`);
       return;
     }
 
@@ -153,7 +160,7 @@ async function main(): Promise<void> {
     } catch (err: unknown) {
       stopSpinner();
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(`\n  \x1b[31mAnalysis failed:\x1b[0m ${msg}\n`);
+      console.error(`\n  ${RED}Analysis failed:${RESET} ${msg}\n`);
     }
   }
 
@@ -165,13 +172,17 @@ async function main(): Promise<void> {
 
   // Graceful shutdown
   const shutdown = async () => {
-    console.log('\n  \x1b[2mStopping watcher...\x1b[0m');
+    console.log(`\n  ${DIM}Stopping watcher...${RESET}`);
     await watcher.close();
     process.exit(0);
   };
 
   process.on('SIGINT', () => void shutdown());
   process.on('SIGTERM', () => void shutdown());
+
+  // Keep the process alive - the watcher is async
+  // On Windows, also keep stdin open so the console doesn't close
+  process.stdin.resume();
 }
 
 function printHelp(): void {
@@ -194,7 +205,22 @@ function printHelp(): void {
   `.trim());
 }
 
-main().catch(err => {
-  console.error(`Fatal: ${err instanceof Error ? err.message : String(err)}`);
+// Top-level error handler: catch EVERYTHING, show it, and wait for
+// keypress so the Windows console doesn't vanish.
+main().catch(async (err) => {
+  console.error('');
+  console.error(`  ${BOLD}${RED}Fatal error:${RESET} ${err instanceof Error ? err.message : String(err)}`);
+  if (err instanceof Error && err.stack) {
+    console.error(`  ${DIM}${err.stack.split('\n').slice(1, 4).join('\n  ')}${RESET}`);
+  }
+  await waitForKeypress();
+  process.exit(1);
+});
+
+// Also catch unhandled rejections
+process.on('unhandledRejection', async (reason) => {
+  console.error('');
+  console.error(`  ${BOLD}${RED}Unhandled error:${RESET} ${reason instanceof Error ? reason.message : String(reason)}`);
+  await waitForKeypress();
   process.exit(1);
 });
