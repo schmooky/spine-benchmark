@@ -1,0 +1,12 @@
+{
+  "identifier": "default",
+  "description": "Default permissions for Spine Watcher",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "shell:allow-spawn",
+    "shell:allow-stdin-write",
+    "shell:allow-open"
+  ]
+}

@@ -1,16 +1,14 @@
 /**
- * Spine CLI detection and first-run setup.
+ * Spine CLI detection (silent - no console output).
  *
  * 1. Check saved config for a previously located Spine path
  * 2. Scan PATH and known install locations
- * 3. If not found, prompt user to locate it via native file dialog
- * 4. Persist the result to config
+ * 3. Return null if not found (Tauri UI handles the file dialog)
  */
 import { existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
 import { loadConfig, saveConfig } from './config.js';
-import { pickExecutable } from './dialog.js';
 
 const KNOWN_PATHS_MAC = [
   '/Applications/Spine.app/Contents/MacOS/Spine',
@@ -42,37 +40,27 @@ function findInKnownLocations(): string | null {
   return null;
 }
 
-export function resolveSpinePath(): string | null {
-  // 1. Check saved config
+/**
+ * Try to find Spine CLI without any user interaction.
+ * Returns the path if found, null otherwise.
+ * The Tauri frontend handles prompting the user if null.
+ */
+export function resolveSpinePathSilent(): string | null {
   const config = loadConfig();
   if (config.spinePath && existsSync(config.spinePath)) {
     return config.spinePath;
   }
 
-  // 2. Check PATH
   const onPath = findOnPath();
   if (onPath) {
     saveConfig({ ...config, spinePath: onPath });
     return onPath;
   }
 
-  // 3. Check known install locations
   const known = findInKnownLocations();
   if (known) {
     saveConfig({ ...config, spinePath: known });
     return known;
-  }
-
-  // 4. Ask user to locate it
-  console.log('');
-  console.log('  Spine CLI executable not found on PATH or in default locations.');
-  console.log('  Please select your Spine installation executable.');
-  console.log('');
-
-  const picked = pickExecutable('Select Spine executable (Spine.exe or Spine.app)');
-  if (picked && existsSync(picked)) {
-    saveConfig({ ...config, spinePath: picked });
-    return picked;
   }
 
   return null;
