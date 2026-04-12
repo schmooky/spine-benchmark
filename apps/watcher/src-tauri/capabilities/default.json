@@ -5,7 +5,15 @@
   "permissions": [
     "core:default",
     "dialog:default",
-    "shell:allow-spawn",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/spine-watcher-sidecar",
+          "sidecar": true
+        }
+      ]
+    },
     "shell:allow-stdin-write",
     "shell:allow-open"
   ]
