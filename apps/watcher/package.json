@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/watcher",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Standalone Spine animation watcher with native GUI - auto-exports and analyzes .spine projects on every save",
   "scripts": {
