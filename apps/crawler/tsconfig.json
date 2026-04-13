@@ -8,7 +8,13 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@spine-benchmark/pixi-crawler": ["../../packages/pixi-crawler/src/index.ts"],
+      "@spine-benchmark/pixi-crawler/core": ["../../packages/pixi-crawler/src/core/index.ts"],
+      "@spine-benchmark/pixi-crawler/ui": ["../../packages/pixi-crawler/src/ui/index.ts"]
+    }
   },
   "include": ["src"]
 }
