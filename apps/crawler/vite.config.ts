@@ -56,6 +56,10 @@ export default defineConfig({
         __dirname,
         '../../packages/pixi-crawler/src/ui/index.ts',
       ),
+      '@spine-benchmark/metrics-impact-formula': path.resolve(
+        __dirname,
+        '../../packages/metrics-impact-formula/src/index.ts',
+      ),
     },
   },
 });
