@@ -12,6 +12,7 @@ import path from 'node:path';
 const spinefolioAssets = path.resolve(__dirname, '../../packages/spinefolio/assets');
 
 export default defineConfig({
+  base: './',
   server: {
     port: 8080,
     open: true,
