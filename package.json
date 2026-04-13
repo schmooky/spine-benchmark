@@ -56,7 +56,7 @@
     "size:update": "node scripts/size-check.mjs --update",
     "release": "npm run build:all && changeset publish",
     "snapshot": "node scripts/snapshot-release.mjs",
-    "prepare": "husky"
+    "prepare": "node node_modules/husky/bin.js || true"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [

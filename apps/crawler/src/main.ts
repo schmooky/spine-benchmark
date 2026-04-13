@@ -595,15 +595,24 @@ function makeSpine(
   // ─────────────────────────────────────────────────────────────
 
   // ─────────────────────────────────────────────────────────────
-  // HUD
+  // Welcome overlay dismiss
+  // ─────────────────────────────────────────────────────────────
+  const welcomeEl = document.getElementById('welcome');
+  if (welcomeEl) {
+    const dismiss = () => {
+      welcomeEl.classList.add('hidden');
+      welcomeEl.removeEventListener('click', dismiss);
+      document.removeEventListener('keydown', dismiss);
+    };
+    welcomeEl.addEventListener('click', dismiss);
+    document.addEventListener('keydown', dismiss);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // HUD (minimal - detailed controls are on the welcome screen)
   // ─────────────────────────────────────────────────────────────
   const hudText = new Text({
-    text: [
-      'PIXI CRAWLER ISSUE SHOWCASE',
-      'each cell triggers a specific crawler issue category',
-      '~ overlay   G graph   I issues   H highlights',
-      'R record    P report  D analysis W remote panel',
-    ].join('\n'),
+    text: 'PIXI CRAWLER ISSUE SHOWCASE  ·  press ~ for overlay',
     style: new TextStyle({
       fontFamily: '"Courier New", monospace',
       fontSize: 11,

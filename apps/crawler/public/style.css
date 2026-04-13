@@ -2,3 +2,129 @@
 html, body { width: 100%; height: 100%; overflow: hidden; background: #080c14; }
 #pixi-container { width: 100%; height: 100%; }
 #pixi-container canvas { display: block; width: 100%; height: 100%; }
+
+/* ── Welcome overlay ─────────────────────────────────────────── */
+
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 20, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+.welcome-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.welcome-card {
+  max-width: 640px;
+  padding: 40px 48px;
+  color: #c8d6e5;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.welcome-card h1 {
+  font-family: "Courier New", monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: #4fc3f7;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.welcome-subtitle {
+  font-size: 14px;
+  color: #667788;
+  margin-bottom: 28px;
+}
+
+.welcome-description {
+  margin-bottom: 32px;
+}
+.welcome-description p {
+  font-size: 14px;
+  color: #99aabb;
+  margin-bottom: 12px;
+}
+.welcome-description strong {
+  color: #c8d6e5;
+  font-weight: 600;
+}
+
+.welcome-card h2 {
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #667788;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+}
+
+/* Hotkey grid - two columns on wider screens */
+.hotkey-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 32px;
+  margin-bottom: 32px;
+}
+@media (max-width: 560px) {
+  .hotkey-grid { grid-template-columns: 1fr; }
+  .welcome-card { padding: 28px 20px; }
+}
+
+.hotkey-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hotkey-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #99aabb;
+}
+.hotkey-row small {
+  color: #556677;
+}
+
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 26px;
+  padding: 0 7px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e0e8f0;
+  background: linear-gradient(180deg, #1e2a3a 0%, #151e2b 100%);
+  border: 1px solid #2a3a4e;
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.welcome-cta {
+  text-align: center;
+  font-size: 13px;
+  color: #445566;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
