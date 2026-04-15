@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics-reporting",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reporting and export helpers for Spine metrics",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,8 +19,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-impact-formula": "^0.1.0",
-    "@spine-benchmark/metrics-pipeline": "^0.1.0"
+    "@spine-benchmark/metrics-impact-formula": "^0.1.1",
+    "@spine-benchmark/metrics-pipeline": "^0.1.1"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

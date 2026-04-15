@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/spinefolio",
-  "version": "2.2.2",
+  "version": "3.0.0",
   "description": "Spine widget library for PixiJS v8 with auto-initialization and blog-ready demos",
   "type": "module",
   "main": "./dist/spinefolio.js",
@@ -56,8 +56,12 @@
     "pixi.js": "^8.0.0"
   },
   "peerDependenciesMeta": {
-    "@esotericsoftware/spine-pixi-v8": { "optional": true },
-    "pixi.js": { "optional": true }
+    "@esotericsoftware/spine-pixi-v8": {
+      "optional": true
+    },
+    "pixi.js": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101",
