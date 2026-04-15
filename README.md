@@ -28,7 +28,7 @@ It includes a browser workbench, reusable metrics packages, and runtime tooling.
 
 - Production: https://spine.schmooky.dev/
 - Repository: https://github.com/schmooky/spine-benchmark
-- Updates: https://t.me/spine_benchmark
+- Updates: [https://t.me/spine_benchmark](https://t.me/+nwFiDd407Pk4Njdi)
 
 ## Quick Start
 
