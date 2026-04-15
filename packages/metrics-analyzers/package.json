@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics-analyzers",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Low-level Spine metrics analyzers for meshes, clipping, blend modes, skeleton, and constraints",
   "type": "module",
   "main": "./dist/index.js",

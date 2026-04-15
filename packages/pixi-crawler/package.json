@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/pixi-crawler",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Real-time Spine animation profiler and performance analyzer for PixiJS",
   "main": "dist/index.js",
