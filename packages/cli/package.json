@@ -40,7 +40,7 @@
     "@spine-benchmark/metrics-impact-formula": "^0.1.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "repository": {
     "type": "git",

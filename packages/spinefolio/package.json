@@ -67,7 +67,7 @@
     "@esotericsoftware/spine-pixi-v8": "^4.2.101",
     "pixi.js": "^8.16.0",
     "terser": "^5.46.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "vite": "^7.3.1"
   },
   "repository": {

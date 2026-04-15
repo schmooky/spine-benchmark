@@ -25,7 +25,7 @@
   "devDependencies": {
     "@esotericsoftware/spine-core": "^4.2.101",
     "@spine-benchmark/metrics-sampling": "^0.1.1",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "repository": {
     "type": "git",
