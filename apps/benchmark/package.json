@@ -51,7 +51,7 @@
   "devDependencies": {
     "@babel/parser": "^7.29.0",
     "@babel/traverse": "^7.29.0",
-    "@types/node": "^25.2.3",
+    "@types/node": "^25.6.0",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.172.0",
