@@ -10,27 +10,23 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "development": "./src/index.ts"
+      }
     },
     "./core": {
       "import": {
         "types": "./dist/core/index.d.ts",
         "default": "./dist/core/index.js"
-      },
-      "development": "./src/core/index.ts"
+      }
     },
     "./ui": {
       "import": {
         "types": "./dist/ui/index.d.ts",
         "default": "./dist/ui/index.js"
-      },
-      "development": "./src/ui/index.ts"
+      }
     }
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -49,10 +45,20 @@
   "author": "Spine Benchmark Contributors",
   "license": "MIT",
   "dependencies": {
+    "@spine-benchmark/metrics-impact-formula": "^0.1.0",
     "pixi.js": "^8.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/pixi-crawler"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/pixi-crawler#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

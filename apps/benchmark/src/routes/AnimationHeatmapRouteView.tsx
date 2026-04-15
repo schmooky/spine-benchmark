@@ -307,7 +307,7 @@ function FrameDetail({ frame, index }: { frame: FrameMetrics; index: number }) {
             className={`heatmap-slot-row${slot.isBreak ? ' break' : ''}`}
           >
             <span className="heatmap-slot-idx">{slot.index}</span>
-            <span className="heatmap-slot-name" title={`${slot.slotName} → ${slot.attachmentName}`}>
+            <span className="heatmap-slot-name" title={`${slot.slotName} -> ${slot.attachmentName}`}>
               {slot.attachmentName}
             </span>
             <span className="heatmap-slot-page">{slot.atlasPage}</span>

@@ -96,7 +96,13 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
+
+# Build outputs for every workspace. "dist" alone used to cover this
+# but being explicit makes it obvious to contributors that every
+# apps/* and packages/* dist/ is derived and should never be committed.
 dist
+apps/*/dist/
+packages/*/dist/
 
 # Gatsby files
 .cache/

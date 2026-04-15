@@ -1,6 +1,7 @@
 import { Graphics } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer.js';
+import type { DebugBone, DebugTransformConstraint } from '../spine-debug-types.js';
 
 export interface TransformConstraintDebugOptions extends DebugLayerOptions {
   constraintBoneColor?: number;
@@ -66,7 +67,7 @@ export class TransformConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawConstraintBones(bones: any[]): void {
+  private drawConstraintBones(bones: DebugBone[]): void {
     const g = this.graphics;
     
     g.stroke({ 
@@ -92,7 +93,7 @@ export class TransformConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawTargetBone(target: any): void {
+  private drawTargetBone(target: DebugBone): void {
     const g = this.graphics;
     const x = target.worldX;
     const y = target.worldY;
@@ -116,7 +117,7 @@ export class TransformConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawLimits(constraint: any): void {
+  private drawLimits(constraint: DebugTransformConstraint): void {
     // For transform constraints, we'll draw a simple visualization of the affected area
     if (!constraint.bones || constraint.bones.length === 0) return;
     

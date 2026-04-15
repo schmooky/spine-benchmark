@@ -1,6 +1,7 @@
 import { Graphics } from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { DebugLayer, DebugLayerOptions } from '../DebugLayer.js';
+import type { DebugBone, DebugPathConstraint } from '../spine-debug-types.js';
 
 export interface PathConstraintDebugOptions extends DebugLayerOptions {
   /** Main path color */
@@ -145,8 +146,8 @@ export class PathConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawBoneConnections(constraint: any, world: number[]): void {
-    const bones = constraint.bones as any[];
+  private drawBoneConnections(constraint: DebugPathConstraint, world: number[]): void {
+    const bones = constraint.bones;
     if (!bones || bones.length === 0) return;
 
     const g = this.graphics;
@@ -190,7 +191,7 @@ export class PathConstraintDebugLayer extends DebugLayer {
     }
   }
 
-  private drawTarget(targetBone: any): void {
+  private drawTarget(targetBone: DebugBone): void {
     const tx = targetBone.worldX;
     const ty = targetBone.worldY;
     const R = 15;

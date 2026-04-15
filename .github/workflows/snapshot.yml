@@ -1,0 +1,89 @@
+name: Snapshot Release
+
+# Publishes a Changesets "snapshot" release of every package that has
+# a pending .changeset/*.md file on the current branch. Snapshot
+# versions are stamped `<base>-<tag>-<timestamp>` and published to npm
+# under a per-branch dist-tag so reviewers can install the preview
+# without disturbing `latest` or the normal release flow.
+#
+# How it runs:
+#   1. On every push to a version branch (v*). Each push to the branch
+#      produces a new snapshot so reviewers always see the latest head.
+#   2. Nightly at 03:00 UTC for branches matching the pattern, so long-
+#      lived branches stay fresh even without new pushes.
+#   3. On-demand via workflow_dispatch, picking any branch by hand.
+#
+# Install a published snapshot with:
+#   npm i @spine-benchmark/spinefolio@<branch-tag>
+# where <branch-tag> is the sanitized branch name (e.g. v3.2 -> v3-2).
+#
+# Skip conditions:
+#   - main: rejected in scripts/snapshot-release.mjs; use the real
+#     release workflow instead.
+#   - no pending .changeset/*.md files: nothing to publish, exits clean.
+
+on:
+  push:
+    branches:
+      - 'v*'
+  schedule:
+    # 03:00 UTC every day. Adjust to taste.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to snapshot (defaults to the workflow ref)'
+        required: false
+        type: string
+
+concurrency:
+  group: snapshot-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint guards
+        run: npm run check:lint
+
+      - name: Test
+        run: npx vitest run
+
+      - name: Derive dist-tag from branch
+        id: tag
+        run: |
+          RAW="${{ github.event.inputs.branch || github.ref_name }}"
+          SAN=$(echo "$RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g; s/^-*//; s/-*$//')
+          echo "tag=$SAN" >> "$GITHUB_OUTPUT"
+          echo "Snapshot dist-tag: $SAN"
+
+      - name: Publish snapshot
+        run: npm run snapshot
+        env:
+          SNAPSHOT_TAG: ${{ steps.tag.outputs.tag }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sign preview releases with npm provenance too (same as the
+          # main release workflow), so reviewers can verify a snapshot
+          # genuinely came out of this repo's CI and not somewhere else.
+          NPM_CONFIG_PROVENANCE: 'true'

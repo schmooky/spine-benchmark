@@ -127,7 +127,7 @@ export class Recorder {
                 L.push(`║`);
                 L.push(`║  Spine skeleton instances:`);
                 for (const { name, count } of census.spineSkeletons) {
-                    const note = count > 3 ? ` ← ${count} instances, consider pooling` : '';
+                    const note = count > 3 ? ` <- ${count} instances, consider pooling` : '';
                     L.push(`║    ${name.padEnd(22)} x${count}${note}`);
                 }
             }

@@ -3,6 +3,9 @@
   "private": true,
   "version": "3.0.0",
   "description": "Spine Benchmark monorepo",
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -11,6 +14,7 @@
     "dev": "npm run dev --workspace @spine-benchmark/site",
     "build": "npm run build --workspace @spine-benchmark/site",
     "build:site": "npm run build --workspace @spine-benchmark/site",
+    "build:metrics-impact-formula": "npm run build --workspace @spine-benchmark/metrics-impact-formula",
     "build:metrics-factors": "npm run build --workspace @spine-benchmark/metrics-factors",
     "build:metrics-scoring": "npm run build --workspace @spine-benchmark/metrics-scoring",
     "build:metrics-sampling": "npm run build --workspace @spine-benchmark/metrics-sampling",
@@ -29,17 +33,44 @@
     "build:workbench-core": "npm run build --workspace @spine-benchmark/workbench-core",
     "build:pixi-crawler": "npm run build --workspace @spine-benchmark/pixi-crawler",
     "dev:crawler": "npm run dev --workspace @spine-benchmark/crawler-demo",
+    "dev:watcher": "npm run dev --workspace @spine-benchmark/watcher",
+    "build:watcher": "npm run build --workspace @spine-benchmark/watcher",
+    "build:watcher-sidecar": "npm run build:sidecar --workspace @spine-benchmark/watcher",
     "publish:pixi-crawler": "npm publish --workspace @spine-benchmark/pixi-crawler --access public",
     "demo:spinefolio": "npm run demo --workspace @spine-benchmark/spinefolio --",
     "publish:spinefolio": "npm publish --workspace @spine-benchmark/spinefolio --access public",
     "preview": "npm run preview --workspace @spine-benchmark/site",
     "check:i18n": "npm run check:i18n --workspace @spine-benchmark/site",
     "sync:locales": "npm run sync:locales --workspace @spine-benchmark/site",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "check:no-duplicate-formulas": "node scripts/check-no-duplicate-impact-formulas.mjs",
+    "check:no-fancy-unicode": "node scripts/check-no-fancy-unicode.mjs",
+    "check:lint": "npm run check:no-duplicate-formulas && npm run check:no-fancy-unicode",
+    "test": "npm run check:lint && vitest run",
+    "test:coverage": "npm run check:lint && vitest run --coverage",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "version-packages": "changeset version && npm install --package-lock-only",
+    "build:all": "node scripts/build-all-publishable.mjs",
+    "size": "node scripts/size-check.mjs",
+    "size:check": "node scripts/size-check.mjs --check",
+    "size:update": "node scripts/size-check.mjs --update",
+    "release": "npm run build:all && changeset publish",
+    "snapshot": "node scripts/snapshot-release.mjs",
+    "prepare": "node node_modules/husky/bin.js || true"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "node scripts/check-no-duplicate-impact-formulas.mjs",
+      "node scripts/check-no-fancy-unicode.mjs"
+    ]
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^3.2.4",
-    "vitest": "^3.2.4"
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "vite": "^8.0.8",
+    "vitest": "^4.1.4"
   }
 }

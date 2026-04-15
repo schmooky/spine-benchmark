@@ -1,0 +1,88 @@
+name: Bug report
+description: Something in the benchmark, the metrics packages, pixi-crawler, or spinefolio behaves incorrectly.
+title: 'bug: '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill out as much of the form as you can - the more reproducible a report is, the faster it gets fixed. If the issue involves a specific skeleton, attaching the atlas + json/skel + images as a zip helps enormously.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the monorepo is affected?
+      options:
+        - Benchmark UI (apps/benchmark, spine.schmooky.dev)
+        - Reports API / shareable reports (apps/reports-api)
+        - Encrypted share / unlock flow
+        - Metrics pipeline (packages/metrics*)
+        - spine-loader / asset-store / file-tools
+        - mesh-tools / constraint-tools / drawcall-tools / render-tools
+        - spinefolio (widget library)
+        - pixi-crawler (runtime profiler)
+        - Build, CI, or release tooling
+        - Unsure / other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / branch / commit
+      description: |
+        For the hosted site, check the footer or report page. For packages, run `npm ls @spine-benchmark/spinefolio` (or the relevant package). For local checkouts, include the git SHA and branch.
+      placeholder: 'e.g. spinefolio 2.2.2, or v3.2 @ 400277a'
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior you observed. Error messages, stack traces, and screenshots all help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps a maintainer can follow from a fresh clone or a fresh browser tab.
+      placeholder: |
+        1. Go to https://spine.schmooky.dev
+        2. Drop in the attached bundle (or link to a reproducer repo)
+        3. Click 'Share' and set export mode to 'full asset bundle'
+        4. Observe the console error
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser + OS for UI bugs. For library bugs, include Node version and the package versions installed.
+      placeholder: |
+        - Browser: Chrome 139 on macOS 15
+        - Node: 20.11.0
+        - Pixi: 8.x
+    validations:
+      required: false
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console / server logs
+      description: Paste any relevant DevTools console output or server logs. Wrap with triple backticks.
+      render: text
+    validations:
+      required: false

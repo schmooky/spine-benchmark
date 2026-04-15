@@ -15,14 +15,23 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "npm run build --workspace @spine-benchmark/metrics-factors",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-factors": "file:../metrics-factors"
+    "@spine-benchmark/metrics-impact-formula": "^0.1.0",
+    "@spine-benchmark/metrics-factors": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/metrics-scoring"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/metrics-scoring#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

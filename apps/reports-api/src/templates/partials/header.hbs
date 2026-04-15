@@ -1,0 +1,12 @@
+<div class="header">
+  <div class="header-row">
+    <div class="logo">SB</div>
+    <h1><span>Spine Benchmark</span> {{meta.skeletonName}}</h1>
+  </div>
+  <div class="header-meta">
+    <span>Spine {{meta.spineVersion}}</span>
+    <span>{{meta.totalAnimations}} animations</span>
+    {{#if analysis.skeleton.totalBones}}<span>{{analysis.skeleton.totalBones}} bones</span>{{/if}}
+    <span>Expires {{formatDate meta.expiresAt}}</span>
+  </div>
+</div>

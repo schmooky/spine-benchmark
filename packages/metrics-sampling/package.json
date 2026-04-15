@@ -23,5 +23,14 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/metrics-sampling"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/metrics-sampling#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

@@ -1,0 +1,17 @@
+{
+  "name": "@spine-benchmark/watcher",
+  "version": "0.3.1",
+  "private": true,
+  "description": "Standalone Spine animation watcher with native GUI - auto-exports and analyzes .spine projects on every save",
+  "scripts": {
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "build:sidecar": "npm run build --prefix sidecar && npm run build:bundle --prefix sidecar && node sidecar/scripts/build-sidecar.mjs",
+    "dev": "npm run build:sidecar && tauri dev",
+    "build": "npm run build:sidecar && tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

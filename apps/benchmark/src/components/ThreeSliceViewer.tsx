@@ -214,7 +214,7 @@ export function ThreeSliceViewer({
               texCacheRef.current.set(layer.id, entry);
             }
 
-            // Blit cached canvas → persistent canvas → Three.js texture
+            // Blit cached canvas -> persistent canvas -> Three.js texture
             const dstCtx = entry.canvas.getContext('2d');
             if (dstCtx) {
               if (entry.canvas.width !== cachedCanvas.width || entry.canvas.height !== cachedCanvas.height) {
@@ -262,7 +262,7 @@ export function ThreeSliceViewer({
 
     const { w, h } = planeSize;
 
-    // Skip full rebuild if layer IDs unchanged – just reposition
+    // Skip full rebuild if layer IDs unchanged - just reposition
     if (layerFingerprint === prevFingerprintRef.current && layerGroupsRef.current.size > 0) {
       const spacing = layerSpacing / 10;
       const totalHeight = (layers.length - 1) * spacing;

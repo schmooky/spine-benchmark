@@ -6,7 +6,7 @@ import { getPixiApp } from './usePixiApp';
 import { Matrix, RenderTexture } from 'pixi.js';
 
 /* ── Constants ─────────────────────────────────────────────────────── */
-/** Prerender FPS – lower = less memory, higher = smoother scrubbing */
+/** Prerender FPS - lower = less memory, higher = smoother scrubbing */
 const PRERENDER_FPS = 30;
 /** Yield to browser every N frames during prerender to keep UI responsive */
 const PRERENDER_BATCH = 4;
@@ -125,7 +125,7 @@ function captureLayerCanvas(
 /* ── Exported types ────────────────────────────────────────────────── */
 
 export interface PrerenderFrame {
-  /** layerId → cloned canvas with that layer's rendered content */
+  /** layerId -> cloned canvas with that layer's rendered content */
   textures: Map<string, HTMLCanvasElement>;
 }
 

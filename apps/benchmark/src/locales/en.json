@@ -391,7 +391,7 @@
         "low": "Low",
         "moderate": "Moderate",
         "high": "High",
-        "veryHigh": "Very High"
+        "very-high": "Very High"
       },
       "globalSkeletonStatisticsTitle": "Global Skeleton Statistics",
       "medianPerformanceLabel": "{{rating}} impact profile",
@@ -421,7 +421,7 @@
         "animation": {
           "new": "New in B",
           "removed": "Removed from B",
-          "delta": "A {{baseline}} → B {{current}} (Δ {{delta}})"
+          "delta": "A {{baseline}} -> B {{current}} (Δ {{delta}})"
         }
       },
       "advisor": {
@@ -1523,7 +1523,7 @@
     }
   },
   "zSlice": {
-    "subtitle": "Visualize skeleton layers in an exploded 3D view — split by draw call batch, bone depth, or custom grouping.",
+    "subtitle": "Visualize skeleton layers in an exploded 3D view  -  split by draw call batch, bone depth, or custom grouping.",
     "modes": {
       "drawCall": "Draw Calls",
       "treeDepth": "Tree Depth",
@@ -1613,5 +1613,29 @@
       "pixelLine": "Default: 1px pixel line",
       "reset": "Reset Highlight Style"
     }
+  },
+  "share": {
+    "button": "Share Report",
+    "sharing": "Sharing...",
+    "modalTitle": "Share Report",
+    "close": "Close",
+    "description": "Reports are end-to-end encrypted. The metrics are always visible, but animation previews and asset bundles are locked behind the password you set here.",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter or generate a password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "generatePassword": "Generate strong password",
+    "rememberPassword": "Remember in this browser (for team sharing)",
+    "ttlLabel": "Link lifetime",
+    "ttl1Day": "1 day",
+    "ttlNDays": "{{days}} days",
+    "includeLabel": "Include in the report",
+    "gifMode": "GIF previews",
+    "gifModeDesc": "Animated thumbnails. Encrypted - safe to share.",
+    "bundleMode": "Full asset bundle",
+    "bundleModeDesc": "Atlas + skeleton + images, rendered live via Spinefolio. Encrypted.",
+    "bundleDisabledHint": "Only available when loading from files",
+    "cancel": "Cancel",
+    "submit": "Create encrypted report"
   }
 }

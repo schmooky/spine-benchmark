@@ -102,7 +102,7 @@ export { DEFAULT_IMPACT_BRACKETS } from './types.js';
  * Classify a numeric score into an impact level using configurable brackets.
  *
  * @param score - The RI, CI, or combined budget score to classify.
- * @param brackets - Optional `[low, moderate, high, veryHigh]` thresholds.
+ * @param brackets - Optional `[low, moderate, high, very-high]` thresholds.
  *                   Defaults to `[3, 8, 15, 25]`.
  * @returns One of `'minimal'` | `'low'` | `'moderate'` | `'high'` | `'very-high'`.
  */

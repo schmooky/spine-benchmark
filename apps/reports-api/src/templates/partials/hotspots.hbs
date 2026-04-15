@@ -1,0 +1,29 @@
+{{#if analysis.hotspots}}
+<h2>Performance Hotspots</h2>
+<div class="hotspots">
+  <div class="hotspot">
+    <div class="hotspot-val {{#if (gt analysis.hotspots.peakPageBreaks 3)}}v-high{{/if}}">{{analysis.hotspots.peakPageBreaks}}</div>
+    <div class="hotspot-label">Page Breaks</div>
+  </div>
+  <div class="hotspot">
+    <div class="hotspot-val {{#if (gt analysis.hotspots.peakBlendSwitches 2)}}v-moderate{{/if}}">{{analysis.hotspots.peakBlendSwitches}}</div>
+    <div class="hotspot-label">Blend Switches</div>
+  </div>
+  <div class="hotspot">
+    <div class="hotspot-val {{#if (gt analysis.hotspots.peakMeshDensity 500)}}v-high{{/if}}">{{analysis.hotspots.peakMeshDensity}}</div>
+    <div class="hotspot-label">Peak Vertices</div>
+  </div>
+  <div class="hotspot">
+    <div class="hotspot-val {{#if (gt analysis.hotspots.peakConstraintLoad 5)}}v-moderate{{/if}}">{{analysis.hotspots.peakConstraintLoad}}</div>
+    <div class="hotspot-label">Constraints</div>
+  </div>
+  <div class="hotspot">
+    <div class="hotspot-val {{#if (gt analysis.hotspots.peakPhysicsConstraints 2)}}v-high{{/if}}">{{analysis.hotspots.peakPhysicsConstraints}}</div>
+    <div class="hotspot-label">Physics</div>
+  </div>
+  <div class="hotspot">
+    <div class="hotspot-val">{{analysis.hotspots.peakIkConstraints}}</div>
+    <div class="hotspot-label">IK Chains</div>
+  </div>
+</div>
+{{/if}}

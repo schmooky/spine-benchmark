@@ -1,0 +1,111 @@
+name: Watcher Release
+
+# Builds Spine Watcher desktop app (Tauri + Node.js sidecar) for
+# macOS and Windows, then creates a GitHub Release with installers.
+#
+# Trigger: push a tag matching `watcher-v*` (e.g. `watcher-v0.2.0`).
+# After merging a version bump, tag the commit:
+#   git tag watcher-v0.2.0 && git push origin watcher-v0.2.0
+
+on:
+  push:
+    tags:
+      - 'watcher-v*'
+
+concurrency:
+  group: watcher-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            rust-target: aarch64-apple-darwin
+            pkg-target: node20-macos-arm64
+            label: macOS (Apple Silicon)
+          - os: macos-latest
+            rust-target: x86_64-apple-darwin
+            pkg-target: node20-macos-x64
+            label: macOS (Intel)
+          - os: windows-latest
+            rust-target: x86_64-pc-windows-msvc
+            pkg-target: node20-win-x64
+            label: Windows (x64)
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install workspace deps
+        run: npm ci
+
+      - name: Build metrics-impact-formula
+        run: npm run build --workspace @spine-benchmark/metrics-impact-formula
+
+      - name: Build sidecar TypeScript
+        run: npm run build --prefix apps/watcher/sidecar
+
+      - name: Bundle sidecar with esbuild
+        run: npm run build:bundle --prefix apps/watcher/sidecar
+
+      - name: Compile sidecar binary
+        run: node apps/watcher/sidecar/scripts/build-sidecar.mjs --target ${{ matrix.rust-target }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2
+        with:
+          workspaces: apps/watcher/src-tauri
+
+      - name: Install Tauri CLI
+        run: npm install --prefix apps/watcher
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/watcher
+          tauriScript: npx tauri
+          tagName: ${{ github.ref_name }}
+          releaseName: Spine Watcher ${{ github.ref_name }}
+          releaseBody: |
+            ## Spine Watcher
+
+            Standalone .spine file watcher and performance analyzer with native GUI.
+
+            ### Download
+
+            | Platform | File |
+            |----------|------|
+            | macOS (Apple Silicon) | `.dmg` |
+            | macOS (Intel) | `.dmg` |
+            | Windows (x64) | `.msi` or `.exe` |
+
+            ### First run
+
+            1. Install and launch Spine Watcher
+            2. If Spine CLI is not found, select your Spine installation
+            3. Pick a `.spine` project file to watch
+            4. Save changes in Spine Editor - metrics update automatically
+
+            Requires Spine 4.2+ projects.
+          releaseDraft: false
+          prerelease: false
+          args: --target ${{ matrix.rust-target }}

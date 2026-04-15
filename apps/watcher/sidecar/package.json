@@ -1,0 +1,25 @@
+{
+  "name": "@spine-benchmark/watcher-sidecar",
+  "version": "0.3.1",
+  "private": true,
+  "description": "Node.js sidecar for Spine Watcher - analysis engine communicating via JSONL",
+  "type": "module",
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:bundle": "esbuild src/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/bundle.cjs --external:fsevents",
+    "build:sidecar": "npm run build:bundle && node scripts/build-sidecar.mjs",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@esotericsoftware/spine-core": "^4.2.101",
+    "@spine-benchmark/metrics-impact-formula": "^0.1.0",
+    "chokidar": "^4.0.3"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.3"
+  }
+}

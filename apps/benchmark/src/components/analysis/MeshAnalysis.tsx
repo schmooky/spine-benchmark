@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { computationalImpactCost } from '@spine-benchmark/metrics-impact-formula';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
 import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 
@@ -7,17 +8,24 @@ interface MeshAnalysisProps {
   data: SpineAnalysisResult;
 }
 
-function meshImpactCost(m: any): number {
-  const meshCount = Math.max(m.activeMeshCount ?? 0, 1);
-  const averageVerticesPerMesh = m.totalVertices / meshCount;
-  const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
-  const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
-
-  return (
-    (m.totalVertices / 2000) +
-    (m.deformedMeshCount * deformedMeshWeight) +
-    (m.weightedMeshCount * weightedMeshWeight)
-  );
+/**
+ * Mesh-only slice of the canonical CI formula. Calling
+ * `computationalImpactCost` with zeroed constraint inputs gives the mesh
+ * cost component, so the Mesh tab matches the rest of the app exactly.
+ */
+function meshImpactCost(m: {
+  activeMeshCount?: number;
+  totalVertices: number;
+  deformedMeshCount: number;
+  weightedMeshCount: number;
+}): number {
+  return computationalImpactCost({
+    constraints: { physics: 0, path: 0, ik: 0, transform: 0 },
+    totalVertices: m.totalVertices,
+    activeMeshCount: m.activeMeshCount ?? 0,
+    weightedMeshCount: m.weightedMeshCount,
+    deformedMeshCount: m.deformedMeshCount,
+  });
 }
 
 export const MeshAnalysis: React.FC<MeshAnalysisProps> = ({ data }) => {

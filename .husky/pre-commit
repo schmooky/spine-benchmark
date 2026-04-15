@@ -1,0 +1,6 @@
+npx lint-staged
+
+# Fast i18n parity check. Not in lint-staged because it reads locale
+# files whether or not they're in the commit - a component edit that
+# references a missing key still needs to fail.
+npm run check:i18n

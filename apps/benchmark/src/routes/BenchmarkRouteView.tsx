@@ -118,7 +118,7 @@ export function BenchmarkRouteView() {
                     className="dc-inspector-stat-value"
                     style={{ '--dc-stat-color': rendering?.color ?? 'var(--sb-accent)' } as React.CSSProperties}
                   >
-                    {rendering ? Math.round(rendering.cost) : '–'}
+                    {rendering ? Math.round(rendering.cost) : '-'}
                   </span>
                   <span className="dc-inspector-stat-label">{t('benchmark.summary.renderingImpact')}</span>
                 </div>
@@ -127,7 +127,7 @@ export function BenchmarkRouteView() {
                     className="dc-inspector-stat-value"
                     style={{ '--dc-stat-color': computational?.color ?? 'var(--sb-accent)' } as React.CSSProperties}
                   >
-                    {computational ? Math.round(computational.cost) : '–'}
+                    {computational ? Math.round(computational.cost) : '-'}
                   </span>
                   <span className="dc-inspector-stat-label">{t('benchmark.summary.computationalImpact')}</span>
                 </div>
@@ -152,7 +152,18 @@ export function BenchmarkRouteView() {
               </div>
 
               <div className="benchmark-sidebar-content">
-                <Summary data={benchmarkData} supplemental={supplementalImpact} />
+                <Summary
+                  data={benchmarkData}
+                  supplemental={supplementalImpact}
+                  spineInstance={spineInstance}
+                  droppedFiles={
+                    selectedAsset
+                      ? selectedAsset.files.map(
+                          (f) => new File([f.buffer], f.name, { type: f.type }),
+                        )
+                      : undefined
+                  }
+                />
                 <hr className="benchmark-section-divider" />
                 <MeshAnalysis data={benchmarkData} />
                 <hr className="benchmark-section-divider" />

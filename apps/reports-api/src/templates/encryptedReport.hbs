@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{meta.skeletonName}} - Spine Benchmark Report (encrypted)</title>
+  <meta name="description" content="Encrypted Spine performance report for {{meta.skeletonName}}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  {{> styles}}
+  <style>
+    /* Unlock modal overlay - uses the same tokens as the rest of the page */
+    .unlock-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(8, 10, 14, 0.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      animation: unlock-fade-in 140ms ease-out;
+    }
+    @keyframes unlock-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .unlock-modal {
+      width: min(420px, calc(100vw - 32px));
+      background: var(--sb-bg-2);
+      border: 1px solid var(--sb-border);
+      border-radius: var(--sb-radius-lg);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+      padding: 24px;
+      color: var(--sb-text);
+    }
+    .unlock-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .unlock-modal-icon {
+      width: 40px; height: 40px; border-radius: var(--sb-radius-md);
+      background: var(--sb-accent-dim); color: var(--sb-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .unlock-modal-title { font-size: 15px; font-weight: 600; color: var(--sb-text); }
+    .unlock-modal-subtitle { font-size: 11px; color: var(--sb-text-secondary); margin-top: 2px; }
+    .unlock-modal-desc {
+      font-size: 12px; color: var(--sb-text-secondary);
+      line-height: 1.5; margin-bottom: 16px;
+    }
+    .unlock-modal-input {
+      width: 100%; box-sizing: border-box;
+      background: var(--sb-bg-1);
+      border: 1px solid var(--sb-border);
+      border-radius: var(--sb-radius-md);
+      padding: 10px 12px;
+      color: var(--sb-text);
+      font-family: var(--sb-font-mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 120ms ease;
+    }
+    .unlock-modal-input:focus { border-color: var(--sb-accent); }
+    .unlock-modal-error { color: var(--sb-error); font-size: 11px; margin-top: 8px; min-height: 14px; }
+    .unlock-modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+    .unlock-btn {
+      border: none;
+      border-radius: var(--sb-radius-md);
+      padding: 9px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+    .unlock-btn-primary { background: var(--sb-accent); color: var(--sb-bg-0); }
+    .unlock-btn-primary:hover { background: var(--sb-accent-hover); }
+    .unlock-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .unlock-btn-secondary {
+      background: transparent;
+      color: var(--sb-text-secondary);
+      border: 1px solid var(--sb-border);
+    }
+    .unlock-btn-secondary:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
+
+    /* Header chip for the current lock state */
+    .lock-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: transparent;
+      border: 1px solid var(--sb-border);
+      color: var(--sb-text-secondary);
+      border-radius: var(--sb-radius-sm);
+      padding: 2px 8px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .lock-chip:hover { color: var(--sb-text); border-color: var(--sb-text-muted); }
+    .lock-chip.unlocked { color: var(--sb-accent); border-color: var(--sb-accent-dim); }
+
+    /* Bundle viewer shell - matches the card aesthetic */
+    .bundle-viewer {
+      background: var(--sb-bg-2);
+      border: 1px solid var(--sb-border);
+      border-radius: var(--sb-radius-md);
+      padding: 12px 14px;
+      margin-bottom: 24px;
+    }
+    .bundle-viewer-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--sb-text-secondary);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    #spinefolio-container {
+      width: 100%;
+      height: 420px;
+      position: relative;
+      border-radius: var(--sb-radius-sm);
+      overflow: hidden;
+      background: var(--sb-bg-0);
+      border: 1px solid var(--sb-border);
+    }
+    .bundle-viewer-empty {
+      padding: 20px;
+      color: var(--sb-text-muted);
+      font-size: 11px;
+      text-align: center;
+    }
+    .bundle-viewer-error { color: var(--sb-error); }
+
+    /* Placeholder variant for animation previews shown before unlock */
+    .anim-placeholder.locked { display: flex; flex-direction: column; gap: 6px; padding: 12px; }
+    .anim-placeholder.locked .lock-glyph { font-size: 18px; opacity: 0.5; }
+    .anim-placeholder.locked .lock-label { font-size: 10px; color: var(--sb-text-muted); text-align: center; }
+  </style>
+</head>
+<body>
+<div class="page">
+  {{> header}}
+  {{!-- After the benchmark header we append the lock-state chip --}}
+  <div class="header-lock-row" style="margin-top:-14px;margin-bottom:20px;">
+    <button type="button" id="lock-chip" class="lock-chip" aria-live="polite">Encrypted</button>
+  </div>
+
+  {{!-- Hero screenshot slot - empty until decrypted --}}
+  <div id="enc-hero-slot"></div>
+
+  {{> impactCards}}
+  {{> hotspots}}
+  {{> advisor}}
+
+  {{#if analysis.animations.length}}
+  <h2>Animation Details</h2>
+  <div class="anim-grid">
+    {{#each analysis.animations}}
+    {{> animationCard}}
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{> comparisonTable}}
+  {{> fileHashes}}
+
+  <div class="footer">
+    Encrypted Spine Benchmark Report | {{meta.id}} | {{formatDate meta.createdAt}}
+  </div>
+</div>
+
+<!-- Embedded timeline data for d3 heatmaps -->
+<script id="timeline-data" type="application/json">{{{timelineJson}}}</script>
+<script id="report-id" type="text/plain">{{meta.id}}</script>
+<script id="report-mode" type="text/plain">{{mode}}</script>
+
+<script>
+// d3 heatmap renderer - same shape as report.hbs so the charts look identical
+(function() {
+  var raw = document.getElementById('timeline-data');
+  if (!raw) return;
+  var timelines;
+  try { timelines = JSON.parse(raw.textContent); } catch(e) { return; }
+
+  var COLORS = {
+    ri: '#FB923C',
+    ci: '#60A5FA',
+    bg: '#0E1117',
+    grid: 'rgba(240,246,252,0.06)',
+    text: '#545D68',
+    thresholds: [
+      { val: 3, color: 'rgba(163,230,53,0.2)' },
+      { val: 8, color: 'rgba(251,191,36,0.2)' },
+      { val: 15, color: 'rgba(251,146,60,0.2)' },
+      { val: 25, color: 'rgba(248,113,113,0.25)' },
+    ]
+  };
+
+  document.querySelectorAll('.heatmap[data-anim]').forEach(function(el) {
+    var name = el.getAttribute('data-anim');
+    var data = timelines[name];
+    if (!data || data.length < 2) { el.style.display = 'none'; return; }
+    var W = el.clientWidth || 300;
+    var H = 64;
+    var M = { top: 4, right: 8, bottom: 18, left: 28 };
+    var w = W - M.left - M.right;
+    var h = H - M.top - M.bottom;
+    var maxVal = Math.max(1, d3.max(data, function(d) { return d.ri + d.ci; }));
+    var x = d3.scaleLinear().domain([0, data[data.length - 1].time]).range([0, w]);
+    var y = d3.scaleLinear().domain([0, maxVal]).range([h, 0]);
+    var svg = d3.select(el).append('svg').attr('width', W).attr('height', H)
+      .style('border-radius', '3px').style('border', '1px solid rgba(240,246,252,0.08)');
+    svg.append('rect').attr('width', W).attr('height', H).attr('fill', COLORS.bg);
+    var g = svg.append('g').attr('transform', 'translate(' + M.left + ',' + M.top + ')');
+    COLORS.thresholds.forEach(function(t) {
+      if (t.val < maxVal) {
+        g.append('line').attr('x1', 0).attr('x2', w).attr('y1', y(t.val)).attr('y2', y(t.val))
+          .attr('stroke', t.color).attr('stroke-width', 1).attr('stroke-dasharray', '2,3');
+      }
+    });
+    var areaTotal = d3.area().x(function(d) { return x(d.time); }).y0(h).y1(function(d) { return y(d.ri + d.ci); }).curve(d3.curveMonotoneX);
+    var areaRI = d3.area().x(function(d) { return x(d.time); }).y0(h).y1(function(d) { return y(d.ri); }).curve(d3.curveMonotoneX);
+    g.append('path').datum(data).attr('d', areaTotal).attr('fill', COLORS.ci).attr('opacity', 0.25);
+    g.append('path').datum(data).attr('d', areaRI).attr('fill', COLORS.ri).attr('opacity', 0.35);
+    var lineRI = d3.line().x(function(d) { return x(d.time); }).y(function(d) { return y(d.ri); }).curve(d3.curveMonotoneX);
+    var lineTotal = d3.line().x(function(d) { return x(d.time); }).y(function(d) { return y(d.ri + d.ci); }).curve(d3.curveMonotoneX);
+    g.append('path').datum(data).attr('d', lineRI).attr('fill', 'none').attr('stroke', COLORS.ri).attr('stroke-width', 1.5).attr('opacity', 0.9);
+    g.append('path').datum(data).attr('d', lineTotal).attr('fill', 'none').attr('stroke', COLORS.ci).attr('stroke-width', 1.5).attr('opacity', 0.7);
+    var xAxis = d3.axisBottom(x).ticks(5).tickFormat(function(d) { return d + 's'; });
+    g.append('g').attr('transform', 'translate(0,' + h + ')').call(xAxis)
+      .selectAll('text').attr('fill', COLORS.text).attr('font-size', '8px');
+    g.selectAll('.domain, .tick line').attr('stroke', COLORS.grid);
+    var yAxis = d3.axisLeft(y).ticks(3).tickFormat(d3.format('.0f'));
+    g.append('g').call(yAxis).selectAll('text').attr('fill', COLORS.text).attr('font-size', '8px');
+    g.selectAll('.domain, .tick line').attr('stroke', COLORS.grid);
+  });
+})();
+</script>
+
+<script>
+// Encryption + unlock modal - fetches the envelope, decrypts client-side,
+// and hydrates the gif/screenshot/bundle slots when the user provides a
+// valid password. Metrics above this point are already server-rendered
+// with the exact same partials as the regular report, so the visual
+// design matches 1:1 even before unlock.
+(function() {
+  var REPORT_ID = document.getElementById('report-id').textContent.trim();
+  var MODE = document.getElementById('report-mode').textContent.trim();
+  var envelope = null;
+  var privateData = null;
+  var unlockModalEl = null;
+  var lockChip = document.getElementById('lock-chip');
+  // Per-animation Spinefolio instances we've mounted, so we can tear
+  // them down when the user re-locks the report.
+  var mountedWidgets = [];
+  // Spinefolio module promise (lazy import on first unlock in bundle mode)
+  var spinefolioModPromise = null;
+  // Shared blob URL map for the currently-decrypted bundle. We reuse the
+  // same URLs across all per-animation widgets so the browser only decodes
+  // each image / atlas / skeleton once.
+  var bundleBlobs = null;
+
+  function b64decode(s) {
+    var bin = atob(s);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+  function b64toBlob(b64, type) {
+    return new Blob([b64decode(b64)], { type: type || 'application/octet-stream' });
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  async function deriveKEK(password, salt, iterations) {
+    var passKey = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(password),
+      'PBKDF2', false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: salt, iterations: iterations, hash: 'SHA-256' },
+      passKey, { name: 'AES-GCM', length: 256 },
+      false, ['decrypt']
+    );
+  }
+
+  async function decryptEnvelope(env, password) {
+    var salt = b64decode(env.s);
+    var kwIv = b64decode(env.kwIv);
+    var kw = b64decode(env.kw);
+    var ctIv = b64decode(env.ctIv);
+    var ct = b64decode(env.ct);
+    var kek = await deriveKEK(password, salt, env.it);
+    var rawDek;
+    try {
+      rawDek = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: kwIv }, kek, kw);
+    } catch (e) { throw new Error('Invalid password'); }
+    var dek = await crypto.subtle.importKey('raw', rawDek, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ctIv }, dek, ct);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  // ── UI hydration ─────────────────────────────────────────────
+
+  function hydrateHero() {
+    var slot = document.getElementById('enc-hero-slot');
+    if (!slot || !privateData || !privateData.screenshot) return;
+    slot.innerHTML = '';
+    var img = document.createElement('img');
+    img.className = 'hero-img';
+    img.src = 'data:image/png;base64,' + privateData.screenshot;
+    slot.appendChild(img);
+  }
+
+  function hydrateGifs() {
+    if (!privateData || !privateData.gifs) return;
+    document.querySelectorAll('.anim-card').forEach(function(card) {
+      var name = (card.querySelector('.anim-header h3') || {}).textContent;
+      if (!name) return;
+      var gif = privateData.gifs[name.trim()];
+      if (!gif) return;
+      var existing = card.querySelector('.anim-placeholder, .anim-gif');
+      if (!existing) return;
+      var img = document.createElement('img');
+      img.className = 'anim-gif';
+      img.src = 'data:image/gif;base64,' + gif;
+      img.loading = 'lazy';
+      existing.replaceWith(img);
+    });
+  }
+
+  // Per-animation Spinefolio previews for bundle-mode reports. Each
+  // animation card gets its own widget, mounted in place of the
+  // "No preview" slot, configured to autoplay exactly that animation.
+  async function hydrateBundlePerAnimation() {
+    if (!privateData || !privateData.bundle) return;
+    bundleBlobs = buildBundleBlobs(privateData.bundle);
+    if (!bundleBlobs) return;
+
+    // Lazy-load Spinefolio once and reuse it for every animation card.
+    if (!spinefolioModPromise) {
+      spinefolioModPromise = import('/assets/spinefolio.js').catch(function(err) {
+        console.error('[report] failed to load spinefolio', err);
+        return null;
+      });
+    }
+    var mod = await spinefolioModPromise;
+    if (!mod) {
+      document.querySelectorAll('.anim-card .anim-placeholder').forEach(function(el) {
+        el.classList.add('locked');
+        el.innerHTML = '<div class="lock-glyph">&#9888;</div><div class="lock-label">Spinefolio failed to load</div>';
+      });
+      return;
+    }
+    var factory = mod.create || (mod.default && mod.default.create) || mod.createSpineWidget;
+    if (!factory) return;
+
+    document.querySelectorAll('.anim-card').forEach(function(card) {
+      var nameEl = card.querySelector('.anim-header h3');
+      if (!nameEl) return;
+      var animName = nameEl.textContent.trim();
+      var slot = card.querySelector('.anim-placeholder, .anim-gif');
+      if (!slot) return;
+
+      var mount = document.createElement('div');
+      mount.className = 'anim-spinefolio';
+      mount.style.width = '180px';
+      mount.style.height = '180px';
+      mount.style.background = 'var(--sb-bg-0)';
+      mount.style.borderRight = '1px solid var(--sb-border)';
+      mount.style.position = 'relative';
+      slot.replaceWith(mount);
+
+      try {
+        var widget = factory(mount, {
+          skeleton: bundleBlobs.skeletonUrl,
+          atlas: bundleBlobs.atlasUrl,
+          images: bundleBlobs.imageUrls.join(' '),
+          skeletonFormat: bundleBlobs.skeletonFormat,
+          animation: animName,
+          loop: true,
+          showControls: false,
+          enablePan: false,
+          enableZoom: false,
+          fitToContainer: true,
+          onError: function(err) {
+            mount.innerHTML = '<div class="anim-placeholder locked"><div class="lock-glyph">&#9888;</div><div class="lock-label">' + escapeHtml((err && err.message) || String(err)) + '</div></div>';
+          },
+        });
+        if (widget) mountedWidgets.push(widget);
+      } catch (err) {
+        mount.innerHTML = '<div class="anim-placeholder locked"><div class="lock-glyph">&#9888;</div><div class="lock-label">' + escapeHtml((err && err.message) || String(err)) + '</div></div>';
+      }
+    });
+  }
+
+  function buildBundleBlobs(encodedFiles) {
+    if (!encodedFiles || !encodedFiles.length) return null;
+    var blobByName = {};
+    encodedFiles.forEach(function(f) {
+      blobByName[f.name] = URL.createObjectURL(b64toBlob(f.data, f.type));
+    });
+    var atlasFile = encodedFiles.find(function(f) { return /\.atlas$/i.test(f.name); });
+    var skelFile = encodedFiles.find(function(f) { return /\.(json|skel)$/i.test(f.name); });
+    if (!atlasFile || !skelFile) return null;
+    var imageUrls = [];
+    encodedFiles.forEach(function(f) {
+      if (/^image\//.test(f.type) || /\.(png|webp|jpe?g)$/i.test(f.name)) {
+        imageUrls.push(blobByName[f.name]);
+      }
+    });
+    return {
+      skeletonUrl: blobByName[skelFile.name],
+      atlasUrl: blobByName[atlasFile.name],
+      imageUrls: imageUrls,
+      skeletonFormat: /\.skel$/i.test(skelFile.name) ? 'skel' : 'json',
+    };
+  }
+
+  function destroyMountedWidgets() {
+    mountedWidgets.forEach(function(w) {
+      try { if (w && typeof w.destroy === 'function') w.destroy(); } catch (e) { /* ignore */ }
+    });
+    mountedWidgets = [];
+    if (bundleBlobs) {
+      // Revoking a blob URL while Pixi is still using it would break in
+      // a "lock again" race; we keep them until full GC cleans up. The
+      // set is tiny (one skeleton + one atlas + a few images) so the
+      // leak is bounded.
+      bundleBlobs = null;
+    }
+  }
+
+  function decorateLockedPlaceholders() {
+    // Every .anim-placeholder rendered by the shared partial starts out
+    // as "No preview" - promote it to a styled lock placeholder while the
+    // report is still encrypted so viewers see why it's empty.
+    document.querySelectorAll('.anim-placeholder').forEach(function(el) {
+      if (el.classList.contains('locked')) return;
+      el.classList.add('locked');
+      el.innerHTML = '<div class="lock-glyph">&#128274;</div><div class="lock-label">Enter password<br/>to unlock</div>';
+    });
+  }
+
+  function setLockState(unlocked) {
+    if (!lockChip) return;
+    if (unlocked) {
+      lockChip.classList.add('unlocked');
+      lockChip.innerHTML = '&#128275; Unlocked - lock again';
+    } else {
+      lockChip.classList.remove('unlocked');
+      lockChip.innerHTML = '&#128274; Encrypted - unlock';
+    }
+  }
+
+  function lockAgain() {
+    privateData = null;
+    destroyMountedWidgets();
+    var slot = document.getElementById('enc-hero-slot');
+    if (slot) slot.innerHTML = '';
+    document.querySelectorAll('.anim-gif, .anim-spinefolio').forEach(function(el) {
+      var ph = document.createElement('div');
+      ph.className = 'anim-placeholder';
+      el.replaceWith(ph);
+    });
+    decorateLockedPlaceholders();
+    setLockState(false);
+    openUnlockModal();
+  }
+
+  // ── Unlock modal ─────────────────────────────────────────────
+
+  function openUnlockModal() {
+    closeUnlockModal();
+    var backdrop = document.createElement('div');
+    backdrop.className = 'unlock-backdrop';
+    var modal = document.createElement('div');
+    modal.className = 'unlock-modal';
+    modal.addEventListener('click', function(e) { e.stopPropagation(); });
+
+    modal.innerHTML =
+      '<div class="unlock-modal-header">' +
+        '<div class="unlock-modal-icon">&#128274;</div>' +
+        '<div>' +
+          '<div class="unlock-modal-title">This report is encrypted</div>' +
+          '<div class="unlock-modal-subtitle">Enter the password to unlock animated previews and the asset bundle.</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="unlock-modal-desc">The metrics and heatmaps are visible without a password. Only screenshots, animated previews, and the asset bundle are protected.</div>' +
+      '<input type="password" class="unlock-modal-input" placeholder="Password" autocomplete="current-password" />' +
+      '<div class="unlock-modal-error"></div>' +
+      '<div class="unlock-modal-actions">' +
+        '<button type="button" class="unlock-btn unlock-btn-secondary" data-action="skip">View without assets</button>' +
+        '<button type="button" class="unlock-btn unlock-btn-primary" data-action="submit">Unlock</button>' +
+      '</div>';
+
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+    unlockModalEl = backdrop;
+
+    var input = modal.querySelector('.unlock-modal-input');
+    var err = modal.querySelector('.unlock-modal-error');
+    var unlockBtn = modal.querySelector('[data-action="submit"]');
+    var viewBtn = modal.querySelector('[data-action="skip"]');
+    var busy = false;
+
+    async function submit() {
+      if (busy) return;
+      var pw = input.value;
+      if (!pw) { input.focus(); return; }
+      busy = true;
+      unlockBtn.disabled = true;
+      unlockBtn.textContent = 'Unlocking...';
+      err.textContent = '';
+      var ok = await tryUnlock(pw, false);
+      if (ok) {
+        closeUnlockModal();
+      } else {
+        err.textContent = 'Invalid password. Try again or view without assets.';
+        unlockBtn.disabled = false;
+        unlockBtn.textContent = 'Unlock';
+        input.focus();
+        input.select();
+        busy = false;
+      }
+    }
+
+    unlockBtn.addEventListener('click', submit);
+    viewBtn.addEventListener('click', function() { closeUnlockModal(); });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') submit();
+      if (e.key === 'Escape') closeUnlockModal();
+    });
+    setTimeout(function() { input.focus(); }, 20);
+  }
+
+  function closeUnlockModal() {
+    if (unlockModalEl && unlockModalEl.parentNode) {
+      unlockModalEl.parentNode.removeChild(unlockModalEl);
+    }
+    unlockModalEl = null;
+  }
+
+  async function tryUnlock(password, silent) {
+    try {
+      privateData = await decryptEnvelope(envelope, password);
+      hydrateHero();
+      if (MODE === 'bundle') {
+        await hydrateBundlePerAnimation();
+      } else {
+        hydrateGifs();
+      }
+      setLockState(true);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────
+
+  async function boot() {
+    decorateLockedPlaceholders();
+    try {
+      var res = await fetch('/api/reports/' + REPORT_ID + '/envelope');
+      envelope = res.ok ? await res.json() : null;
+    } catch (e) {
+      envelope = null;
+    }
+
+    if (!envelope) {
+      // Nothing to unlock - treat the report as fully visible.
+      if (lockChip) lockChip.style.display = 'none';
+      return;
+    }
+
+    setLockState(false);
+    lockChip.addEventListener('click', function() {
+      if (privateData) { lockAgain(); }
+      else { openUnlockModal(); }
+    });
+
+    openUnlockModal();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

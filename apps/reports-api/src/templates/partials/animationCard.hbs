@@ -1,0 +1,58 @@
+<div class="anim-card">
+  <div class="anim-header">
+    <h3>{{this.name}}</h3>
+    <span class="dur">{{fixed this.durationSec 2}}s <span class="badge badge-{{rowLevel this}}">{{rowLevel this}}</span></span>
+  </div>
+  <div class="anim-body">
+    {{#if (gifUrl this.name @root.gifMap)}}
+    <img class="anim-gif" src="{{gifUrl this.name @root.gifMap}}" loading="lazy" />
+    {{else}}
+    <div class="anim-placeholder">No preview</div>
+    {{/if}}
+    <div class="anim-metrics">
+      <div class="metrics-row">
+        <div class="metric">
+          <div class="metric-label">Rendering (GPU)</div>
+          <div class="metric-value v-{{this.rendering.level}}">{{fixed this.rendering.cost 1}}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Computational (CPU)</div>
+          <div class="metric-value v-{{this.computational.level}}">{{fixed this.computational.cost 1}}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total</div>
+          <div class="metric-value">{{fixed this.totalCost 1}}</div>
+        </div>
+      </div>
+
+      <!-- d3 heatmap rendered client-side from embedded timeline data -->
+      <div class="heatmap" data-anim="{{this.name}}"></div>
+
+      {{#if this.hotspots}}
+      <div class="metrics-row" style="margin-top:6px">
+        <div class="metric">
+          <div class="metric-label">Page Breaks</div>
+          <div class="metric-value">{{this.hotspots.pageBreaks}}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Blend Switches</div>
+          <div class="metric-value">{{this.hotspots.blendSwitches}}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Vertices</div>
+          <div class="metric-value">{{this.hotspots.meshDensity}}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Constraints</div>
+          <div class="metric-value">{{this.hotspots.constraints}}</div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if this.activeFeatures.length}}
+      <div class="features">
+        {{#each (allFeatures this.activeFeatures)}}<span class="feat{{#if this.on}} on{{/if}}">{{this.name}}</span>{{/each}}
+      </div>
+      {{/if}}
+    </div>
+  </div>
+</div>

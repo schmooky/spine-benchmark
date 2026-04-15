@@ -1,0 +1,31 @@
+{
+  "projectName": "spine-benchmark",
+  "projectOwner": "schmooky",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 72,
+  "commit": true,
+  "commitConvention": "angular",
+  "commitType": "docs",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "schmooky",
+      "name": "schmooky",
+      "avatar_url": "https://avatars.githubusercontent.com/u/0",
+      "profile": "https://github.com/schmooky",
+      "contributions": [
+        "code",
+        "design",
+        "doc",
+        "maintenance",
+        "review"
+      ]
+    }
+  ],
+  "contributorsSortAlphabetically": false,
+  "skipCi": true
+}

@@ -1,0 +1,40 @@
+# Codecov config. Keeps behavior aligned with vitest.config.ts thresholds
+# (90% lines/functions/statements, 85% branches) and ignores files that
+# don't belong in coverage math.
+#
+# Docs: https://docs.codecov.com/docs/codecovyml-reference
+
+coverage:
+  precision: 2
+  round: down
+  range: '85...100'
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%        # tolerate a 1-point dip before failing
+        informational: false
+    patch:
+      default:
+        target: 90%
+        threshold: 5%
+        informational: false
+
+comment:
+  layout: 'reach, diff, flags, files'
+  behavior: default
+  require_changes: false
+
+ignore:
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.ts'
+  - '**/__tests__/**'
+  - '**/__fixtures__/**'
+  - 'apps/site/**'
+  - 'apps/benchmark/**'
+  - 'apps/crawler-demo/**'
+  - 'apps/reports-api/**'
+  - 'scripts/**'
+  - 'dist/**'
+  - 'node_modules/**'

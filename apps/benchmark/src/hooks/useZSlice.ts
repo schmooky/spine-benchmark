@@ -130,7 +130,7 @@ function sliceByDrawCall(spine: Spine): SliceLayer[] {
   let batchBlend = '';
 
   for (const info of snapshot.slots) {
-    // Skip invisible slots — they don't contribute to draw calls
+    // Skip invisible slots  -  they don't contribute to draw calls
     if (info.isInvisible) continue;
 
     // When a break occurs (or first slot), start a new batch layer

@@ -19,13 +19,22 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/asset-store": "file:../asset-store",
-    "@spine-benchmark/spine-loader": "file:../spine-loader"
+    "@spine-benchmark/asset-store": "^0.1.0",
+    "@spine-benchmark/spine-loader": "^0.1.0"
   },
   "peerDependencies": {
     "pixi.js": "^8.16.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/file-tools"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/file-tools#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

@@ -1,42 +1,45 @@
 name: CI
 
 on:
-  push:
-    branches: [main, master, v3]
   pull_request:
-    branches: [main, master, v3]
+  push:
+    branches:
+      - main
+
+# Least-privilege default. Individual jobs can override if they need more.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
 
       - run: npm ci
 
-      - name: Build all packages
-        run: |
-          npm run build:metrics-factors
-          npm run build:metrics-scoring
-          npm run build:metrics-sampling
-          npm run build:metrics-analyzers
-          npm run build:metrics-pipeline
-          npm run build:metrics-reporting
-          npm run build:metrics
-          npm run build:asset-store
-          npm run build:spine-loader
-          npm run build:mesh-tools
-          npm run build:render-tools
-          npm run build:constraint-tools
-          npm run build:drawcall-tools
-          npm run build:file-tools
-          npm run build:workbench-core
-          npm run build:pixi-crawler
+      - name: Lint
+        run: npm run check:lint
 
-      - name: Run tests
-        run: npm test
+      - name: Test with coverage
+        run: npx vitest run --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
+        with:
+          # Public-repo uploads don't strictly need a token, but adding
+          # one lifts rate limits and makes fork PRs upload cleanly.
+          # Configure in repo secrets as CODECOV_TOKEN (optional).
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: false

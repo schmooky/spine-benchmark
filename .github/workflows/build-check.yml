@@ -1,36 +1,43 @@
 name: Build Check
 
+# Builds every publishable workspace package in topological order using
+# the same script the release workflow runs. Keeping the two paths
+# identical means a green PR here is a strong signal that `npm run release`
+# on main will also succeed.
+
 on:
   pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  typecheck:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
 
       - run: npm ci
 
-      - name: Build all packages
-        run: |
-          npm run build:metrics-factors
-          npm run build:metrics-scoring
-          npm run build:metrics-sampling
-          npm run build:metrics-analyzers
-          npm run build:metrics-pipeline
-          npm run build:metrics-reporting
-          npm run build:metrics
-          npm run build:asset-store
-          npm run build:spine-loader
-          npm run build:mesh-tools
-          npm run build:render-tools
-          npm run build:constraint-tools
-          npm run build:drawcall-tools
-          npm run build:file-tools
-          npm run build:workbench-core
-          npm run build:pixi-crawler
+      - name: Build all publishable packages
+        run: npm run build:all
+
+      - name: Bundle size report
+        # Informational on PRs - prints the gzipped size delta for the
+        # marquee published packages. Until the committed baseline has
+        # real numbers this is a "no baseline" report; once the baseline
+        # is populated (npm run size:update on main), switch this step
+        # to `npm run size:check` to enforce the 10% drift tolerance.
+        run: npm run size

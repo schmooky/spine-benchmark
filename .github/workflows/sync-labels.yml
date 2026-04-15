@@ -1,0 +1,97 @@
+name: Sync Labels
+
+# One-shot / on-demand label reconciler. Reads .github/labels.yml and
+# creates-or-updates every label listed there via the GitHub REST API.
+# Existing labels not in the config are left alone (no deletes), so it is
+# safe to run repeatedly.
+#
+# Run it manually from the Actions tab after editing .github/labels.yml,
+# or let it fire automatically when that file changes on main.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/labels.yml'
+      - '.github/workflows/sync-labels.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: sync-labels
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install PyYAML
+        run: python3 -m pip install --user pyyaml
+
+      - name: Sync labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Parse YAML -> JSON with python3 (preinstalled on ubuntu-latest).
+          python3 -c '
+          import json, sys, yaml
+          with open(".github/labels.yml") as f:
+              print(json.dumps(yaml.safe_load(f)))
+          ' > labels.json
+
+          count=$(jq 'length' labels.json)
+          echo "Syncing $count labels to $REPO"
+
+          for i in $(seq 0 $((count - 1))); do
+            name=$(jq -r ".[$i].name" labels.json)
+            color=$(jq -r ".[$i].color" labels.json)
+            description=$(jq -r ".[$i].description // \"\"" labels.json)
+
+            body=$(jq -n \
+              --arg name "$name" \
+              --arg color "$color" \
+              --arg description "$description" \
+              '{name: $name, color: $color, description: $description}')
+
+            # Try to update first; if 404, create. Both endpoints need the
+            # label name URL-encoded when targeting it.
+            encoded=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=\"\"))" "$name")
+
+            http=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
+              -X PATCH \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$REPO/labels/$encoded" \
+              -d "$body")
+
+            if [ "$http" = "404" ]; then
+              http=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
+                -X POST \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/$REPO/labels" \
+                -d "$body")
+              echo "  created $name ($http)"
+            else
+              echo "  updated $name ($http)"
+            fi
+
+            if [ "$http" != "200" ] && [ "$http" != "201" ]; then
+              echo "  ERROR: $name -> HTTP $http"
+              cat /tmp/resp.json
+              exit 1
+            fi
+          done
+
+          echo "Label sync complete."

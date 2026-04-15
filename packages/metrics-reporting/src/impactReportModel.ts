@@ -1,6 +1,13 @@
 import type { AnimationAnalysis, SpineAnalysisResult } from '@spine-benchmark/metrics-pipeline';
+import {
+  computationalImpactCost as sharedComputationalImpactCost,
+  impactFromCost as sharedImpactFromCost,
+  renderingImpactCost as sharedRenderingImpactCost,
+  type ImpactBadge as SharedImpactBadge,
+  type ImpactLevel as SharedImpactLevel,
+} from '@spine-benchmark/metrics-impact-formula';
 
-export type ImpactLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'veryHigh';
+export type ImpactLevel = SharedImpactLevel;
 export type ImpactRowTone = 'neutral' | 'warning' | 'danger';
 export type AdvisorSeverity = 'info' | 'warning' | 'critical';
 export type AdvisorCategory = 'pageBreaks' | 'blendSwitches' | 'meshDensity' | 'constraints';
@@ -20,10 +27,7 @@ export interface ImpactSupplementalMetrics {
   perAnimation?: Record<string, ImpactSupplementalAnimationMetrics>;
 }
 
-export interface ImpactBadge {
-  level: ImpactLevel;
-  cost: number;
-}
+export type ImpactBadge = SharedImpactBadge;
 
 export interface ImpactAnimationEntry {
   name: string;
@@ -128,43 +132,41 @@ export interface ImpactDeltaModel {
 
 const EPSILON = 0.05;
 
-export function impactFromCost(cost: number): ImpactBadge {
-  if (cost < 3) return { level: 'minimal', cost };
-  if (cost < 8) return { level: 'low', cost };
-  if (cost < 15) return { level: 'moderate', cost };
-  if (cost < 25) return { level: 'high', cost };
-  return { level: 'veryHigh', cost };
-}
+/**
+ * Re-exported from `@spine-benchmark/metrics-impact-formula`. Kept here for
+ * backwards compatibility with consumers that import it from this package.
+ */
+export const impactFromCost = sharedImpactFromCost;
 
+/**
+ * Adapter that pulls the canonical RI inputs out of an offline
+ * {@link AnimationAnalysis} and feeds them into the shared formula.
+ */
 export function renderingImpactCost(animation: AnimationAnalysis): number {
-  return (
-    animation.blendModeMetrics.activeNonNormalCount * 3 +
-    animation.clippingMetrics.activeMaskCount * 5 +
-    animation.meshMetrics.totalVertices / 200
-  );
+  return sharedRenderingImpactCost({
+    activeNonNormalBlends: animation.blendModeMetrics.activeNonNormalCount,
+    activeClippingMasks: animation.clippingMetrics.activeMaskCount,
+    totalVertices: animation.meshMetrics.totalVertices,
+  });
 }
 
+/**
+ * Adapter that pulls the canonical CI inputs out of an offline
+ * {@link AnimationAnalysis} and feeds them into the shared formula.
+ */
 export function computationalImpactCost(animation: AnimationAnalysis): number {
-  const meshCount = Math.max(animation.meshMetrics.activeMeshCount ?? 0, 1);
-  const averageVerticesPerMesh = animation.meshMetrics.totalVertices / meshCount;
-
-  // Runtime-aligned weighting:
-  // - Constraints are active-gated and frequently early-out in spine-ts core.
-  // - Mesh deformation/weighting scales with per-mesh vertex complexity.
-  const constraintCost =
-    animation.constraintMetrics.activePhysicsCount * 0.7 +
-    animation.constraintMetrics.activePathCount * 0.55 +
-    animation.constraintMetrics.activeIkCount * 0.35 +
-    animation.constraintMetrics.activeTransformCount * 0.2;
-
-  const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
-  const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
-  const meshComputationCost =
-    animation.meshMetrics.deformedMeshCount * deformedMeshWeight +
-    animation.meshMetrics.weightedMeshCount * weightedMeshWeight +
-    animation.meshMetrics.totalVertices / 2000;
-
-  return constraintCost + meshComputationCost;
+  return sharedComputationalImpactCost({
+    constraints: {
+      physics: animation.constraintMetrics.activePhysicsCount,
+      path: animation.constraintMetrics.activePathCount,
+      ik: animation.constraintMetrics.activeIkCount,
+      transform: animation.constraintMetrics.activeTransformCount,
+    },
+    totalVertices: animation.meshMetrics.totalVertices,
+    activeMeshCount: animation.meshMetrics.activeMeshCount ?? 0,
+    weightedMeshCount: animation.meshMetrics.weightedMeshCount,
+    deformedMeshCount: animation.meshMetrics.deformedMeshCount,
+  });
 }
 
 function rowTone(totalCost: number): ImpactRowTone {

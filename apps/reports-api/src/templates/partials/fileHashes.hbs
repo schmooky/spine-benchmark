@@ -1,0 +1,9 @@
+{{#if meta.fileHashes.length}}
+<h2>Source Files</h2>
+<dl class="hashes">
+  {{#each meta.fileHashes}}
+  <dt>{{this.name}} ({{fileSize this.size}})</dt>
+  <dd>SHA-256: {{this.sha256}}</dd>
+  {{/each}}
+</dl>
+{{/if}}

@@ -4,15 +4,11 @@ import path from "path";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     viteStaticCopy({
       targets: [
-        {
-          src: "stats.js", // Or wherever your stats.js is
-          dest: "", // '' means place it in root of dist/
-        },
         {
           src: "assets/favicon-96x96.png",
           dest: "",
@@ -53,6 +49,13 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
   },
+  // Strip debug statements from production builds only. Dev mode keeps
+  // console.log / debugger calls intact so contributors can trace
+  // analyzer flow. In `vite build` they are dropped at transform time
+  // so they never ship to spine.schmooky.dev.
+  esbuild: {
+    drop: mode === "production" ? ["console", "debugger"] : [],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -70,4 +73,4 @@ export default defineConfig({
       "@spine-benchmark/metrics-reporting",
     ],
   },
-});
+}));

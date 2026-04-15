@@ -1,0 +1,67 @@
+name: Scorecard supply-chain security
+
+# Runs the OpenSSF Scorecard against this repo weekly and on every push
+# to main. Scorecard rates the repo on ~18 supply-chain heuristics -
+# pinned actions, CodeQL, branch protection, dependency update tooling,
+# token permissions, signed releases, fuzzing, etc. - and publishes the
+# findings to the Security tab. A public badge in README.md shows the
+# current score.
+#
+# Docs: https://github.com/ossf/scorecard-action
+
+on:
+  branch_protection_rule:
+  push:
+    branches:
+      - main
+  schedule:
+    # Mondays 09:00 UTC. Same weekly cadence as CodeQL + dependabot.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: scorecard-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed to upload SARIF results to the Security tab.
+      security-events: write
+      # Needed to publish results and get a badge (see publish_results).
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde # v2.4.2
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publish signed results so the badge service can verify them.
+          # This is what lets the README badge show a real number.
+          publish_results: true
+
+      # Upload as an artifact so runs are inspectable even if the SARIF
+      # upload fails.
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v3
+        with:
+          sarif_file: results.sarif

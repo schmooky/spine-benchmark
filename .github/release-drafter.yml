@@ -1,0 +1,107 @@
+# Release Drafter config. Changesets already handles per-package version
+# bumps and changelogs for everything under packages/. Release Drafter
+# complements that by maintaining a repo-level draft GitHub Release that
+# summarises *every* merged PR - including changes to apps/ that never
+# get a changeset - categorised by label.
+#
+# Docs: https://github.com/release-drafter/release-drafter
+
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+# Labels that don't deserve a line in the changelog (grouped already, or
+# noisy). Dependabot minor/patch groups go under "Dependencies" still.
+exclude-labels:
+  - skip-changelog
+  - stale
+  - duplicate
+  - invalid
+  - wontfix
+  - question
+
+categories:
+  - title: 'Breaking changes'
+    labels:
+      - 'breaking'
+      - 'major'
+  - title: 'New features'
+    labels:
+      - 'enhancement'
+      - 'feature'
+  - title: 'Bug fixes'
+    labels:
+      - 'bug'
+      - 'fix'
+      - 'regression'
+  - title: 'Performance'
+    labels:
+      - 'performance'
+  - title: 'Security'
+    labels:
+      - 'security'
+  - title: 'Documentation'
+    labels:
+      - 'area/docs'
+      - 'docs'
+  - title: 'CI / build'
+    labels:
+      - 'area/ci'
+      - 'github-actions'
+  - title: 'Dependencies'
+    collapse-after: 5
+    labels:
+      - 'dependencies'
+
+change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
+change-title-escapes: '\<*_&'
+
+# Version resolver reads labels to pick the next repo-level tag. This
+# is independent of per-package semver (changesets owns that).
+version-resolver:
+  major:
+    labels:
+      - 'breaking'
+      - 'major'
+  minor:
+    labels:
+      - 'enhancement'
+      - 'feature'
+      - 'minor'
+  patch:
+    labels:
+      - 'bug'
+      - 'fix'
+      - 'regression'
+      - 'performance'
+      - 'security'
+      - 'patch'
+      - 'dependencies'
+  default: patch
+
+template: |
+  ## What's changed
+
+  $CHANGES
+
+  **Full changelog**: https://github.com/schmooky/spine-benchmark/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+autolabeler:
+  - label: 'bug'
+    title:
+      - '/^fix(\(.+\))?:/i'
+  - label: 'enhancement'
+    title:
+      - '/^feat(\(.+\))?:/i'
+  - label: 'area/docs'
+    title:
+      - '/^docs(\(.+\))?:/i'
+  - label: 'area/ci'
+    title:
+      - '/^ci(\(.+\))?:/i'
+      - '/^chore\(ci\)/i'
+  - label: 'performance'
+    title:
+      - '/^perf(\(.+\))?:/i'
+  - label: 'dependencies'
+    title:
+      - '/^chore\(deps\)/i'

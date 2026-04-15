@@ -306,8 +306,8 @@ export class Scanner {
 
         // ═══════════════════════════════════════════════════════
         // Issue detection
-        //   visible → rendering/batching issues
-        //   !visible → waste-detection issues only
+        //   visible -> rendering/batching issues
+        //   !visible -> waste-detection issues only
         // ═══════════════════════════════════════════════════════
 
         if (visible) {

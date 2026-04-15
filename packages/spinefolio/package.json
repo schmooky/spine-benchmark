@@ -51,13 +51,28 @@
     "pack:check": "npm pack --dry-run",
     "prepublishOnly": "npm run build"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101",
-    "pixi.js": "^8.16.0"
+    "pixi.js": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@esotericsoftware/spine-pixi-v8": { "optional": true },
+    "pixi.js": { "optional": true }
   },
   "devDependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.101",
+    "pixi.js": "^8.16.0",
     "terser": "^5.46.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/spinefolio"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/spinefolio#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

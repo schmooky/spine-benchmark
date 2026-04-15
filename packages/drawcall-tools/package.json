@@ -22,7 +22,16 @@
     "@spine-benchmark/asset-store": "^0.1.0"
   },
   "devDependencies": {
-    "@spine-benchmark/asset-store": "file:../asset-store",
+    "@spine-benchmark/asset-store": "^0.1.0",
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/drawcall-tools"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/drawcall-tools#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

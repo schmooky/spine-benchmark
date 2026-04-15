@@ -1,6 +1,19 @@
 # @spine-benchmark/pixi-crawler
 
+[![npm](https://img.shields.io/npm/v/@spine-benchmark/pixi-crawler?label=npm)](https://www.npmjs.com/package/@spine-benchmark/pixi-crawler)
+[![downloads](https://img.shields.io/npm/dm/@spine-benchmark/pixi-crawler?label=downloads)](https://www.npmjs.com/package/@spine-benchmark/pixi-crawler)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@spine-benchmark/pixi-crawler?label=minzip)](https://bundlephobia.com/package/@spine-benchmark/pixi-crawler)
+
 A real-time Spine animation profiler and performance analyzer for PixiJS applications. Provides in-game debugging overlay, frame recording, statistical analysis, and remote waterfall visualization for identifying and fixing performance bottlenecks.
+
+The RI/CI scoring here is the same as the
+[offline benchmark site](https://spine.schmooky.dev) - both paths
+import the formulas from
+[`@spine-benchmark/metrics-impact-formula`](https://www.npmjs.com/package/@spine-benchmark/metrics-impact-formula),
+so a number you see at runtime matches what the benchmark reports
+for the same skeleton. See the
+[architecture doc](https://github.com/schmooky/spine-benchmark/blob/main/docs/ARCHITECTURE.md)
+for how the two paths stay in sync.
 
 ## Features
 
@@ -261,6 +274,11 @@ Press **P** to export a detailed performance report with:
 
 ## Development
 
+This package lives inside the
+[spine-benchmark monorepo](https://github.com/schmooky/spine-benchmark).
+See [`CONTRIBUTING.md`](https://github.com/schmooky/spine-benchmark/blob/main/CONTRIBUTING.md)
+for the workflow. Local commands:
+
 ```bash
 npm run build       # Build for production
 npm run build:dev   # Build with source maps
@@ -268,6 +286,12 @@ npm run type-check  # Check types without building
 npm run clean       # Remove dist directory
 ```
 
+## See also
+
+- [`@spine-benchmark/metrics-impact-formula`](https://www.npmjs.com/package/@spine-benchmark/metrics-impact-formula) - the canonical RI/CI formulas this package depends on.
+- [Spine Benchmark site](https://spine.schmooky.dev) - the offline analyzer that uses the same formulas.
+- [`@spine-benchmark/spinefolio`](https://www.npmjs.com/package/@spine-benchmark/spinefolio) - a PixiJS v8 Spine widget for portfolios, sibling package in the same repo.
+
 ## License
 
-MIT
+[MIT](https://github.com/schmooky/spine-benchmark/blob/main/LICENSE) (c) Spine Benchmark Contributors

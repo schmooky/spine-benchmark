@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { computationalImpactCost } from '@spine-benchmark/metrics-impact-formula';
 import { SpineAnalysisResult } from '../../core/SpineAnalyzer';
 import { getImpactFromCost, getImpactBadgeClass } from '../../core/utils/scoreCalculator';
 
@@ -7,13 +8,29 @@ interface PhysicsAnalysisProps {
   data: SpineAnalysisResult;
 }
 
-function constraintImpactCost(c: any): number {
-  return (
-    (c.activePhysicsCount * 0.7) +
-    (c.activePathCount * 0.55) +
-    (c.activeIkCount * 0.35) +
-    (c.activeTransformCount * 0.2)
-  );
+/**
+ * Constraint-only slice of the canonical CI formula. Calling
+ * `computationalImpactCost` with zeroed mesh inputs gives us the constraint
+ * cost component, so the Physics tab matches the rest of the app exactly.
+ */
+function constraintImpactCost(c: {
+  activePhysicsCount: number;
+  activePathCount: number;
+  activeIkCount: number;
+  activeTransformCount: number;
+}): number {
+  return computationalImpactCost({
+    constraints: {
+      physics: c.activePhysicsCount,
+      path: c.activePathCount,
+      ik: c.activeIkCount,
+      transform: c.activeTransformCount,
+    },
+    totalVertices: 0,
+    activeMeshCount: 0,
+    weightedMeshCount: 0,
+    deformedMeshCount: 0,
+  });
 }
 
 export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {

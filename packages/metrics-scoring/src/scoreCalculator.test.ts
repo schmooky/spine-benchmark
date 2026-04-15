@@ -33,13 +33,13 @@ describe('metrics-scoring', () => {
     expect(getImpactFromCost(3).level).toBe('low');
     expect(getImpactFromCost(8).level).toBe('moderate');
     expect(getImpactFromCost(15).level).toBe('high');
-    expect(getImpactFromCost(25).level).toBe('veryHigh');
+    expect(getImpactFromCost(25).level).toBe('very-high');
 
     expect(getImpactBadgeClass('minimal')).toBe('impact-minimal');
     expect(getImpactBadgeClass('low')).toBe('impact-low');
     expect(getImpactBadgeClass('moderate')).toBe('impact-moderate');
     expect(getImpactBadgeClass('high')).toBe('impact-high');
-    expect(getImpactBadgeClass('veryHigh')).toBe('impact-very-high');
+    expect(getImpactBadgeClass('very-high')).toBe('impact-very-high');
     expect(getImpactBadgeClass('unknown')).toBe('impact-minimal');
   });
 
@@ -76,7 +76,7 @@ describe('metrics-scoring', () => {
     expect(cpuImpact.cost).toBeGreaterThan(0);
     expect(cpuImpact.cost).toBeCloseTo(6.59, 2);
     expect(cpuImpact.level).toBe('low');
-    expect(['minimal', 'low', 'moderate', 'high', 'veryHigh']).toContain(renderImpact.level);
-    expect(['minimal', 'low', 'moderate', 'high', 'veryHigh']).toContain(cpuImpact.level);
+    expect(['minimal', 'low', 'moderate', 'high', 'very-high']).toContain(renderImpact.level);
+    expect(['minimal', 'low', 'moderate', 'high', 'very-high']).toContain(cpuImpact.level);
   });
 });

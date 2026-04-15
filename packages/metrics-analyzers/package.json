@@ -15,19 +15,27 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "npm run build --workspace @spine-benchmark/metrics-factors && npm run build --workspace @spine-benchmark/metrics-scoring && npm run build --workspace @spine-benchmark/metrics-sampling",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-factors": "file:../metrics-factors",
-    "@spine-benchmark/metrics-scoring": "file:../metrics-scoring",
-    "@spine-benchmark/metrics-sampling": "file:../metrics-sampling"
+    "@spine-benchmark/metrics-factors": "^0.1.0",
+    "@spine-benchmark/metrics-scoring": "^0.1.0",
+    "@spine-benchmark/metrics-sampling": "^0.1.0"
   },
   "peerDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/metrics-analyzers"
+  },
+  "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/metrics-analyzers#readme",
+  "bugs": {
+    "url": "https://github.com/schmooky/spine-benchmark/issues"
   }
 }

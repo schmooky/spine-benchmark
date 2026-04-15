@@ -1037,7 +1037,7 @@ input[type="color"]::-webkit-color-swatch {
 
 .workspace-content {
   position: relative;
-  /* no z-index — must NOT create a stacking context so canvas overlays
+  /* no z-index  -  must NOT create a stacking context so canvas overlays
      can individually sit above pixi-host-persistent (z-index 5) */
   height: 100%;
 }
@@ -6661,7 +6661,7 @@ select:focus,
 }
 
 .route-links-editorial a::after {
-  content: "↗";
+  content: "->";
   color: #8a8a8a;
 }
 

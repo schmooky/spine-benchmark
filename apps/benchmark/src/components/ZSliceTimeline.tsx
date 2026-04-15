@@ -90,8 +90,8 @@ export const ZSliceTimeline: React.FC<ZSliceTimelineProps> = ({
           className="animation-select-prefix"
           style={{ whiteSpace: 'nowrap', fontSize: 11, opacity: 0.7, minWidth: 46 }}
         >
-          {t('zSlice.timeline.frame')} {isReady ? currentFrame + 1 : '–'}
-          <span style={{ opacity: 0.4 }}> / {isReady ? totalFrames : '–'}</span>
+          {t('zSlice.timeline.frame')} {isReady ? currentFrame + 1 : '-'}
+          <span style={{ opacity: 0.4 }}> / {isReady ? totalFrames : '-'}</span>
         </span>
 
         <input

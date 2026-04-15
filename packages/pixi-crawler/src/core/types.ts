@@ -1,4 +1,14 @@
 import type { Container } from 'pixi.js';
+import type { ImpactLevel } from '@spine-benchmark/metrics-impact-formula';
+
+// Re-export the canonical impact formula primitives so existing crawler
+// consumers (`import { ImpactLevel, classifyImpactLevel, DEFAULT_IMPACT_BRACKETS } from '@spine-benchmark/pixi-crawler'`)
+// keep working without needing to know about the leaf package.
+export {
+  classifyImpactLevel,
+  DEFAULT_IMPACT_BRACKETS,
+  type ImpactLevel,
+} from '@spine-benchmark/metrics-impact-formula';
 
 /** Metadata we store per-node via WeakMap */
 export interface NodeMeta {
@@ -165,7 +175,7 @@ export const ISSUE_EXPLAIN: Record<IssueCode, { what: string; fix: string }> = {
         fix:  'Repack atlas into fewer pages, reorder slots in Spine editor so same-atlas/same-blend slots are adjacent.',
     },
     SPINE_BLEND_THRASH: {
-        what: 'Spine slots alternate between blend modes (Normal↔Additive) in draw order, each transition flushes the batch.',
+        what: 'Spine slots alternate between blend modes (Normal<->Additive) in draw order, each transition flushes the batch.',
         fix:  'Group all additive slots together at the end of the draw order in Spine editor. Avoid interleaving blend modes.',
     },
     SPINE_ATLAS_THRASH: {
@@ -177,7 +187,7 @@ export const ISSUE_EXPLAIN: Record<IssueCode, { what: string; fix: string }> = {
         fix:  'Consolidate into a single atlas page by reducing attachment sizes or using a larger atlas dimension.',
     },
     MASK_BREAK: {
-        what: 'Mask causes a batch break: flush → write stencil → draw masked content → clear stencil (+2 draw calls).',
+        what: 'Mask causes a batch break: flush -> write stencil -> draw masked content -> clear stencil (+2 draw calls).',
         fix:  'Minimize mask usage. For rectangular clips use container bounds or scissor rect. Consider pre-rendered mask textures.',
     },
     MASK_NESTED: {
@@ -317,11 +327,11 @@ export interface CrawlerConfig {
     /** Combined budget threshold above which SPINE_HIGH_BUDGET fires. Default 25 (= 'very-high' level) */
     budgetThreshold: number;
     /**
-     * Impact level bracket boundaries [low, moderate, high, veryHigh].
+     * Impact level bracket boundaries [low, moderate, high, very-high].
      * Scores below [0] = minimal, [0]..[1] = low, [1]..[2] = moderate,
-     * [2]..[3] = high, ≥[3] = very-high.
+     * [2]..[3] = high, >=[3] = very-high.
      *
-     * Default [3, 8, 15, 25] matches metrics-reporting/scoreCalculator.
+     * Default [3, 8, 15, 25] matches `@spine-benchmark/metrics-impact-formula`.
      * Raise these for high-end targets (e.g. desktop GPU [6, 16, 30, 50])
      * or lower for constrained devices (e.g. mobile [2, 5, 10, 18]).
      */
@@ -347,40 +357,19 @@ export const DEFAULT_CONFIG: CrawlerConfig = {
     impactBrackets: [3, 8, 15, 25],
 };
 
-/**
- * Default impact brackets aligned with metrics-reporting/scoreCalculator:
- *   minimal: <3, low: <8, moderate: <15, high: <25, very-high: ≥25
- */
-export const DEFAULT_IMPACT_BRACKETS: [number, number, number, number] = [3, 8, 15, 25];
-
-/**
- * Classify impact level based on score and configurable brackets.
- * Brackets: [low, moderate, high, veryHigh].
- *
- * Use wider brackets for high-end targets (desktop GPU) to avoid
- * false-positive red warnings on content that performs fine.
- * Use tighter brackets for constrained targets (mobile, low-end).
- */
-export function classifyImpactLevel(
-    score: number,
-    brackets: [number, number, number, number] = DEFAULT_IMPACT_BRACKETS,
-): ImpactLevel {
-    if (score >= brackets[3]) return 'very-high';
-    if (score >= brackets[2]) return 'high';
-    if (score >= brackets[1]) return 'moderate';
-    if (score >= brackets[0]) return 'low';
-    return 'minimal';
-}
-
 /** Ref to an actual pixi container, kept weakly */
 export type WeakNodeRef = WeakRef<Container>;
 
 // ══════════════════════════════════════════════════════════════
 // Spine Budget Tracking Types
+//
+// `ImpactLevel`, `classifyImpactLevel`, and `DEFAULT_IMPACT_BRACKETS`
+// live in `@spine-benchmark/metrics-impact-formula` and are re-exported
+// at the top of this file. The crawler must NEVER duplicate the formulas
+// or bracket constants  -  anything that scores Spine impact has to go
+// through the shared package so the live runtime numbers stay 1:1 with
+// the offline benchmark.
 // ══════════════════════════════════════════════════════════════
-
-/** Impact level classification for budget metrics */
-export type ImpactLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'very-high';
 
 /** Rendering Impact - GPU cost from visual complexity */
 export interface RenderingImpact {

@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question (GitHub Discussions)
+    url: https://github.com/schmooky/spine-benchmark/discussions/categories/q-a
+    about: Open-ended "how do I" or "is this a bug" questions go here.
+  - name: Share an idea (GitHub Discussions)
+    url: https://github.com/schmooky/spine-benchmark/discussions/categories/ideas
+    about: Rough feature ideas to kick around before filing a formal request.
+  - name: Updates and chatter (Telegram)
+    url: https://t.me/spine_benchmark
+    about: Release announcements, quick questions, general chatter.
+  - name: Benchmark the site directly
+    url: https://spine.schmooky.dev/
+    about: Drag-drop your skeleton into the hosted benchmark instead of filing a bug.

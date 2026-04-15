@@ -8,6 +8,7 @@ import {
 } from "pixi.js";
 import type { FrameSnapshot, Issue, NodeMeta } from "../core/types.js";
 import { ISSUE_IMPACT } from "../core/types.js";
+import { classifyImpactLevel } from "@spine-benchmark/metrics-impact-formula";
 
 // ── Monochrome palette ─────────────────────────────────────────
 const C = {
@@ -750,12 +751,12 @@ export class Overlay {
 
     const m = 4; // margin inset so X corners sit inside the bounds
 
-    // Diagonal line: top-left → bottom-right
+    // Diagonal line: top-left -> bottom-right
     gfx.moveTo(bx + m, by + m);
     gfx.lineTo(bx + bw - m, by + bh - m);
     gfx.stroke({ color: C.xMarker, width: 2, alpha: 0.8 });
 
-    // Diagonal line: top-right → bottom-left
+    // Diagonal line: top-right -> bottom-left
     gfx.moveTo(bx + bw - m, by + m);
     gfx.lineTo(bx + m, by + bh - m);
     gfx.stroke({ color: C.xMarker, width: 2, alpha: 0.8 });
@@ -783,8 +784,8 @@ export class Overlay {
 
   /**
    * Area graph with a filled shape and line on top.
-   * warnAbove = false → values below threshold are "bad" (FPS)
-   * warnAbove = true  → values above threshold are "bad" (DC)
+   * warnAbove = false -> values below threshold are "bad" (FPS)
+   * warnAbove = true  -> values above threshold are "bad" (DC)
    */
   private _drawAreaGraph(
     history: FrameSnapshot[],
@@ -1033,15 +1034,23 @@ export class Overlay {
   }
 
   /**
-   * Get color for budget value based on impact level thresholds.
-   * Uses the same thresholds as the budget tracker.
+   * Get color for a raw RI/CI/total budget score using the canonical
+   * impact brackets from `@spine-benchmark/metrics-impact-formula`.
+   *
+   * Previously this used hand-rolled thresholds (25/50/75/100) that did
+   * NOT match the rest of the crawler or the offline benchmark  -  a score
+   * that was already 'high' (≥15) would render green here. Routing it
+   * through `classifyImpactLevel` keeps the overlay 1:1 with every other
+   * scorer in the workspace.
    */
   private _getBudgetColor(value: number): number {
-    if (value < 25) return C.budgetMinimal; // minimal: green
-    if (value < 50) return C.budgetLow; // low: light green
-    if (value < 75) return C.budgetModerate; // moderate: yellow
-    if (value < 100) return C.budgetHigh; // high: orange
-    return C.budgetVeryHigh; // very-high: red
+    switch (classifyImpactLevel(value)) {
+      case 'minimal': return C.budgetMinimal;
+      case 'low': return C.budgetLow;
+      case 'moderate': return C.budgetModerate;
+      case 'high': return C.budgetHigh;
+      case 'very-high': return C.budgetVeryHigh;
+    }
   }
 
   destroy(): void {

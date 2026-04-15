@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { Share2 } from 'lucide-react';
 import {
   buildImpactDeltaModel,
   buildImpactReportModel,
@@ -10,11 +11,16 @@ import {
   type ImpactSupplementalMetrics,
   type SpineAnalysisResult,
 } from '../../core/SpineAnalyzer';
+import type { Spine } from '@esotericsoftware/spine-pixi-v8';
 import { getImpactBadgeClass } from '../../core/utils/scoreCalculator';
+import { useShareReport } from '../../hooks/useShareReport';
+import { ShareModal, type ShareOptions } from '../ShareModal';
 
 interface SummaryProps {
   data: SpineAnalysisResult;
   supplemental?: ImpactSupplementalMetrics;
+  droppedFiles?: File[];
+  spineInstance?: Spine | null;
 }
 
 const IMPACT_LABEL_KEYS: Record<ImpactLevel, string> = {
@@ -22,7 +28,7 @@ const IMPACT_LABEL_KEYS: Record<ImpactLevel, string> = {
   low: 'analysis.summary.impact.low',
   moderate: 'analysis.summary.impact.moderate',
   high: 'analysis.summary.impact.high',
-  veryHigh: 'analysis.summary.impact.veryHigh',
+  'very-high': 'analysis.summary.impact.very-high',
 };
 
 function metricLabel(t: TFunction, key: ImpactDeltaMetric['key']): string {
@@ -110,7 +116,8 @@ function featureLabel(t: TFunction, key: 'physics' | 'ik' | 'clipping' | 'blend'
   }
 }
 
-export const Summary: React.FC<SummaryProps> = ({ data, supplemental }) => {
+export const Summary: React.FC<SummaryProps> = ({ data, supplemental, droppedFiles, spineInstance }) => {
+  const shareReport = useShareReport();
   const { t } = useTranslation();
   const [baseline, setBaseline] = useState<ImpactReportModel | null>(null);
 
@@ -149,6 +156,24 @@ export const Summary: React.FC<SummaryProps> = ({ data, supplemental }) => {
               {t('analysis.summary.delta.actions.clearBaseline')}
             </button>
           )}
+          {shareReport.isAvailable && (
+            <button
+              type="button"
+              className="secondary-btn"
+              disabled={shareReport.isSharing}
+              onClick={shareReport.openModal}
+            >
+              <Share2 size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
+              {shareReport.isSharing ? t('share.sharing') : t('share.button')}
+            </button>
+          )}
+          <ShareModal
+            isOpen={shareReport.isModalOpen}
+            onClose={shareReport.closeModal}
+            onShare={(options: ShareOptions) => shareReport.share(options, data, spineInstance, droppedFiles, supplemental).then(() => undefined)}
+            hasDroppedFiles={!!droppedFiles && droppedFiles.length > 0}
+            isSharing={shareReport.isSharing}
+          />
         </div>
         {baseline ? (
           <p className="subtle-text">

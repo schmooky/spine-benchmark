@@ -1,0 +1,25 @@
+# Code owners for Spine Benchmark.
+#
+# GitHub auto-requests review from the owner listed next to each pattern
+# when a PR touches a matching file. Order matters - later patterns win.
+# See: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-security/customizing-your-repository/about-code-owners
+
+# Default owner for anything not covered below.
+*                                   @schmooky
+
+# Release + snapshot + CI plumbing
+/.github/                           @schmooky
+/scripts/                           @schmooky
+/.changeset/                        @schmooky
+
+# Canonical impact formula - the single source of truth for RI/CI math.
+/packages/metrics-impact-formula/   @schmooky
+
+# Published libraries - extra care on the review loop because they ship
+# to npm and other projects depend on them.
+/packages/spinefolio/               @schmooky
+/packages/pixi-crawler/             @schmooky
+
+# Encrypted share / report backend touches a real crypto surface.
+/apps/reports-api/                  @schmooky
+/apps/benchmark/src/utils/shareEncryption.ts   @schmooky
