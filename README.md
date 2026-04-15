@@ -10,7 +10,6 @@
   <a href="https://github.com/schmooky/spine-benchmark/actions/workflows/codeql.yml"><img src="https://github.com/schmooky/spine-benchmark/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" /></a>
   <a href="https://codecov.io/gh/schmooky/spine-benchmark"><img src="https://codecov.io/gh/schmooky/spine-benchmark/branch/main/graph/badge.svg" alt="Codecov" /></a>
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/schmooky/spine-benchmark"><img src="https://api.securityscorecards.dev/projects/github.com/schmooky/spine-benchmark/badge" alt="OpenSSF Scorecard" /></a>
-  <a href="https://www.bestpractices.dev/projects/0"><img src="https://www.bestpractices.dev/projects/0/badge" alt="OpenSSF Best Practices" /></a>
   <br />
   <a href="https://www.npmjs.com/package/@spine-benchmark/spinefolio"><img src="https://img.shields.io/npm/v/@spine-benchmark/spinefolio?label=spinefolio" alt="spinefolio version" /></a>
   <a href="https://www.npmjs.com/package/@spine-benchmark/spinefolio"><img src="https://img.shields.io/npm/dm/@spine-benchmark/spinefolio?label=downloads" alt="spinefolio downloads" /></a>
