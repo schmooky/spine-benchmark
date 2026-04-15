@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics-scoring",
-  "version": "0.2.1",
+  "version": "0.2.0",
   "description": "Score and impact calculation helpers for Spine metrics",
   "type": "module",
   "main": "./dist/index.js",

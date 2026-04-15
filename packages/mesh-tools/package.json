@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/mesh-tools",
-  "version": "0.2.1",
+  "version": "0.2.0",
   "description": "Mesh optimization and preview tools for Spine Benchmark",
   "type": "module",
   "main": "./dist/index.js",

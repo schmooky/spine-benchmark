@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/file-tools",
-  "version": "0.2.1",
+  "version": "0.2.0",
   "description": "File processing helpers for Spine Benchmark app workflows",
   "type": "module",
   "main": "./dist/index.js",

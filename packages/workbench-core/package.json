@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/workbench-core",
-  "version": "0.2.1",
+  "version": "0.2.0",
   "description": "Compatibility aggregator for spine benchmark workbench packages",
   "type": "module",
   "main": "./dist/index.js",
