@@ -11,8 +11,8 @@
   "dependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.102",
     "@spine-benchmark/pixi-crawler": "^0.1.0",
-    "gsap": "^3.14.2",
-    "pixi.js": "^8.8.1"
+    "gsap": "^3.15.0",
+    "pixi.js": "^8.18.1"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
