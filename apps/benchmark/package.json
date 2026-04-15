@@ -43,7 +43,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hotkeys-hook": "^5.2.4",
-    "react-i18next": "^16.5.4",
+    "react-i18next": "^17.0.3",
     "react-toastify": "^11.0.5",
     "three": "^0.172.0",
     "vite-plugin-static-copy": "^4.0.1"
