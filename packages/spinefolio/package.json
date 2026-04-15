@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/spinefolio",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Spine widget library for PixiJS v8 with auto-initialization and blog-ready demos",
   "type": "module",
   "main": "./dist/spinefolio.js",

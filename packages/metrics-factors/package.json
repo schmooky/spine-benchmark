@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics-factors",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Performance constants and weighting factors for Spine metrics",
   "type": "module",
   "main": "./dist/index.js",

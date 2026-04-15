@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/constraint-tools",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Constraint bake and inspection tools for Spine Benchmark",
   "type": "module",
   "main": "./dist/index.js",

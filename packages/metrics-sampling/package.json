@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics-sampling",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Animation sampling and active component detection for Spine metrics",
   "type": "module",
   "main": "./dist/index.js",
