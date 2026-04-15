@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics-reporting",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Reporting and export helpers for Spine metrics",
   "type": "module",
   "main": "./dist/index.js",

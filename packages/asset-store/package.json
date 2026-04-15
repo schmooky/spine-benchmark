@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/asset-store",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Asset persistence and bundle helpers for Spine Benchmark",
   "type": "module",
   "main": "./dist/index.js",

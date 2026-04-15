@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Reusable Spine metrics and benchmark analysis package",
   "type": "module",
   "main": "./dist/index.js",

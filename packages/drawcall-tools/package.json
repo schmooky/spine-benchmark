@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/drawcall-tools",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Draw call analysis and atlas repack planning tools",
   "type": "module",
   "main": "./dist/index.js",
