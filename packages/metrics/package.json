@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reusable Spine metrics and benchmark analysis package",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,12 +19,12 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-analyzers": "^0.1.0",
-    "@spine-benchmark/metrics-factors": "^0.1.0",
-    "@spine-benchmark/metrics-pipeline": "^0.1.0",
-    "@spine-benchmark/metrics-reporting": "^0.1.0",
-    "@spine-benchmark/metrics-sampling": "^0.1.0",
-    "@spine-benchmark/metrics-scoring": "^0.1.0"
+    "@spine-benchmark/metrics-analyzers": "^0.1.1",
+    "@spine-benchmark/metrics-factors": "^0.1.1",
+    "@spine-benchmark/metrics-pipeline": "^0.1.1",
+    "@spine-benchmark/metrics-reporting": "^0.1.1",
+    "@spine-benchmark/metrics-sampling": "^0.1.1",
+    "@spine-benchmark/metrics-scoring": "^0.1.1"
   },
   "peerDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101"

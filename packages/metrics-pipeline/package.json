@@ -1,6 +1,6 @@
 {
   "name": "@spine-benchmark/metrics-pipeline",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Analysis orchestration pipeline for Spine metrics",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,9 +19,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-analyzers": "^0.1.0",
-    "@spine-benchmark/metrics-scoring": "^0.1.0",
-    "@spine-benchmark/metrics-sampling": "^0.1.0"
+    "@spine-benchmark/metrics-analyzers": "^0.1.1",
+    "@spine-benchmark/metrics-scoring": "^0.1.1",
+    "@spine-benchmark/metrics-sampling": "^0.1.1"
   },
   "peerDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101"
