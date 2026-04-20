@@ -46,7 +46,7 @@
   "license": "MIT",
   "dependencies": {
     "@spine-benchmark/metrics-impact-formula": "^0.1.1",
-    "pixi.js": "^8.0.0"
+    "pixi.js": "^8.18.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
