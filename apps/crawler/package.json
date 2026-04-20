@@ -15,7 +15,7 @@
     "pixi.js": "^8.8.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "vite": "^8.0.8",
     "vite-plugin-static-copy": "^4.0.1"
   }
