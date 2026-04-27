@@ -83,10 +83,12 @@ export function worstComputationalImpact(animations: AnimationAnalysis[]): Impac
         ik: animation.constraintMetrics.activeIkCount,
         transform: animation.constraintMetrics.activeTransformCount,
       },
+      constraintBones: animation.constraintMetrics.constraintBones,
       totalVertices: animation.meshMetrics.totalVertices,
       activeMeshCount: animation.meshMetrics.activeMeshCount ?? 0,
       weightedMeshCount: animation.meshMetrics.weightedMeshCount,
       deformedMeshCount: animation.meshMetrics.deformedMeshCount,
+      meshDetails: animation.meshMetrics.meshDetails,
     });
     return cost > worst.cost ? getImpactFromCost(cost) : worst;
   }, getImpactFromCost(0));

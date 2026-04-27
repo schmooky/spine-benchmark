@@ -7,7 +7,16 @@
  */
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 import { Spine, Physics, BlendMode, ClippingAttachment, MeshAttachment } from '@esotericsoftware/spine-pixi-v8';
-import { renderingImpactCost, computationalImpactCost } from '@spine-benchmark/metrics-impact-formula';
+import {
+  avgBoneInfluencesForMesh,
+  computationalImpactCost,
+  ikMixScale,
+  isConstraintActive,
+  isPhysicsConstraintContributing,
+  pathMixScale,
+  renderingImpactCost,
+  transformMixScale,
+} from '@spine-benchmark/metrics-impact-formula';
 import { getPixiApp } from '../hooks/usePixiApp';
 
 const GIF_SIZE = 256;
@@ -32,6 +41,7 @@ function sampleImpact(skeleton: any): { ri: number; ci: number } {
   let activeMeshCount = 0;
   let weightedMeshCount = 0;
   let deformedMeshCount = 0;
+  const meshDetails: Array<{ vertices: number; weighted: boolean; deformed: boolean; boneInfluences: number }> = [];
 
   for (const slot of skeleton.drawOrder) {
     if ((slot.color?.a ?? 1) <= 0) continue;
@@ -42,16 +52,45 @@ function sampleImpact(skeleton: any): { ri: number; ci: number } {
     if (att instanceof ClippingAttachment) clippingMasks++;
     if (att instanceof MeshAttachment) {
       activeMeshCount++;
-      totalVertices += (att.worldVerticesLength ?? 0) / 2;
-      if (att.bones && att.bones.length > 0) weightedMeshCount++;
-      if (slot.deform && slot.deform.length > 0) deformedMeshCount++;
+      const vertCount = (att.worldVerticesLength ?? 0) / 2;
+      totalVertices += vertCount;
+      const isWeighted = att.bones != null && att.bones.length > 0;
+      const isDeformed = slot.deform != null && slot.deform.length > 0;
+      if (isWeighted) weightedMeshCount++;
+      if (isDeformed) deformedMeshCount++;
+      let boneInfluences = 1;
+      if (isWeighted && att.bones) {
+        boneInfluences = avgBoneInfluencesForMesh(att.bones as number[]);
+      }
+      meshDetails.push({ vertices: vertCount, weighted: isWeighted, deformed: isDeformed, boneInfluences });
     }
   }
 
-  const activeIk = (skeleton.ikConstraints ?? []).filter((c: any) => c.active !== false).length;
-  const activeTransform = (skeleton.transformConstraints ?? []).filter((c: any) => c.active !== false).length;
-  const activePath = (skeleton.pathConstraints ?? []).filter((c: any) => c.active !== false).length;
-  const activePhysics = (skeleton.physicsConstraints ?? []).filter((c: any) => c.active !== false).length;
+  // Mix-scaled constraint bones
+  let ikBones = 0;
+  let activeIk = 0;
+  for (const c of skeleton.ikConstraints ?? []) {
+    if (!isConstraintActive(c)) continue;
+    activeIk++;
+    ikBones += (c.bones?.length ?? 1) * ikMixScale(c);
+  }
+  let transformBones = 0;
+  let activeTransform = 0;
+  for (const c of skeleton.transformConstraints ?? []) {
+    if (!isConstraintActive(c)) continue;
+    activeTransform++;
+    transformBones += (c.bones?.length ?? 1) * transformMixScale(c);
+  }
+  let pathBones = 0;
+  let activePath = 0;
+  for (const c of skeleton.pathConstraints ?? []) {
+    if (!isConstraintActive(c)) continue;
+    activePath++;
+    pathBones += (c.bones?.length ?? 1) * pathMixScale(c);
+  }
+  const activePhysics = (skeleton.physicsConstraints ?? []).filter(
+    (c: any) => isPhysicsConstraintContributing(c),
+  ).length;
 
   return {
     ri: Number(renderingImpactCost({
@@ -61,7 +100,9 @@ function sampleImpact(skeleton: any): { ri: number; ci: number } {
     }).toFixed(2)),
     ci: Number(computationalImpactCost({
       constraints: { physics: activePhysics, path: activePath, ik: activeIk, transform: activeTransform },
+      constraintBones: { ik: ikBones, path: pathBones, transform: transformBones },
       totalVertices, activeMeshCount, weightedMeshCount, deformedMeshCount,
+      meshDetails,
     }).toFixed(2)),
   };
 }

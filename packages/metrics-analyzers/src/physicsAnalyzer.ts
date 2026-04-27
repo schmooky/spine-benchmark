@@ -1,5 +1,10 @@
 import { Animation, Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "@spine-benchmark/metrics-factors";
+import {
+  ikMixScale,
+  pathMixScale,
+  transformMixScale,
+} from "@spine-benchmark/metrics-impact-formula";
 import type { ActiveComponents } from "@spine-benchmark/metrics-sampling";
 
 export interface ConstraintMetrics {
@@ -12,6 +17,12 @@ export interface ConstraintMetrics {
   transformImpact: number;
   pathImpact: number;
   physicsImpact: number;
+  /**
+   * Mix-scaled effective bone counts per constraint type.
+   * Each value is `sum(constraint.bones.length * mixScale)` across active
+   * constraints, matching the enhanced CI formula path in metrics-impact-formula.
+   */
+  constraintBones: { ik: number; path: number; transform: number };
 }
 
 export interface IkConstraintInfo {
@@ -105,37 +116,45 @@ export function analyzePhysicsForAnimation(
   activeComponents: ActiveComponents
 ): ConstraintMetrics {
   const skeleton = spineInstance.skeleton;
-  
+
   // Count active constraints in this animation
   const activeIkCount = activeComponents.activeConstraints.ik.size;
   const activeTransformCount = activeComponents.activeConstraints.transform.size;
   const activePathCount = activeComponents.activeConstraints.path.size;
   const activePhysicsCount = activeComponents.activeConstraints.physics.size;
-  
+
   console.log(`Active constraints in ${animation.name}:`, {
     ik: activeIkCount,
     transform: activeTransformCount,
     path: activePathCount,
     physics: activePhysicsCount
   });
-  
+
   // Get detailed constraint data for active constraints
   const ikData: any[] = [];
   const transformData: any[] = [];
   const pathData: any[] = [];
   const physicsData: any[] = [];
-  
+
+  // Mix-scaled effective bone counts (accumulated during constraint iteration)
+  let ikBones = 0;
+  let transformBones = 0;
+  let pathBones = 0;
+
   // Collect IK constraint data
   skeleton.ikConstraints.forEach((constraint: any) => {
     if (activeComponents.activeConstraints.ik.has(constraint.data.name)) {
+      const mix = constraint.mix ?? constraint.data.mix ?? 1;
+      const boneCount = constraint.bones?.length ?? 1;
+      ikBones += boneCount * ikMixScale({ mix });
       ikData.push({
         name: constraint.data.name,
         bones: constraint.bones.map((bone: any) => bone.data.name),
-        mix: constraint.mix || constraint.data.mix || 1
+        mix
       });
     }
   });
-  
+
   // Collect Transform constraint data
   skeleton.transformConstraints.forEach((constraint: any) => {
     if (activeComponents.activeConstraints.transform.has(constraint.data.name)) {
@@ -146,14 +165,19 @@ export function analyzePhysicsForAnimation(
       const mixScaleX = constraint.mixScaleX ?? constraint.data.mixScaleX ?? 0;
       const mixScaleY = constraint.mixScaleY ?? constraint.data.mixScaleY ?? 0;
       const mixShearY = constraint.mixShearY ?? constraint.data.mixShearY ?? 0;
-      
+
       if (mixRotate > 0) affectedProps.push('rotate');
       if (mixX > 0) affectedProps.push('x');
       if (mixY > 0) affectedProps.push('y');
       if (mixScaleX > 0) affectedProps.push('scaleX');
       if (mixScaleY > 0) affectedProps.push('scaleY');
       if (mixShearY > 0) affectedProps.push('shearY');
-      
+
+      const boneCount = constraint.bones?.length ?? 1;
+      transformBones += boneCount * transformMixScale({
+        mixRotate, mixX, mixY, mixScaleX, mixScaleY, mixShearY,
+      });
+
       transformData.push({
         name: constraint.data.name,
         bones: constraint.bones.map((bone: any) => bone.data.name),
@@ -161,10 +185,16 @@ export function analyzePhysicsForAnimation(
       });
     }
   });
-  
+
   // Collect Path constraint data
   skeleton.pathConstraints.forEach((constraint: any) => {
     if (activeComponents.activeConstraints.path.has(constraint.data.name)) {
+      const mixRotate = constraint.mixRotate ?? constraint.data.mixRotate ?? 0;
+      const mixX = constraint.mixX ?? constraint.data.mixX ?? 0;
+      const mixY = constraint.mixY ?? constraint.data.mixY ?? 0;
+      const boneCount = constraint.bones?.length ?? 1;
+      pathBones += boneCount * pathMixScale({ mixRotate, mixX, mixY });
+
       pathData.push({
         name: constraint.data.name,
         bones: constraint.bones.map((bone: any) => bone.data.name),
@@ -173,7 +203,7 @@ export function analyzePhysicsForAnimation(
       });
     }
   });
-  
+
   // Collect Physics constraint data
   if (skeleton.physicsConstraints) {
     skeleton.physicsConstraints.forEach((constraint: any) => {
@@ -184,7 +214,7 @@ export function analyzePhysicsForAnimation(
         if (constraint.data.rotate > 0) affectedProps.push('rotate');
         if (constraint.data.scaleX > 0) affectedProps.push('scale');
         if (constraint.data.shearX > 0) affectedProps.push('shear');
-        
+
         physicsData.push({
           name: constraint.data.name,
           bone: constraint.bone.data.name,
@@ -195,17 +225,17 @@ export function analyzePhysicsForAnimation(
       }
     });
   }
-  
+
   // Calculate constraint performance impact scores
   const ikImpact = calculateIkImpact(ikData);
   const transformImpact = calculateTransformImpact(transformData);
   const pathImpact = calculatePathImpact(pathData);
   const physicsImpact = calculatePhysicsImpact(physicsData);
-  
+
   // Total active constraints
-  const totalActiveConstraints = activeIkCount + activeTransformCount + 
+  const totalActiveConstraints = activeIkCount + activeTransformCount +
                                 activePathCount + activePhysicsCount;
-  
+
   return {
     activeIkCount,
     activeTransformCount,
@@ -215,7 +245,8 @@ export function analyzePhysicsForAnimation(
     ikImpact,
     transformImpact,
     pathImpact,
-    physicsImpact
+    physicsImpact,
+    constraintBones: { ik: ikBones, path: pathBones, transform: transformBones },
   };
 }
 
@@ -226,13 +257,13 @@ export function analyzePhysicsForAnimation(
  */
 export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysis {
   const skeleton = spineInstance.skeleton;
-  
+
   // Get all constraints
   const ikConstraints = skeleton.ikConstraints;
   const transformConstraints = skeleton.transformConstraints;
   const pathConstraints = skeleton.pathConstraints;
   const physicsConstraints = skeleton.physicsConstraints || [];
-  
+
   // Analyze IK Constraints
   const ikData: IkConstraintInfo[] = ikConstraints.map(constraint => ({
     name: constraint.data.name,
@@ -245,7 +276,7 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     stretch: constraint.stretch,
     isActive: constraint.isActive()
   }));
-  
+
   // Analyze Transform Constraints
   const transformData: TransformConstraintInfo[] = transformConstraints.map(constraint => ({
     name: constraint.data.name,
@@ -261,7 +292,7 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     isLocal: constraint.data.local,
     isRelative: constraint.data.relative
   }));
-  
+
   // Analyze Path Constraints
   const pathData: PathConstraintInfo[] = pathConstraints.map(constraint => ({
     name: constraint.data.name,
@@ -281,7 +312,7 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     hasSegments: constraint.segments && constraint.segments.length > 0,
     hasLengths: constraint.lengths && constraint.lengths.length > 0
   }));
-  
+
   // Analyze Physics Constraints
   const physicsData: PhysicsConstraintInfo[] = physicsConstraints.map(constraint => ({
     name: constraint.data.name,
@@ -298,29 +329,51 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     affectsRotation: constraint.data.rotate > 0,
     affectsScale: constraint.data.scaleX > 0,
     affectsShear: constraint.data.shearX > 0,
-    isActive: constraint.isActive()
+    // mix=0 means physics output is not applied - treat as inactive (parity with crawler/heatmap)
+    isActive: constraint.isActive() && constraint.mix !== 0
   }));
-  
+
+  const activePhysicsData = physicsData.filter(p => p.isActive);
+
   // Calculate constraint performance impact scores
   const ikImpact = calculateIkImpact(ikData);
   const transformImpact = calculateTransformImpact(transformData);
   const pathImpact = calculatePathImpact(pathData);
-  const physicsImpact = calculatePhysicsImpact(physicsData);
-  
-  // Total constraints
-  const totalConstraints = ikConstraints.length + transformConstraints.length + 
-                           pathConstraints.length + physicsConstraints.length;
-  
+  const physicsImpact = calculatePhysicsImpact(activePhysicsData);
+
+  // Total constraints (only truly active ones)
+  const activeIkData = ikData.filter(c => c.isActive);
+  const activeTransformData = transformData.filter(c => c.isActive);
+  const activePathData = pathData.filter(c => c.isActive);
+  const totalConstraints = activeIkData.length + activeTransformData.length +
+                           activePathData.length + activePhysicsData.length;
+
+  // Mix-scaled effective bone counts for the enhanced CI formula path.
+  // Only count active constraints (matching crawler/heatmap parity).
+  let globalIkBones = 0;
+  for (const ik of activeIkData) {
+    globalIkBones += ik.bones.length * ikMixScale(ik);
+  }
+  let globalTransformBones = 0;
+  for (const t of activeTransformData) {
+    globalTransformBones += t.bones.length * transformMixScale(t);
+  }
+  let globalPathBones = 0;
+  for (const p of activePathData) {
+    globalPathBones += p.bones.length * pathMixScale(p);
+  }
+
   const metrics = {
-    activeIkCount: ikData.length,
-    activeTransformCount: transformData.length,
-    activePathCount: pathData.length,
-    activePhysicsCount: physicsData.length,
+    activeIkCount: activeIkData.length,
+    activeTransformCount: activeTransformData.length,
+    activePathCount: activePathData.length,
+    activePhysicsCount: activePhysicsData.length,
     totalActiveConstraints: totalConstraints,
     ikImpact,
     transformImpact,
     pathImpact,
     physicsImpact,
+    constraintBones: { ik: globalIkBones, path: globalPathBones, transform: globalTransformBones },
     // Additional fields for compatibility
     ikCount: ikConstraints.length,
     transformCount: transformConstraints.length,
@@ -328,7 +381,7 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     physicsCount: physicsConstraints.length,
     totalConstraints
   };
-  
+
   return {
     ikConstraints: ikData,
     transformConstraints: transformData,
@@ -341,87 +394,87 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
 // Helper functions (unchanged from original)
 function calculateIkImpact(ikData: any[]): number {
   if (ikData.length === 0) return 0;
-  
+
   let impact = Math.log2(ikData.length + 1) * 20;
-  
+
   let totalBones = 0;
   let maxChainLength = 0;
-  
+
   ikData.forEach(ik => {
     totalBones += ik.bones.length;
     maxChainLength = Math.max(maxChainLength, ik.bones.length);
   });
-  
+
   impact += Math.log2(totalBones + 1) * 10;
-  
+
   if (maxChainLength > 2) {
     impact += Math.pow(maxChainLength, PERFORMANCE_FACTORS.IK_CHAIN_LENGTH_FACTOR) * 2;
   }
-  
+
   return Math.min(100, impact);
 }
 
 function calculateTransformImpact(transformData: any[]): number {
   if (transformData.length === 0) return 0;
-  
+
   let impact = Math.log2(transformData.length + 1) * 15;
-  
+
   let totalBones = 0;
   transformData.forEach(t => {
     totalBones += t.bones.length;
   });
-  
+
   impact += Math.log2(totalBones + 1) * 8;
-  
+
   let propertyComplexity = 0;
   transformData.forEach(t => {
     propertyComplexity += t.affectedProps;
   });
-  
+
   impact += propertyComplexity * 5;
-  
+
   return Math.min(100, impact);
 }
 
 function calculatePathImpact(pathData: any[]): number {
   if (pathData.length === 0) return 0;
-  
+
   let impact = Math.log2(pathData.length + 1) * 20;
-  
+
   let totalBones = 0;
   pathData.forEach(p => {
     totalBones += p.bones.length;
   });
-  
+
   impact += Math.log2(totalBones + 1) * 10;
-  
+
   let modeComplexity = 0;
   pathData.forEach(p => {
     if (p.rotateMode === 2) modeComplexity += 3; // ChainScale
     else if (p.rotateMode === 1) modeComplexity += 2; // Chain
     else modeComplexity += 1; // Tangent
-    
+
     if (p.spacingMode === 3) modeComplexity += 2; // Proportional
     else modeComplexity += 1; // Other modes
   });
-  
+
   impact += modeComplexity * 7;
-  
+
   return Math.min(100, impact);
 }
 
 function calculatePhysicsImpact(physicsData: any[]): number {
   if (physicsData.length === 0) return 0;
-  
+
   let impact = Math.log2(physicsData.length + 1) * 30;
-  
+
   let propertiesComplexity = 0;
   physicsData.forEach(p => {
     const iterationFactor = Math.max(1, 3 - p.damping) * p.strength / 50;
     propertiesComplexity += p.affectedProps * (1 + iterationFactor);
   });
-  
+
   impact += propertiesComplexity * 5;
-  
+
   return Math.min(100, impact);
 }

@@ -387,17 +387,31 @@ export interface RenderingImpact {
 
 /** Computational Impact - CPU cost from runtime calculations */
 export interface ComputationalImpact {
-    /** Physics constraints (each costs ~4 units) */
+    /** Active physics constraints */
     physics: number;
-    /** Path constraints (each costs ~2.5 units) */
+    /** Active path constraints */
     path: number;
-    /** IK constraints (each costs ~2 units) */
+    /** Mix-scaled effective path bone count (sum of bones.length * mixScale) */
+    pathBones: number;
+    /** Active IK constraints */
     ik: number;
-    /** Weighted meshes (each costs ~2 units) */
-    weightedMeshes: number;
-    /** Transform constraints (each costs ~1.5 units) */
+    /** Mix-scaled effective IK bone count (sum of bones.length * mixScale) */
+    ikBones: number;
+    /** Active transform constraints */
     transform: number;
-    /** Deformed meshes (each costs ~1.5 units) */
+    /** Mix-scaled effective transform bone count (sum of bones.length * mixScale) */
+    transformBones: number;
+    /** Total bone count in the skeleton */
+    boneCount: number;
+    /** Total mixing entries across all animation tracks (crossfade depth) */
+    mixingDepth: number;
+    /** Number of active mesh attachments */
+    activeMeshes: number;
+    /** Subset of meshes that are weighted (have bones) */
+    weightedMeshes: number;
+    /** Average bone influences per vertex across weighted meshes */
+    avgBoneInfluences: number;
+    /** Subset of meshes that are deformed */
     deformedMeshes: number;
     /** Total CI score */
     total: number;

@@ -153,6 +153,10 @@ export function renderingImpactCost(animation: AnimationAnalysis): number {
 /**
  * Adapter that pulls the canonical CI inputs out of an offline
  * {@link AnimationAnalysis} and feeds them into the shared formula.
+ *
+ * Passes the enhanced inputs (constraintBones, meshDetails) when
+ * available so the offline path uses the same per-bone and per-mesh
+ * formula as the live crawler and heatmap.
  */
 export function computationalImpactCost(animation: AnimationAnalysis): number {
   return sharedComputationalImpactCost({
@@ -162,10 +166,12 @@ export function computationalImpactCost(animation: AnimationAnalysis): number {
       ik: animation.constraintMetrics.activeIkCount,
       transform: animation.constraintMetrics.activeTransformCount,
     },
+    constraintBones: animation.constraintMetrics.constraintBones,
     totalVertices: animation.meshMetrics.totalVertices,
     activeMeshCount: animation.meshMetrics.activeMeshCount ?? 0,
     weightedMeshCount: animation.meshMetrics.weightedMeshCount,
     deformedMeshCount: animation.meshMetrics.deformedMeshCount,
+    meshDetails: animation.meshMetrics.meshDetails,
   });
 }
 

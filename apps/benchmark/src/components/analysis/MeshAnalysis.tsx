@@ -18,6 +18,7 @@ function meshImpactCost(m: {
   totalVertices: number;
   deformedMeshCount: number;
   weightedMeshCount: number;
+  meshDetails?: ReadonlyArray<{ vertices: number; weighted: boolean; deformed: boolean; boneInfluences: number }>;
 }): number {
   return computationalImpactCost({
     constraints: { physics: 0, path: 0, ik: 0, transform: 0 },
@@ -25,6 +26,7 @@ function meshImpactCost(m: {
     activeMeshCount: m.activeMeshCount ?? 0,
     weightedMeshCount: m.weightedMeshCount,
     deformedMeshCount: m.deformedMeshCount,
+    meshDetails: m.meshDetails,
   });
 }
 

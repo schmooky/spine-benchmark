@@ -18,6 +18,7 @@ function constraintImpactCost(c: {
   activePathCount: number;
   activeIkCount: number;
   activeTransformCount: number;
+  constraintBones?: { ik: number; path: number; transform: number };
 }): number {
   return computationalImpactCost({
     constraints: {
@@ -26,6 +27,7 @@ function constraintImpactCost(c: {
       ik: c.activeIkCount,
       transform: c.activeTransformCount,
     },
+    constraintBones: c.constraintBones,
     totalVertices: 0,
     activeMeshCount: 0,
     weightedMeshCount: 0,
@@ -94,10 +96,10 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
           })}
         </tbody>
       </table>
-      
+
       <ConstraintImpactBreakdown data={data} />
       <ConstraintDetails data={data} />
-      
+
     </div>
   );
 };
@@ -105,7 +107,7 @@ export const PhysicsAnalysis: React.FC<PhysicsAnalysisProps> = ({ data }) => {
 const ConstraintImpactBreakdown: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => {
   const { t } = useTranslation();
   const { metrics } = data.globalPhysics;
-  
+
   return (
     <div className="constraint-summary">
       <h4>{t('analysis.physics.impactBreakdown.title')}</h4>
@@ -152,11 +154,11 @@ const ConstraintImpactBreakdown: React.FC<{ data: SpineAnalysisResult }> = ({ da
 const ConstraintDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) => {
   const { t } = useTranslation();
   const { ikConstraints, transformConstraints, pathConstraints, physicsConstraints } = data.globalPhysics;
-  
+
   if (data.globalPhysics.metrics.totalConstraints === 0) {
     return <p>{t('analysis.physics.noConstraints')}</p>;
   }
-  
+
   return (
     <>
       {ikConstraints.length > 0 && <IkConstraintsTable constraints={ikConstraints} />}
@@ -169,7 +171,7 @@ const ConstraintDetails: React.FC<{ data: SpineAnalysisResult }> = ({ data }) =>
 
 const IkConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints }) => {
   const { t } = useTranslation();
-  
+
   return (
     <div className="constraint-details">
       <h4>{t('analysis.physics.constraintDetails.ikConstraints.title')}</h4>
@@ -186,7 +188,7 @@ const IkConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints }) =
         <tbody>
           {constraints.map((ik) => {
             const complexityClass = ik.bones.length > 2 ? 'row-warning' : '';
-            
+
             return (
               <tr key={ik.name} className={complexityClass}>
                 <td>{ik.name}</td>
@@ -205,7 +207,7 @@ const IkConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints }) =
 
 const TransformConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints }) => {
   const { t } = useTranslation();
-  
+
   return (
     <div className="constraint-details">
       <h4>{t('analysis.physics.constraintDetails.transformConstraints.title')}</h4>
@@ -228,9 +230,9 @@ const TransformConstraintsTable: React.FC<{ constraints: any[] }> = ({ constrain
             if (tc.mixScaleX > 0) props.push(`${t('analysis.physics.properties.scaleX')}: ${tc.mixScaleX.toFixed(2)}`);
             if (tc.mixScaleY > 0) props.push(`${t('analysis.physics.properties.scaleY')}: ${tc.mixScaleY.toFixed(2)}`);
             if (tc.mixShearY > 0) props.push(`${t('analysis.physics.properties.shearY')}: ${tc.mixShearY.toFixed(2)}`);
-            
+
             const complexityClass = props.length > 3 ? 'row-warning' : '';
-            
+
             return (
               <tr key={tc.name} className={complexityClass}>
                 <td>{tc.name}</td>
@@ -249,7 +251,7 @@ const TransformConstraintsTable: React.FC<{ constraints: any[] }> = ({ constrain
 
 const PathConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints }) => {
   const { t } = useTranslation();
-  
+
   const getRotateModeName = (mode: number): string => {
     switch(mode) {
       case 0: return t('analysis.physics.modes.rotate.tangent');
@@ -258,7 +260,7 @@ const PathConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints })
       default: return `Unknown (${mode})`;
     }
   };
-  
+
   const getSpacingModeName = (mode: number): string => {
     switch(mode) {
       case 0: return t('analysis.physics.modes.spacing.length');
@@ -268,7 +270,7 @@ const PathConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints })
       default: return `Unknown (${mode})`;
     }
   };
-  
+
   return (
     <div className="constraint-details">
       <h4>{t('analysis.physics.constraintDetails.pathConstraints.title')}</h4>
@@ -285,7 +287,7 @@ const PathConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints })
         <tbody>
           {constraints.map((p) => {
             const complexityClass = (p.rotateMode === 2 || p.bones.length > 3) ? 'row-warning' : '';
-            
+
             return (
               <tr key={p.name} className={complexityClass}>
                 <td>{p.name}</td>
@@ -308,7 +310,7 @@ const PathConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints })
 
 const PhysicsConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints }) => {
   const { t } = useTranslation();
-  
+
   return (
     <div className="constraint-details">
       <h4>{t('analysis.physics.constraintDetails.physicsConstraints.title')}</h4>
@@ -330,18 +332,18 @@ const PhysicsConstraintsTable: React.FC<{ constraints: any[] }> = ({ constraints
             if (p.affectsRotation) props.push(t('analysis.physics.properties.rotation'));
             if (p.affectsScale) props.push(t('analysis.physics.properties.scale'));
             if (p.affectsShear) props.push(t('analysis.physics.properties.shear'));
-            
+
             const params = [
               `${t('analysis.physics.parameters.inertia')}: ${p.inertia.toFixed(2)}`,
               `${t('analysis.physics.parameters.strength')}: ${p.strength.toFixed(2)}`,
               `${t('analysis.physics.parameters.damping')}: ${p.damping.toFixed(2)}`
             ];
-            
+
             if (p.wind !== 0) params.push(`${t('analysis.physics.parameters.wind')}: ${p.wind.toFixed(2)}`);
             if (p.gravity !== 0) params.push(`${t('analysis.physics.parameters.gravity')}: ${p.gravity.toFixed(2)}`);
-            
+
             const complexityClass = props.length > 2 ? 'row-warning' : '';
-            
+
             return (
               <tr key={p.name} className={complexityClass}>
                 <td>{p.name}</td>

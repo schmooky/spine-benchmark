@@ -1,8 +1,15 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
 import {
+  avgBoneInfluencesForMesh,
   computationalImpactCost as sharedComputationalImpactCost,
+  countMixingDepth,
+  ikMixScale,
+  isConstraintActive,
+  isPhysicsConstraintContributing,
+  pathMixScale,
   renderingImpactCost as sharedRenderingImpactCost,
+  transformMixScale,
 } from '@spine-benchmark/metrics-impact-formula';
 import { AnimationSampler } from '../core/utils/animationSampler';
 import { collectSnapshot, LiveSlotInfo } from './useDrawCallInspector';
@@ -13,6 +20,14 @@ interface FrameConstraintCounts {
   transform: number;
   path: number;
   physics: number;
+  constraintBones: { ik: number; path: number; transform: number };
+}
+
+interface FrameMeshDetail {
+  vertices: number;
+  weighted: boolean;
+  deformed: boolean;
+  boneInfluences: number;
 }
 
 interface FrameImpactInputs {
@@ -23,15 +38,8 @@ interface FrameImpactInputs {
   deformedMeshCount: number;
   weightedMeshCount: number;
   constraints: FrameConstraintCounts;
-}
-
-function isConstraintActive(constraint: unknown): boolean {
-  if (!constraint || typeof constraint !== 'object') return false;
-  const candidate = constraint as { active?: boolean };
-  if (typeof candidate.active === 'boolean') {
-    return candidate.active;
-  }
-  return true;
+  meshDetails: FrameMeshDetail[];
+  mixingDepth: number;
 }
 
 function countActiveConstraints(skeleton: {
@@ -40,27 +48,45 @@ function countActiveConstraints(skeleton: {
   pathConstraints?: unknown[];
   physicsConstraints?: unknown[];
 }): FrameConstraintCounts {
-  const result: FrameConstraintCounts = {
+  const bones = {
     ik: 0,
     transform: 0,
     path: 0,
-    physics: 0,
   };
-
-  for (const constraint of skeleton.ikConstraints ?? []) {
-    if (isConstraintActive(constraint)) result.ik += 1;
-  }
-  for (const constraint of skeleton.transformConstraints ?? []) {
-    if (isConstraintActive(constraint)) result.transform += 1;
-  }
-  for (const constraint of skeleton.pathConstraints ?? []) {
-    if (isConstraintActive(constraint)) result.path += 1;
-  }
-  for (const constraint of skeleton.physicsConstraints ?? []) {
-    if (isConstraintActive(constraint)) result.physics += 1;
+  let ik = 0;
+  for (const raw of skeleton.ikConstraints ?? []) {
+    const c = (raw ?? {}) as { active?: boolean; mix?: number; bones?: unknown[] };
+    if (!isConstraintActive(c)) continue;
+    ik++;
+    bones.ik += (c.bones?.length ?? 1) * ikMixScale(c);
   }
 
-  return result;
+  let transform = 0;
+  for (const raw of skeleton.transformConstraints ?? []) {
+    const c = (raw ?? {}) as Parameters<typeof transformMixScale>[0]
+      & { active?: boolean; bones?: unknown[] };
+    if (!isConstraintActive(c)) continue;
+    transform++;
+    bones.transform += (c.bones?.length ?? 1) * transformMixScale(c);
+  }
+
+  let path = 0;
+  for (const raw of skeleton.pathConstraints ?? []) {
+    const c = (raw ?? {}) as Parameters<typeof pathMixScale>[0]
+      & { active?: boolean; bones?: unknown[] };
+    if (!isConstraintActive(c)) continue;
+    path++;
+    bones.path += (c.bones?.length ?? 1) * pathMixScale(c);
+  }
+
+  let physics = 0;
+  for (const raw of skeleton.physicsConstraints ?? []) {
+    const c = (raw ?? {}) as { active?: boolean; mix?: number };
+    if (!isPhysicsConstraintContributing(c)) continue;
+    physics++;
+  }
+
+  return { ik, transform, path, physics, constraintBones: bones };
 }
 
 // Per-frame heatmap costs delegate to the shared formula package so the
@@ -78,10 +104,13 @@ function renderingImpactCost(
 function computationalImpactCost(input: FrameImpactInputs): number {
   return sharedComputationalImpactCost({
     constraints: input.constraints,
+    constraintBones: input.constraints.constraintBones,
     totalVertices: input.totalVertices,
     activeMeshCount: input.activeMeshCount,
     weightedMeshCount: input.weightedMeshCount,
     deformedMeshCount: input.deformedMeshCount,
+    meshDetails: input.meshDetails,
+    mixingDepth: input.mixingDepth,
   });
 }
 
@@ -184,6 +213,7 @@ export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHe
                 }
               }
 
+              const meshDetails: FrameMeshDetail[] = [];
               for (const slot of skeleton.drawOrder as Array<{
                 color?: { a?: number };
                 bone?: { active?: boolean };
@@ -197,15 +227,31 @@ export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHe
 
                 if (attachment instanceof MeshAttachment) {
                   activeMeshCount += 1;
-                  meshVertices += attachment.worldVerticesLength / 2;
-                  if ((attachment.bones?.length ?? 0) > 0) weightedMeshCount += 1;
-                  if ((slot.deform?.length ?? 0) > 0) deformedMeshCount += 1;
+                  const vertCount = attachment.worldVerticesLength / 2;
+                  meshVertices += vertCount;
+                  const isWeighted = (attachment.bones?.length ?? 0) > 0;
+                  const isDeformed = (slot.deform?.length ?? 0) > 0;
+                  if (isWeighted) weightedMeshCount += 1;
+                  if (isDeformed) deformedMeshCount += 1;
+
+                  let boneInfluences = 1;
+                  if (isWeighted && attachment.bones) {
+                    boneInfluences = avgBoneInfluencesForMesh(attachment.bones as number[]);
+                  }
+
+                  meshDetails.push({
+                    vertices: vertCount,
+                    weighted: isWeighted,
+                    deformed: isDeformed,
+                    boneInfluences,
+                  });
                 } else if (attachment instanceof ClippingAttachment) {
                   clippingMasks += 1;
                 }
               }
 
               const activeConstraints = countActiveConstraints(skeleton);
+              const mixingDepth = countMixingDepth(targetSpine.state);
               const renderingCost = renderingImpactCost({
                 nonNormalBlends,
                 clippingMasks,
@@ -219,6 +265,8 @@ export function useAnimationHeatmap(spineInstance: Spine | null): UseAnimationHe
                 deformedMeshCount,
                 weightedMeshCount,
                 constraints: activeConstraints,
+                meshDetails,
+                mixingDepth,
               });
               const renderingImpact = Number(renderingCost.toFixed(2));
               const computationalImpact = Number(computationalCost.toFixed(2));

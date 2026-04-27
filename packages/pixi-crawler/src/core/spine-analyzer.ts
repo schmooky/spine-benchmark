@@ -12,10 +12,16 @@
 
 import type { Container } from 'pixi.js';
 import {
+    avgBoneInfluencesForMesh,
     classifyImpactLevel,
     computationalImpactCost as sharedComputationalImpactCost,
+    countMixingDepth,
+    ikMixScale,
+    isConstraintActive,
+    isPhysicsConstraintContributing,
+    pathMixScale,
     renderingImpactCost as sharedRenderingImpactCost,
-    type ImpactLevel,
+    transformMixScale,
 } from '@spine-benchmark/metrics-impact-formula';
 import type {
     SpineAnalysis,
@@ -87,6 +93,7 @@ interface SpineAtlasPage {
 /** Duck-typed Spine runtime shape - avoids hard dep on @esotericsoftware/spine-core. */
 export interface SpineLike {
     skeleton?: {
+        bones: { active?: boolean }[];
         slots: SpineSlot[];
         drawOrder: SpineSlot[];
         data?: {
@@ -133,11 +140,20 @@ function buildRenderingImpact(
     };
 }
 
+interface MeshDetail {
+    vertices: number;
+    weighted: boolean;
+    deformed: boolean;
+    boneInfluences: number;
+}
+
 interface MeshStats {
     totalVertices: number;
     activeMeshCount: number;
     weightedMeshCount: number;
     deformedMeshCount: number;
+    avgBoneInfluences: number;
+    meshDetails: MeshDetail[];
 }
 
 interface ConstraintCounts {
@@ -145,51 +161,74 @@ interface ConstraintCounts {
     transform: number;
     path: number;
     physics: number;
+    constraintBones: { ik: number; path: number; transform: number };
 }
 
 /**
- * Spine `Constraint.active` defaults to `true` and may be toggled by the
- * runtime (e.g. inactive skin slots, mix-out of constraint controllers).
- * The benchmark heatmap counts active constraints only  -  the crawler must
- * do the same or it will overshoot CI on skeletons with deactivated
- * constraints, breaking parity with the offline benchmark.
+ * Walk all constraint arrays, counting active constraints and computing
+ * mix-scaled effective bone counts for each type via the canonical helpers
+ * in metrics-impact-formula.
  */
-function isConstraintActive(constraint: unknown): boolean {
-    if (!constraint || typeof constraint !== 'object') return false;
-    const candidate = constraint as { active?: boolean };
-    if (typeof candidate.active === 'boolean') return candidate.active;
-    return true;
-}
-
-function countActive(list: unknown[] | undefined): number {
-    if (!list) return 0;
-    let n = 0;
-    for (const c of list) if (isConstraintActive(c)) n++;
-    return n;
-}
-
 function analyzeConstraints(skeleton: SpineLike['skeleton']): ConstraintCounts {
     if (!skeleton) {
-        return { ik: 0, transform: 0, path: 0, physics: 0 };
+        return {
+            ik: 0, transform: 0, path: 0, physics: 0,
+            constraintBones: { ik: 0, path: 0, transform: 0 },
+        };
     }
 
-    return {
-        ik: countActive(skeleton.ikConstraints),
-        transform: countActive(skeleton.transformConstraints),
-        path: countActive(skeleton.pathConstraints),
-        physics: countActive(skeleton.physicsConstraints),
-    };
+    const bones = { ik: 0, transform: 0, path: 0 };
+    let ik = 0;
+    for (const raw of skeleton.ikConstraints ?? []) {
+        const c = (raw ?? {}) as { active?: boolean; mix?: number; bones?: unknown[] };
+        if (!isConstraintActive(c)) continue;
+        ik++;
+        bones.ik += (c.bones?.length ?? 1) * ikMixScale(c);
+    }
+
+    let transform = 0;
+    for (const raw of skeleton.transformConstraints ?? []) {
+        const c = (raw ?? {}) as Parameters<typeof transformMixScale>[0]
+            & { active?: boolean; bones?: unknown[] };
+        if (!isConstraintActive(c)) continue;
+        transform++;
+        bones.transform += (c.bones?.length ?? 1) * transformMixScale(c);
+    }
+
+    let path = 0;
+    for (const raw of skeleton.pathConstraints ?? []) {
+        const c = (raw ?? {}) as Parameters<typeof pathMixScale>[0]
+            & { active?: boolean; bones?: unknown[] };
+        if (!isConstraintActive(c)) continue;
+        path++;
+        bones.path += (c.bones?.length ?? 1) * pathMixScale(c);
+    }
+
+    let physics = 0;
+    for (const raw of skeleton.physicsConstraints ?? []) {
+        const c = (raw ?? {}) as { active?: boolean; mix?: number };
+        if (!isPhysicsConstraintContributing(c)) continue;
+        physics++;
+    }
+
+    return { ik, transform, path, physics, constraintBones: bones };
 }
 
 /**
- * Analyze meshes by reading real vertex counts from attachments
- * and checking bones/deform arrays for weighted/deformed status.
+ * Analyze meshes by reading real vertex counts from attachments,
+ * checking bones/deform arrays for weighted/deformed status,
+ * and computing per-mesh bone influence density.
  */
 function analyzeMeshes(drawOrder: SpineSlot[]): MeshStats {
     let totalVertices = 0;
     let activeMeshCount = 0;
     let weightedMeshCount = 0;
     let deformedMeshCount = 0;
+    const meshDetails: MeshDetail[] = [];
+
+    // For computing global average bone influences across all weighted meshes
+    let totalBoneInfluenceSum = 0;
+    let totalWeightedVertices = 0;
 
     for (const slot of drawOrder) {
         const att = slot.attachment;
@@ -207,27 +246,48 @@ function analyzeMeshes(drawOrder: SpineSlot[]): MeshStats {
         const vertCount = (att.worldVerticesLength ?? 0) / 2;
         totalVertices += vertCount;
 
-        // Weighted mesh: has bone indices
-        if (att.bones != null && att.bones.length > 0) {
+        const isWeighted = att.bones != null && att.bones.length > 0;
+        const isDeformed = slot.deform != null && slot.deform.length > 0;
+
+        let boneInfluences = 1;
+        if (isWeighted) {
             weightedMeshCount++;
+            boneInfluences = avgBoneInfluencesForMesh(att.bones!);
+            totalBoneInfluenceSum += boneInfluences * vertCount;
+            totalWeightedVertices += vertCount;
         }
 
-        // Deformed mesh: slot.deform has non-zero-length array when actively deformed
-        if (slot.deform != null && slot.deform.length > 0) {
+        if (isDeformed) {
             deformedMeshCount++;
         }
+
+        meshDetails.push({
+            vertices: vertCount,
+            weighted: isWeighted,
+            deformed: isDeformed,
+            boneInfluences,
+        });
     }
 
-    return { totalVertices, activeMeshCount, weightedMeshCount, deformedMeshCount };
+    const avgBoneInfluences =
+        totalWeightedVertices > 0 ? totalBoneInfluenceSum / totalWeightedVertices : 0;
+
+    return {
+        totalVertices, activeMeshCount, weightedMeshCount, deformedMeshCount,
+        avgBoneInfluences, meshDetails,
+    };
 }
 
 function buildComputationalImpact(
-    skeleton: SpineLike['skeleton'],
+    spine: { skeleton?: SpineLike['skeleton']; state?: SpineLike['state'] },
     drawOrder: SpineSlot[],
     brackets?: [number, number, number, number],
 ): ComputationalImpact {
+    const skeleton = spine.skeleton;
     const c = analyzeConstraints(skeleton);
     const m = analyzeMeshes(drawOrder);
+    const boneCount = skeleton?.bones?.length ?? 0;
+    const mixingDepth = countMixingDepth(spine.state);
 
     const total = sharedComputationalImpactCost({
         constraints: {
@@ -236,18 +296,28 @@ function buildComputationalImpact(
             ik: c.ik,
             transform: c.transform,
         },
+        constraintBones: c.constraintBones,
         totalVertices: m.totalVertices,
         activeMeshCount: m.activeMeshCount,
         weightedMeshCount: m.weightedMeshCount,
         deformedMeshCount: m.deformedMeshCount,
+        meshDetails: m.meshDetails,
+        mixingDepth,
     });
 
     return {
         physics: c.physics,
         path: c.path,
+        pathBones: c.constraintBones.path,
         ik: c.ik,
-        weightedMeshes: m.weightedMeshCount,
+        ikBones: c.constraintBones.ik,
         transform: c.transform,
+        transformBones: c.constraintBones.transform,
+        boneCount,
+        mixingDepth,
+        activeMeshes: m.activeMeshCount,
+        weightedMeshes: m.weightedMeshCount,
+        avgBoneInfluences: m.avgBoneInfluences,
         deformedMeshes: m.deformedMeshCount,
         total,
         level: classifyImpactLevel(total, brackets),
@@ -434,9 +504,10 @@ export function analyzeSpine(
     // visible mesh vertices)  -  same definition the heatmap uses.
     const renderingImpact = buildRenderingImpact(activeNonNormalBlends, clippingMasks, totalVertices, brackets);
 
-    // CI reads constraints + mesh properties from skeleton/drawOrder and
-    // delegates the math to the shared formula package.
-    const computationalImpact = buildComputationalImpact(skeleton, drawOrder, brackets);
+    // CI reads constraints + mesh properties from skeleton/drawOrder,
+    // including mix-scaled bone counts, per-mesh bone influences, and
+    // mixing depth, then delegates the math to the shared formula package.
+    const computationalImpact = buildComputationalImpact(spine, drawOrder, brackets);
 
     return {
         totalSlots: drawOrder.length,

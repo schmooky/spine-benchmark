@@ -8,12 +8,19 @@ import {
 interface AnimationAnalysisLike {
   blendModeMetrics: { activeNonNormalCount: number };
   clippingMetrics: { activeMaskCount: number };
-  meshMetrics: { activeMeshCount?: number; totalVertices: number; deformedMeshCount: number; weightedMeshCount: number };
+  meshMetrics: {
+    activeMeshCount?: number;
+    totalVertices: number;
+    deformedMeshCount: number;
+    weightedMeshCount: number;
+    meshDetails?: ReadonlyArray<{ vertices: number; weighted: boolean; deformed: boolean; boneInfluences: number }>;
+  };
   constraintMetrics: {
     activePhysicsCount: number;
     activeIkCount: number;
     activeTransformCount: number;
     activePathCount: number;
+    constraintBones?: { ik: number; path: number; transform: number };
   };
 }
 
@@ -99,10 +106,12 @@ export function worstComputationalImpact(animations: AnimationAnalysisLike[]): I
         ik: a.constraintMetrics.activeIkCount,
         transform: a.constraintMetrics.activeTransformCount,
       },
+      constraintBones: a.constraintMetrics.constraintBones,
       totalVertices: a.meshMetrics.totalVertices,
       activeMeshCount: a.meshMetrics.activeMeshCount ?? 0,
       weightedMeshCount: a.meshMetrics.weightedMeshCount,
       deformedMeshCount: a.meshMetrics.deformedMeshCount,
+      meshDetails: a.meshMetrics.meshDetails,
     });
     return cost > worst.cost ? getImpactFromCost(cost) : worst;
   }, getImpactFromCost(0));

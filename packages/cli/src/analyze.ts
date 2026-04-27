@@ -23,9 +23,16 @@ import {
   MeshAttachment,
 } from '@esotericsoftware/spine-core';
 import {
+  avgBoneInfluencesForMesh,
   classifyImpactLevel,
   computationalImpactCost,
+  countMixingDepth,
+  ikMixScale,
+  isConstraintActive,
+  isPhysicsConstraintContributing,
+  pathMixScale,
   renderingImpactCost,
+  transformMixScale,
   type ImpactLevel,
 } from '@spine-benchmark/metrics-impact-formula';
 
@@ -59,10 +66,6 @@ export interface AnalysisReport {
   worstCI: { animation: string; cost: number; level: ImpactLevel };
 }
 
-function isConstraintActive(constraint: { active?: boolean }): boolean {
-  return constraint.active !== false;
-}
-
 export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport {
   const skeleton = new Skeleton(skeletonData);
   const stateData = new AnimationStateData(skeletonData);
@@ -82,6 +85,8 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
     let peakMeshes = 0;
     let peakWeightedMeshes = 0;
     let peakDeformedMeshes = 0;
+    let peakCi = 0;
+    let peakCiInputs: Parameters<typeof computationalImpactCost>[0] | null = null;
 
     state.clearTracks();
     state.setAnimation(0, animation.name, false);
@@ -104,6 +109,7 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
       let meshCount = 0;
       let weightedCount = 0;
       let deformedCount = 0;
+      const frameMeshDetails: Array<{ vertices: number; weighted: boolean; deformed: boolean; boneInfluences: number }> = [];
 
       for (const slot of skeleton.drawOrder) {
         if (slot.color.a <= 0) continue;
@@ -115,16 +121,53 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
         if (att instanceof ClippingAttachment) clips++;
         if (att instanceof MeshAttachment) {
           meshCount++;
-          verts += (att.worldVerticesLength ?? 0) / 2;
-          if (att.bones && att.bones.length > 0) weightedCount++;
-          if (slot.deform && slot.deform.length > 0) deformedCount++;
+          const vertCount = (att.worldVerticesLength ?? 0) / 2;
+          verts += vertCount;
+          const isWeighted = att.bones != null && att.bones.length > 0;
+          const isDeformed = slot.deform != null && slot.deform.length > 0;
+          if (isWeighted) weightedCount++;
+          if (isDeformed) deformedCount++;
+
+          let boneInfluences = 1;
+          if (isWeighted && att.bones) {
+            boneInfluences = avgBoneInfluencesForMesh(att.bones);
+          }
+          frameMeshDetails.push({
+            vertices: vertCount,
+            weighted: isWeighted,
+            deformed: isDeformed,
+            boneInfluences,
+          });
         }
       }
 
-      const activeIk = (skeleton.ikConstraints ?? []).filter(isConstraintActive).length;
-      const activeTransform = (skeleton.transformConstraints ?? []).filter(isConstraintActive).length;
-      const activePath = (skeleton.pathConstraints ?? []).filter(isConstraintActive).length;
-      const activePhysics = ((skeleton as any).physicsConstraints ?? []).filter(isConstraintActive).length;
+      // Compute mix-scaled constraint bones and active counts in one pass.
+      let ikBones = 0;
+      let activeIk = 0;
+      for (const c of skeleton.ikConstraints ?? []) {
+        if (!isConstraintActive(c)) continue;
+        activeIk++;
+        ikBones += (c.bones?.length ?? 1) * ikMixScale(c as { mix?: number });
+      }
+      let transformBones = 0;
+      let activeTransform = 0;
+      for (const c of skeleton.transformConstraints ?? []) {
+        if (!isConstraintActive(c)) continue;
+        activeTransform++;
+        transformBones += (c.bones?.length ?? 1)
+          * transformMixScale(c as Parameters<typeof transformMixScale>[0]);
+      }
+      let pathBones = 0;
+      let activePath = 0;
+      for (const c of skeleton.pathConstraints ?? []) {
+        if (!isConstraintActive(c)) continue;
+        activePath++;
+        pathBones += (c.bones?.length ?? 1)
+          * pathMixScale(c as Parameters<typeof pathMixScale>[0]);
+      }
+      const activePhysics = ((skeleton as any).physicsConstraints ?? []).filter(
+        (c: any) => isPhysicsConstraintContributing(c),
+      ).length;
       const totalActive = activeIk + activeTransform + activePath + activePhysics;
 
       peakNonNormalBlends = Math.max(peakNonNormalBlends, nonNormal);
@@ -134,6 +177,25 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
       peakMeshes = Math.max(peakMeshes, meshCount);
       peakWeightedMeshes = Math.max(peakWeightedMeshes, weightedCount);
       peakDeformedMeshes = Math.max(peakDeformedMeshes, deformedCount);
+
+      const mixingDepth = countMixingDepth(state);
+
+      // Track the frame that produces the highest CI
+      const frameCiInputs = {
+        constraints: { physics: activePhysics, path: activePath, ik: activeIk, transform: activeTransform },
+        constraintBones: { ik: ikBones, path: pathBones, transform: transformBones },
+        totalVertices: verts,
+        activeMeshCount: meshCount,
+        weightedMeshCount: weightedCount,
+        deformedMeshCount: deformedCount,
+        meshDetails: frameMeshDetails,
+        mixingDepth,
+      };
+      const frameCi = computationalImpactCost(frameCiInputs);
+      if (frameCi > peakCi) {
+        peakCi = frameCi;
+        peakCiInputs = frameCiInputs;
+      }
     }
 
     const ri = renderingImpactCost({
@@ -141,18 +203,7 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
       activeClippingMasks: peakClippingMasks,
       totalVertices: peakVertices,
     });
-    const ci = computationalImpactCost({
-      constraints: {
-        physics: ((skeleton as any).physicsConstraints ?? []).filter(isConstraintActive).length,
-        path: (skeleton.pathConstraints ?? []).filter(isConstraintActive).length,
-        ik: (skeleton.ikConstraints ?? []).filter(isConstraintActive).length,
-        transform: (skeleton.transformConstraints ?? []).filter(isConstraintActive).length,
-      },
-      totalVertices: peakVertices,
-      activeMeshCount: peakMeshes,
-      weightedMeshCount: peakWeightedMeshes,
-      deformedMeshCount: peakDeformedMeshes,
-    });
+    const ci = peakCiInputs ? computationalImpactCost(peakCiInputs) : 0;
     const total = ri + ci;
 
     animations.push({

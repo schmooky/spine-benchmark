@@ -138,45 +138,305 @@ export interface ComputationalImpactInputs {
   weightedMeshCount: number;
   /** Subset of meshes that are deformed (have a non-empty deform array). */
   deformedMeshCount: number;
+
+  // --- Enhanced inputs (optional, backwards-compatible) ---
+
+  /**
+   * Mix-scaled effective bone counts per constraint type. Each value is
+   * `sum(constraint.bones.length * mixScale)` across active constraints.
+   * When provided, constraint cost uses per-bone weights instead of
+   * per-constraint weights for more accurate mix-aware scoring.
+   */
+  constraintBones?: { ik: number; path: number; transform: number };
+
+  /**
+   * Total mixing entries across all animation tracks, walking each
+   * track's `mixingFrom` chain. Accounts for crossfade / layered mixing cost.
+   */
+  mixingDepth?: number;
+
+  /**
+   * Per-mesh details for accurate per-mesh capped cost with bone influence
+   * scaling. When provided, replaces the average-based mesh cost calculation.
+   */
+  meshDetails?: ReadonlyArray<{
+    vertices: number;
+    weighted: boolean;
+    deformed: boolean;
+    /** Average bone influences per vertex (1 for non-weighted). */
+    boneInfluences: number;
+  }>;
 }
 
 /**
- * CI formula:
+ * CI formula (basic path, used when enhanced inputs are absent):
  *
- *   constraintCost = (physics × 0.7) + (path × 0.55)
- *                  + (ik × 0.35) + (transform × 0.2)
+ *   constraintCost = (physics x 0.7) + (path x 0.55)
+ *                  + (ik x 0.35) + (transform x 0.2)
  *
  *   avgVerts = totalVertices / max(activeMeshCount, 1)
  *
  *   deformedMeshWeight = 0.08 + min(0.5, avgVerts / 500)
  *   weightedMeshWeight = 0.1  + min(0.55, avgVerts / 450)
  *
- *   meshCost = (deformedMeshCount × deformedMeshWeight)
- *            + (weightedMeshCount × weightedMeshWeight)
+ *   meshCost = (deformedMeshCount x deformedMeshWeight)
+ *            + (weightedMeshCount x weightedMeshWeight)
  *            + (totalVertices / 2000)
  *
  *   CI = constraintCost + meshCost
+ *
+ * Enhanced path (when `constraintBones`, `meshDetails`, or `mixingDepth` are
+ * provided):
+ *
+ *   constraintCost uses per-bone weights scaled by mix:
+ *     (physics x 0.7) + (pathBones x 0.275)
+ *     + (ikBones x 0.175) + (transformBones x 0.10)
+ *
+ *   meshCost uses per-mesh capped cost with bone-influence scaling
+ *   normalized to a baseline of 2 influences per vertex:
+ *     for each mesh:
+ *       if deformed: += 0.08 + min(0.5, verts / 500)
+ *       if weighted: += (0.1 + min(0.55, verts / 450)) x (boneInfluences / 2)
+ *     += totalVertices / 2000
+ *
+ *   mixCost = mixingDepth x 0.15
+ *
+ *   CI = constraintCost + meshCost + mixCost
+ *
+ * Per-bone constraint weights are calibrated so that a "standard" skeleton
+ * (2 bones per chain, mix=1) produces the same constraint cost as the basic
+ * path - 0.175 x 2 = 0.35 (IK), 0.275 x 2 = 0.55 (path), 0.10 x 2 = 0.20
+ * (transform). The bone-influence multiplier is normalized the same way: a
+ * vertex skinned to 2 bones reproduces the old fixed weighted-mesh weight,
+ * so DEFAULT_IMPACT_BRACKETS keep meaning what they meant before. The
+ * enhanced path only diverges from the basic path when inputs deviate from
+ * the baseline (mix < 1, longer/shorter chains, heavier/lighter skinning).
  *
  * Constraint weights mirror the early-out cost profile of `spine-ts` core;
  * mesh weights scale by per-mesh vertex density because deformation/skinning
  * is the dominant cost rather than mesh count alone.
  */
 export function computationalImpactCost(inputs: ComputationalImpactInputs): number {
-  const meshCount = Math.max(inputs.activeMeshCount, 1);
-  const averageVerticesPerMesh = inputs.totalVertices / meshCount;
+  // Constraint cost: use per-bone scaling when mix-scaled bone counts are
+  // available, otherwise fall back to simple per-constraint weights.
+  let constraintCost: number;
+  if (inputs.constraintBones) {
+    constraintCost =
+      inputs.constraints.physics * 0.7 +
+      inputs.constraintBones.path * 0.275 +
+      inputs.constraintBones.ik * 0.175 +
+      inputs.constraintBones.transform * 0.10;
+  } else {
+    constraintCost =
+      inputs.constraints.physics * 0.7 +
+      inputs.constraints.path * 0.55 +
+      inputs.constraints.ik * 0.35 +
+      inputs.constraints.transform * 0.2;
+  }
 
-  const constraintCost =
-    inputs.constraints.physics * 0.7 +
-    inputs.constraints.path * 0.55 +
-    inputs.constraints.ik * 0.35 +
-    inputs.constraints.transform * 0.2;
+  // Mesh cost: use per-mesh details when available for accurate per-mesh
+  // capped cost with bone influence scaling, otherwise use averaged approach.
+  let meshCost: number;
+  if (inputs.meshDetails && inputs.meshDetails.length > 0) {
+    meshCost = 0;
+    for (const mesh of inputs.meshDetails) {
+      if (mesh.deformed) {
+        meshCost += 0.08 + Math.min(0.5, mesh.vertices / 500);
+      }
+      if (mesh.weighted) {
+        // Normalize boneInfluences against a baseline of 2 (typical skinning
+        // density) so a 2-influence vertex matches the basic path's fixed
+        // weighted-mesh weight, while heavier/lighter skinning scales
+        // linearly above/below it.
+        meshCost +=
+          (0.1 + Math.min(0.55, mesh.vertices / 450)) * (mesh.boneInfluences / 2);
+      }
+    }
+    meshCost += inputs.totalVertices / 2000;
+  } else {
+    const meshCount = Math.max(inputs.activeMeshCount, 1);
+    const averageVerticesPerMesh = inputs.totalVertices / meshCount;
+    const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
+    const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
+    meshCost =
+      inputs.deformedMeshCount * deformedMeshWeight +
+      inputs.weightedMeshCount * weightedMeshWeight +
+      inputs.totalVertices / 2000;
+  }
 
-  const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
-  const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
-  const meshComputationCost =
-    inputs.deformedMeshCount * deformedMeshWeight +
-    inputs.weightedMeshCount * weightedMeshWeight +
-    inputs.totalVertices / 2000;
+  // Mixing cost: crossfade entries across animation tracks.
+  const mixCost = (inputs.mixingDepth ?? 0) * 0.15;
 
-  return constraintCost + meshComputationCost;
+  return constraintCost + meshCost + mixCost;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Input extractors (canonical, duck-typed, zero-deps)
+//
+// These helpers translate raw skeleton/state shapes into the numeric
+// inputs that `computationalImpactCost` expects. They live here so every
+// scoring path - offline pipeline, live crawler, in-app heatmap, gif
+// capture, CLI - resolves bone influences, mix scaling, and mixing depth
+// the same way. Duplicating this logic in a consumer is a parity bug:
+// the formula is shared but the inputs would diverge.
+// ──────────────────────────────────────────────────────────────
+
+/** Minimal shape for any constraint with an `active` flag. */
+export interface ConstraintActiveLike {
+  active?: boolean;
+}
+
+/** Treat absent `active` as active (matches spine-core default). */
+export function isConstraintActive(constraint: ConstraintActiveLike): boolean {
+  return constraint.active !== false;
+}
+
+/** Duck-typed IK constraint shape. */
+export interface IkConstraintLike extends ConstraintActiveLike {
+  mix?: number;
+  bones?: ReadonlyArray<unknown>;
+}
+
+/** Duck-typed transform constraint shape. */
+export interface TransformConstraintLike extends ConstraintActiveLike {
+  mixRotate?: number;
+  mixX?: number;
+  mixY?: number;
+  mixScaleX?: number;
+  mixScaleY?: number;
+  mixShearY?: number;
+  bones?: ReadonlyArray<unknown>;
+}
+
+/** Duck-typed path constraint shape. */
+export interface PathConstraintLike extends ConstraintActiveLike {
+  mixRotate?: number;
+  mixX?: number;
+  mixY?: number;
+  bones?: ReadonlyArray<unknown>;
+}
+
+/** Duck-typed physics constraint shape. */
+export interface PhysicsConstraintLike extends ConstraintActiveLike {
+  mix?: number;
+}
+
+/** Mix scale for an IK constraint: `abs(mix ?? 1)`. */
+export function ikMixScale(c: { mix?: number }): number {
+  return Math.abs(c.mix ?? 1);
+}
+
+/**
+ * Mix scale for a transform constraint: max abs across all six mix axes.
+ * Falls back to 1 when no mix property is present (older spine versions
+ * or duck-typed objects without these fields), so the constraint still
+ * counts at full weight rather than being silently zeroed.
+ */
+export function transformMixScale(c: {
+  mixRotate?: number; mixX?: number; mixY?: number;
+  mixScaleX?: number; mixScaleY?: number; mixShearY?: number;
+}): number {
+  return Math.max(
+    Math.abs(c.mixRotate ?? 0),
+    Math.abs(c.mixX ?? 0),
+    Math.abs(c.mixY ?? 0),
+    Math.abs(c.mixScaleX ?? 0),
+    Math.abs(c.mixScaleY ?? 0),
+    Math.abs(c.mixShearY ?? 0),
+  ) || 1;
+}
+
+/**
+ * Mix scale for a path constraint: max abs across `mixRotate`/`mixX`/`mixY`.
+ * Same fallback semantics as {@link transformMixScale}.
+ */
+export function pathMixScale(c: { mixRotate?: number; mixX?: number; mixY?: number }): number {
+  return Math.max(
+    Math.abs(c.mixRotate ?? 0),
+    Math.abs(c.mixX ?? 0),
+    Math.abs(c.mixY ?? 0),
+  ) || 1;
+}
+
+/**
+ * `mix === 0` means the physics constraint output is not blended into
+ * the skeleton, so it should not contribute to CI. Combined with the
+ * usual `active` check.
+ */
+export function isPhysicsConstraintContributing(c: PhysicsConstraintLike): boolean {
+  return isConstraintActive(c) && c.mix !== 0;
+}
+
+/**
+ * Sum mix-scaled effective bone counts per constraint type for the
+ * enhanced CI formula (`ComputationalImpactInputs.constraintBones`).
+ * Each value is `sum(bones.length * mixScale)` across active constraints.
+ */
+export function constraintBoneCounts(skeleton: {
+  ikConstraints?: ReadonlyArray<IkConstraintLike>;
+  transformConstraints?: ReadonlyArray<TransformConstraintLike>;
+  pathConstraints?: ReadonlyArray<PathConstraintLike>;
+}): { ik: number; transform: number; path: number } {
+  let ik = 0;
+  for (const c of skeleton.ikConstraints ?? []) {
+    if (!isConstraintActive(c)) continue;
+    ik += (c.bones?.length ?? 1) * ikMixScale(c);
+  }
+  let transform = 0;
+  for (const c of skeleton.transformConstraints ?? []) {
+    if (!isConstraintActive(c)) continue;
+    transform += (c.bones?.length ?? 1) * transformMixScale(c);
+  }
+  let path = 0;
+  for (const c of skeleton.pathConstraints ?? []) {
+    if (!isConstraintActive(c)) continue;
+    path += (c.bones?.length ?? 1) * pathMixScale(c);
+  }
+  return { ik, transform, path };
+}
+
+/**
+ * Parse the bones array of a weighted MeshAttachment to compute the
+ * average number of bone influences per vertex. Returns 1 for empty
+ * input (so non-weighted meshes get a neutral multiplier).
+ *
+ * Spine bones[] layout (from spine-core VertexAttachment):
+ *   [n, boneIdx0, boneIdx1, ..., n, boneIdx0, ...]
+ * where n is the number of bones influencing that vertex.
+ */
+export function avgBoneInfluencesForMesh(bones: ReadonlyArray<number>): number {
+  let totalInfluences = 0;
+  let vertexCount = 0;
+  let i = 0;
+  while (i < bones.length) {
+    const n = bones[i];
+    totalInfluences += n;
+    vertexCount++;
+    i += 1 + n;
+  }
+  return vertexCount > 0 ? totalInfluences / vertexCount : 1;
+}
+
+/**
+ * Count total mixing entries across all animation tracks, walking each
+ * track's `mixingFrom` linked list. Single-track playback contributes 1
+ * per track; a crossfade A->B contributes 2 (current + mixingFrom);
+ * layered crossfades add more.
+ */
+export function countMixingDepth(
+  state: { tracks?: ReadonlyArray<unknown> } | null | undefined,
+): number {
+  if (!state?.tracks) return 0;
+  let depth = 0;
+  for (const track of state.tracks) {
+    let entry = track as { mixingFrom?: unknown } | null | undefined;
+    while (entry != null) {
+      depth++;
+      entry = (entry as { mixingFrom?: unknown }).mixingFrom as
+        | { mixingFrom?: unknown }
+        | null
+        | undefined;
+    }
+  }
+  return depth;
 }

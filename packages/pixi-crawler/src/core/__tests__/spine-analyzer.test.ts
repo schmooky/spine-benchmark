@@ -84,8 +84,18 @@ function makeClippingAttachment(name: string): MockAttachment {
     return { name, endSlot: {} };
 }
 
-function makeConstraints(count: number, active = true) {
-    return Array.from({ length: count }, () => ({ active }));
+function makeConstraints(count: number, active = true, bonesPerConstraint = 2) {
+    return Array.from({ length: count }, () => ({
+        active,
+        bones: Array.from({ length: bonesPerConstraint }, () => ({})),
+        mix: 1,
+        mixRotate: 1,
+        mixX: 1,
+        mixY: 1,
+        mixScaleX: 1,
+        mixScaleY: 1,
+        mixShearY: 1,
+    }));
 }
 
 function makeSkeleton(
@@ -112,9 +122,10 @@ function makeSkeleton(
 function mockSpineNode(
     drawOrder: MockSlot[],
     constraints?: Parameters<typeof makeSkeleton>[1],
+    state?: { tracks?: (unknown | null)[] },
 ): Container {
     const skeleton = makeSkeleton(drawOrder, constraints);
-    return { skeleton } as unknown as Container;
+    return { skeleton, state: state ?? { tracks: [] } } as unknown as Container;
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -267,24 +278,32 @@ describe('analyzeSpine - Computational Impact', () => {
         expect(result.computationalImpact!.level).toBe('minimal');
     });
 
-    it('computes constraint cost with canonical weights', () => {
+    it('computes constraint cost with per-bone canonical weights', () => {
         const slots = [
             makeSlot('slot0', 0, makeRegionAttachment('img', 'page1', 8)),
         ];
-        // 2 IK, 1 transform, 1 path, 1 physics
+        // 2 IK, 1 transform, 1 path, 1 physics (each constraint has 2 bones, mix=1)
         const node = mockSpineNode(slots, { ik: 2, transform: 1, path: 1, physics: 1 });
         const result = analyzeSpine(node);
 
-        // constraintCost = (1 × 0.7) + (1 × 0.55) + (2 × 0.35) + (1 × 0.2) = 2.15
-        const expected = (1 * 0.7) + (1 * 0.55) + (2 * 0.35) + (1 * 0.2);
+        // constraintBones: ik=4, path=2, transform=2
+        // Per-bone weights are calibrated so that 2-bone chains at mix=1
+        // reproduce the basic per-constraint formula exactly:
+        //   (1 * 0.7) + (2 * 0.275) + (4 * 0.175) + (2 * 0.10)
+        // = (1 * 0.7) + (1 * 0.55)  + (2 * 0.35)  + (1 * 0.20) = 2.15
+        const expected = (1 * 0.7) + (1 * 0.55) + (2 * 0.35) + (1 * 0.20);
         expect(result.computationalImpact!.total).toBeCloseTo(expected, 4);
+        expect(result.computationalImpact!.ikBones).toBeCloseTo(4);
+        expect(result.computationalImpact!.pathBones).toBeCloseTo(2);
+        expect(result.computationalImpact!.transformBones).toBeCloseTo(2);
     });
 
-    it('computes mesh cost with vertex-scaled weights', () => {
-        // 2 meshes: one weighted+deformed (200 verts), one plain mesh (100 verts)
+    it('computes per-mesh capped cost with bone influence scaling', () => {
+        // 2 meshes: one weighted+deformed (200 verts, avg 2 bone influences), one plain (100 verts)
+        // bones=[2, 0, 1] -> spine-core format: 1 vertex with 2 bone influences -> avg = 2
         const slots = [
             makeSlot('mesh1', 0,
-                makeMeshAttachment('m1', 'page1', 400, { bones: [0, 1, 2] }),
+                makeMeshAttachment('m1', 'page1', 400, { bones: [2, 0, 1] }),
                 { deform: [1, 2, 3] },
             ),
             makeSlot('mesh2', 0,
@@ -294,19 +313,22 @@ describe('analyzeSpine - Computational Impact', () => {
         const node = mockSpineNode(slots);
         const result = analyzeSpine(node);
 
-        const totalVerts = 200 + 100; // 400/2 + 200/2
-        const avgVerts = totalVerts / 2; // 2 active meshes
-        const deformedWeight = 0.08 + Math.min(0.5, avgVerts / 500);
-        const weightedWeight = 0.1 + Math.min(0.55, avgVerts / 450);
-
-        // mesh1 is both weighted and deformed
-        const meshCost =
-            (1 * deformedWeight) +  // 1 deformed mesh
-            (1 * weightedWeight) +  // 1 weighted mesh
-            (totalVerts / 2000);
+        // Per-mesh cost (enhanced path via meshDetails). The weighted
+        // multiplier is normalized to a baseline of 2 influences/vertex,
+        // so a 2-influence mesh reproduces the basic-path weighted weight.
+        // mesh1 (200 verts, deformed + weighted, boneInfluences=2):
+        //   deformed: 0.08 + min(0.5, 200/500) = 0.48
+        //   weighted: (0.1 + min(0.55, 200/450)) * (2/2) = 0.5444 * 1 = 0.5444
+        // mesh2 (100 verts, plain): no per-mesh cost
+        // base vertex cost: 300/2000 = 0.15
+        const deformedCost = 0.08 + Math.min(0.5, 200 / 500);
+        const weightedCost = (0.1 + Math.min(0.55, 200 / 450)) * (2 / 2);
+        const meshCost = deformedCost + weightedCost + 300 / 2000;
 
         expect(result.computationalImpact!.deformedMeshes).toBe(1);
         expect(result.computationalImpact!.weightedMeshes).toBe(1);
+        expect(result.computationalImpact!.avgBoneInfluences).toBeCloseTo(2);
+        expect(result.computationalImpact!.activeMeshes).toBe(2);
         expect(result.computationalImpact!.total).toBeCloseTo(meshCost, 4);
     });
 
@@ -326,11 +348,33 @@ describe('analyzeSpine - Computational Impact', () => {
         const slots = [makeSlot('slot0', 0, makeRegionAttachment('a', 'page1', 8))];
         const node = mockSpineNode(slots);
         const skeleton = (node as any).skeleton;
-        skeleton.physicsConstraints = [{ active: true }, { active: false }];
+        skeleton.physicsConstraints = [
+            { active: true, mix: 1 },
+            { active: false, mix: 1 },
+        ];
 
         const result = analyzeSpine(node);
         expect(result.computationalImpact!.physics).toBe(1);
         expect(result.computationalImpact!.total).toBeCloseTo(0.7, 4);
+    });
+
+    it('scales constraint cost by mix and bone count', () => {
+        const slots = [makeSlot('slot0', 0, makeRegionAttachment('a', 'page1', 8))];
+        const node = mockSpineNode(slots);
+        const skeleton = (node as any).skeleton;
+        // IK with 3 bones and mix=0.5 -> ikBones = 3 * 0.5 = 1.5
+        skeleton.ikConstraints = [{ active: true, mix: 0.5, bones: [{}, {}, {}] }];
+        // Physics with mix=0 -> skipped entirely
+        skeleton.physicsConstraints = [{ active: true, mix: 0 }];
+        skeleton.transformConstraints = [];
+        skeleton.pathConstraints = [];
+
+        const result = analyzeSpine(node);
+        expect(result.computationalImpact!.ik).toBe(1);
+        expect(result.computationalImpact!.ikBones).toBeCloseTo(1.5);
+        expect(result.computationalImpact!.physics).toBe(0); // skipped due to mix=0
+        // constraintCost = 0 (physics) + 0 (path) + 1.5*0.175 (ik) + 0 (transform) = 0.2625
+        expect(result.computationalImpact!.total).toBeCloseTo(0.2625, 4);
     });
 });
 
@@ -475,11 +519,12 @@ describe('analyzeSpine - heatmap parity', () => {
     it('crawler RI/CI equals leaf-formula output for identical inputs', () => {
         // Build a non-trivial skeleton: 4 visible slots (1 additive, 1 with
         // a clipping mask, 2 region+mesh), 1 physics + 1 ik constraint.
+        // bones=[2, 0, 1] -> 1 vertex with 2 bone influences -> avg = 2
         const slots = [
             makeSlot('region', 0, makeRegionAttachment('r', 'page1', 8)),
             makeSlot('additive', 1, makeRegionAttachment('a', 'page1', 8)),
             makeSlot('clip', 0, makeClippingAttachment('clipper')),
-            makeSlot('mesh', 0, makeMeshAttachment('m', 'page1', 200, { bones: [0, 1] }), {
+            makeSlot('mesh', 0, makeMeshAttachment('m', 'page1', 200, { bones: [2, 0, 1] }), {
                 deform: [1, 2],
             }),
         ];
@@ -494,16 +539,39 @@ describe('analyzeSpine - heatmap parity', () => {
             activeClippingMasks: 1,
             totalVertices: 108,
         });
+
+        // Enhanced CI: per-bone constraint weights, per-mesh details, no mixing
+        // Each constraint has 2 bones (from makeConstraints default), mix=1
+        // constraintBones: ik=2, path=0, transform=0
         const expectedCI = computationalImpactCost({
             constraints: { physics: 1, path: 0, ik: 1, transform: 0 },
+            constraintBones: { ik: 2, path: 0, transform: 0 },
             totalVertices: 100, // only the mesh contributes to mesh stats
             activeMeshCount: 1,
             weightedMeshCount: 1,
             deformedMeshCount: 1,
+            meshDetails: [
+                { vertices: 100, weighted: true, deformed: true, boneInfluences: 2 },
+            ],
+            mixingDepth: 0,
         });
 
         expect(result.renderingImpact!.total).toBeCloseTo(expectedRI, 6);
         expect(result.computationalImpact!.total).toBeCloseTo(expectedCI, 6);
+    });
+
+    it('includes mixing depth from animation state tracks', () => {
+        const slots = [
+            makeSlot('slot0', 0, makeRegionAttachment('a', 'page1', 8)),
+        ];
+        // Simulate a crossfade: track 0 has a mixingFrom chain of depth 2
+        const track0 = { mixingFrom: { mixingFrom: null } };
+        const state = { tracks: [track0] };
+        const node = mockSpineNode(slots, {}, state);
+        const result = analyzeSpine(node);
+
+        // mixingDepth = 2 (track0 + track0.mixingFrom)
+        expect(result.computationalImpact!.mixingDepth).toBe(2);
     });
 });
 
