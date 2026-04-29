@@ -1,7 +1,9 @@
-import { Animation, Spine } from "@esotericsoftware/spine-pixi-v8";
+import type { Animation, Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "@spine-benchmark/metrics-factors";
 import {
+  activeConstraintStats,
   ikMixScale,
+  isConstraintActive,
   isPhysicsConstraintContributing,
   pathMixScale,
   transformMixScale,
@@ -26,9 +28,13 @@ export interface ConstraintMetrics {
   pathImpact: number;
   physicsImpact: number;
   /**
-   * Mix-scaled effective bone counts per constraint type.
-   * Each value is `sum(constraint.bones.length * mixScale)` across active
-   * constraints, matching the enhanced CI formula path in metrics-impact-formula.
+   * Total bones across *contributing* (active && mix > 0) constraints
+   * per type. NOT mix-scaled - spine-ts runs the full constraint solve
+   * at any non-zero `mix` (mix only controls the lerp factor when
+   * writing back into bones, marginal versus the solve), so per-bone
+   * CPU cost is independent of `mix` magnitude. Matches the `bones`
+   * output of `activeConstraintStats` in metrics-impact-formula and
+   * feeds directly into the formula's enhanced CI path.
    */
   constraintBones: { ik: number; path: number; transform: number };
 }
@@ -138,72 +144,78 @@ export function analyzePhysicsForAnimation(
   const pathData: any[] = [];
   const physicsData: any[] = [];
 
-  // Mix-scaled effective bone counts (accumulated during constraint iteration)
+  // Raw bone counts of contributing (active && mix > 0) constraints,
+  // NOT mix-scaled. Spine-ts runs the full constraint solve at any
+  // non-zero mix, so per-bone CPU cost is mix-independent. Mirrors the
+  // semantics of `activeConstraintStats` in metrics-impact-formula so
+  // the offline path stays in lockstep with crawler / heatmap / CLI.
   let ikBones = 0;
   let transformBones = 0;
   let pathBones = 0;
 
   // Collect IK constraint data
   skeleton.ikConstraints.forEach((constraint: any) => {
-    if (activeComponents.activeConstraints.ik.has(constraint.data.name)) {
-      const mix = constraint.mix ?? constraint.data.mix ?? 1;
-      const boneCount = constraint.bones?.length ?? 1;
-      ikBones += boneCount * ikMixScale({ mix });
-      ikData.push({
-        name: constraint.data.name,
-        bones: constraint.bones.map((bone: any) => bone.data.name),
-        mix
-      });
+    if (!activeComponents.activeConstraints.ik.has(constraint.data.name)) return;
+    const mix = constraint.mix ?? constraint.data.mix ?? 1;
+    const boneCount = constraint.bones?.length ?? 1;
+    if (isConstraintActive(constraint) && ikMixScale({ mix }) > 0) {
+      ikBones += boneCount;
     }
+    ikData.push({
+      name: constraint.data.name,
+      bones: constraint.bones.map((bone: any) => bone.data.name),
+      mix
+    });
   });
 
   // Collect Transform constraint data
   skeleton.transformConstraints.forEach((constraint: any) => {
-    if (activeComponents.activeConstraints.transform.has(constraint.data.name)) {
-      const affectedProps = [];
-      const mixRotate = constraint.mixRotate ?? constraint.data.mixRotate ?? 0;
-      const mixX = constraint.mixX ?? constraint.data.mixX ?? 0;
-      const mixY = constraint.mixY ?? constraint.data.mixY ?? 0;
-      const mixScaleX = constraint.mixScaleX ?? constraint.data.mixScaleX ?? 0;
-      const mixScaleY = constraint.mixScaleY ?? constraint.data.mixScaleY ?? 0;
-      const mixShearY = constraint.mixShearY ?? constraint.data.mixShearY ?? 0;
+    if (!activeComponents.activeConstraints.transform.has(constraint.data.name)) return;
+    const affectedProps = [];
+    const mixRotate = constraint.mixRotate ?? constraint.data.mixRotate ?? 0;
+    const mixX = constraint.mixX ?? constraint.data.mixX ?? 0;
+    const mixY = constraint.mixY ?? constraint.data.mixY ?? 0;
+    const mixScaleX = constraint.mixScaleX ?? constraint.data.mixScaleX ?? 0;
+    const mixScaleY = constraint.mixScaleY ?? constraint.data.mixScaleY ?? 0;
+    const mixShearY = constraint.mixShearY ?? constraint.data.mixShearY ?? 0;
 
-      if (mixRotate > 0) affectedProps.push('rotate');
-      if (mixX > 0) affectedProps.push('x');
-      if (mixY > 0) affectedProps.push('y');
-      if (mixScaleX > 0) affectedProps.push('scaleX');
-      if (mixScaleY > 0) affectedProps.push('scaleY');
-      if (mixShearY > 0) affectedProps.push('shearY');
+    if (mixRotate > 0) affectedProps.push('rotate');
+    if (mixX > 0) affectedProps.push('x');
+    if (mixY > 0) affectedProps.push('y');
+    if (mixScaleX > 0) affectedProps.push('scaleX');
+    if (mixScaleY > 0) affectedProps.push('scaleY');
+    if (mixShearY > 0) affectedProps.push('shearY');
 
-      const boneCount = constraint.bones?.length ?? 1;
-      transformBones += boneCount * transformMixScale({
-        mixRotate, mixX, mixY, mixScaleX, mixScaleY, mixShearY,
-      });
-
-      transformData.push({
-        name: constraint.data.name,
-        bones: constraint.bones.map((bone: any) => bone.data.name),
-        affectedProps: affectedProps.length
-      });
+    const boneCount = constraint.bones?.length ?? 1;
+    const tMix = { mixRotate, mixX, mixY, mixScaleX, mixScaleY, mixShearY };
+    if (isConstraintActive(constraint) && transformMixScale(tMix) > 0) {
+      transformBones += boneCount;
     }
+
+    transformData.push({
+      name: constraint.data.name,
+      bones: constraint.bones.map((bone: any) => bone.data.name),
+      affectedProps: affectedProps.length
+    });
   });
 
   // Collect Path constraint data
   skeleton.pathConstraints.forEach((constraint: any) => {
-    if (activeComponents.activeConstraints.path.has(constraint.data.name)) {
-      const mixRotate = constraint.mixRotate ?? constraint.data.mixRotate ?? 0;
-      const mixX = constraint.mixX ?? constraint.data.mixX ?? 0;
-      const mixY = constraint.mixY ?? constraint.data.mixY ?? 0;
-      const boneCount = constraint.bones?.length ?? 1;
-      pathBones += boneCount * pathMixScale({ mixRotate, mixX, mixY });
-
-      pathData.push({
-        name: constraint.data.name,
-        bones: constraint.bones.map((bone: any) => bone.data.name),
-        rotateMode: constraint.data.rotateMode || 0,
-        spacingMode: constraint.data.spacingMode || 0
-      });
+    if (!activeComponents.activeConstraints.path.has(constraint.data.name)) return;
+    const mixRotate = constraint.mixRotate ?? constraint.data.mixRotate ?? 0;
+    const mixX = constraint.mixX ?? constraint.data.mixX ?? 0;
+    const mixY = constraint.mixY ?? constraint.data.mixY ?? 0;
+    const boneCount = constraint.bones?.length ?? 1;
+    if (isConstraintActive(constraint) && pathMixScale({ mixRotate, mixX, mixY }) > 0) {
+      pathBones += boneCount;
     }
+
+    pathData.push({
+      name: constraint.data.name,
+      bones: constraint.bones.map((bone: any) => bone.data.name),
+      rotateMode: constraint.data.rotateMode || 0,
+      spacingMode: constraint.data.spacingMode || 0
+    });
   });
 
   // Collect Physics constraint data. A physics constraint with `mix === 0`
@@ -355,10 +367,15 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
   }));
 
   const activePhysicsData = physicsData.filter(p => p.isActive);
-  // Count physics constraints that are active regardless of `mix`. Spine-ts
-  // runs the integration step even when mix=0, so the integration cost
-  // applies to all `isActive()` physics constraints, not just contributing.
-  const activePhysicsAllCount = physicsConstraints.filter(c => c.isActive()).length;
+  // Canonical helper: walks every constraint array once and returns
+  // raw bone counts of contributing constraints (active && mix > 0)
+  // plus `physicsActiveAll` (active physics regardless of mix). Use
+  // it everywhere CI inputs are gathered so the offline path stays
+  // in lockstep with the live crawler / heatmap / CLI / gif-capture.
+  const stats = activeConstraintStats(
+    skeleton as Parameters<typeof activeConstraintStats>[0],
+  );
+  const activePhysicsAllCount = stats.physicsActiveAll;
 
   // Calculate constraint performance impact scores
   const ikImpact = calculateIkImpact(ikData);
@@ -366,46 +383,35 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
   const pathImpact = calculatePathImpact(pathData);
   const physicsImpact = calculatePhysicsImpact(activePhysicsData);
 
-  // Total constraints (only truly active ones)
-  const activeIkData = ikData.filter(c => c.isActive);
-  const activeTransformData = transformData.filter(c => c.isActive);
-  const activePathData = pathData.filter(c => c.isActive);
-  const totalConstraints = activeIkData.length + activeTransformData.length +
-                           activePathData.length + activePhysicsData.length;
-
-  // Mix-scaled effective bone counts for the enhanced CI formula path.
-  // Only count active constraints (matching crawler/heatmap parity).
-  let globalIkBones = 0;
-  for (const ik of activeIkData) {
-    globalIkBones += ik.bones.length * ikMixScale(ik);
-  }
-  let globalTransformBones = 0;
-  for (const t of activeTransformData) {
-    globalTransformBones += t.bones.length * transformMixScale(t);
-  }
-  let globalPathBones = 0;
-  for (const p of activePathData) {
-    globalPathBones += p.bones.length * pathMixScale(p);
-  }
+  // Active counts come from the canonical helper so the offline path
+  // matches the live crawler exactly: a constraint with `active=true`
+  // but every mix axis explicitly zero contributes nothing to CI and
+  // is therefore not counted as active. Filtering off `c.isActive`
+  // alone (without the mix-scale check) over-counted such constraints
+  // and diverged from `activeConstraintStats`.
+  const totalActiveConstraints =
+    stats.active.ik + stats.active.transform + stats.active.path + stats.active.physics;
 
   const metrics = {
-    activeIkCount: activeIkData.length,
-    activeTransformCount: activeTransformData.length,
-    activePathCount: activePathData.length,
-    activePhysicsCount: activePhysicsData.length,
+    activeIkCount: stats.active.ik,
+    activeTransformCount: stats.active.transform,
+    activePathCount: stats.active.path,
+    activePhysicsCount: stats.active.physics,
     activePhysicsAllCount,
-    totalActiveConstraints: totalConstraints,
+    totalActiveConstraints,
     ikImpact,
     transformImpact,
     pathImpact,
     physicsImpact,
-    constraintBones: { ik: globalIkBones, path: globalPathBones, transform: globalTransformBones },
+    // Raw bone counts of contributing constraints (mix-independent),
+    // sourced from the canonical helper. See `ConstraintMetrics.constraintBones`.
+    constraintBones: stats.bones,
     // Additional fields for compatibility
     ikCount: ikConstraints.length,
     transformCount: transformConstraints.length,
     pathCount: pathConstraints.length,
     physicsCount: physicsConstraints.length,
-    totalConstraints
+    totalConstraints: totalActiveConstraints,
   };
 
   return {
