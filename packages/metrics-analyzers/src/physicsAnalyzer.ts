@@ -12,7 +12,14 @@ export interface ConstraintMetrics {
   activeIkCount: number;
   activeTransformCount: number;
   activePathCount: number;
+  /** Active physics constraints with non-zero `mix` (apply work). */
   activePhysicsCount: number;
+  /**
+   * Active physics constraints regardless of `mix` value (integration
+   * work). Spine-ts always integrates the physics step; only the
+   * write-back to bones depends on `mix`. `>= activePhysicsCount`.
+   */
+  activePhysicsAllCount: number;
   totalActiveConstraints: number;
   ikImpact: number;
   transformImpact: number;
@@ -200,11 +207,16 @@ export function analyzePhysicsForAnimation(
   });
 
   // Collect Physics constraint data. A physics constraint with `mix === 0`
-  // produces no output and is excluded everywhere else (crawler, heatmap,
-  // CLI, global path), so do the same here for parity.
+  // produces no output (apply step) and is excluded from `physicsData` /
+  // `activePhysicsCount` everywhere else (crawler, heatmap, CLI, global
+  // path), so do the same here. Track `activePhysicsAllCount` separately:
+  // spine-ts runs the integration step regardless of `mix`, so a temporarily
+  // disabled physics constraint still costs CPU.
+  let activePhysicsAllCount = 0;
   if (skeleton.physicsConstraints) {
     skeleton.physicsConstraints.forEach((constraint: any) => {
       if (!activeComponents.activeConstraints.physics.has(constraint.data.name)) return;
+      activePhysicsAllCount++;
       if (!isPhysicsConstraintContributing(constraint)) return;
 
       const affectedProps = [];
@@ -224,7 +236,7 @@ export function analyzePhysicsForAnimation(
     });
   }
 
-  // Active physics count is the post-filter count, not the raw sampled set.
+  // Active physics count is the post-filter contributing count.
   const activePhysicsCount = physicsData.length;
 
   console.log(`Active constraints in ${animation.name}:`, {
@@ -249,6 +261,7 @@ export function analyzePhysicsForAnimation(
     activeTransformCount,
     activePathCount,
     activePhysicsCount,
+    activePhysicsAllCount,
     totalActiveConstraints,
     ikImpact,
     transformImpact,
@@ -342,6 +355,10 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
   }));
 
   const activePhysicsData = physicsData.filter(p => p.isActive);
+  // Count physics constraints that are active regardless of `mix`. Spine-ts
+  // runs the integration step even when mix=0, so the integration cost
+  // applies to all `isActive()` physics constraints, not just contributing.
+  const activePhysicsAllCount = physicsConstraints.filter(c => c.isActive()).length;
 
   // Calculate constraint performance impact scores
   const ikImpact = calculateIkImpact(ikData);
@@ -376,6 +393,7 @@ export function analyzeGlobalPhysics(spineInstance: Spine): GlobalPhysicsAnalysi
     activeTransformCount: activeTransformData.length,
     activePathCount: activePathData.length,
     activePhysicsCount: activePhysicsData.length,
+    activePhysicsAllCount,
     totalActiveConstraints: totalConstraints,
     ikImpact,
     transformImpact,

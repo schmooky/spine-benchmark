@@ -15,6 +15,7 @@ interface PhysicsAnalysisProps {
  */
 function constraintImpactCost(c: {
   activePhysicsCount: number;
+  activePhysicsAllCount?: number;
   activePathCount: number;
   activeIkCount: number;
   activeTransformCount: number;
@@ -27,6 +28,7 @@ function constraintImpactCost(c: {
       ik: c.activeIkCount,
       transform: c.activeTransformCount,
     },
+    physicsActiveAll: c.activePhysicsAllCount,
     constraintBones: c.constraintBones,
     totalVertices: 0,
     activeMeshCount: 0,

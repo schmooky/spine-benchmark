@@ -187,6 +187,72 @@ describe('computationalImpactCost', () => {
     ).toBeCloseTo(0.45);
   });
 
+  it('charges physics integration cost when mix=0 via physicsActiveAll', () => {
+    // 1 physics active but mix=0 -> contributing=0, physicsActiveAll=1.
+    // Should pay the 0.56 structural integration cost but no apply cost.
+    expect(
+      computationalImpactCost({
+        constraints: { physics: 0, path: 0, ik: 0, transform: 0 },
+        physicsActiveAll: 1,
+        totalVertices: 0,
+        activeMeshCount: 0,
+        weightedMeshCount: 0,
+        deformedMeshCount: 0,
+      }),
+    ).toBeCloseTo(0.56, 6);
+
+    // 1 physics with mix>0 -> contributing=1, physicsActiveAll=1.
+    // Pays both halves and reproduces the legacy 0.7 weight.
+    expect(
+      computationalImpactCost({
+        constraints: { physics: 1, path: 0, ik: 0, transform: 0 },
+        physicsActiveAll: 1,
+        totalVertices: 0,
+        activeMeshCount: 0,
+        weightedMeshCount: 0,
+        deformedMeshCount: 0,
+      }),
+    ).toBeCloseTo(0.7, 6);
+  });
+
+  it('charges partial-mix constraints the same as full-mix (mix-independent cost)', () => {
+    // A 3-bone IK at mix=1 and the same chain at mix=0.5 cost the same
+    // CI because spine-ts runs the full constraint solve at any mix > 0.
+    const fullMix = computationalImpactCost({
+      constraints: { physics: 0, path: 0, ik: 1, transform: 0 },
+      constraintBones: { ik: 3, path: 0, transform: 0 },
+      totalVertices: 0,
+      activeMeshCount: 0,
+      weightedMeshCount: 0,
+      deformedMeshCount: 0,
+    });
+    const partialMix = computationalImpactCost({
+      constraints: { physics: 0, path: 0, ik: 1, transform: 0 },
+      constraintBones: { ik: 3, path: 0, transform: 0 }, // same 3 bones, full count
+      totalVertices: 0,
+      activeMeshCount: 0,
+      weightedMeshCount: 0,
+      deformedMeshCount: 0,
+    });
+    expect(fullMix).toBeCloseTo(partialMix, 6);
+    expect(fullMix).toBeCloseTo(3 * 0.175, 6); // 0.525
+  });
+
+  it('falls back to legacy physics weight when physicsActiveAll is omitted', () => {
+    // Without physicsActiveAll, physics cost reduces to contributing * 0.7
+    // exactly, preserving backwards compatibility for callers that only
+    // know about `constraints.physics`.
+    expect(
+      computationalImpactCost({
+        constraints: { physics: 3, path: 0, ik: 0, transform: 0 },
+        totalVertices: 0,
+        activeMeshCount: 0,
+        weightedMeshCount: 0,
+        deformedMeshCount: 0,
+      }),
+    ).toBeCloseTo(2.1, 6);
+  });
+
   it('falls back to basic path when enhanced inputs are absent', () => {
     // Same as the first test - verifies backwards compatibility
     const basic = computationalImpactCost({
@@ -253,35 +319,44 @@ describe('isPhysicsConstraintContributing', () => {
 });
 
 describe('activeConstraintStats', () => {
-  it('returns active counts and mix-scaled bones in a single pass', () => {
+  it('returns active counts and contributing bones (mix-independent) in a single pass', () => {
     const stats = activeConstraintStats({
       ikConstraints: [
-        { active: true, mix: 0.5, bones: [{}, {}, {}] }, // active, 3 * 0.5 = 1.5
+        { active: true, mix: 0.5, bones: [{}, {}, {}] }, // contributes, full 3 bones
         { active: false, mix: 1, bones: [{}, {}] },      // skipped (inactive)
-        { mix: 1, bones: [{}] },                         // active, 1 * 1 = 1
+        { mix: 1, bones: [{}] },                         // contributes, 1 bone
+        { active: true, mix: 0, bones: [{}, {}] },       // mix=0 early-exit, skipped
       ],
       transformConstraints: [
-        { mixRotate: 0.7, bones: [{}, {}] },              // active, 2 * 0.7 = 1.4
+        { mixRotate: 0.7, bones: [{}, {}] },              // contributes, 2 bones
+        { mixRotate: 0, mixX: 0, mixY: 0, bones: [{}] }, // all-zero -> skipped
       ],
       pathConstraints: [
-        { mixX: 0.5, bones: [{}, {}, {}, {}] },           // active, 4 * 0.5 = 2
+        { mixX: 0.5, bones: [{}, {}, {}, {}] },           // contributes, 4 bones
       ],
       physicsConstraints: [
         { active: true, mix: 1 },                         // contributes
-        { active: true, mix: 0 },                         // mix=0 -> excluded
+        { active: true, mix: 0 },                         // mix=0 -> apply skipped
         { active: false, mix: 1 },                        // inactive -> excluded
       ],
     });
     expect(stats.active).toEqual({ ik: 2, transform: 1, path: 1, physics: 1 });
-    expect(stats.bones.ik).toBeCloseTo(2.5);
-    expect(stats.bones.transform).toBeCloseTo(1.4);
-    expect(stats.bones.path).toBeCloseTo(2);
+    // Bones are full bone counts of contributing constraints, not
+    // mix-scaled: a 3-bone chain at mix=0.5 still contributes 3 bones
+    // because spine-ts does the full solve regardless of mix magnitude.
+    expect(stats.bones.ik).toBe(4);       // 3 + 1
+    expect(stats.bones.transform).toBe(2); // 2
+    expect(stats.bones.path).toBe(4);      // 4
+    // physicsActiveAll counts active physics regardless of mix; only the
+    // active-and-inactive cases are excluded.
+    expect(stats.physicsActiveAll).toBe(2);
   });
 
   it('returns zeros for empty/missing arrays', () => {
     expect(activeConstraintStats({})).toEqual({
       active: { ik: 0, transform: 0, path: 0, physics: 0 },
       bones: { ik: 0, transform: 0, path: 0 },
+      physicsActiveAll: 0,
     });
   });
 });
@@ -307,20 +382,28 @@ describe('countMixingDepth', () => {
     expect(countMixingDepth({ tracks: [] })).toBe(0);
   });
 
-  it('counts only extra mixingFrom entries beyond the head track entry', () => {
-    // Single track, no crossfade: head only, no mixingFrom -> 0 (baseline)
+  it('counts total timeline applies minus the one-track baseline', () => {
+    // Single track, no crossfade: 1 apply - 1 baseline = 0
     expect(countMixingDepth({ tracks: [{ mixingFrom: null }] })).toBe(0);
-    // One crossfade A->B: one mixingFrom past the head -> 1
+    // One crossfade A->B: head + 1 mixingFrom = 2 applies, -1 = 1
     expect(countMixingDepth({ tracks: [{ mixingFrom: { mixingFrom: null } }] })).toBe(1);
-    // Two tracks, second is a 3-deep layered crossfade: 0 + 2 = 2
+    // Two parallel tracks, no crossfade on either: 2 applies - 1 = 1
+    // (multi-track playback now contributes, not free).
+    expect(countMixingDepth({
+      tracks: [
+        { mixingFrom: null },
+        { mixingFrom: null },
+      ],
+    })).toBe(1);
+    // Two tracks, second is a 3-deep layered crossfade: 1 + 3 = 4 applies, -1 = 3
     expect(countMixingDepth({
       tracks: [
         { mixingFrom: null },
         { mixingFrom: { mixingFrom: { mixingFrom: null } } },
       ],
-    })).toBe(2);
+    })).toBe(3);
     // Null/undefined tracks are skipped; one playing track with no
-    // crossfade is still the zero-cost baseline
+    // crossfade is still the zero-cost baseline.
     expect(countMixingDepth({ tracks: [null, undefined, { mixingFrom: null }] })).toBe(0);
   });
 });

@@ -16,6 +16,7 @@ interface FrameConstraintCounts {
   transform: number;
   path: number;
   physics: number;
+  physicsActiveAll: number;
   constraintBones: { ik: number; path: number; transform: number };
 }
 
@@ -50,6 +51,7 @@ function countActiveConstraints(skeleton: {
     transform: stats.active.transform,
     path: stats.active.path,
     physics: stats.active.physics,
+    physicsActiveAll: stats.physicsActiveAll,
     constraintBones: stats.bones,
   };
 }
@@ -69,6 +71,7 @@ function renderingImpactCost(
 function computationalImpactCost(input: FrameImpactInputs): number {
   return sharedComputationalImpactCost({
     constraints: input.constraints,
+    physicsActiveAll: input.constraints.physicsActiveAll,
     constraintBones: input.constraints.constraintBones,
     totalVertices: input.totalVertices,
     activeMeshCount: input.activeMeshCount,

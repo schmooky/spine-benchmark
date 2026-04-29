@@ -73,6 +73,7 @@ function sampleImpact(skeleton: any, state: any): { ri: number; ci: number } {
     }).toFixed(2)),
     ci: Number(computationalImpactCost({
       constraints: stats.active,
+      physicsActiveAll: stats.physicsActiveAll,
       constraintBones: stats.bones,
       totalVertices, activeMeshCount, weightedMeshCount, deformedMeshCount,
       meshDetails,

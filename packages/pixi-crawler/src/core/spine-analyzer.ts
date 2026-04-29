@@ -157,6 +157,7 @@ interface ConstraintCounts {
     transform: number;
     path: number;
     physics: number;
+    physicsActiveAll: number;
     constraintBones: { ik: number; path: number; transform: number };
 }
 
@@ -175,6 +176,7 @@ function analyzeConstraints(skeleton: SpineLike['skeleton']): ConstraintCounts {
         transform: stats.active.transform,
         path: stats.active.path,
         physics: stats.active.physics,
+        physicsActiveAll: stats.physicsActiveAll,
         constraintBones: stats.bones,
     };
 }
@@ -261,6 +263,7 @@ function buildComputationalImpact(
             ik: c.ik,
             transform: c.transform,
         },
+        physicsActiveAll: c.physicsActiveAll,
         constraintBones: c.constraintBones,
         totalVertices: m.totalVertices,
         activeMeshCount: m.activeMeshCount,
@@ -272,6 +275,7 @@ function buildComputationalImpact(
 
     return {
         physics: c.physics,
+        physicsActiveAll: c.physicsActiveAll,
         path: c.path,
         pathBones: c.constraintBones.path,
         ik: c.ik,

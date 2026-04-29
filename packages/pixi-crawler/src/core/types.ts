@@ -387,8 +387,10 @@ export interface RenderingImpact {
 
 /** Computational Impact - CPU cost from runtime calculations */
 export interface ComputationalImpact {
-    /** Active physics constraints */
+    /** Active physics constraints with non-zero `mix` (apply work) */
     physics: number;
+    /** Active physics constraints regardless of `mix` (integration work; >= physics) */
+    physicsActiveAll: number;
     /** Active path constraints */
     path: number;
     /** Mix-scaled effective path bone count (sum of bones.length * mixScale) */

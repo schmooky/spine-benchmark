@@ -142,23 +142,40 @@ export interface ComputationalImpactInputs {
   // --- Enhanced inputs (optional, backwards-compatible) ---
 
   /**
-   * Mix-scaled effective bone counts per constraint type. Each value is
-   * `sum(constraint.bones.length * mixScale)` across active constraints.
-   * When provided, constraint cost uses per-bone weights instead of
-   * per-constraint weights for more accurate mix-aware scoring.
+   * Total bones across *contributing* (active && mix > 0) constraints
+   * per type. NOT mix-scaled - spine-ts does the full constraint solve
+   * at any non-zero mix, so the per-bone CPU cost is independent of
+   * `mix` magnitude. When provided, constraint cost uses per-bone
+   * weights to capture long-chain cost that the basic per-constraint
+   * formula misses.
    */
   constraintBones?: { ik: number; path: number; transform: number };
 
   /**
-   * Extra mixing entries beyond the one-track-no-crossfade baseline:
-   * sum of `mixingFrom` chain lengths across active tracks (the head
-   * track entry itself is NOT counted). A skeleton playing a single
-   * animation with no crossfade has `mixingDepth === 0`, so the
-   * enhanced CI path matches the basic path on the baseline. Each
-   * additional layered mixer (crossfade `mixingFrom`, deeper chains)
-   * contributes 1.
+   * Extra timeline applications beyond the one-track-no-crossfade
+   * baseline. Counts every active track entry including its `mixingFrom`
+   * chain and subtracts 1 for the baseline animation, so:
+   *
+   *   - 1 track, no crossfade  -> 0  (baseline)
+   *   - 1 track, A -> B fade   -> 1  (head + 1 mixingFrom = 2 applies, -1)
+   *   - 2 tracks, no crossfade -> 1  (parallel layered playback)
+   *   - 2 tracks, second is 3-deep -> 3
+   *
+   * Each extra application contributes `0.15` to CI, modelling the
+   * additional `AnimationState.apply` work spine-ts performs per entry.
    */
   mixingDepth?: number;
+
+  /**
+   * Number of *active* physics constraints regardless of `mix` value.
+   * Physics integration runs every frame even when `mix === 0` (only
+   * the write-back to bones is skipped), so active-but-non-contributing
+   * physics still costs CPU. When omitted, falls back to
+   * `constraints.physics` (i.e. assumes every active physics constraint
+   * is also contributing). Pair with the canonical
+   * {@link activeConstraintStats} helper.
+   */
+  physicsActiveAll?: number;
 
   /**
    * Per-mesh details for accurate per-mesh capped cost with bone influence
@@ -176,8 +193,11 @@ export interface ComputationalImpactInputs {
 /**
  * CI formula (basic path, used when enhanced inputs are absent):
  *
- *   constraintCost = (physics x 0.7) + (path x 0.55)
- *                  + (ik x 0.35) + (transform x 0.2)
+ *   constraintCost = (physicsActiveAll x 0.56) + (physicsContributing x 0.14)
+ *                  + (path x 0.55) + (ik x 0.35) + (transform x 0.2)
+ *
+ *   where physicsActiveAll falls back to physicsContributing when not
+ *   provided, recovering the legacy `physics x 0.7` behaviour.
  *
  *   avgVerts = totalVertices / max(activeMeshCount, 1)
  *
@@ -193,9 +213,23 @@ export interface ComputationalImpactInputs {
  * Enhanced path (when `constraintBones`, `meshDetails`, or `mixingDepth` are
  * provided):
  *
- *   constraintCost uses per-bone weights scaled by mix:
- *     (physics x 0.7) + (pathBones x 0.275)
- *     + (ikBones x 0.175) + (transformBones x 0.10)
+ *   constraintCost uses per-bone weights independent of mix magnitude
+ *   (spine-ts runs the full constraint solve at any mix > 0; mix only
+ *   controls the lerp factor when writing back into bones, which is a
+ *   marginal cost compared to the solve):
+ *     (physicsActiveAll x 0.56) + (physicsContributing x 0.14)
+ *     + (pathBones x 0.275) + (ikBones x 0.175) + (transformBones x 0.10)
+ *
+ *   `*Bones` here are total bone counts across contributing constraints
+ *   - a constraint with `mix=0.01` and a 3-bone chain pays the same
+ *   per-bone cost as the same constraint with `mix=1`, matching the
+ *   actual CPU work.
+ *
+ *   The physics split (80% structural / 20% mix-dependent) reflects that
+ *   spine-ts always runs the physics integration step even when
+ *   `mix === 0`; only the bone write-back depends on mix. So an active
+ *   physics constraint that has been temporarily disabled by mix=0 still
+ *   pays the integration cost, just not the apply cost.
  *
  *   meshCost uses per-mesh capped cost with bone-influence scaling
  *   normalized to a baseline of 2 influences per vertex:
@@ -226,18 +260,28 @@ export interface ComputationalImpactInputs {
  * is the dominant cost rather than mesh count alone.
  */
 export function computationalImpactCost(inputs: ComputationalImpactInputs): number {
+  // Physics split: integration runs on every active constraint regardless
+  // of `mix`, so `physicsActiveAll` pays the structural cost. The apply
+  // step only runs at `mix > 0`, captured by `constraints.physics` (which
+  // every consumer already filters via `isPhysicsConstraintContributing`).
+  // When `physicsActiveAll` is absent, fall back to the contributing count
+  // so legacy callers reproduce the old `physics x 0.7` weight.
+  const physicsContributing = inputs.constraints.physics;
+  const physicsActiveAll = inputs.physicsActiveAll ?? physicsContributing;
+  const physicsCost = physicsActiveAll * 0.56 + physicsContributing * 0.14;
+
   // Constraint cost: use per-bone scaling when mix-scaled bone counts are
   // available, otherwise fall back to simple per-constraint weights.
   let constraintCost: number;
   if (inputs.constraintBones) {
     constraintCost =
-      inputs.constraints.physics * 0.7 +
+      physicsCost +
       inputs.constraintBones.path * 0.275 +
       inputs.constraintBones.ik * 0.175 +
       inputs.constraintBones.transform * 0.10;
   } else {
     constraintCost =
-      inputs.constraints.physics * 0.7 +
+      physicsCost +
       inputs.constraints.path * 0.55 +
       inputs.constraints.ik * 0.35 +
       inputs.constraints.transform * 0.2;
@@ -400,10 +444,24 @@ export function isPhysicsConstraintContributing(c: PhysicsConstraintLike): boole
  * parity bug waiting to happen if the predicates ever diverge.
  */
 export interface ConstraintStats {
-  /** Active counts. Physics also requires non-zero `mix`. */
+  /** Active counts. Physics also requires non-zero `mix` (contributing). */
   active: { ik: number; transform: number; path: number; physics: number };
-  /** Mix-scaled effective bone counts: `sum(bones.length * mixScale)`. */
+  /**
+   * Total bones across *contributing* (active && mix > 0) constraints
+   * per type, NOT mix-scaled. Spine-ts runs the full constraint solve
+   * for every contributing constraint regardless of `mix` value (mix is
+   * only used to lerp the result back into bones), so the CPU cost is
+   * driven by chain length, not by `mix`. A 5-bone chain with `mix=0.5`
+   * costs the same as the same chain with `mix=1`.
+   */
   bones: { ik: number; transform: number; path: number };
+  /**
+   * Active physics constraint count *including* `mix === 0`. Spine-ts
+   * runs the physics integration step every frame regardless of `mix`,
+   * so this is the right input for the integration-side cost; the
+   * mix-dependent apply cost still uses `active.physics`.
+   */
+  physicsActiveAll: number;
 }
 
 /**
@@ -418,35 +476,46 @@ export function activeConstraintStats(skeleton: {
   pathConstraints?: ReadonlyArray<PathConstraintLike> | null;
   physicsConstraints?: ReadonlyArray<PhysicsConstraintLike> | null;
 }): ConstraintStats {
+  // For IK/transform/path: a constraint contributes (i.e. costs CPU) iff
+  // it is active AND has non-zero mix on at least one axis - spine-ts
+  // early-exits at all-zero mix, but otherwise does the full solve and
+  // pays per-bone CPU regardless of `mix` magnitude. So `bones` is the
+  // raw bone count of contributing constraints, NOT mix-scaled.
   let ik = 0;
   let ikBones = 0;
   for (const c of skeleton.ikConstraints ?? []) {
     if (!isConstraintActive(c)) continue;
+    if (ikMixScale(c) === 0) continue;
     ik++;
-    ikBones += (c.bones?.length ?? 1) * ikMixScale(c);
+    ikBones += c.bones?.length ?? 1;
   }
   let transform = 0;
   let transformBones = 0;
   for (const c of skeleton.transformConstraints ?? []) {
     if (!isConstraintActive(c)) continue;
+    if (transformMixScale(c) === 0) continue;
     transform++;
-    transformBones += (c.bones?.length ?? 1) * transformMixScale(c);
+    transformBones += c.bones?.length ?? 1;
   }
   let path = 0;
   let pathBones = 0;
   for (const c of skeleton.pathConstraints ?? []) {
     if (!isConstraintActive(c)) continue;
+    if (pathMixScale(c) === 0) continue;
     path++;
-    pathBones += (c.bones?.length ?? 1) * pathMixScale(c);
+    pathBones += c.bones?.length ?? 1;
   }
   let physics = 0;
+  let physicsActiveAll = 0;
   for (const c of skeleton.physicsConstraints ?? []) {
-    if (!isPhysicsConstraintContributing(c)) continue;
-    physics++;
+    if (!isConstraintActive(c)) continue;
+    physicsActiveAll++;
+    if (c.mix !== 0) physics++;
   }
   return {
     active: { ik, transform, path, physics },
     bones: { ik: ikBones, transform: transformBones, path: pathBones },
+    physicsActiveAll,
   };
 }
 
@@ -473,39 +542,39 @@ export function avgBoneInfluencesForMesh(bones: ReadonlyArray<number>): number {
 }
 
 /**
- * Count *extra* mixing entries beyond the baseline of one playing animation
- * per track: sum of each active track's `mixingFrom` chain length. The head
- * track entry itself is NOT counted, only the chain it is mixing from.
+ * Count *extra* timeline applications beyond a single playing animation.
+ * Sums every active track entry plus its `mixingFrom` chain, then
+ * subtracts 1 for the baseline (a single playing animation costs one
+ * `AnimationState.apply` invocation, which the formula treats as free).
  *
- * - single track, no crossfade -> 0   (head only, no mixingFrom)
- * - crossfade A->B              -> 1  (one mixingFrom)
- * - layered N-deep crossfade    -> N-1
+ * - 0 active tracks            -> 0  (nothing playing)
+ * - 1 track, no crossfade      -> 0  (1 apply - 1 baseline)
+ * - 1 track, A -> B fade       -> 1  (head + 1 mixingFrom = 2 applies, -1)
+ * - 2 tracks, no crossfade     -> 1  (parallel layered playback)
+ * - 2 tracks, second is 3-deep -> 3  (1 + 3 = 4 applies, -1)
  *
- * Defining the cost this way lets the CI formula treat the canonical
- * "one animation playing, no crossfade" case as the zero-cost baseline,
- * matching the `constraintBones` and `meshDetails` calibration. Real CPU
- * cost in spine-core's `AnimationState.apply` scales with the number of
- * additional timeline applications a crossfade forces, which is exactly
- * the chain length beyond the head entry.
+ * Real CPU cost in spine-core's `AnimationState.apply` scales with the
+ * total number of timeline applications - one per active track plus one
+ * per `mixingFrom` entry in each chain. Subtracting the baseline keeps
+ * the canonical "one animation playing, no crossfade" case at zero so
+ * the enhanced CI path still matches the basic path on the calibration
+ * baseline.
  */
 export function countMixingDepth(
   state: { tracks?: ReadonlyArray<unknown> } | null | undefined,
 ): number {
   if (!state?.tracks) return 0;
-  let depth = 0;
+  let totalApplies = 0;
   for (const track of state.tracks) {
     if (track == null) continue;
-    let entry = (track as { mixingFrom?: unknown }).mixingFrom as
-      | { mixingFrom?: unknown }
-      | null
-      | undefined;
+    let entry = track as { mixingFrom?: unknown } | null | undefined;
     while (entry != null) {
-      depth++;
+      totalApplies++;
       entry = (entry as { mixingFrom?: unknown }).mixingFrom as
         | { mixingFrom?: unknown }
         | null
         | undefined;
     }
   }
-  return depth;
+  return Math.max(0, totalApplies - 1);
 }

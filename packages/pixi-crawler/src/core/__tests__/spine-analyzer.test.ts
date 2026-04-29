@@ -358,23 +358,28 @@ describe('analyzeSpine - Computational Impact', () => {
         expect(result.computationalImpact!.total).toBeCloseTo(0.7, 4);
     });
 
-    it('scales constraint cost by mix and bone count', () => {
+    it('charges full per-bone cost regardless of mix magnitude', () => {
         const slots = [makeSlot('slot0', 0, makeRegionAttachment('a', 'page1', 8))];
         const node = mockSpineNode(slots);
         const skeleton = (node as any).skeleton;
-        // IK with 3 bones and mix=0.5 -> ikBones = 3 * 0.5 = 1.5
+        // 3-bone IK at mix=0.5: spine-ts still does the full solve, so
+        // ikBones is the raw bone count (3), not mix-scaled (1.5).
         skeleton.ikConstraints = [{ active: true, mix: 0.5, bones: [{}, {}, {}] }];
-        // Physics with mix=0 -> skipped entirely
+        // Physics with mix=0: apply skipped (contributing = 0) but
+        // integration still runs (physicsActiveAll = 1).
         skeleton.physicsConstraints = [{ active: true, mix: 0 }];
         skeleton.transformConstraints = [];
         skeleton.pathConstraints = [];
 
         const result = analyzeSpine(node);
         expect(result.computationalImpact!.ik).toBe(1);
-        expect(result.computationalImpact!.ikBones).toBeCloseTo(1.5);
-        expect(result.computationalImpact!.physics).toBe(0); // skipped due to mix=0
-        // constraintCost = 0 (physics) + 0 (path) + 1.5*0.175 (ik) + 0 (transform) = 0.2625
-        expect(result.computationalImpact!.total).toBeCloseTo(0.2625, 4);
+        expect(result.computationalImpact!.ikBones).toBe(3); // mix-independent
+        expect(result.computationalImpact!.physics).toBe(0); // contributing physics
+        expect(result.computationalImpact!.physicsActiveAll).toBe(1); // integrated still
+        // constraintCost = 1 * 0.56 (physics integration) + 0 * 0.14 (apply skipped)
+        //                + 0 (path) + 3 * 0.175 (ik) + 0 (transform)
+        //                = 0.56 + 0.525 = 1.085
+        expect(result.computationalImpact!.total).toBeCloseTo(1.085, 4);
     });
 });
 

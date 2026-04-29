@@ -17,6 +17,7 @@ interface AnimationAnalysisLike {
   };
   constraintMetrics: {
     activePhysicsCount: number;
+    activePhysicsAllCount?: number;
     activeIkCount: number;
     activeTransformCount: number;
     activePathCount: number;
@@ -106,6 +107,7 @@ export function worstComputationalImpact(animations: AnimationAnalysisLike[]): I
         ik: a.constraintMetrics.activeIkCount,
         transform: a.constraintMetrics.activeTransformCount,
       },
+      physicsActiveAll: a.constraintMetrics.activePhysicsAllCount,
       constraintBones: a.constraintMetrics.constraintBones,
       totalVertices: a.meshMetrics.totalVertices,
       activeMeshCount: a.meshMetrics.activeMeshCount ?? 0,

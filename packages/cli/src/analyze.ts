@@ -159,6 +159,7 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
       // Track the frame that produces the highest CI
       const frameCiInputs = {
         constraints: constraintStats.active,
+        physicsActiveAll: constraintStats.physicsActiveAll,
         constraintBones: constraintStats.bones,
         totalVertices: verts,
         activeMeshCount: meshCount,

@@ -166,6 +166,7 @@ export function computationalImpactCost(animation: AnimationAnalysis): number {
       ik: animation.constraintMetrics.activeIkCount,
       transform: animation.constraintMetrics.activeTransformCount,
     },
+    physicsActiveAll: animation.constraintMetrics.activePhysicsAllCount,
     constraintBones: animation.constraintMetrics.constraintBones,
     totalVertices: animation.meshMetrics.totalVertices,
     activeMeshCount: animation.meshMetrics.activeMeshCount ?? 0,

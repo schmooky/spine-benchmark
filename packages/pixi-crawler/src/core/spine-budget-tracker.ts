@@ -136,6 +136,7 @@ export class SpineBudgetTracker {
             },
             ci: {
                 physics: 0,
+                physicsActiveAll: 0,
                 path: 0,
                 pathBones: 0,
                 ik: 0,
