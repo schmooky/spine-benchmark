@@ -23,16 +23,12 @@ import {
   MeshAttachment,
 } from '@esotericsoftware/spine-core';
 import {
+  activeConstraintStats,
   avgBoneInfluencesForMesh,
   classifyImpactLevel,
   computationalImpactCost,
   countMixingDepth,
-  ikMixScale,
-  isConstraintActive,
-  isPhysicsConstraintContributing,
-  pathMixScale,
   renderingImpactCost,
-  transformMixScale,
   type ImpactLevel,
 } from '@spine-benchmark/metrics-impact-formula';
 
@@ -141,33 +137,13 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
         }
       }
 
-      // Compute mix-scaled constraint bones and active counts in one pass.
-      let ikBones = 0;
-      let activeIk = 0;
-      for (const c of skeleton.ikConstraints ?? []) {
-        if (!isConstraintActive(c)) continue;
-        activeIk++;
-        ikBones += (c.bones?.length ?? 1) * ikMixScale(c as { mix?: number });
-      }
-      let transformBones = 0;
-      let activeTransform = 0;
-      for (const c of skeleton.transformConstraints ?? []) {
-        if (!isConstraintActive(c)) continue;
-        activeTransform++;
-        transformBones += (c.bones?.length ?? 1)
-          * transformMixScale(c as Parameters<typeof transformMixScale>[0]);
-      }
-      let pathBones = 0;
-      let activePath = 0;
-      for (const c of skeleton.pathConstraints ?? []) {
-        if (!isConstraintActive(c)) continue;
-        activePath++;
-        pathBones += (c.bones?.length ?? 1)
-          * pathMixScale(c as Parameters<typeof pathMixScale>[0]);
-      }
-      const activePhysics = ((skeleton as any).physicsConstraints ?? []).filter(
-        (c: any) => isPhysicsConstraintContributing(c),
-      ).length;
+      // Active counts and mix-scaled bone counts in one pass via the
+      // canonical helper. Crawler/heatmap/gif-capture share this exact path.
+      const constraintStats = activeConstraintStats(
+        skeleton as Parameters<typeof activeConstraintStats>[0],
+      );
+      const { ik: activeIk, transform: activeTransform, path: activePath, physics: activePhysics } =
+        constraintStats.active;
       const totalActive = activeIk + activeTransform + activePath + activePhysics;
 
       peakNonNormalBlends = Math.max(peakNonNormalBlends, nonNormal);
@@ -182,8 +158,8 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
 
       // Track the frame that produces the highest CI
       const frameCiInputs = {
-        constraints: { physics: activePhysics, path: activePath, ik: activeIk, transform: activeTransform },
-        constraintBones: { ik: ikBones, path: pathBones, transform: transformBones },
+        constraints: constraintStats.active,
+        constraintBones: constraintStats.bones,
         totalVertices: verts,
         activeMeshCount: meshCount,
         weightedMeshCount: weightedCount,

@@ -564,13 +564,16 @@ describe('analyzeSpine - heatmap parity', () => {
         const slots = [
             makeSlot('slot0', 0, makeRegionAttachment('a', 'page1', 8)),
         ];
-        // Simulate a crossfade: track 0 has a mixingFrom chain of depth 2
-        const track0 = { mixingFrom: { mixingFrom: null } };
+        // Simulate a layered crossfade: track 0 is mixing from a previous
+        // animation that was itself still mixing from an earlier one - a
+        // 2-entry mixingFrom chain past the head track entry.
+        const track0 = { mixingFrom: { mixingFrom: { mixingFrom: null } } };
         const state = { tracks: [track0] };
         const node = mockSpineNode(slots, {}, state);
         const result = analyzeSpine(node);
 
-        // mixingDepth = 2 (track0 + track0.mixingFrom)
+        // mixingDepth counts only the mixingFrom chain (extras beyond the
+        // baseline single-track playback): 2 mixingFrom entries -> 2.
         expect(result.computationalImpact!.mixingDepth).toBe(2);
     });
 });

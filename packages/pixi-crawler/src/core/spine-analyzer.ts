@@ -12,16 +12,12 @@
 
 import type { Container } from 'pixi.js';
 import {
+    activeConstraintStats,
     avgBoneInfluencesForMesh,
     classifyImpactLevel,
     computationalImpactCost as sharedComputationalImpactCost,
     countMixingDepth,
-    ikMixScale,
-    isConstraintActive,
-    isPhysicsConstraintContributing,
-    pathMixScale,
     renderingImpactCost as sharedRenderingImpactCost,
-    transformMixScale,
 } from '@spine-benchmark/metrics-impact-formula';
 import type {
     SpineAnalysis,
@@ -165,53 +161,22 @@ interface ConstraintCounts {
 }
 
 /**
- * Walk all constraint arrays, counting active constraints and computing
- * mix-scaled effective bone counts for each type via the canonical helpers
- * in metrics-impact-formula.
+ * Wrap the canonical {@link activeConstraintStats} helper into the local
+ * {@link ConstraintCounts} shape. All predicate / mix-scale logic lives
+ * in metrics-impact-formula so the crawler stays in lockstep with the
+ * heatmap, gif-capture, CLI, and offline reporter.
  */
 function analyzeConstraints(skeleton: SpineLike['skeleton']): ConstraintCounts {
-    if (!skeleton) {
-        return {
-            ik: 0, transform: 0, path: 0, physics: 0,
-            constraintBones: { ik: 0, path: 0, transform: 0 },
-        };
-    }
-
-    const bones = { ik: 0, transform: 0, path: 0 };
-    let ik = 0;
-    for (const raw of skeleton.ikConstraints ?? []) {
-        const c = (raw ?? {}) as { active?: boolean; mix?: number; bones?: unknown[] };
-        if (!isConstraintActive(c)) continue;
-        ik++;
-        bones.ik += (c.bones?.length ?? 1) * ikMixScale(c);
-    }
-
-    let transform = 0;
-    for (const raw of skeleton.transformConstraints ?? []) {
-        const c = (raw ?? {}) as Parameters<typeof transformMixScale>[0]
-            & { active?: boolean; bones?: unknown[] };
-        if (!isConstraintActive(c)) continue;
-        transform++;
-        bones.transform += (c.bones?.length ?? 1) * transformMixScale(c);
-    }
-
-    let path = 0;
-    for (const raw of skeleton.pathConstraints ?? []) {
-        const c = (raw ?? {}) as Parameters<typeof pathMixScale>[0]
-            & { active?: boolean; bones?: unknown[] };
-        if (!isConstraintActive(c)) continue;
-        path++;
-        bones.path += (c.bones?.length ?? 1) * pathMixScale(c);
-    }
-
-    let physics = 0;
-    for (const raw of skeleton.physicsConstraints ?? []) {
-        const c = (raw ?? {}) as { active?: boolean; mix?: number };
-        if (!isPhysicsConstraintContributing(c)) continue;
-        physics++;
-    }
-
-    return { ik, transform, path, physics, constraintBones: bones };
+    const stats = activeConstraintStats(
+        (skeleton ?? {}) as Parameters<typeof activeConstraintStats>[0],
+    );
+    return {
+        ik: stats.active.ik,
+        transform: stats.active.transform,
+        path: stats.active.path,
+        physics: stats.active.physics,
+        constraintBones: stats.bones,
+    };
 }
 
 /**

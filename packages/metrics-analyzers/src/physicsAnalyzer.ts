@@ -2,6 +2,7 @@ import { Animation, Spine } from "@esotericsoftware/spine-pixi-v8";
 import { PERFORMANCE_FACTORS } from "@spine-benchmark/metrics-factors";
 import {
   ikMixScale,
+  isPhysicsConstraintContributing,
   pathMixScale,
   transformMixScale,
 } from "@spine-benchmark/metrics-impact-formula";
@@ -117,18 +118,12 @@ export function analyzePhysicsForAnimation(
 ): ConstraintMetrics {
   const skeleton = spineInstance.skeleton;
 
-  // Count active constraints in this animation
+  // Count active constraints in this animation. Physics is computed below
+  // after filtering out `mix === 0` constraints (they produce no skeleton
+  // output, matching the parity of crawler / heatmap / CLI / global path).
   const activeIkCount = activeComponents.activeConstraints.ik.size;
   const activeTransformCount = activeComponents.activeConstraints.transform.size;
   const activePathCount = activeComponents.activeConstraints.path.size;
-  const activePhysicsCount = activeComponents.activeConstraints.physics.size;
-
-  console.log(`Active constraints in ${animation.name}:`, {
-    ik: activeIkCount,
-    transform: activeTransformCount,
-    path: activePathCount,
-    physics: activePhysicsCount
-  });
 
   // Get detailed constraint data for active constraints
   const ikData: any[] = [];
@@ -204,27 +199,40 @@ export function analyzePhysicsForAnimation(
     }
   });
 
-  // Collect Physics constraint data
+  // Collect Physics constraint data. A physics constraint with `mix === 0`
+  // produces no output and is excluded everywhere else (crawler, heatmap,
+  // CLI, global path), so do the same here for parity.
   if (skeleton.physicsConstraints) {
     skeleton.physicsConstraints.forEach((constraint: any) => {
-      if (activeComponents.activeConstraints.physics.has(constraint.data.name)) {
-        const affectedProps = [];
-        if (constraint.data.x > 0) affectedProps.push('x');
-        if (constraint.data.y > 0) affectedProps.push('y');
-        if (constraint.data.rotate > 0) affectedProps.push('rotate');
-        if (constraint.data.scaleX > 0) affectedProps.push('scale');
-        if (constraint.data.shearX > 0) affectedProps.push('shear');
+      if (!activeComponents.activeConstraints.physics.has(constraint.data.name)) return;
+      if (!isPhysicsConstraintContributing(constraint)) return;
 
-        physicsData.push({
-          name: constraint.data.name,
-          bone: constraint.bone.data.name,
-          affectedProps: affectedProps.length,
-          strength: constraint.strength || constraint.data.strength || 100,
-          damping: constraint.damping || constraint.data.damping || 1
-        });
-      }
+      const affectedProps = [];
+      if (constraint.data.x > 0) affectedProps.push('x');
+      if (constraint.data.y > 0) affectedProps.push('y');
+      if (constraint.data.rotate > 0) affectedProps.push('rotate');
+      if (constraint.data.scaleX > 0) affectedProps.push('scale');
+      if (constraint.data.shearX > 0) affectedProps.push('shear');
+
+      physicsData.push({
+        name: constraint.data.name,
+        bone: constraint.bone.data.name,
+        affectedProps: affectedProps.length,
+        strength: constraint.strength || constraint.data.strength || 100,
+        damping: constraint.damping || constraint.data.damping || 1
+      });
     });
   }
+
+  // Active physics count is the post-filter count, not the raw sampled set.
+  const activePhysicsCount = physicsData.length;
+
+  console.log(`Active constraints in ${animation.name}:`, {
+    ik: activeIkCount,
+    transform: activeTransformCount,
+    path: activePathCount,
+    physics: activePhysicsCount
+  });
 
   // Calculate constraint performance impact scores
   const ikImpact = calculateIkImpact(ikData);

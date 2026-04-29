@@ -403,7 +403,7 @@ export interface ComputationalImpact {
     transformBones: number;
     /** Total bone count in the skeleton */
     boneCount: number;
-    /** Total mixing entries across all animation tracks (crossfade depth) */
+    /** Extra crossfade entries beyond the baseline (sum of `mixingFrom` chain lengths across active tracks; 0 = no crossfades active) */
     mixingDepth: number;
     /** Number of active mesh attachments */
     activeMeshes: number;

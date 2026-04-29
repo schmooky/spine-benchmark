@@ -150,8 +150,13 @@ export interface ComputationalImpactInputs {
   constraintBones?: { ik: number; path: number; transform: number };
 
   /**
-   * Total mixing entries across all animation tracks, walking each
-   * track's `mixingFrom` chain. Accounts for crossfade / layered mixing cost.
+   * Extra mixing entries beyond the one-track-no-crossfade baseline:
+   * sum of `mixingFrom` chain lengths across active tracks (the head
+   * track entry itself is NOT counted). A skeleton playing a single
+   * animation with no crossfade has `mixingDepth === 0`, so the
+   * enhanced CI path matches the basic path on the baseline. Each
+   * additional layered mixer (crossfade `mixingFrom`, deeper chains)
+   * contributes 1.
    */
   mixingDepth?: number;
 
@@ -207,10 +212,14 @@ export interface ComputationalImpactInputs {
  * (2 bones per chain, mix=1) produces the same constraint cost as the basic
  * path - 0.175 x 2 = 0.35 (IK), 0.275 x 2 = 0.55 (path), 0.10 x 2 = 0.20
  * (transform). The bone-influence multiplier is normalized the same way: a
- * vertex skinned to 2 bones reproduces the old fixed weighted-mesh weight,
- * so DEFAULT_IMPACT_BRACKETS keep meaning what they meant before. The
- * enhanced path only diverges from the basic path when inputs deviate from
- * the baseline (mix < 1, longer/shorter chains, heavier/lighter skinning).
+ * vertex skinned to 2 bones reproduces the old fixed weighted-mesh weight.
+ * `mixingDepth` is defined as the count of *extra* mixing entries beyond a
+ * single playing animation (sum of `mixingFrom` chain lengths only), so
+ * single-track playback with no crossfade contributes zero. Together this
+ * means DEFAULT_IMPACT_BRACKETS keep meaning what they meant before: the
+ * enhanced path matches the basic path on the canonical baseline (2-bone
+ * chains, mix=1, 2-influence skinning, no crossfade) and only diverges
+ * when inputs deviate from it.
  *
  * Constraint weights mirror the early-out cost profile of `spine-ts` core;
  * mesh weights scale by per-mesh vertex density because deformation/skinning
@@ -328,34 +337,49 @@ export function ikMixScale(c: { mix?: number }): number {
 
 /**
  * Mix scale for a transform constraint: max abs across all six mix axes.
- * Falls back to 1 when no mix property is present (older spine versions
- * or duck-typed objects without these fields), so the constraint still
- * counts at full weight rather than being silently zeroed.
+ *
+ * Distinguishes "duck-typed object without any mix fields" (older spine
+ * versions or partial mocks - falls back to 1 so the constraint still
+ * counts at full weight) from "every mix axis is explicitly 0" (real
+ * Spine constraint that produces no output - returns 0 so it does not
+ * contribute to CI). This mirrors the semantics of {@link ikMixScale}
+ * (`abs(mix ?? 1)`), where an explicit `mix: 0` returns 0 but absent
+ * `mix` returns 1.
  */
 export function transformMixScale(c: {
   mixRotate?: number; mixX?: number; mixY?: number;
   mixScaleX?: number; mixScaleY?: number; mixShearY?: number;
 }): number {
-  return Math.max(
+  const max = Math.max(
     Math.abs(c.mixRotate ?? 0),
     Math.abs(c.mixX ?? 0),
     Math.abs(c.mixY ?? 0),
     Math.abs(c.mixScaleX ?? 0),
     Math.abs(c.mixScaleY ?? 0),
     Math.abs(c.mixShearY ?? 0),
-  ) || 1;
+  );
+  if (max > 0) return max;
+  const hasAnyField =
+    c.mixRotate !== undefined || c.mixX !== undefined || c.mixY !== undefined ||
+    c.mixScaleX !== undefined || c.mixScaleY !== undefined || c.mixShearY !== undefined;
+  return hasAnyField ? 0 : 1;
 }
 
 /**
  * Mix scale for a path constraint: max abs across `mixRotate`/`mixX`/`mixY`.
- * Same fallback semantics as {@link transformMixScale}.
+ * Same fallback semantics as {@link transformMixScale}: absent fields ->
+ * neutral 1, all-fields-explicitly-zero -> 0 (no contribution).
  */
 export function pathMixScale(c: { mixRotate?: number; mixX?: number; mixY?: number }): number {
-  return Math.max(
+  const max = Math.max(
     Math.abs(c.mixRotate ?? 0),
     Math.abs(c.mixX ?? 0),
     Math.abs(c.mixY ?? 0),
-  ) || 1;
+  );
+  if (max > 0) return max;
+  const hasAnyField =
+    c.mixRotate !== undefined || c.mixX !== undefined || c.mixY !== undefined;
+  return hasAnyField ? 0 : 1;
 }
 
 /**
@@ -368,31 +392,62 @@ export function isPhysicsConstraintContributing(c: PhysicsConstraintLike): boole
 }
 
 /**
- * Sum mix-scaled effective bone counts per constraint type for the
- * enhanced CI formula (`ComputationalImpactInputs.constraintBones`).
- * Each value is `sum(bones.length * mixScale)` across active constraints.
+ * Per-animation / per-frame stats that every CI consumer needs at once:
+ * active constraint counts (filtered by {@link isConstraintActive} and
+ * {@link isPhysicsConstraintContributing}) plus mix-scaled effective
+ * bone counts. Returned together because every consumer needs both in
+ * lockstep, and computing them in two passes is both wasteful and a
+ * parity bug waiting to happen if the predicates ever diverge.
  */
-export function constraintBoneCounts(skeleton: {
-  ikConstraints?: ReadonlyArray<IkConstraintLike>;
-  transformConstraints?: ReadonlyArray<TransformConstraintLike>;
-  pathConstraints?: ReadonlyArray<PathConstraintLike>;
-}): { ik: number; transform: number; path: number } {
+export interface ConstraintStats {
+  /** Active counts. Physics also requires non-zero `mix`. */
+  active: { ik: number; transform: number; path: number; physics: number };
+  /** Mix-scaled effective bone counts: `sum(bones.length * mixScale)`. */
+  bones: { ik: number; transform: number; path: number };
+}
+
+/**
+ * Single-pass walk over a skeleton's constraint arrays, producing both
+ * active counts and mix-scaled effective bone counts. Use this everywhere
+ * CI inputs are gathered (crawler, heatmap, gif-capture, CLI) so the
+ * predicates and mix-scale rules stay identical across paths.
+ */
+export function activeConstraintStats(skeleton: {
+  ikConstraints?: ReadonlyArray<IkConstraintLike> | null;
+  transformConstraints?: ReadonlyArray<TransformConstraintLike> | null;
+  pathConstraints?: ReadonlyArray<PathConstraintLike> | null;
+  physicsConstraints?: ReadonlyArray<PhysicsConstraintLike> | null;
+}): ConstraintStats {
   let ik = 0;
+  let ikBones = 0;
   for (const c of skeleton.ikConstraints ?? []) {
     if (!isConstraintActive(c)) continue;
-    ik += (c.bones?.length ?? 1) * ikMixScale(c);
+    ik++;
+    ikBones += (c.bones?.length ?? 1) * ikMixScale(c);
   }
   let transform = 0;
+  let transformBones = 0;
   for (const c of skeleton.transformConstraints ?? []) {
     if (!isConstraintActive(c)) continue;
-    transform += (c.bones?.length ?? 1) * transformMixScale(c);
+    transform++;
+    transformBones += (c.bones?.length ?? 1) * transformMixScale(c);
   }
   let path = 0;
+  let pathBones = 0;
   for (const c of skeleton.pathConstraints ?? []) {
     if (!isConstraintActive(c)) continue;
-    path += (c.bones?.length ?? 1) * pathMixScale(c);
+    path++;
+    pathBones += (c.bones?.length ?? 1) * pathMixScale(c);
   }
-  return { ik, transform, path };
+  let physics = 0;
+  for (const c of skeleton.physicsConstraints ?? []) {
+    if (!isPhysicsConstraintContributing(c)) continue;
+    physics++;
+  }
+  return {
+    active: { ik, transform, path, physics },
+    bones: { ik: ikBones, transform: transformBones, path: pathBones },
+  };
 }
 
 /**
@@ -418,10 +473,20 @@ export function avgBoneInfluencesForMesh(bones: ReadonlyArray<number>): number {
 }
 
 /**
- * Count total mixing entries across all animation tracks, walking each
- * track's `mixingFrom` linked list. Single-track playback contributes 1
- * per track; a crossfade A->B contributes 2 (current + mixingFrom);
- * layered crossfades add more.
+ * Count *extra* mixing entries beyond the baseline of one playing animation
+ * per track: sum of each active track's `mixingFrom` chain length. The head
+ * track entry itself is NOT counted, only the chain it is mixing from.
+ *
+ * - single track, no crossfade -> 0   (head only, no mixingFrom)
+ * - crossfade A->B              -> 1  (one mixingFrom)
+ * - layered N-deep crossfade    -> N-1
+ *
+ * Defining the cost this way lets the CI formula treat the canonical
+ * "one animation playing, no crossfade" case as the zero-cost baseline,
+ * matching the `constraintBones` and `meshDetails` calibration. Real CPU
+ * cost in spine-core's `AnimationState.apply` scales with the number of
+ * additional timeline applications a crossfade forces, which is exactly
+ * the chain length beyond the head entry.
  */
 export function countMixingDepth(
   state: { tracks?: ReadonlyArray<unknown> } | null | undefined,
@@ -429,7 +494,11 @@ export function countMixingDepth(
   if (!state?.tracks) return 0;
   let depth = 0;
   for (const track of state.tracks) {
-    let entry = track as { mixingFrom?: unknown } | null | undefined;
+    if (track == null) continue;
+    let entry = (track as { mixingFrom?: unknown }).mixingFrom as
+      | { mixingFrom?: unknown }
+      | null
+      | undefined;
     while (entry != null) {
       depth++;
       entry = (entry as { mixingFrom?: unknown }).mixingFrom as

@@ -8,14 +8,11 @@
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 import { Spine, Physics, BlendMode, ClippingAttachment, MeshAttachment } from '@esotericsoftware/spine-pixi-v8';
 import {
+  activeConstraintStats,
   avgBoneInfluencesForMesh,
   computationalImpactCost,
-  ikMixScale,
-  isConstraintActive,
-  isPhysicsConstraintContributing,
-  pathMixScale,
+  countMixingDepth,
   renderingImpactCost,
-  transformMixScale,
 } from '@spine-benchmark/metrics-impact-formula';
 import { getPixiApp } from '../hooks/usePixiApp';
 
@@ -34,7 +31,7 @@ export interface AnimationCapture {
   timeline: FrameSample[];
 }
 
-function sampleImpact(skeleton: any): { ri: number; ci: number } {
+function sampleImpact(skeleton: any, state: any): { ri: number; ci: number } {
   let nonNormalBlends = 0;
   let clippingMasks = 0;
   let totalVertices = 0;
@@ -66,31 +63,7 @@ function sampleImpact(skeleton: any): { ri: number; ci: number } {
     }
   }
 
-  // Mix-scaled constraint bones
-  let ikBones = 0;
-  let activeIk = 0;
-  for (const c of skeleton.ikConstraints ?? []) {
-    if (!isConstraintActive(c)) continue;
-    activeIk++;
-    ikBones += (c.bones?.length ?? 1) * ikMixScale(c);
-  }
-  let transformBones = 0;
-  let activeTransform = 0;
-  for (const c of skeleton.transformConstraints ?? []) {
-    if (!isConstraintActive(c)) continue;
-    activeTransform++;
-    transformBones += (c.bones?.length ?? 1) * transformMixScale(c);
-  }
-  let pathBones = 0;
-  let activePath = 0;
-  for (const c of skeleton.pathConstraints ?? []) {
-    if (!isConstraintActive(c)) continue;
-    activePath++;
-    pathBones += (c.bones?.length ?? 1) * pathMixScale(c);
-  }
-  const activePhysics = (skeleton.physicsConstraints ?? []).filter(
-    (c: any) => isPhysicsConstraintContributing(c),
-  ).length;
+  const stats = activeConstraintStats(skeleton);
 
   return {
     ri: Number(renderingImpactCost({
@@ -99,10 +72,11 @@ function sampleImpact(skeleton: any): { ri: number; ci: number } {
       totalVertices,
     }).toFixed(2)),
     ci: Number(computationalImpactCost({
-      constraints: { physics: activePhysics, path: activePath, ik: activeIk, transform: activeTransform },
-      constraintBones: { ik: ikBones, path: pathBones, transform: transformBones },
+      constraints: stats.active,
+      constraintBones: stats.bones,
       totalVertices, activeMeshCount, weightedMeshCount, deformedMeshCount,
       meshDetails,
+      mixingDepth: countMixingDepth(state),
     }).toFixed(2)),
   };
 }
@@ -172,7 +146,7 @@ export async function captureAnimationGif(
       }
 
       // Sample RI/CI at this frame
-      const impact = sampleImpact(skeleton);
+      const impact = sampleImpact(skeleton, state);
       timeline.push({ time: Number(time.toFixed(3)), ri: impact.ri, ci: impact.ci });
 
       // Render to the main canvas then yield so WebGL flushes

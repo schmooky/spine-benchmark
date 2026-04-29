@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
+  activeConstraintStats,
   avgBoneInfluencesForMesh,
   classifyImpactLevel,
   computationalImpactCost,
-  constraintBoneCounts,
   countMixingDepth,
   DEFAULT_IMPACT_BRACKETS,
   ikMixScale,
@@ -127,8 +127,9 @@ describe('computationalImpactCost', () => {
 
   it('matches basic-path constraint cost for standard 2-bone, mix=1 chains', () => {
     // Calibration check: enhanced constraintBones with the canonical
-    // baseline (2 bones per chain, mix=1) should reproduce the basic
-    // formula exactly, so DEFAULT_IMPACT_BRACKETS keep the same meaning.
+    // baseline (2 bones per chain, mix=1) plus the no-crossfade baseline
+    // (mixingDepth=0) should reproduce the basic formula exactly, so
+    // DEFAULT_IMPACT_BRACKETS keep the same meaning.
     const enhanced = computationalImpactCost({
       constraints: { physics: 1, path: 2, ik: 3, transform: 4 },
       constraintBones: { ik: 6, path: 4, transform: 8 }, // each chain has 2 bones
@@ -136,6 +137,7 @@ describe('computationalImpactCost', () => {
       activeMeshCount: 0,
       weightedMeshCount: 0,
       deformedMeshCount: 0,
+      mixingDepth: 0,
     });
     const basic = computationalImpactCost({
       constraints: { physics: 1, path: 2, ik: 3, transform: 4 },
@@ -214,18 +216,29 @@ describe('mix scale helpers', () => {
     expect(ikMixScale({ mix: 0 })).toBe(0);
   });
 
-  it('transformMixScale returns max abs across all six axes, falling back to 1', () => {
+  it('transformMixScale returns max abs across all six axes, with field-aware fallback', () => {
+    // Duck-typed object without any mix fields -> neutral 1 (full weight)
     expect(transformMixScale({})).toBe(1);
     expect(transformMixScale({ mixRotate: 0.4, mixX: 0.7, mixY: 0.2 })).toBeCloseTo(0.7);
     expect(transformMixScale({ mixScaleX: -0.9 })).toBeCloseTo(0.9);
-    // All zero mix axes fall back to 1 (could not distinguish "all 0" from "no fields")
-    expect(transformMixScale({ mixRotate: 0, mixX: 0, mixY: 0 })).toBe(1);
+    // All-fields-explicitly-zero -> 0 (constraint contributes nothing).
+    // Mirrors ikMixScale({ mix: 0 }) === 0.
+    expect(transformMixScale({ mixRotate: 0, mixX: 0, mixY: 0 })).toBe(0);
+    expect(transformMixScale({
+      mixRotate: 0, mixX: 0, mixY: 0, mixScaleX: 0, mixScaleY: 0, mixShearY: 0,
+    })).toBe(0);
+    // Single explicit zero with the rest absent is still "present but zero".
+    expect(transformMixScale({ mixRotate: 0 })).toBe(0);
   });
 
-  it('pathMixScale returns max abs across rotate/x/y, falling back to 1', () => {
+  it('pathMixScale returns max abs across rotate/x/y, with field-aware fallback', () => {
+    // Duck-typed object without any mix fields -> neutral 1 (full weight)
     expect(pathMixScale({})).toBe(1);
     expect(pathMixScale({ mixRotate: 0.5, mixX: 0.8, mixY: 0.1 })).toBeCloseTo(0.8);
     expect(pathMixScale({ mixRotate: -0.6 })).toBeCloseTo(0.6);
+    // All-fields-explicitly-zero -> 0 (no contribution).
+    expect(pathMixScale({ mixRotate: 0, mixX: 0, mixY: 0 })).toBe(0);
+    expect(pathMixScale({ mixX: 0 })).toBe(0);
   });
 });
 
@@ -239,28 +252,37 @@ describe('isPhysicsConstraintContributing', () => {
   });
 });
 
-describe('constraintBoneCounts', () => {
-  it('sums bones * mixScale per type, skipping inactive constraints', () => {
-    const counts = constraintBoneCounts({
+describe('activeConstraintStats', () => {
+  it('returns active counts and mix-scaled bones in a single pass', () => {
+    const stats = activeConstraintStats({
       ikConstraints: [
-        { active: true, mix: 0.5, bones: [{}, {}, {}] }, // 3 * 0.5 = 1.5
-        { active: false, mix: 1, bones: [{}, {}] },      // skipped
-        { mix: 1, bones: [{}] },                         // 1 * 1 = 1
+        { active: true, mix: 0.5, bones: [{}, {}, {}] }, // active, 3 * 0.5 = 1.5
+        { active: false, mix: 1, bones: [{}, {}] },      // skipped (inactive)
+        { mix: 1, bones: [{}] },                         // active, 1 * 1 = 1
       ],
       transformConstraints: [
-        { mixRotate: 0.7, bones: [{}, {}] },              // 2 * 0.7 = 1.4
+        { mixRotate: 0.7, bones: [{}, {}] },              // active, 2 * 0.7 = 1.4
       ],
       pathConstraints: [
-        { mixX: 0.5, bones: [{}, {}, {}, {}] },           // 4 * 0.5 = 2
+        { mixX: 0.5, bones: [{}, {}, {}, {}] },           // active, 4 * 0.5 = 2
+      ],
+      physicsConstraints: [
+        { active: true, mix: 1 },                         // contributes
+        { active: true, mix: 0 },                         // mix=0 -> excluded
+        { active: false, mix: 1 },                        // inactive -> excluded
       ],
     });
-    expect(counts.ik).toBeCloseTo(2.5);
-    expect(counts.transform).toBeCloseTo(1.4);
-    expect(counts.path).toBeCloseTo(2);
+    expect(stats.active).toEqual({ ik: 2, transform: 1, path: 1, physics: 1 });
+    expect(stats.bones.ik).toBeCloseTo(2.5);
+    expect(stats.bones.transform).toBeCloseTo(1.4);
+    expect(stats.bones.path).toBeCloseTo(2);
   });
 
   it('returns zeros for empty/missing arrays', () => {
-    expect(constraintBoneCounts({})).toEqual({ ik: 0, transform: 0, path: 0 });
+    expect(activeConstraintStats({})).toEqual({
+      active: { ik: 0, transform: 0, path: 0, physics: 0 },
+      bones: { ik: 0, transform: 0, path: 0 },
+    });
   });
 });
 
@@ -285,19 +307,20 @@ describe('countMixingDepth', () => {
     expect(countMixingDepth({ tracks: [] })).toBe(0);
   });
 
-  it('counts each track entry plus its mixingFrom chain', () => {
-    // Single track, no crossfade: 1
-    expect(countMixingDepth({ tracks: [{ mixingFrom: null }] })).toBe(1);
-    // One crossfade A->B: current + mixingFrom = 2
-    expect(countMixingDepth({ tracks: [{ mixingFrom: { mixingFrom: null } }] })).toBe(2);
-    // Two tracks, second is layered crossfade
+  it('counts only extra mixingFrom entries beyond the head track entry', () => {
+    // Single track, no crossfade: head only, no mixingFrom -> 0 (baseline)
+    expect(countMixingDepth({ tracks: [{ mixingFrom: null }] })).toBe(0);
+    // One crossfade A->B: one mixingFrom past the head -> 1
+    expect(countMixingDepth({ tracks: [{ mixingFrom: { mixingFrom: null } }] })).toBe(1);
+    // Two tracks, second is a 3-deep layered crossfade: 0 + 2 = 2
     expect(countMixingDepth({
       tracks: [
         { mixingFrom: null },
         { mixingFrom: { mixingFrom: { mixingFrom: null } } },
       ],
-    })).toBe(4);
-    // Null/undefined tracks are skipped
-    expect(countMixingDepth({ tracks: [null, undefined, { mixingFrom: null }] })).toBe(1);
+    })).toBe(2);
+    // Null/undefined tracks are skipped; one playing track with no
+    // crossfade is still the zero-cost baseline
+    expect(countMixingDepth({ tracks: [null, undefined, { mixingFrom: null }] })).toBe(0);
   });
 });
