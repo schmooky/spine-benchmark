@@ -393,15 +393,15 @@ export interface ComputationalImpact {
     physicsActiveAll: number;
     /** Active path constraints */
     path: number;
-    /** Mix-scaled effective path bone count (sum of bones.length * mixScale) */
+    /** Total bones across contributing (active && mix > 0) path constraints; not mix-scaled (spine-ts runs the full solve at any non-zero mix) */
     pathBones: number;
     /** Active IK constraints */
     ik: number;
-    /** Mix-scaled effective IK bone count (sum of bones.length * mixScale) */
+    /** Total bones across contributing (active && mix > 0) IK constraints; not mix-scaled (spine-ts runs the full solve at any non-zero mix) */
     ikBones: number;
     /** Active transform constraints */
     transform: number;
-    /** Mix-scaled effective transform bone count (sum of bones.length * mixScale) */
+    /** Total bones across contributing (active && mix > 0) transform constraints; not mix-scaled (spine-ts runs the full solve at any non-zero mix) */
     transformBones: number;
     /** Total bone count in the skeleton */
     boneCount: number;
