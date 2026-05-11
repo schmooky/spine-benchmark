@@ -23,7 +23,7 @@
     "@spine-benchmark/spine-loader": "^0.1.1"
   },
   "peerDependencies": {
-    "pixi.js": "^8.16.0"
+    "pixi.js": "^8.18.1"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
