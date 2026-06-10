@@ -8,3 +8,8 @@ export {
   listMeshAttachments,
   type MeshEntry,
 } from "./lib/overlays";
+export {
+  analyzeAnimations,
+  type AnimationInfo,
+  type BoneHeatRow,
+} from "./lib/animation-analysis";

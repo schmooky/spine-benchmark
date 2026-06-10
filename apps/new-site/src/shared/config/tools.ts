@@ -1,4 +1,11 @@
-import { Bone, Gauge, LibraryBig, Spline, type LucideIcon } from "lucide-react";
+import {
+  Activity,
+  Bone,
+  Gauge,
+  LibraryBig,
+  Spline,
+  type LucideIcon,
+} from "lucide-react";
 
 export interface ToolDef {
   id: string;
@@ -18,6 +25,13 @@ export const TOOLS: ToolDef[] = [
     label: "Library - load a spine",
     icon: LibraryBig,
     requiresSkeleton: false,
+  },
+  {
+    id: "animations",
+    path: "/animations",
+    label: "Animations & heatmap",
+    icon: Activity,
+    requiresSkeleton: true,
   },
   {
     id: "bones",
