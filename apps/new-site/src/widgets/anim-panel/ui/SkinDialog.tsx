@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui/dialog";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { cn } from "@/shared/lib/utils";
 
 /**
@@ -48,7 +47,7 @@ export function SkinDialog({ skins }: { skins: string[] }) {
             Choose a skin to apply to the skeleton.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[50vh]">
+        <div className="max-h-[50vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-2 pr-3">
             {skins.map((name) => (
               <button
@@ -69,7 +68,7 @@ export function SkinDialog({ skins }: { skins: string[] }) {
               </button>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

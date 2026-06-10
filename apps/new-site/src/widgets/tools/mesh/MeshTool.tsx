@@ -9,7 +9,6 @@ import {
   type MeshEntry,
 } from "@/entities/skeleton";
 import { stage } from "@/widgets/stage";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { cn } from "@/shared/lib/utils";
 
 /**
@@ -81,7 +80,7 @@ export function MeshTool() {
         </button>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-1 p-2">
           {entries.length === 0 && (
             <p className="px-2 py-6 text-center text-sm text-muted-foreground">
@@ -110,7 +109,7 @@ export function MeshTool() {
             </button>
           ))}
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="border-t border-border px-4 py-2.5 text-[11px] leading-snug text-muted-foreground">
         Vertices colored by dominant bone, sized by weight.
