@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Play, Pause, Square, Repeat, Film } from "lucide-react";
 import type { TrackEntry } from "@esotericsoftware/spine-pixi-v8";
 
@@ -27,6 +28,7 @@ import { SkinDialog } from "./SkinDialog";
 export function AnimSkinPanel() {
   const status = useSkeletonStore((s) => s.status);
   const spine = useSkeletonStore((s) => s.spine);
+  const { pathname } = useLocation();
 
   const selectedAnimation = usePlaybackStore((s) => s.selectedAnimation);
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
@@ -74,7 +76,9 @@ export function AnimSkinPanel() {
     [spine],
   );
 
-  if (status !== "ready" || !spine) return null;
+  // the track mixer takes over multi-track playback; hide the single-track
+  // transport while it's open so they don't fight over track 0
+  if (status !== "ready" || !spine || pathname === "/mixer") return null;
 
   const playAnim = (name: string, withLoop: boolean, withSpeed: number) => {
     const sp = useSkeletonStore.getState().spine;

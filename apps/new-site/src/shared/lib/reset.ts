@@ -1,6 +1,6 @@
 import { useSkeletonStore } from "@/entities/skeleton";
 import { useMetricsStore } from "@/entities/metrics";
-import { usePlaybackStore } from "@/entities/playback";
+import { usePlaybackStore, useMixerStore } from "@/entities/playback";
 
 /**
  * The single "forget everything" switch. The whole app revolves around one
@@ -15,6 +15,7 @@ import { usePlaybackStore } from "@/entities/playback";
 export function resetAll(opts: { keepSkeleton?: boolean } = {}): void {
   useMetricsStore.getState().reset();
   usePlaybackStore.getState().reset();
+  useMixerStore.getState().reset();
   if (!opts.keepSkeleton) {
     useSkeletonStore.getState().reset();
   }

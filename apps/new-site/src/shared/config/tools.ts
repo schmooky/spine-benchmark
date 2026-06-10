@@ -2,6 +2,7 @@ import {
   Activity,
   Bone,
   Gauge,
+  Layers,
   LibraryBig,
   Spline,
   type LucideIcon,
@@ -31,6 +32,13 @@ export const TOOLS: ToolDef[] = [
     path: "/animations",
     label: "Animations & heatmap",
     icon: Activity,
+    requiresSkeleton: true,
+  },
+  {
+    id: "mixer",
+    path: "/mixer",
+    label: "Track mixer (layering)",
+    icon: Layers,
     requiresSkeleton: true,
   },
   {
