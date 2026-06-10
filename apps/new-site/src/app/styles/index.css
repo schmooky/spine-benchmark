@@ -11,24 +11,24 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.24 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.72 0.13 230);
+  --primary: oklch(0.82 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.27 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.27 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.3 0.02 230);
+  --accent: oklch(0.32 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.637 0.237 25.331);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.13 230);
+  --ring: oklch(0.72 0 0);
 
   /* workbench-specific tokens */
   --stage-bg: oklch(0.205 0 0);
   --grid-minor: oklch(1 0 0 / 4%);
   --grid-major: oklch(1 0 0 / 9%);
-  --grid-axis: oklch(0.72 0.13 230 / 45%);
+  --grid-axis: oklch(0.92 0 0 / 32%);
 }
 
 @theme inline {

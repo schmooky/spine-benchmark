@@ -99,7 +99,7 @@ class StageController {
 
     const minorColor = 0xffffff;
     const majorColor = 0xffffff;
-    const axisColor = 0x6db7ff;
+    const axisColor = 0xd8d8d8; // neutral light grey, no accent hue
 
     const falloff = (d: number) => {
       const t = Math.min(d / maxDist, 1);

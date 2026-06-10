@@ -148,7 +148,7 @@ export function makeMeshDraw(slotIndex: number) {
         .lineTo(world[b], world[b + 1] * Y)
         .lineTo(world[c], world[c + 1] * Y)
         .lineTo(world[a], world[a + 1] * Y)
-        .stroke({ width: 1, color: 0x9fd2ff, alpha: 0.4 });
+        .stroke({ width: 1, color: 0xcfcfcf, alpha: 0.38 });
     }
 
     // weight-colored vertices
