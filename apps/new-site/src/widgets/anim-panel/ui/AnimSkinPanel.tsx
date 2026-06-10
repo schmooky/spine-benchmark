@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Pause, Square, Repeat, Film } from "lucide-react";
+import type { TrackEntry } from "@esotericsoftware/spine-pixi-v8";
 
 import { useSkeletonStore } from "@/entities/skeleton";
 import { usePlaybackStore } from "@/entities/playback";
@@ -33,6 +34,10 @@ export function AnimSkinPanel() {
   const speed = usePlaybackStore((s) => s.speed);
   const pb = usePlaybackStore;
 
+  // true once the active non-looping animation has played to its end, so the
+  // transport knows to flip back to Play (and to restart, not resume, on Play)
+  const finishedRef = useRef(false);
+
   const [shown, setShown] = useState(false);
   useEffect(() => {
     if (status !== "ready") {
@@ -42,6 +47,23 @@ export function AnimSkinPanel() {
     const t = window.setTimeout(() => setShown(true), 450);
     return () => window.clearTimeout(t);
   }, [status]);
+
+  // when a non-looping animation completes on its own, switch Pause -> Play
+  useEffect(() => {
+    if (!spine) return;
+    const listener = {
+      complete: (entry: TrackEntry) => {
+        if (!entry.loop) {
+          finishedRef.current = true;
+          usePlaybackStore.getState().setPlaying(false);
+        }
+      },
+    };
+    spine.state.addListener(listener);
+    return () => {
+      spine.state.removeListener(listener);
+    };
+  }, [spine]);
 
   const animations = useMemo(
     () => spine?.skeleton.data.animations.map((a) => a.name) ?? [],
@@ -62,6 +84,7 @@ export function AnimSkinPanel() {
   };
 
   const onSelectAnim = (name: string) => {
+    finishedRef.current = false;
     pb.getState().setSelectedAnimation(name);
     pb.getState().setPlaying(true);
     playAnim(name, loop, speed);
@@ -79,6 +102,13 @@ export function AnimSkinPanel() {
       if (animations[0]) onSelectAnim(animations[0]);
       return;
     }
+    if (finishedRef.current) {
+      // the animation already ran to its end - Play restarts it
+      finishedRef.current = false;
+      playAnim(selectedAnimation, loop, speed);
+      pb.getState().setPlaying(true);
+      return;
+    }
     sp.state.timeScale = speed;
     pb.getState().setPlaying(true);
   };
@@ -86,6 +116,7 @@ export function AnimSkinPanel() {
   const stop = () => {
     const sp = useSkeletonStore.getState().spine;
     if (!sp) return;
+    finishedRef.current = false;
     sp.state.clearTracks();
     sp.skeleton.setToSetupPose();
     pb.getState().setPlaying(false);
@@ -96,6 +127,7 @@ export function AnimSkinPanel() {
     pb.getState().setLoop(next);
     const sp = useSkeletonStore.getState().spine;
     if (sp && selectedAnimation) {
+      finishedRef.current = false;
       sp.state.setAnimation(0, selectedAnimation, next);
       sp.state.timeScale = isPlaying ? speed : 0;
     }
