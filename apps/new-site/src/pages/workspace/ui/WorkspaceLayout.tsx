@@ -5,6 +5,7 @@ import { StageCanvas } from "@/widgets/stage";
 import { DropOverlay } from "@/widgets/drop-overlay";
 import { ToolRail } from "@/widgets/tool-rail";
 import { AnimSkinPanel } from "@/widgets/anim-panel";
+import { ViewControls } from "@/widgets/view-controls";
 import { WelcomeDialog } from "@/features/onboarding-tour";
 import { useLoadSkeleton } from "@/features/load-skeleton";
 import { useSkeletonStore } from "@/entities/skeleton";
@@ -60,6 +61,7 @@ export function WorkspaceLayout() {
 
       <ToolRail />
       <AnimSkinPanel />
+      <ViewControls />
 
       {/* active tool surface */}
       <Outlet />
