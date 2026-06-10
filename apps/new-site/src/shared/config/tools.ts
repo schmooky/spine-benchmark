@@ -5,6 +5,7 @@ import {
   Layers,
   LibraryBig,
   Spline,
+  SquareStack,
   type LucideIcon,
 } from "lucide-react";
 
@@ -53,6 +54,13 @@ export const TOOLS: ToolDef[] = [
     path: "/mesh",
     label: "Meshes & weights",
     icon: Spline,
+    requiresSkeleton: true,
+  },
+  {
+    id: "drawcalls",
+    path: "/drawcalls",
+    label: "Draw calls",
+    icon: SquareStack,
     requiresSkeleton: true,
   },
   {

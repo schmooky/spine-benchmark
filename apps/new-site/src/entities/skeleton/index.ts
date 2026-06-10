@@ -13,3 +13,9 @@ export {
   type AnimationInfo,
   type BoneHeatRow,
 } from "./lib/animation-analysis";
+export {
+  analyzeDrawCalls,
+  type DrawCallAnalysis,
+  type DrawBatch,
+  type BreakReason,
+} from "./lib/drawcalls";

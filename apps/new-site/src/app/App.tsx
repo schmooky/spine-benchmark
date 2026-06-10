@@ -10,6 +10,7 @@ import {
   MeshTool,
   AnimationsDrawer,
   MixerTool,
+  DrawCallsTool,
 } from "@/widgets/tools";
 import { TooltipProvider } from "@/shared/ui/tooltip";
 import { Toaster } from "@/shared/ui/sonner";
@@ -34,6 +35,7 @@ export function App() {
             <Route path="info" element={<InfoDrawer />} />
             <Route path="bones" element={<BonesTool />} />
             <Route path="mesh" element={<MeshTool />} />
+            <Route path="drawcalls" element={<DrawCallsTool />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
