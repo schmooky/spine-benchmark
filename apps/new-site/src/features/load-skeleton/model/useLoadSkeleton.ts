@@ -8,6 +8,12 @@ import {
 } from "@/entities/skeleton";
 import { runMeasurements } from "@/entities/metrics";
 import { usePlaybackStore } from "@/entities/playback";
+import {
+  saveBundle,
+  getBundleFiles,
+  useLibraryStore,
+  type BundleMeta,
+} from "@/entities/library";
 import { resetAll } from "@/shared/lib/reset";
 import { sleep } from "@/shared/lib/sleep";
 import { MIN_LOAD_MS } from "@/shared/config/constants";
@@ -22,7 +28,7 @@ function deriveName(files: File[]): string {
   return (skel?.name ?? "skeleton").replace(/\.(json|skel)$/i, "");
 }
 
-/** Fetch a library bundle's files into File objects the loader understands. */
+/** Fetch a static library bundle's files into File objects. */
 async function fetchLibraryFiles(item: LibraryItem): Promise<File[]> {
   return Promise.all(
     item.files.map(async (name) => {
@@ -34,6 +40,12 @@ async function fetchLibraryFiles(item: LibraryItem): Promise<File[]> {
   );
 }
 
+interface RunOpts {
+  displayName?: string;
+  /** save the bundle to IndexedDB so it shows up in the Library later */
+  persist?: boolean;
+}
+
 /**
  * The drop/library -> materialize orchestration, in one place.
  *
@@ -43,9 +55,10 @@ async function fetchLibraryFiles(item: LibraryItem): Promise<File[]> {
  *   3. parse the bundle into a Spine, then run the background measuring tasks
  *   4. hold for at least MIN_LOAD_MS so the loader never flickers past
  *   5. publish the ready skeleton - the stage mounts it and materializes it in
+ *   6. (drops only) persist the bundle to IndexedDB for the Library
  */
 export function useLoadSkeleton() {
-  const run = useCallback(async (files: File[], displayName?: string) => {
+  const run = useCallback(async (files: File[], opts: RunOpts = {}) => {
     if (files.length === 0) return;
 
     const { beginLoad, setReady, setError } = useSkeletonStore.getState();
@@ -64,7 +77,7 @@ export function useLoadSkeleton() {
       if (remaining > 0) await sleep(remaining);
 
       const meta: SkeletonMeta = {
-        name: displayName ?? deriveName(files),
+        name: opts.displayName ?? deriveName(files),
         bones: spine.skeleton.bones.length,
         slots: spine.skeleton.slots.length,
         skins: spine.skeleton.data.skins.length,
@@ -83,6 +96,16 @@ export function useLoadSkeleton() {
         usePlaybackStore.getState().setSelectedSkin(defaultSkin);
       }
 
+      // keep this drop around for next time
+      if (opts.persist) {
+        try {
+          await saveBundle(meta.name, meta.name, files);
+          await useLibraryStore.getState().refresh();
+        } catch (err) {
+          console.warn("[library] could not save bundle", err);
+        }
+      }
+
       toast.success(`Loaded ${meta.name}`, {
         description: `${meta.bones} bones · ${meta.slots} slots · ${meta.animations.length} animations`,
       });
@@ -94,16 +117,35 @@ export function useLoadSkeleton() {
     }
   }, []);
 
+  /** A fresh drop: load and persist it to the Library. */
   const load = useCallback(
-    (fileList: FileList | File[]) => run(Array.from(fileList)),
+    (fileList: FileList | File[]) =>
+      run(Array.from(fileList), { persist: true }),
     [run],
   );
 
+  /** Re-load a previously-saved bundle from IndexedDB (no re-save). */
+  const loadSaved = useCallback(
+    async (bundle: BundleMeta) => {
+      try {
+        const files = await getBundleFiles(bundle.id);
+        if (files.length === 0) throw new Error("Saved files are missing.");
+        await run(files, { displayName: bundle.name });
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to open bundle.";
+        toast.error("Could not open saved bundle", { description: message });
+      }
+    },
+    [run],
+  );
+
+  /** Load a bundled (static-catalog) spine. */
   const loadFromLibrary = useCallback(
     async (item: LibraryItem) => {
       try {
         const files = await fetchLibraryFiles(item);
-        await run(files, item.name);
+        await run(files, { displayName: item.name });
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to fetch bundle.";
@@ -113,5 +155,5 @@ export function useLoadSkeleton() {
     [run],
   );
 
-  return { load, loadFromLibrary };
+  return { load, loadSaved, loadFromLibrary };
 }
