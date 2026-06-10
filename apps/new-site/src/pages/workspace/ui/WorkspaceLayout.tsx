@@ -8,7 +8,6 @@ import { AnimSkinPanel } from "@/widgets/anim-panel";
 import { ViewControls } from "@/widgets/view-controls";
 import { WelcomeDialog } from "@/features/onboarding-tour";
 import { useLoadSkeleton } from "@/features/load-skeleton";
-import { useSkeletonStore } from "@/entities/skeleton";
 
 /**
  * The persistent workbench shell. The pixi stage, drop handling, tool rail and
@@ -18,8 +17,6 @@ import { useSkeletonStore } from "@/entities/skeleton";
  */
 export function WorkspaceLayout() {
   const { load } = useLoadSkeleton();
-  const meta = useSkeletonStore((s) => s.meta);
-  const status = useSkeletonStore((s) => s.status);
 
   const [isDragging, setIsDragging] = useState(false);
   const dragDepth = useRef(0);
@@ -67,18 +64,6 @@ export function WorkspaceLayout() {
       <Outlet />
 
       <WelcomeDialog />
-
-      <header className="pointer-events-none absolute left-5 top-5 z-20 flex items-center gap-2">
-        <div className="size-2.5 rounded-full bg-primary shadow-[0_0_12px] shadow-primary/70" />
-        <span className="text-sm font-medium tracking-tight text-foreground/90">
-          Spine Workbench
-        </span>
-        {status === "ready" && meta && (
-          <span className="ml-2 rounded-md border border-border bg-card/60 px-2 py-0.5 text-xs text-muted-foreground backdrop-blur-sm">
-            {meta.name} · {meta.bones} bones · scale 1:1
-          </span>
-        )}
-      </header>
     </main>
   );
 }
