@@ -1,11 +1,13 @@
 import { Filter, GlProgram } from "pixi.js";
 
 /**
- * A dissolve / "materialize" filter. The skeleton is mounted on its very first
- * setup-pose frame (no animation is ever played), so instead of letting it pop
- * in, we sweep `uProgress` 0 -> ~1.15 and the texture grains in from a noise
- * field with a glowing frontier. Purely visual; the underlying Spine is
- * untouched.
+ * A "materialize" filter - a monochrome digital-assembly reveal. The skeleton
+ * is mounted on its first setup-pose frame (no animation is ever played), so
+ * instead of letting it pop in we sweep `uProgress` 0 -> ~1.15 and the figure
+ * assembles from grid-quantized cells that drift into place. The reveal order
+ * is biased by luminance and a slight top-down sweep so it reads as being drawn
+ * rather than randomly fading, and the dissolve frontier glows white-hot. No
+ * hue at all; purely value. The underlying Spine is untouched.
  */
 const vertex = /* glsl */ `
 in vec2 aPosition;
@@ -50,22 +52,38 @@ float hash(vec2 p) {
 }
 
 void main(void) {
-    vec4 color = texture(uTexture, vTextureCoord);
+    vec2 uv = vTextureCoord;
 
-    // stable per-cell grain so the dissolve looks granular, not like a wipe
-    float n = hash(floor(vTextureCoord * 360.0) + uSeed);
+    // quantize into cells that echo the pixel grid; each gets a stable noise
+    // value and a stable drift direction
+    vec2 cell = floor(uv * 150.0);
+    float n = hash(cell + uSeed);
 
-    float edge = 0.16;
-    // a cell becomes visible once progress passes its noise value
-    float reveal = smoothstep(n, n + edge, uProgress);
+    // luminance of the resting pixel, used to bias the reveal order
+    vec4 probe = texture(uTexture, uv);
+    float lum = dot(probe.rgb, vec3(0.299, 0.587, 0.114));
 
-    // glowing frontier: brightest where a cell is mid-transition
+    // a cell resolves once progress passes its threshold. Bias the threshold
+    // by luminance (bright bits first) and a gentle top-down sweep, so the
+    // figure looks drawn-in rather than randomly grained.
+    float threshold = mix(n, 1.0 - lum, 0.25);
+    threshold = mix(threshold, uv.y, 0.12);
+
+    float edge = 0.18;
+    float reveal = smoothstep(threshold, threshold + edge, uProgress);
+
+    // drift: each cell slides in along its own direction, settling to rest as
+    // it resolves
+    float settle = 1.0 - reveal;
+    vec2 dir = vec2(hash(cell + 4.0), hash(cell + 9.0)) - 0.5;
+    vec4 color = texture(uTexture, uv + dir * settle * 0.035);
+
+    // white-hot frontier, brightest where a cell is mid-transition
     float rim = reveal * (1.0 - reveal) * 4.0;
-    vec3 rimColor = vec3(0.45, 0.78, 1.0);
 
     // pixi filter textures are premultiplied - scale rgb and a together
     vec4 outColor = color * reveal;
-    outColor.rgb += rimColor * rim * color.a;
+    outColor.rgb += vec3(1.0) * rim * color.a;
 
     finalColor = outColor;
 }

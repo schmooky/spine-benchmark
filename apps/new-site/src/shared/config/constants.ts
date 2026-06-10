@@ -3,7 +3,7 @@
 export const MIN_LOAD_MS = 1100;
 
 /** Duration of the materialize (dissolve-in) shader sweep. */
-export const MATERIALIZE_MS = 1000;
+export const MATERIALIZE_MS = 1200;
 
 /** Pixel grid spacing in world pixels (skeleton is spawned at scale 1, so one
  *  minor cell === one skeleton pixel * MINOR). */
