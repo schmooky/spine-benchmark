@@ -8,6 +8,7 @@ import {
 } from "@/entities/skeleton";
 import { runMeasurements } from "@/entities/metrics";
 import { usePlaybackStore } from "@/entities/playback";
+import { useEventLogStore } from "@/entities/playback";
 import {
   saveBundle,
   getBundleFiles,
@@ -84,6 +85,22 @@ export function useLoadSkeleton() {
         animations: spine.skeleton.data.animations.map((a) => a.name),
       };
       setReady(spine, meta);
+
+      // capture user events fired by any track (transport or mixer) for the
+      // Events monitor; the listener dies with the spine on the next load
+      spine.state.addListener({
+        event: (entry, ev) => {
+          useEventLogStore.getState().push({
+            name: ev.data.name,
+            animation: entry.animation?.name ?? "?",
+            track: entry.trackIndex,
+            time: ev.time,
+            intValue: ev.intValue,
+            floatValue: ev.floatValue,
+            stringValue: ev.stringValue ?? "",
+          });
+        },
+      });
 
       // the default skin is selected (and applied) by default
       const defaultSkin =

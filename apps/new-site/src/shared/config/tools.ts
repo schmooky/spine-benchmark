@@ -6,6 +6,7 @@ import {
   LibraryBig,
   Spline,
   SquareStack,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -61,6 +62,13 @@ export const TOOLS: ToolDef[] = [
     path: "/drawcalls",
     label: "Draw calls",
     icon: SquareStack,
+    requiresSkeleton: true,
+  },
+  {
+    id: "events",
+    path: "/events",
+    label: "Event monitor",
+    icon: Zap,
     requiresSkeleton: true,
   },
   {
