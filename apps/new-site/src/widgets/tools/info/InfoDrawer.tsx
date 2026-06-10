@@ -9,7 +9,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/shared/ui/drawer";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 
 /**
  * Info tool - a bottom shadcn Drawer showing the measurements gathered during
@@ -35,7 +34,7 @@ export function InfoDrawer() {
               {rows.length === 1 ? "" : "s"}.
             </DrawerDescription>
           </DrawerHeader>
-          <ScrollArea className="max-h-[46vh] px-4 pb-6">
+          <div className="max-h-[46vh] overflow-y-auto px-4 pb-6">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {rows.map((m) => (
                 <div
@@ -56,7 +55,7 @@ export function InfoDrawer() {
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>

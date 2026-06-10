@@ -11,7 +11,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/shared/ui/drawer";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { formatBytes, relativeTime } from "@/shared/lib/format";
 
 /**
@@ -60,7 +59,7 @@ export function LibraryDrawer() {
               </p>
             </div>
           ) : (
-            <ScrollArea className="max-h-[46vh] px-4 pb-6">
+            <div className="max-h-[46vh] overflow-y-auto px-4 pb-6">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {bundles.map((b) => (
                   <div
@@ -104,7 +103,7 @@ export function LibraryDrawer() {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           )}
         </div>
       </DrawerContent>

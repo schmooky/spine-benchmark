@@ -9,7 +9,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/shared/ui/drawer";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 
 /** white cell at an opacity that scales with keyframe density */
 function heatColor(value: number, max: number): string {
@@ -44,7 +43,7 @@ export function AnimationsDrawer() {
   return (
     <Drawer open onOpenChange={(open) => !open && close()}>
       <DrawerContent>
-        <div className="mx-auto flex w-full max-w-3xl flex-col">
+        <div className="mx-auto w-full max-w-3xl">
           <DrawerHeader>
             <DrawerTitle>Animations</DrawerTitle>
             <DrawerDescription>
@@ -53,7 +52,7 @@ export function AnimationsDrawer() {
             </DrawerDescription>
           </DrawerHeader>
 
-          <ScrollArea className="max-h-[56vh] px-4 pb-6">
+          <div className="max-h-[58vh] overflow-y-auto px-4 pb-6">
             <div className="flex flex-col gap-3">
               {animations.length === 0 && (
                 <p className="py-6 text-center text-sm text-muted-foreground">
@@ -119,7 +118,7 @@ export function AnimationsDrawer() {
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>
