@@ -137,8 +137,8 @@ export function startBenchmark(
       if (!app) return;
       const n = pool.active.length;
       if (n === 0) return;
-      const W = app.renderer.width / app.renderer.resolution;
-      const H = app.renderer.height / app.renderer.resolution;
+      const W = app.screen.width;
+      const H = app.screen.height;
       const cols = Math.max(1, Math.ceil(Math.sqrt((n * W) / H)));
       const rows = Math.max(1, Math.ceil(n / cols));
       const cellW = W / cols;

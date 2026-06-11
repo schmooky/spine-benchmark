@@ -1,0 +1,2134 @@
+{
+    "skeleton": {
+        "hash": "6XVl6LnJW/Q",
+        "spine": "4.2.42",
+        "x": -27.88,
+        "y": -23.46,
+        "width": 55.42,
+        "height": 45.9
+    },
+    "bones": [
+        {
+            "name": "root"
+        },
+        {
+            "name": "all",
+            "parent": "root",
+            "y": -21.46,
+            "scaleX": 0.34,
+            "scaleY": 0.34
+        },
+        {
+            "name": "diamond_blue_rays2",
+            "parent": "all",
+            "x": -1.25,
+            "y": 65.69,
+            "scaleX": 0.8676,
+            "scaleY": 0.8676
+        },
+        {
+            "name": "main",
+            "parent": "all",
+            "y": 63.13
+        },
+        {
+            "name": "crystal",
+            "parent": "main"
+        },
+        {
+            "name": "STAR_white",
+            "parent": "crystal",
+            "x": -61.17,
+            "y": -3.93
+        },
+        {
+            "name": "STAR_white2",
+            "parent": "crystal",
+            "x": 59.34,
+            "y": 32.26,
+            "scaleX": 0.6939,
+            "scaleY": 0.6939
+        },
+        {
+            "name": "STAR_white3",
+            "parent": "crystal",
+            "x": 45.49,
+            "y": 24.15,
+            "scaleX": 0.4351,
+            "scaleY": 0.4351
+        },
+        {
+            "name": "crystal_rays",
+            "parent": "crystal",
+            "x": -0.13,
+            "y": 9.81
+        },
+        {
+            "name": "diamond_blue_rays3",
+            "parent": "all",
+            "x": -1.25,
+            "y": 65.69,
+            "scaleX": 0.8676,
+            "scaleY": 0.8676
+        },
+        {
+            "name": "particles",
+            "parent": "all",
+            "x": 4.77,
+            "y": 71.66,
+            "scaleX": 1.0799,
+            "scaleY": 1.0799
+        },
+        {
+            "name": "particles2",
+            "parent": "all",
+            "x": 4.77,
+            "y": 71.66,
+            "scaleX": 1.0799,
+            "scaleY": 1.0799
+        }
+    ],
+    "slots": [
+        {
+            "name": "crystal_glow",
+            "bone": "main"
+        },
+        {
+            "name": "crystal_outer_glow",
+            "bone": "crystal"
+        },
+        {
+            "name": "blue_flare2",
+            "bone": "all"
+        },
+        {
+            "name": "particles",
+            "bone": "particles"
+        },
+        {
+            "name": "particles2",
+            "bone": "particles2"
+        },
+        {
+            "name": "diamond_blue_rays2",
+            "bone": "diamond_blue_rays2",
+            "blend": "additive"
+        },
+        {
+            "name": "diamond_blue_rays3",
+            "bone": "diamond_blue_rays3",
+            "blend": "additive"
+        },
+        {
+            "name": "crystal_rays",
+            "bone": "crystal_rays",
+            "blend": "additive"
+        },
+        {
+            "name": "crystal",
+            "bone": "crystal",
+            "attachment": "crystal"
+        },
+        {
+            "name": "crystal_top_glow",
+            "bone": "crystal"
+        },
+        {
+            "name": "STAR_white",
+            "bone": "STAR_white"
+        },
+        {
+            "name": "STAR_white2",
+            "bone": "STAR_white2"
+        },
+        {
+            "name": "STAR_white3",
+            "bone": "STAR_white3"
+        },
+        {
+            "name": "crystal_part_5",
+            "bone": "root"
+        },
+        {
+            "name": "crystal_part_4",
+            "bone": "root"
+        },
+        {
+            "name": "crystal_part_3",
+            "bone": "root"
+        },
+        {
+            "name": "crystal_part_2",
+            "bone": "root"
+        },
+        {
+            "name": "crystal_part_1",
+            "bone": "root"
+        }
+    ],
+    "skins": [
+        {
+            "name": "default",
+            "attachments": {
+                "blue_flare2": {
+                    "blue_flare": {
+                        "color": "e57affff",
+                        "x": 6.14,
+                        "y": 76.86,
+                        "scaleX": 1.1534,
+                        "scaleY": 1.1534,
+                        "width": 418,
+                        "height": 390
+                    }
+                },
+                "crystal": {
+                    "crystal": {
+                        "x": -0.5,
+                        "y": -1.5,
+                        "width": 163,
+                        "height": 135
+                    }
+                },
+                "crystal_glow": {
+                    "crystal_glow": {
+                        "x": 1,
+                        "y": -2.5,
+                        "scaleX": 2,
+                        "scaleY": 2,
+                        "width": 135,
+                        "height": 138
+                    }
+                },
+                "crystal_outer_glow": {
+                    "crystal_outer_glow": {
+                        "x": -0.77,
+                        "y": -1.15,
+                        "scaleX": 1.8356,
+                        "scaleY": 1.8356,
+                        "width": 97,
+                        "height": 83
+                    }
+                },
+                "crystal_part_1": {
+                    "crystal_part_1": {
+                        "x": -14.96,
+                        "y": 8.84,
+                        "scaleX": 0.34,
+                        "scaleY": 0.34,
+                        "width": 40,
+                        "height": 44
+                    }
+                },
+                "crystal_part_2": {
+                    "crystal_part_2": {
+                        "x": -6.12,
+                        "y": -12.75,
+                        "scaleX": 0.34,
+                        "scaleY": 0.34,
+                        "width": 38,
+                        "height": 55
+                    }
+                },
+                "crystal_part_3": {
+                    "crystal_part_3": {
+                        "x": 10.54,
+                        "y": 2.38,
+                        "scaleX": 0.34,
+                        "scaleY": 0.34,
+                        "width": 68,
+                        "height": 44
+                    }
+                },
+                "crystal_part_4": {
+                    "crystal_part_4": {
+                        "x": -21.59,
+                        "y": 4.93,
+                        "scaleX": 0.34,
+                        "scaleY": 0.34,
+                        "width": 27,
+                        "height": 39
+                    }
+                },
+                "crystal_part_5": {
+                    "crystal_part_5": {
+                        "x": 14.62,
+                        "y": 6.8,
+                        "scaleX": 0.34,
+                        "scaleY": 0.34,
+                        "width": 42,
+                        "height": 50
+                    }
+                },
+                "crystal_rays": {
+                    "crystal_rays": {
+                        "path": "crystal_rays_b",
+                        "y": 26.65,
+                        "scaleX": 2,
+                        "scaleY": 2,
+                        "width": 195,
+                        "height": 161
+                    }
+                },
+                "crystal_top_glow": {
+                    "crystal_top_glow": {
+                        "x": -0.5,
+                        "y": -0.5,
+                        "scaleX": 2,
+                        "scaleY": 2,
+                        "width": 97,
+                        "height": 83
+                    }
+                },
+                "diamond_blue_rays2": {
+                    "diamond_blue_rays": {
+                        "scaleX": 0.9296,
+                        "scaleY": 0.9296,
+                        "width": 390,
+                        "height": 389
+                    }
+                },
+                "diamond_blue_rays3": {
+                    "diamond_blue_rays": {
+                        "scaleX": 0.9296,
+                        "scaleY": 0.9296,
+                        "width": 390,
+                        "height": 389
+                    }
+                },
+                "particles": {
+                    "particles": {
+                        "path": "particles_blue",
+                        "x": -5.74,
+                        "y": 48.79,
+                        "rotation": 10.22,
+                        "width": 167,
+                        "height": 176
+                    }
+                },
+                "particles2": {
+                    "particles": {
+                        "path": "particles_blue",
+                        "x": -5.74,
+                        "y": 48.79,
+                        "rotation": 10.22,
+                        "width": 167,
+                        "height": 176
+                    }
+                },
+                "STAR_white": {
+                    "STAR_white": {
+                        "width": 78,
+                        "height": 79
+                    }
+                },
+                "STAR_white2": {
+                    "STAR_white": {
+                        "width": 78,
+                        "height": 79
+                    }
+                },
+                "STAR_white3": {
+                    "STAR_white": {
+                        "width": 78,
+                        "height": 79
+                    }
+                }
+            }
+        }
+    ],
+    "animations": {
+        "anticipation_in": {
+            "slots": {
+                "blue_flare2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1667,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.5555,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "blue_flare"
+                        }
+                    ]
+                },
+                "crystal_glow": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.2667,
+                            "color": "ffffffff"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_glow"
+                        }
+                    ]
+                },
+                "crystal_outer_glow": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffffff"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_outer_glow"
+                        }
+                    ]
+                },
+                "crystal_rays": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1778,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_rays"
+                        }
+                    ]
+                },
+                "diamond_blue_rays2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.2333,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "diamond_blue_rays"
+                        }
+                    ]
+                },
+                "diamond_blue_rays3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.2333,
+                            "color": "ffffffff"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "diamond_blue_rays"
+                        }
+                    ]
+                },
+                "particles": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.8624,
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffffff"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "particles"
+                        }
+                    ]
+                },
+                "particles2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.8624,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "particles"
+                        }
+                    ]
+                }
+            },
+            "bones": {
+                "crystal_rays": {
+                    "scale": [
+                        {},
+                        {
+                            "time": 0.1778,
+                            "x": 1.239,
+                            "y": 1.239
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                },
+                "main": {
+                    "scale": [
+                        {
+                            "curve": [
+                                0.056,
+                                1.071,
+                                0.122,
+                                1.157,
+                                0.056,
+                                1.071,
+                                0.122,
+                                1.157
+                            ]
+                        },
+                        {
+                            "time": 0.1778,
+                            "x": 1.157,
+                            "y": 1.157,
+                            "curve": [
+                                0.284,
+                                1.157,
+                                0.405,
+                                0.929,
+                                0.284,
+                                1.157,
+                                0.405,
+                                0.929
+                            ]
+                        },
+                        {
+                            "time": 0.5111,
+                            "x": 0.929,
+                            "y": 0.929,
+                            "curve": [
+                                0.623,
+                                0.929,
+                                0.754,
+                                0.962,
+                                0.623,
+                                0.929,
+                                0.754,
+                                0.962
+                            ]
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                },
+                "crystal": {
+                    "scale": [
+                        {
+                            "curve": [
+                                0.074,
+                                0.963,
+                                0.148,
+                                0.889,
+                                0.074,
+                                1,
+                                0.148,
+                                1.044
+                            ]
+                        },
+                        {
+                            "time": 0.2222,
+                            "x": 0.889,
+                            "y": 1.044,
+                            "curve": [
+                                0.304,
+                                0.889,
+                                0.429,
+                                1.137,
+                                0.304,
+                                1.044,
+                                0.429,
+                                0.976
+                            ]
+                        },
+                        {
+                            "time": 0.5111,
+                            "x": 1.137,
+                            "y": 0.976,
+                            "curve": [
+                                0.63,
+                                1.137,
+                                0.748,
+                                1.073,
+                                0.63,
+                                0.976,
+                                0.748,
+                                0.987
+                            ]
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                },
+                "diamond_blue_rays2": {
+                    "rotate": [
+                        {
+                            "value": -16.11
+                        },
+                        {
+                            "time": 0.8667,
+                            "value": -28.44
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 1.241,
+                            "y": 1.241,
+                            "curve": [
+                                0.078,
+                                1.241,
+                                0.156,
+                                1.686,
+                                0.078,
+                                1.241,
+                                0.156,
+                                1.686
+                            ]
+                        },
+                        {
+                            "time": 0.2333,
+                            "x": 1.686,
+                            "y": 1.686
+                        },
+                        {
+                            "time": 0.8667,
+                            "x": 1.58,
+                            "y": 1.58
+                        }
+                    ]
+                },
+                "diamond_blue_rays3": {
+                    "rotate": [
+                        {
+                            "value": 16.47
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 0.838,
+                            "y": 0.838,
+                            "curve": [
+                                0.078,
+                                0.838,
+                                0.156,
+                                1.108,
+                                0.078,
+                                0.838,
+                                0.156,
+                                1.108
+                            ]
+                        },
+                        {
+                            "time": 0.2333,
+                            "x": 1.108,
+                            "y": 1.108
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                },
+                "particles": {
+                    "translate": [
+                        {
+                            "y": -3.68
+                        },
+                        {
+                            "time": 0.8624,
+                            "y": 22,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.8667,
+                            "y": -7.65
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 1.005,
+                            "y": 1.005
+                        },
+                        {
+                            "time": 0.8624,
+                            "x": 1.035,
+                            "y": 1.035,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                },
+                "particles2": {
+                    "translate": [
+                        {
+                            "y": -18.42
+                        },
+                        {
+                            "time": 0.8624,
+                            "y": -7.65,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.8667,
+                            "y": -20.09
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 0.809,
+                            "y": 0.809
+                        },
+                        {
+                            "time": 0.8624,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.8667,
+                            "x": 0.78,
+                            "y": 0.78
+                        }
+                    ]
+                }
+            }
+        },
+        "anticipation_loop": {
+            "slots": {
+                "crystal_glow": {
+                    "attachment": [
+                        {
+                            "name": "crystal_glow"
+                        }
+                    ]
+                },
+                "crystal_outer_glow": {
+                    "attachment": [
+                        {
+                            "name": "crystal_outer_glow"
+                        }
+                    ]
+                },
+                "crystal_part_1": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.2667,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.4667,
+                            "color": "ffffffd4"
+                        },
+                        {
+                            "time": 1,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_1"
+                        }
+                    ]
+                },
+                "crystal_part_2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.0667,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.2667,
+                            "color": "ffffffd4"
+                        },
+                        {
+                            "time": 0.8,
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.9333,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 1.1333,
+                            "color": "ffffffd4"
+                        },
+                        {
+                            "time": 1.6667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_2"
+                        }
+                    ]
+                },
+                "crystal_part_3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.2,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.4,
+                            "color": "ffffffd4"
+                        },
+                        {
+                            "time": 0.9333,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_3"
+                        }
+                    ]
+                },
+                "crystal_part_4": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1.2667,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 1.4667,
+                            "color": "ffffffd4"
+                        },
+                        {
+                            "time": 2,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_4"
+                        }
+                    ]
+                },
+                "crystal_part_5": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.5667,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.7667,
+                            "color": "ffffffd4"
+                        },
+                        {
+                            "time": 1.3,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_5"
+                        }
+                    ]
+                },
+                "crystal_rays": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 1,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 2,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_rays"
+                        }
+                    ]
+                },
+                "diamond_blue_rays2": {
+                    "rgba": [
+                        {
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 2,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "diamond_blue_rays"
+                        }
+                    ]
+                },
+                "diamond_blue_rays3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 2,
+                            "color": "ffffffff"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "diamond_blue_rays"
+                        }
+                    ]
+                },
+                "particles": {
+                    "rgba": [
+                        {
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.9958,
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 1.9958,
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 2,
+                            "color": "ffffffff"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "particles"
+                        }
+                    ]
+                },
+                "particles2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.9958,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 1.9958,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 2,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "particles"
+                        }
+                    ]
+                },
+                "STAR_white": {
+                    "rgba": [
+                        {
+                            "time": 0.2667,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.4,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.7333,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.9333,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "time": 0.2667,
+                            "name": "STAR_white"
+                        }
+                    ]
+                },
+                "STAR_white2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.3667,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.6667,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.9,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 1.2,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "STAR_white"
+                        }
+                    ]
+                },
+                "STAR_white3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1.4,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 1.5333,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1.8,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 1.9667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "STAR_white"
+                        }
+                    ]
+                }
+            },
+            "bones": {
+                "STAR_white2": {
+                    "scale": [
+                        {
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.3667,
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": [
+                                0.459,
+                                0.875,
+                                0.574,
+                                1.761,
+                                0.459,
+                                0.875,
+                                0.574,
+                                1.761
+                            ]
+                        },
+                        {
+                            "time": 0.6667,
+                            "x": 1.761,
+                            "y": 1.761,
+                            "curve": [
+                                0.852,
+                                1.761,
+                                1.014,
+                                0.68,
+                                0.852,
+                                1.761,
+                                1.014,
+                                0.68
+                            ]
+                        },
+                        {
+                            "time": 1.2,
+                            "x": 0.543,
+                            "y": 0.543
+                        }
+                    ]
+                },
+                "STAR_white3": {
+                    "scale": [
+                        {
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1.4,
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": [
+                                1.479,
+                                0.91,
+                                1.554,
+                                2.059,
+                                1.479,
+                                0.91,
+                                1.554,
+                                2.059
+                            ]
+                        },
+                        {
+                            "time": 1.6333,
+                            "x": 2.059,
+                            "y": 2.059,
+                            "curve": [
+                                1.752,
+                                2.059,
+                                1.848,
+                                0.68,
+                                1.752,
+                                2.059,
+                                1.848,
+                                0.68
+                            ]
+                        },
+                        {
+                            "time": 1.9667,
+                            "x": 0.543,
+                            "y": 0.543
+                        }
+                    ]
+                },
+                "STAR_white": {
+                    "scale": [
+                        {
+                            "time": 0.2667,
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": [
+                                0.338,
+                                0.896,
+                                0.429,
+                                1.253,
+                                0.338,
+                                0.896,
+                                0.429,
+                                1.253
+                            ]
+                        },
+                        {
+                            "time": 0.5,
+                            "x": 1.253,
+                            "y": 1.253,
+                            "curve": [
+                                0.638,
+                                1.253,
+                                0.795,
+                                0.702,
+                                0.638,
+                                1.253,
+                                0.795,
+                                0.702
+                            ]
+                        },
+                        {
+                            "time": 0.9333,
+                            "x": 0.543,
+                            "y": 0.543
+                        }
+                    ]
+                },
+                "diamond_blue_rays3": {
+                    "rotate": [
+                        {
+                            "value": 38.01
+                        },
+                        {
+                            "time": 2
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 0.764,
+                            "y": 0.764
+                        },
+                        {
+                            "time": 2
+                        }
+                    ]
+                },
+                "diamond_blue_rays2": {
+                    "rotate": [
+                        {},
+                        {
+                            "time": 2,
+                            "value": -28.44
+                        }
+                    ],
+                    "scale": [
+                        {},
+                        {
+                            "time": 2,
+                            "x": 1.58,
+                            "y": 1.58
+                        }
+                    ]
+                },
+                "crystal_rays": {
+                    "scale": [
+                        {
+                            "x": 0.688,
+                            "y": 0.688
+                        },
+                        {
+                            "time": 2
+                        }
+                    ]
+                },
+                "particles": {
+                    "translate": [
+                        {
+                            "y": -7.65
+                        },
+                        {
+                            "time": 0.9958,
+                            "y": 22,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1,
+                            "y": -7.65
+                        },
+                        {
+                            "time": 1.9958,
+                            "y": 22,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 2,
+                            "y": -7.65
+                        }
+                    ],
+                    "scale": [
+                        {},
+                        {
+                            "time": 0.9958,
+                            "x": 1.035,
+                            "y": 1.035,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1
+                        },
+                        {
+                            "time": 1.9958,
+                            "x": 1.035,
+                            "y": 1.035,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 2
+                        }
+                    ]
+                },
+                "particles2": {
+                    "translate": [
+                        {
+                            "y": -20.09
+                        },
+                        {
+                            "time": 0.9958,
+                            "y": -7.65,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1,
+                            "y": -20.09
+                        },
+                        {
+                            "time": 1.9958,
+                            "y": -7.65,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 2,
+                            "y": -20.09
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 0.78,
+                            "y": 0.78
+                        },
+                        {
+                            "time": 0.9958,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 1,
+                            "x": 0.78,
+                            "y": 0.78
+                        },
+                        {
+                            "time": 1.9958,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 2,
+                            "x": 0.78,
+                            "y": 0.78
+                        }
+                    ]
+                }
+            }
+        },
+        "anticipation_out": {
+            "slots": {
+                "crystal_glow": {
+                    "rgba": [
+                        {
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.3333,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_glow"
+                        }
+                    ]
+                },
+                "crystal_outer_glow": {
+                    "rgba": [
+                        {
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.3333,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_outer_glow"
+                        }
+                    ]
+                },
+                "crystal_part_1": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_1"
+                        }
+                    ]
+                },
+                "crystal_part_2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_2"
+                        }
+                    ]
+                },
+                "crystal_part_3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_3"
+                        }
+                    ]
+                },
+                "crystal_part_4": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_4"
+                        }
+                    ]
+                },
+                "crystal_part_5": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_part_5"
+                        }
+                    ]
+                },
+                "crystal_rays": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_rays"
+                        }
+                    ]
+                },
+                "diamond_blue_rays2": {
+                    "rgba": [
+                        {
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.3333,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "diamond_blue_rays"
+                        }
+                    ]
+                },
+                "diamond_blue_rays3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "diamond_blue_rays"
+                        }
+                    ]
+                },
+                "particles": {
+                    "rgba": [
+                        {
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.3333,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "particles"
+                        }
+                    ]
+                },
+                "particles2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "particles"
+                        }
+                    ]
+                },
+                "STAR_white2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "STAR_white"
+                        }
+                    ]
+                },
+                "STAR_white3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "STAR_white"
+                        }
+                    ]
+                }
+            },
+            "bones": {
+                "STAR_white2": {
+                    "scale": [
+                        {
+                            "x": 0.77,
+                            "y": 0.77
+                        }
+                    ]
+                },
+                "STAR_white3": {
+                    "scale": [
+                        {
+                            "x": 0.77,
+                            "y": 0.77
+                        }
+                    ]
+                },
+                "diamond_blue_rays3": {
+                    "rotate": [
+                        {
+                            "value": 38.01
+                        },
+                        {
+                            "time": 0.3333,
+                            "value": 31.67
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 0.764,
+                            "y": 0.764
+                        },
+                        {
+                            "time": 0.3333,
+                            "x": 0.803,
+                            "y": 0.803
+                        }
+                    ]
+                },
+                "diamond_blue_rays2": {
+                    "rotate": [
+                        {},
+                        {
+                            "time": 0.3333,
+                            "value": -4.74
+                        }
+                    ],
+                    "scale": [
+                        {},
+                        {
+                            "time": 0.3333,
+                            "x": 1.097,
+                            "y": 1.097
+                        }
+                    ]
+                },
+                "crystal_rays": {
+                    "scale": [
+                        {
+                            "x": 0.688,
+                            "y": 0.688
+                        },
+                        {
+                            "time": 0.3333,
+                            "x": 0.74,
+                            "y": 0.74
+                        }
+                    ]
+                },
+                "particles": {
+                    "translate": [
+                        {
+                            "y": -7.65
+                        },
+                        {
+                            "time": 0.3333,
+                            "y": 2.27
+                        }
+                    ],
+                    "scale": [
+                        {},
+                        {
+                            "time": 0.3333,
+                            "x": 1.012,
+                            "y": 1.012
+                        }
+                    ]
+                },
+                "particles2": {
+                    "translate": [
+                        {
+                            "y": -20.09
+                        },
+                        {
+                            "time": 0.3333,
+                            "y": -15.93
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "x": 0.78,
+                            "y": 0.78
+                        },
+                        {
+                            "time": 0.3333,
+                            "x": 0.853,
+                            "y": 0.853
+                        }
+                    ]
+                }
+            }
+        },
+        "idle": {},
+        "once": {
+            "slots": {
+                "blue_flare2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1667,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.5555,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "blue_flare"
+                        }
+                    ]
+                },
+                "crystal_glow": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1667,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.5111,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_glow"
+                        }
+                    ]
+                },
+                "crystal_rays": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1667,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_rays"
+                        }
+                    ]
+                },
+                "crystal_top_glow": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1667,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.5111,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "crystal_top_glow"
+                        }
+                    ]
+                },
+                "diamond_blue_rays2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1333,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.4667,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "diamond_blue_rays"
+                        }
+                    ]
+                },
+                "STAR_white": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.1667,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.2667,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.5555,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "STAR_white"
+                        }
+                    ]
+                },
+                "STAR_white2": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.1333,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.2667,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.4222,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.6,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "STAR_white"
+                        }
+                    ]
+                },
+                "STAR_white3": {
+                    "rgba": [
+                        {
+                            "color": "ffffff00",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.2222,
+                            "color": "ffffff00"
+                        },
+                        {
+                            "time": 0.4667,
+                            "color": "ffffffff",
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.5555,
+                            "color": "ffffffff"
+                        },
+                        {
+                            "time": 0.8667,
+                            "color": "ffffff00"
+                        }
+                    ],
+                    "attachment": [
+                        {
+                            "name": "STAR_white"
+                        }
+                    ]
+                }
+            },
+            "bones": {
+                "diamond_blue_rays2": {
+                    "rotate": [
+                        {},
+                        {
+                            "time": 0.8667,
+                            "value": -4.54
+                        }
+                    ],
+                    "scale": [
+                        {
+                            "curve": [
+                                0.083,
+                                1,
+                                0.659,
+                                1.561,
+                                0.083,
+                                1,
+                                0.659,
+                                1.561
+                            ]
+                        },
+                        {
+                            "time": 0.8667,
+                            "x": 1.561,
+                            "y": 1.561
+                        }
+                    ]
+                },
+                "main": {
+                    "scale": [
+                        {
+                            "curve": [
+                                0.053,
+                                1.067,
+                                0.114,
+                                1.157,
+                                0.053,
+                                1.067,
+                                0.114,
+                                1.157
+                            ]
+                        },
+                        {
+                            "time": 0.1667,
+                            "x": 1.157,
+                            "y": 1.157,
+                            "curve": [
+                                0.276,
+                                1.157,
+                                0.402,
+                                0.929,
+                                0.276,
+                                1.157,
+                                0.402,
+                                0.929
+                            ]
+                        },
+                        {
+                            "time": 0.5111,
+                            "x": 0.929,
+                            "y": 0.929,
+                            "curve": [
+                                0.623,
+                                0.929,
+                                0.754,
+                                0.962,
+                                0.623,
+                                0.929,
+                                0.754,
+                                0.962
+                            ]
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                },
+                "crystal": {
+                    "scale": [
+                        {
+                            "curve": [
+                                0.074,
+                                0.963,
+                                0.148,
+                                0.889,
+                                0.074,
+                                1,
+                                0.148,
+                                1.044
+                            ]
+                        },
+                        {
+                            "time": 0.2222,
+                            "x": 0.889,
+                            "y": 1.044,
+                            "curve": [
+                                0.304,
+                                0.889,
+                                0.429,
+                                1.137,
+                                0.304,
+                                1.044,
+                                0.429,
+                                0.976
+                            ]
+                        },
+                        {
+                            "time": 0.5111,
+                            "x": 1.137,
+                            "y": 0.976,
+                            "curve": [
+                                0.63,
+                                1.137,
+                                0.748,
+                                1.073,
+                                0.63,
+                                0.976,
+                                0.748,
+                                0.987
+                            ]
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                },
+                "STAR_white": {
+                    "scale": [
+                        {
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": [
+                                0.05,
+                                0.888,
+                                0.117,
+                                1.253,
+                                0.05,
+                                0.888,
+                                0.117,
+                                1.253
+                            ]
+                        },
+                        {
+                            "time": 0.1667,
+                            "x": 1.253,
+                            "y": 1.253,
+                            "curve": [
+                                0.296,
+                                1.253,
+                                0.426,
+                                0.742,
+                                0.296,
+                                1.253,
+                                0.426,
+                                0.742
+                            ]
+                        },
+                        {
+                            "time": 0.5555,
+                            "x": 0.543,
+                            "y": 0.543
+                        }
+                    ]
+                },
+                "STAR_white2": {
+                    "scale": [
+                        {
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.1333,
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": [
+                                0.178,
+                                0.875,
+                                0.222,
+                                1.253,
+                                0.178,
+                                0.875,
+                                0.222,
+                                1.253
+                            ]
+                        },
+                        {
+                            "time": 0.2667,
+                            "x": 1.253,
+                            "y": 1.253,
+                            "curve": [
+                                0.378,
+                                1.253,
+                                0.489,
+                                0.714,
+                                0.378,
+                                1.253,
+                                0.489,
+                                0.714
+                            ]
+                        },
+                        {
+                            "time": 0.6,
+                            "x": 0.543,
+                            "y": 0.543
+                        }
+                    ]
+                },
+                "STAR_white3": {
+                    "scale": [
+                        {
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": "stepped"
+                        },
+                        {
+                            "time": 0.2222,
+                            "x": 0.77,
+                            "y": 0.77,
+                            "curve": [
+                                0.291,
+                                0.933,
+                                0.398,
+                                1.253,
+                                0.291,
+                                0.933,
+                                0.398,
+                                1.253
+                            ]
+                        },
+                        {
+                            "time": 0.4667,
+                            "x": 1.253,
+                            "y": 1.253,
+                            "curve": [
+                                0.6,
+                                1.253,
+                                0.733,
+                                0.748,
+                                0.6,
+                                1.253,
+                                0.733,
+                                0.748
+                            ]
+                        },
+                        {
+                            "time": 0.8667,
+                            "x": 0.543,
+                            "y": 0.543
+                        }
+                    ]
+                },
+                "crystal_rays": {
+                    "scale": [
+                        {},
+                        {
+                            "time": 0.1667,
+                            "x": 1.239,
+                            "y": 1.239
+                        },
+                        {
+                            "time": 0.8667
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
