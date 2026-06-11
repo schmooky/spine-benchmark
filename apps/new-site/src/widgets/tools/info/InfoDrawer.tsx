@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useSkeletonStore } from "@/entities/skeleton";
@@ -20,11 +21,17 @@ export function InfoDrawer() {
   const meta = useSkeletonStore((s) => s.meta);
   const metrics = useMetricsStore((s) => s.metrics);
 
-  const close = () => navigate("/");
+  const [open, setOpen] = useState(true);
   const rows = Object.values(metrics);
 
   return (
-    <Drawer open onOpenChange={(open) => !open && close()}>
+    <Drawer
+      open={open}
+      onOpenChange={setOpen}
+      onAnimationEnd={(o) => {
+        if (!o) navigate("/");
+      }}
+    >
       <DrawerContent>
         <div className="mx-auto w-full max-w-3xl">
           <DrawerHeader>

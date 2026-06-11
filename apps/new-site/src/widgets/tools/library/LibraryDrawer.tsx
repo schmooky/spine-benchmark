@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Boxes, UploadCloud, Trash2 } from "lucide-react";
 
@@ -30,10 +30,17 @@ export function LibraryDrawer() {
     void refresh();
   }, [refresh]);
 
-  const close = () => navigate("/");
+  const [open, setOpen] = useState(true);
+  const close = () => setOpen(false);
 
   return (
-    <Drawer open onOpenChange={(open) => !open && close()}>
+    <Drawer
+      open={open}
+      onOpenChange={setOpen}
+      onAnimationEnd={(o) => {
+        if (!o) navigate("/");
+      }}
+    >
       <DrawerContent>
         <div className="mx-auto w-full max-w-4xl">
           <DrawerHeader>

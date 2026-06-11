@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useSkeletonStore, analyzeAnimations } from "@/entities/skeleton";
@@ -38,10 +38,16 @@ export function AnimationsDrawer() {
     [spine],
   );
 
-  const close = () => navigate("/");
+  const [open, setOpen] = useState(true);
 
   return (
-    <Drawer open onOpenChange={(open) => !open && close()}>
+    <Drawer
+      open={open}
+      onOpenChange={setOpen}
+      onAnimationEnd={(o) => {
+        if (!o) navigate("/");
+      }}
+    >
       <DrawerContent>
         <div className="mx-auto w-full max-w-3xl">
           <DrawerHeader>
