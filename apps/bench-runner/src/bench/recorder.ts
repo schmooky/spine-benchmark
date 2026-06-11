@@ -44,6 +44,7 @@ export class Recorder {
   private riPeak = 0;
   private ciPeak = 0;
   private steps: NonNullable<ScenarioResult["steps"]> = [];
+  private abortedReason: string | null = null;
 
   // rolling per-second window
   private secDts: number[] = [];
@@ -66,8 +67,19 @@ export class Recorder {
     this.riPeak = 0;
     this.ciPeak = 0;
     this.steps = [];
+    this.abortedReason = null;
     this.secDts = [];
     this.secStart = 0;
+  }
+
+  /** Tag the current scenario as cut short / capped. */
+  markAborted(reason: string): void {
+    if (this.current && !this.abortedReason) this.abortedReason = reason;
+  }
+
+  /** Rolling tail of per-second rows for the crash stash. */
+  recentPerSecond(n: number): PerSecondRow[] {
+    return this.perSecond.slice(-n);
   }
 
   /** One rendered frame: dt in ms, current instance count, latest sample. */
@@ -143,6 +155,7 @@ export class Recorder {
         ciPeak: Math.round(this.ciPeak * 10) / 10,
       },
       steps: this.steps.length > 0 ? this.steps : undefined,
+      ...(this.abortedReason ? { aborted: this.abortedReason } : {}),
     });
     this.current = null;
   }

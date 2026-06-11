@@ -18,7 +18,7 @@ export function renderRunReport(run: RunRecord): string {
   const scenarioRows = run.scenarios
     .map(
       (sc) => `<tr>
-        <td>${esc(sc.label)}</td>
+        <td>${esc(sc.label)}${sc.aborted ? ` <span class="bad">(${esc(sc.aborted)})</span>` : ""}</td>
         <td>${esc(sc.kind)}</td>
         <td class="num">${sc.stats.avgFps.toFixed(1)}</td>
         <td class="num">${sc.stats.frameMsP95.toFixed(1)}</td>
@@ -62,7 +62,14 @@ export function renderRunReport(run: RunRecord): string {
 </head>
 <body>
   <h1>Spine Bench run <span class="id">${esc(run.id)}</span></h1>
-  <p class="muted">${esc(run.createdAt)} · client ${esc(run.clientVersion)}${s.quick ? " · QUICK MODE" : ""}${s.degraded ? ' · <span class="bad">degraded (tab was hidden)</span>' : ""}</p>
+  <p class="muted">${esc(run.createdAt)} · client ${esc(run.clientVersion)}${s.quick ? " · QUICK MODE" : ""}${s.degraded && !s.crashed ? ' · <span class="bad">degraded (tab was hidden)</span>' : ""}</p>
+  ${
+    s.crashed
+      ? `<p class="bad"><strong>BROWSER CRASHED</strong> - reconstructed from the crash stash: ${esc(s.abortReason ?? "")}</p>`
+      : s.aborted
+        ? `<p class="bad"><strong>RUN ENDED EARLY</strong> - ${esc(s.abortReason ?? "device floor reached")}</p>`
+        : ""
+  }
 
   <h2>Device</h2>
   <table>

@@ -4,6 +4,12 @@ import type { HudState } from "./bench/engine";
 
 export type Stage = "landing" | "running" | "uploading" | "done" | "error";
 
+export interface CrashReportNotice {
+  id: string;
+  scenario: string;
+  instances: number;
+}
+
 interface RunnerState {
   stage: Stage;
   hud: HudState | null;
@@ -12,10 +18,13 @@ interface RunnerState {
   error: string | null;
   /** Set when upload failed: the finished payload, offered as a download. */
   pendingPayload: string | null;
+  /** A previous run crashed the browser; its report was uploaded as this id. */
+  crashReport: CrashReportNotice | null;
   setStage: (stage: Stage) => void;
   setHud: (hud: HudState) => void;
   setResult: (runId: string, reportUrl: string | null) => void;
   setError: (error: string, pendingPayload?: string | null) => void;
+  setCrashReport: (crashReport: CrashReportNotice | null) => void;
 }
 
 export const useRunnerStore = create<RunnerState>((set) => ({
@@ -25,10 +34,12 @@ export const useRunnerStore = create<RunnerState>((set) => ({
   reportUrl: null,
   error: null,
   pendingPayload: null,
+  crashReport: null,
   setStage: (stage) => set({ stage }),
   setHud: (hud) => set({ hud }),
   setResult: (runId, reportUrl) =>
     set({ stage: "done", runId, reportUrl, error: null }),
   setError: (error, pendingPayload = null) =>
     set({ stage: "error", error, pendingPayload }),
+  setCrashReport: (crashReport) => set({ crashReport }),
 }));

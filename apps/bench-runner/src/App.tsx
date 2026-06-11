@@ -6,6 +6,7 @@ import { startBenchmark, BenchCancelled } from "@/bench/engine";
 import { collectDevice } from "@/lib/device";
 import { buildUpload, uploadRun } from "@/lib/upload";
 import { rememberRun } from "@/lib/history";
+import { loadStash, clearStash } from "@/lib/stash";
 import type { RunUpload } from "@/types";
 import { Landing } from "@/ui/Landing";
 import { Hud } from "@/ui/Hud";
@@ -29,6 +30,7 @@ export default function App() {
     store.setStage("uploading");
     try {
       const ok = await uploadRun(upload);
+      clearStash();
       rememberRun(ok.id);
       store.setResult(ok.id, ok.reportUrl ?? null);
     } catch (err) {
@@ -42,8 +44,9 @@ export default function App() {
   const start = async () => {
     const store = useRunnerStore.getState();
     store.setStage("running");
-    // give React a tick to mount the canvas host
-    await new Promise((r) => requestAnimationFrame(r));
+    // give React a tick to mount the canvas host (NOT rAF - that never
+    // fires in a hidden tab and would hang the start forever)
+    await new Promise((r) => window.setTimeout(r, 50));
     if (!hostRef.current) {
       store.setError("canvas host missing");
       return;
@@ -70,6 +73,63 @@ export default function App() {
 
   useEffect(() => {
     return () => cancelRef.current?.();
+  }, []);
+
+  // a leftover crash stash means the browser died mid-run last time -
+  // upload it as a crash report so the breaking point is never lost
+  useEffect(() => {
+    const stash = loadStash();
+    if (!stash) return;
+    void (async () => {
+      try {
+        const device = await collectDevice();
+        const crashUpload: RunUpload = {
+          clientVersion: stash.clientVersion,
+          startedAt: stash.startedAt,
+          device,
+          scenarios: [],
+          summary: {
+            totalDurationMs: stash.elapsedMs,
+            totalFrames: 0,
+            avgFps: stash.fps,
+            worstFrameMsP99: 0,
+            hiddenMs: 0,
+            degraded: true,
+            quick: false,
+            displayHz: stash.displayHz,
+            longTaskCount: 0,
+            longTaskTotalMs: 0,
+            aborted: true,
+            crashed: true,
+            abortReason: `browser died during "${stash.scenarioId}" (${stash.scenarioIndex + 1}/${stash.scenarioCount}) at ${stash.instances} instances, ~${stash.fps} fps, heap ${stash.heapMb ?? "?"} MB`,
+          },
+          capture: {
+            frames: [],
+            perSecond: stash.recentSeconds,
+            longTasks: null,
+            loaf: null,
+            events: [
+              {
+                t: stash.elapsedMs,
+                type: "crash",
+                detail: `${stash.scenarioId} @ ${stash.instances} instances`,
+              },
+            ],
+            resources: [],
+          },
+        };
+        const ok = await uploadRun(crashUpload);
+        clearStash();
+        rememberRun(ok.id);
+        useRunnerStore.getState().setCrashReport({
+          id: ok.id,
+          scenario: stash.scenarioId,
+          instances: stash.instances,
+        });
+      } catch {
+        // upload failed - keep the stash for the next visit
+      }
+    })();
   }, []);
 
   return (

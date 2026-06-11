@@ -54,6 +54,7 @@ export interface ScenarioResult {
   };
   /** For ramp scenarios: per-step rows (instances vs achieved fps). */
   steps?: { instances: number; fps: number; frameMsP95: number }[];
+  aborted?: string;
 }
 
 export interface RunSummary {
@@ -68,6 +69,9 @@ export interface RunSummary {
   displayHz?: number;
   longTaskCount?: number;
   longTaskTotalMs?: number;
+  aborted?: boolean;
+  abortReason?: string;
+  crashed?: boolean;
 }
 
 export interface RunCapture {

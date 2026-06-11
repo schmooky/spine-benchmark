@@ -145,6 +145,8 @@ export interface ScenarioResult {
     ciPeak: number;
   };
   steps?: { instances: number; fps: number; frameMsP95: number }[];
+  /** Set when the scenario was cut short or capped (reason). */
+  aborted?: string;
 }
 
 export interface RunSummary {
@@ -158,6 +160,11 @@ export interface RunSummary {
   displayHz: number;
   longTaskCount: number;
   longTaskTotalMs: number;
+  /** The run hit the device floor and ended early. */
+  aborted?: boolean;
+  abortReason?: string;
+  /** Reconstructed from a crash stash - the browser died mid-run. */
+  crashed?: boolean;
 }
 
 export interface TimelineEvent {

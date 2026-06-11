@@ -7,6 +7,8 @@ import { measureFrameImpactDetailed } from "./impact";
 import { loadManifest, buildPlan, type Scenario } from "./plan";
 import { cpuScore, heapSnapshot, measureDisplayHz, readBattery } from "./probes";
 import { PerfWatcher, spineResourceTimings } from "./watcher";
+import { saveStash, clearStash } from "@/lib/stash";
+import { CLIENT_VERSION } from "@/config";
 
 export interface HudState {
   scenarioLabel: string;
@@ -24,6 +26,21 @@ export interface EngineHooks {
 
 const SWARM_CAP = 60;
 const IMPACT_SAMPLE_MS = 500;
+
+// Safety rails for weak devices: dying at the breaking point is the
+// measurement, crashing the browser loses it.
+/** A frame slower than this counts toward the stall streak (5 fps). */
+const STALL_FRAME_MS = 200;
+/** Abort the scenario after this much consecutive stall time. */
+const STALL_ABORT_MS = 3000;
+/** Stop raising the ramp below this fps - hold at the breaking point. */
+const RAMP_GATE_FPS = 15;
+/** Stop adding swarm instances below this fps. */
+const SWARM_GATE_FPS = 20;
+/** Abort the scenario when the JS heap passes this share of its limit. */
+const HEAP_ABORT_RATIO = 0.85;
+/** Cap the framebuffer (logical px x resolution^2) to ~2.6 MP. */
+const MAX_FRAMEBUFFER_AREA = 2_600_000;
 
 interface InstancePool {
   /** Base local bounds per spine id, measured once at scale 1. */
@@ -65,13 +82,20 @@ export function startBenchmark(
     const cpuScoreStart = cpuScore();
     const heapStart = heapSnapshot();
 
+    const logicalArea = Math.max(1, window.innerWidth * window.innerHeight);
+    const resolution = Math.min(
+      window.devicePixelRatio || 1,
+      2,
+      Math.max(1, Math.sqrt(MAX_FRAMEBUFFER_AREA / logicalArea)),
+    );
+
     app = new Application();
     await app.init({
       background: 0x161616,
       resizeTo: window,
       antialias: false,
       autoDensity: true,
-      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      resolution,
     });
     if (cancelled) {
       app.destroy(true);
@@ -104,12 +128,16 @@ export function startBenchmark(
 
     const recorder = new Recorder();
     let hiddenAt: number | null = null;
+    // set when the tab returns to foreground: the next frame's delta spans
+    // the whole hidden gap and must not be recorded as a frame
+    let resumeSkip = false;
     const onVisibility = () => {
       if (document.hidden) {
         hiddenAt = performance.now();
       } else if (hiddenAt != null) {
         recorder.hiddenMs += performance.now() - hiddenAt;
         hiddenAt = null;
+        resumeSkip = true;
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
@@ -200,8 +228,11 @@ export function startBenchmark(
     let lastHud = 0;
     const recentDts: number[] = [];
 
+    const startedAt = new Date().toISOString();
+
+    /** Resolves with the abort reason, or null when it ran to time. */
     const runScenario = (sc: Scenario, index: number) =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<string | null>((resolve, reject) => {
         if (!app) {
           reject(new BenchCancelled());
           return;
@@ -225,16 +256,34 @@ export function startBenchmark(
         let elapsed = 0;
         let stepIdx = 0;
         let stepDts: number[] = [];
+        let rampCapped = false;
         let swarmTimer = 0;
         let swarmIdx = 0;
         let impactAge = Infinity;
         let heapAge = Infinity;
+        let stallMs = 0;
+        let lastNow = performance.now();
         let lastImpact = { ri: 0, ci: 0 };
         let lastInputs: ImpactInputs | null = null;
         let lastHeapMb: number | null = null;
         const stepDur = sc.rampSteps
           ? sc.durationMs / sc.rampSteps.length
           : Infinity;
+
+        const rollingFps = (): number => {
+          if (recentDts.length === 0) return 60;
+          const avg = recentDts.reduce((a, b) => a + b, 0) / recentDts.length;
+          return avg > 0 ? 1000 / avg : 60;
+        };
+
+        const finish = (reason: string | null) => {
+          if (sc.kind === "ramp" && stepDts.length > 0) {
+            recorder.closeStep(sc.rampSteps![stepIdx], stepDts);
+          }
+          if (reason) recorder.markAborted(reason);
+          app!.ticker.remove(tickFn);
+          resolve(reason);
+        };
 
         const tickFn = () => {
           if (!app) return;
@@ -243,9 +292,30 @@ export function startBenchmark(
             reject(new BenchCancelled());
             return;
           }
-          const dt = app.ticker.deltaMS;
+          // real frame delta - ticker.deltaMS is capped at 100 ms and would
+          // hide exactly the stalls a weak device produces
+          const now = performance.now();
+          const dt = now - lastNow;
+          lastNow = now;
+          if (resumeSkip || dt > 10_000) {
+            // hidden-tab gap, not a frame
+            resumeSkip = false;
+            return;
+          }
           elapsed += dt;
           runElapsed += dt;
+
+          // stall watchdog: sustained < 5 fps means the OS killing the tab
+          // is next - bail out and keep the data
+          if (dt >= STALL_FRAME_MS) {
+            stallMs += dt;
+            if (stallMs >= STALL_ABORT_MS) {
+              finish(`stalled below 5 fps for ${Math.round(stallMs / 1000)}s at ${pool.active.length} instances`);
+              return;
+            }
+          } else {
+            stallMs = 0;
+          }
 
           // RI/CI: sample one instance at 2 Hz, scale by instance count.
           // Raw formula inputs ride along for offline weight re-fitting.
@@ -258,8 +328,35 @@ export function startBenchmark(
           }
           heapAge += dt;
           if (heapAge >= 1000) {
-            lastHeapMb = heapSnapshot().usedMb;
+            const heap = heapSnapshot();
+            lastHeapMb = heap.usedMb;
             heapAge = 0;
+            // heap guard: bail before the OOM-killer does
+            if (
+              heap.usedMb != null &&
+              heap.limitMb != null &&
+              heap.usedMb > heap.limitMb * HEAP_ABORT_RATIO
+            ) {
+              finish(`heap at ${heap.usedMb}/${heap.limitMb} MB at ${pool.active.length} instances`);
+              return;
+            }
+            // crash stash: if the browser dies anyway, the next visit
+            // uploads this as a crash report
+            saveStash({
+              startedAt,
+              updatedAt: new Date().toISOString(),
+              clientVersion: CLIENT_VERSION,
+              scenarioId: sc.id,
+              scenarioIndex: index,
+              scenarioCount: plan.length,
+              elapsedMs: Math.round(runElapsed),
+              instances: pool.active.length,
+              fps: Math.round(rollingFps() * 10) / 10,
+              heapMb: lastHeapMb,
+              displayHz,
+              cpuScoreStart,
+              recentSeconds: recorder.recentPerSecond(30),
+            });
           }
           const count = pool.active.length;
           recorder.tick(dt, count, {
@@ -274,9 +371,20 @@ export function startBenchmark(
             const boundary = (stepIdx + 1) * stepDur;
             if (elapsed >= boundary && stepIdx < sc.rampSteps!.length - 1) {
               recorder.closeStep(sc.rampSteps![stepIdx], stepDts);
+              const stepFps = rollingFps();
               stepDts = [];
-              stepIdx++;
-              setInstanceCount(sc.spines[0], sc.rampSteps![stepIdx]);
+              if (!rampCapped && stepFps < RAMP_GATE_FPS) {
+                // hold at the breaking point instead of marching into a
+                // GPU hang - the remaining time keeps sampling this count
+                rampCapped = true;
+                recorder.markAborted(
+                  `ramp capped at ${sc.rampSteps![stepIdx]} instances (${stepFps.toFixed(0)} fps < ${RAMP_GATE_FPS})`,
+                );
+              }
+              if (!rampCapped) {
+                stepIdx++;
+                setInstanceCount(sc.spines[0], sc.rampSteps![stepIdx]);
+              }
             }
           }
 
@@ -284,7 +392,9 @@ export function startBenchmark(
             swarmTimer += dt;
             if (swarmTimer >= 1000 && pool.active.length < SWARM_CAP) {
               swarmTimer = 0;
-              addInstance(spineFor(swarmIdx++));
+              if (rollingFps() >= SWARM_GATE_FPS) {
+                addInstance(spineFor(swarmIdx++));
+              }
             }
           }
 
@@ -307,20 +417,29 @@ export function startBenchmark(
           }
 
           if (elapsed >= sc.durationMs) {
-            if (sc.kind === "ramp" && stepDts.length > 0) {
-              recorder.closeStep(sc.rampSteps![stepIdx], stepDts);
-            }
-            app.ticker.remove(tickFn);
-            resolve();
+            finish(null);
           }
         };
 
         app.ticker.add(tickFn);
       });
 
+    let runAbortReason: string | null = null;
     try {
+      let consecutiveAborts = 0;
       for (let i = 0; i < plan.length; i++) {
-        await runScenario(plan[i], i);
+        const aborted = await runScenario(plan[i], i);
+        if (aborted) {
+          consecutiveAborts++;
+          if (consecutiveAborts >= 2) {
+            // two hard aborts in a row: the device floor is found, more
+            // scenarios would only risk the tab
+            runAbortReason = `device floor reached: ${aborted}`;
+            break;
+          }
+        } else {
+          consecutiveAborts = 0;
+        }
       }
       recorder.endScenario();
 
@@ -342,6 +461,9 @@ export function startBenchmark(
           displayHz,
           longTaskCount: watched.longTasks.count,
           longTaskTotalMs: watched.longTasks.totalMs,
+          ...(runAbortReason
+            ? { aborted: true, abortReason: runAbortReason }
+            : {}),
         },
         capture: {
           frames: base.frames,

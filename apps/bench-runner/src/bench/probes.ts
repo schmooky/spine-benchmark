@@ -33,12 +33,26 @@ export function probeSink(): number {
   return sink;
 }
 
-/** Median rAF cadence over ~50 frames, snapped to common panel rates. */
+/**
+ * Median rAF cadence over ~50 frames, snapped to common panel rates.
+ * Falls back to 0 ("unknown") after 3 s - rAF does not fire in hidden
+ * tabs and the benchmark must not hang on a backgrounded start.
+ */
 export function measureDisplayHz(): Promise<number> {
   return new Promise((resolve) => {
+    let done = false;
+    const finish = (hz: number) => {
+      if (!done) {
+        done = true;
+        resolve(hz);
+      }
+    };
+    window.setTimeout(() => finish(0), 3000);
+
     const deltas: number[] = [];
     let last = performance.now();
     const tick = (t: number) => {
+      if (done) return;
       deltas.push(t - last);
       last = t;
       if (deltas.length >= 50) {
@@ -50,7 +64,7 @@ export function measureDisplayHz(): Promise<number> {
           Math.abs(b - hz) < Math.abs(a - hz) ? b : a,
         );
         if (Math.abs(best - hz) / best > 0.15) best = Math.round(hz);
-        resolve(best);
+        finish(best);
         return;
       }
       requestAnimationFrame(tick);
