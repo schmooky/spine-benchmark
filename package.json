@@ -35,7 +35,7 @@
     "dev:bench-server": "npm run dev --workspace @spine-benchmark/bench-server",
     "build:bench-server": "npm run build --workspace @spine-benchmark/bench-server",
     "dev:bench-runner": "npm run dev --workspace @spine-benchmark/bench-runner",
-    "build:bench-runner": "npm run build --workspace @spine-benchmark/bench-runner",
+    "build:bench-runner": "npm run build --workspace @spine-benchmark/metrics-impact-formula && npm run build --workspace @spine-benchmark/bench-runner",
     "dev:crawler": "npm run dev --workspace @spine-benchmark/crawler-demo",
     "dev:watcher": "npm run dev --workspace @spine-benchmark/watcher",
     "build:watcher": "npm run build --workspace @spine-benchmark/watcher",

@@ -1,22 +1,27 @@
 /**
  * Environment configuration. See .env.example for documentation.
  *
- * STORAGE_MODE=memory runs without Postgres/S3 (runs live in process
- * memory) - meant for local development and CI smoke tests only.
+ * STORAGE_MODE picks the run-row backend: postgres | mongo | memory.
+ * memory runs without any external storage (runs live in process memory) -
+ * meant for local development and CI smoke tests only.
  */
 
-export type StorageMode = "postgres" | "memory";
+export type StorageMode = "postgres" | "mongo" | "memory";
 
 function storageMode(): StorageMode {
   const raw = (process.env.STORAGE_MODE || "postgres").toLowerCase();
-  return raw === "memory" ? "memory" : "postgres";
+  if (raw === "memory") return "memory";
+  if (raw === "mongo" || raw === "mongodb") return "mongo";
+  return "postgres";
 }
 
 export const config = {
   port: Number(process.env.PORT || "8787"),
   storageMode: storageMode(),
 
-  // Postgres connection string, e.g. postgres://user:pass@host:5432/spinebench
+  // Connection string for the chosen backend:
+  //   postgres://user:pass@host:5432/spinebench
+  //   mongodb://user:pass@host:27017/spinebench?authSource=admin
   databaseUrl: process.env.DATABASE_URL || "",
 
   // S3 / S3-compatible storage for full per-frame captures.

@@ -1,12 +1,14 @@
 import pg from "pg";
+import { MongoClient, type Collection } from "mongodb";
 
 import { config } from "./config.js";
 import { logger } from "./logger.js";
-import type { RunRecord, RunUpload } from "./types.js";
+import type { DeviceInfo, RunRecord, RunSummary, RunUpload, ScenarioResult } from "./types.js";
 
 /**
- * Run rows live in Postgres (bench_runs). STORAGE_MODE=memory swaps in a
- * process-local Map with the same interface for local dev / smoke tests.
+ * Run rows live in Postgres or MongoDB (bench_runs), picked by
+ * STORAGE_MODE. STORAGE_MODE=memory swaps in a process-local Map with the
+ * same interface for local dev / smoke tests.
  */
 
 export interface RunListItem {
@@ -113,6 +115,91 @@ class PgStore implements RunStore {
   }
 }
 
+// ── MongoDB ────────────────────────────────────────────────
+
+interface RunDoc {
+  _id: string;
+  createdAt: Date;
+  clientVersion: string;
+  device: DeviceInfo;
+  scenarios: ScenarioResult[];
+  summary: RunSummary;
+  captureKey: string | null;
+}
+
+class MongoStore implements RunStore {
+  private client = new MongoClient(config.databaseUrl, {
+    serverSelectionTimeoutMS: 5000,
+  });
+
+  private coll(): Collection<RunDoc> {
+    return this.client.db().collection<RunDoc>("bench_runs");
+  }
+
+  async init(): Promise<void> {
+    await this.client.connect();
+    await this.coll().createIndex({ createdAt: -1 });
+    logger.info("mongodb ready");
+  }
+
+  async healthy(): Promise<boolean> {
+    try {
+      await this.client.db().command({ ping: 1 });
+      return true;
+    } catch (err) {
+      logger.warn({ err }, "mongodb health check failed");
+      return false;
+    }
+  }
+
+  async insert(id: string, u: RunUpload, captureKey: string | null): Promise<void> {
+    await this.coll().insertOne({
+      _id: id,
+      createdAt: new Date(),
+      clientVersion: u.clientVersion,
+      device: u.device,
+      scenarios: u.scenarios,
+      summary: u.summary,
+      captureKey,
+    });
+  }
+
+  async exists(id: string): Promise<boolean> {
+    const n = await this.coll().countDocuments({ _id: id }, { limit: 1 });
+    return n > 0;
+  }
+
+  async get(id: string): Promise<RunRecord | null> {
+    const doc = await this.coll().findOne({ _id: id });
+    if (!doc) return null;
+    return {
+      id: doc._id,
+      createdAt: doc.createdAt.toISOString(),
+      clientVersion: doc.clientVersion,
+      device: doc.device,
+      scenarios: doc.scenarios,
+      summary: doc.summary,
+      captureKey: doc.captureKey,
+    };
+  }
+
+  async list(limit: number): Promise<RunListItem[]> {
+    const docs = await this.coll()
+      .find({}, { projection: { device: 1, summary: 1, createdAt: 1 } })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray();
+    return docs.map((d) => ({
+      id: d._id,
+      createdAt: d.createdAt.toISOString(),
+      deviceLabel: d.device?.label ?? "unknown",
+      avgFps: d.summary?.avgFps ?? 0,
+      degraded: d.summary?.degraded ?? false,
+      quick: d.summary?.quick ?? false,
+    }));
+  }
+}
+
 // ── In-memory (dev only) ───────────────────────────────────
 
 class MemoryStore implements RunStore {
@@ -157,4 +244,8 @@ class MemoryStore implements RunStore {
 }
 
 export const runStore: RunStore =
-  config.storageMode === "memory" ? new MemoryStore() : new PgStore();
+  config.storageMode === "memory"
+    ? new MemoryStore()
+    : config.storageMode === "mongo"
+      ? new MongoStore()
+      : new PgStore();
