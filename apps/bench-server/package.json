@@ -1,0 +1,35 @@
+{
+  "name": "@spine-benchmark/bench-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Ingest + report API for device calibration runs (spine-bench.schmooky.dev). Stores run rows in Postgres and full captures in S3.",
+  "main": "./dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "type-check": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.700.0",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.3.2",
+    "pg": "^8.13.1",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^25.2.3",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

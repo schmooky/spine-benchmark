@@ -1,0 +1,10 @@
+{
+  "spines": [
+    {
+      "id": "spineboy",
+      "name": "Spineboy (placeholder)",
+      "skel": "/spines/spineboy/spineboy.json",
+      "atlas": "/spines/spineboy/spineboy.atlas"
+    }
+  ]
+}
