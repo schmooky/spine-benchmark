@@ -13,6 +13,7 @@ import {
   type BudgetStatus,
 } from "@/shared/config/devices";
 import { cn } from "@/shared/lib/utils";
+import { budgetHeadroom, formatBudgetPct } from "@/shared/lib/format";
 import {
   Drawer,
   DrawerContent,
@@ -102,13 +103,13 @@ export function AnimationsDrawer() {
                       const fraction = imp.total / device.capacity;
                       return (
                         <span
-                          title={`Worst frame on ${device.name}: RI ${imp.ri.toFixed(1)} + CI ${imp.ci.toFixed(1)} = ${imp.total.toFixed(1)} of ${device.capacity} units`}
+                          title={`Worst frame on ${device.name}: RI ${imp.ri.toFixed(1)} + CI ${imp.ci.toFixed(1)} = ${imp.total.toFixed(1)} of ${device.capacity} units (fits ${budgetHeadroom(fraction)} of these)`}
                           className={cn(
                             "rounded-md border bg-secondary/40 px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
                             IMPACT_CHIP[budgetStatus(fraction)],
                           )}
                         >
-                          max {Math.round(fraction * 100)}%
+                          max {formatBudgetPct(fraction)} · {budgetHeadroom(fraction)}
                         </span>
                       );
                     })()}

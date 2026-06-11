@@ -16,3 +16,21 @@ export function relativeTime(ms: number): string {
   const d = Math.round(h / 24);
   return `${d}d ago`;
 }
+
+/**
+ * Budget percentage with adaptive precision so tiny skeletons don't all
+ * collapse to "0%": below 10% keep one decimal, below 0.1% clamp.
+ */
+export function formatBudgetPct(fraction: number): string {
+  const pct = fraction * 100;
+  if (pct > 0 && pct < 0.1) return "<0.1%";
+  if (pct < 10) return `${pct.toFixed(1)}%`;
+  return `${Math.round(pct)}%`;
+}
+
+/** "×52" - how many copies of this cost the budget fits. "×999+" when huge. */
+export function budgetHeadroom(fraction: number): string {
+  if (fraction <= 0) return "×999+";
+  const n = Math.floor(1 / fraction);
+  return n > 999 ? "×999+" : `×${n}`;
+}

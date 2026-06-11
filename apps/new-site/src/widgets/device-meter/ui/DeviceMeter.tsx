@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { cn } from "@/shared/lib/utils";
+import { budgetHeadroom, formatBudgetPct } from "@/shared/lib/format";
 
 const STATUS_TEXT: Record<BudgetStatus, string> = {
   ok: "text-emerald-400",
@@ -66,7 +67,6 @@ export function DeviceMeter() {
 
   const device = deviceById(deviceId);
   const fraction = frame.total / device.capacity;
-  const pct = Math.round(fraction * 100);
   const state = budgetStatus(fraction);
   const Icon = DEVICE_KIND_ICON[device.kind];
 
@@ -75,7 +75,7 @@ export function DeviceMeter() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`${device.name} - RI ${frame.ri.toFixed(1)} + CI ${frame.ci.toFixed(1)} = ${frame.total.toFixed(1)} of ${device.capacity} units - click to change device`}
+        title={`${device.name} - RI ${frame.ri.toFixed(1)} + CI ${frame.ci.toFixed(1)} = ${frame.total.toFixed(1)} of ${device.capacity} units (fits ${budgetHeadroom(fraction)} of these) - click to change device`}
         className="pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-1.5 transition-opacity hover:opacity-75"
       >
         <Icon className={cn("size-4", STATUS_TEXT[state])} />
@@ -85,7 +85,10 @@ export function DeviceMeter() {
             STATUS_TEXT[state],
           )}
         >
-          {pct}%
+          {formatBudgetPct(fraction)}
+        </span>
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {budgetHeadroom(fraction)}
         </span>
       </button>
 
