@@ -50,10 +50,16 @@ app.get("/livez", (_req, res) => {
 app.get("/healthz", async (_req, res) => {
   const [db, s3] = await Promise.all([runStore.healthy(), captureStore.healthy()]);
   const ok = db && s3;
+  const storeName =
+    config.storageMode === "mongo"
+      ? "mongodb"
+      : config.storageMode === "memory"
+        ? "memory"
+        : "postgres";
   res.status(ok ? 200 : 503).json({
     status: ok ? "ok" : "degraded",
     storageMode: config.storageMode,
-    checks: { postgres: db ? "ok" : "fail", s3: s3 ? "ok" : "fail" },
+    checks: { [storeName]: db ? "ok" : "fail", s3: s3 ? "ok" : "fail" },
   });
 });
 
