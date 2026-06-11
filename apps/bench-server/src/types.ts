@@ -17,6 +17,19 @@ export interface DeviceInfo {
   battery: { level: number; charging: boolean } | null;
   language: string;
   timezone: string;
+  /** Post-run probes from the client (displayHz, cpu drift, heap, ...). */
+  runtime?: {
+    displayHz?: number;
+    cpuScoreStart?: number;
+    cpuScoreEnd?: number;
+    cpuDriftPct?: number;
+    rendererType?: string;
+    contextLost?: boolean;
+    [extra: string]: unknown;
+  } | null;
+  /** Client 0.2.0+ sends much more (gl caps, webgpu, ua-ch, media flags).
+   *  Stored verbatim; analysis reads it from the raw document. */
+  [extra: string]: unknown;
 }
 
 export interface ScenarioResult {
@@ -51,12 +64,17 @@ export interface RunSummary {
   hiddenMs: number;
   degraded: boolean;
   quick: boolean;
+  /** Client 0.2.0+ */
+  displayHz?: number;
+  longTaskCount?: number;
+  longTaskTotalMs?: number;
 }
 
 export interface RunCapture {
   /** Per-scenario raw frame deltas in ms (rounded to 0.1). */
   frames: { scenarioId: string; dtMs: number[] }[];
-  /** One row per second across the whole run. */
+  /** One row per second across the whole run. Client 0.2.0+ adds heapMb
+   *  and `one` (raw RI/CI formula inputs for a single instance). */
   perSecond: {
     t: number;
     scenarioId: string;
@@ -66,7 +84,14 @@ export interface RunCapture {
     instances: number;
     ri: number;
     ci: number;
+    heapMb?: number | null;
+    one?: Record<string, number> | null;
   }[];
+  /** Client 0.2.0+: longtask / LoAF summaries, event timeline, resource timings. */
+  longTasks?: unknown;
+  loaf?: unknown;
+  events?: unknown[];
+  resources?: unknown[];
 }
 
 export interface RunUpload {

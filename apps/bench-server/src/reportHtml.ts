@@ -79,6 +79,18 @@ export function renderRunReport(run: RunRecord): string {
         <th>frames</th><td class="num">${s.totalFrames}</td></tr>
     <tr><th>avg fps</th><td class="num ${s.avgFps >= 55 ? "ok" : s.avgFps < 30 ? "bad" : ""}">${s.avgFps.toFixed(1)}</td>
         <th>worst p99 ms</th><td class="num">${s.worstFrameMsP99.toFixed(1)}</td></tr>
+    ${
+      s.displayHz != null
+        ? `<tr><th>display</th><td class="num">${s.displayHz} Hz</td>
+        <th>long tasks</th><td class="num">${s.longTaskCount ?? 0} (${s.longTaskTotalMs ?? 0} ms)</td></tr>`
+        : ""
+    }
+    ${
+      d.runtime?.cpuScoreStart != null
+        ? `<tr><th>cpu score</th><td class="num">${d.runtime.cpuScoreStart} kops/ms</td>
+        <th>cpu drift</th><td class="num ${(d.runtime.cpuDriftPct ?? 0) < -10 ? "bad" : ""}">${d.runtime.cpuDriftPct ?? 0}%${(d.runtime.cpuDriftPct ?? 0) < -10 ? " (throttling)" : ""}</td></tr>`
+        : ""
+    }
   </table>
 
   <h2>Scenarios</h2>

@@ -58,6 +58,7 @@ export default function App() {
     cancelRef.current = cancel;
     try {
       const bench = await result;
+      device.runtime = bench.environment;
       const upload = buildUpload(device, startedAt, bench);
       lastUploadRef.current = upload;
       await doUpload(upload);

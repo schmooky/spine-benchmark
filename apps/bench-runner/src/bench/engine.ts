@@ -1,10 +1,12 @@
 import { Application, Assets } from "pixi.js";
 import { Spine } from "@esotericsoftware/spine-pixi-v8";
 
-import type { BenchResult } from "@/types";
+import type { BenchResult, ImpactInputs } from "@/types";
 import { Recorder } from "./recorder";
-import { measureFrameImpact } from "./impact";
-import { loadManifest, buildPlan, type Manifest, type Scenario } from "./plan";
+import { measureFrameImpactDetailed } from "./impact";
+import { loadManifest, buildPlan, type Scenario } from "./plan";
+import { cpuScore, heapSnapshot, measureDisplayHz, readBattery } from "./probes";
+import { PerfWatcher, spineResourceTimings } from "./watcher";
 
 export interface HudState {
   scenarioLabel: string;
@@ -58,6 +60,11 @@ export function startBenchmark(
     const plan = buildPlan(manifest, totalSeconds);
     const totalMs = plan.reduce((a, s) => a + s.durationMs, 0);
 
+    // pre-run probes: panel refresh rate + cpu baseline + heap
+    const displayHz = await measureDisplayHz();
+    const cpuScoreStart = cpuScore();
+    const heapStart = heapSnapshot();
+
     app = new Application();
     await app.init({
       background: 0x161616,
@@ -71,6 +78,9 @@ export function startBenchmark(
       throw new BenchCancelled();
     }
     host.appendChild(app.canvas);
+
+    const watcher = new PerfWatcher();
+    watcher.start(app.canvas);
 
     try {
       wakeLock = await (
@@ -218,7 +228,10 @@ export function startBenchmark(
         let swarmTimer = 0;
         let swarmIdx = 0;
         let impactAge = Infinity;
+        let heapAge = Infinity;
         let lastImpact = { ri: 0, ci: 0 };
+        let lastInputs: ImpactInputs | null = null;
+        let lastHeapMb: number | null = null;
         const stepDur = sc.rampSteps
           ? sc.durationMs / sc.rampSteps.length
           : Infinity;
@@ -234,15 +247,27 @@ export function startBenchmark(
           elapsed += dt;
           runElapsed += dt;
 
-          // RI/CI: sample one instance at 2 Hz, scale by instance count
+          // RI/CI: sample one instance at 2 Hz, scale by instance count.
+          // Raw formula inputs ride along for offline weight re-fitting.
           impactAge += dt;
           if (impactAge >= IMPACT_SAMPLE_MS && pool.active.length > 0) {
-            const one = measureFrameImpact(pool.active[0].spine.skeleton);
+            const one = measureFrameImpactDetailed(pool.active[0].spine.skeleton);
             lastImpact = { ri: one.ri, ci: one.ci };
+            lastInputs = one.inputs;
             impactAge = 0;
           }
+          heapAge += dt;
+          if (heapAge >= 1000) {
+            lastHeapMb = heapSnapshot().usedMb;
+            heapAge = 0;
+          }
           const count = pool.active.length;
-          recorder.tick(dt, count, lastImpact.ri * count, lastImpact.ci * count);
+          recorder.tick(dt, count, {
+            ri: lastImpact.ri * count,
+            ci: lastImpact.ci * count,
+            one: lastInputs,
+            heapMb: lastHeapMb,
+          });
 
           if (sc.kind === "ramp") {
             stepDts.push(dt);
@@ -298,7 +323,50 @@ export function startBenchmark(
         await runScenario(plan[i], i);
       }
       recorder.endScenario();
-      return recorder.finalize(totalSeconds < 120);
+
+      // post-run probes: cpu drift = throttling, heap growth, battery burn
+      const cpuScoreEnd = cpuScore();
+      const heapEnd = heapSnapshot();
+      const batteryEnd = await readBattery();
+      const watched = watcher.stop();
+      const base = recorder.finalize(totalSeconds < 120);
+
+      const rendererType =
+        (app.renderer as unknown as { name?: string }).name ??
+        String(app.renderer.type);
+
+      return {
+        scenarios: base.scenarios,
+        summary: {
+          ...base.summary,
+          displayHz,
+          longTaskCount: watched.longTasks.count,
+          longTaskTotalMs: watched.longTasks.totalMs,
+        },
+        capture: {
+          frames: base.frames,
+          perSecond: base.perSecond,
+          longTasks: watched.longTasks,
+          loaf: watched.loaf,
+          events: watched.events,
+          resources: spineResourceTimings(),
+        },
+        environment: {
+          displayHz,
+          cpuScoreStart,
+          cpuScoreEnd,
+          cpuDriftPct:
+            cpuScoreStart > 0
+              ? Math.round(((cpuScoreEnd - cpuScoreStart) / cpuScoreStart) * 1000) / 10
+              : 0,
+          rendererType,
+          pixiResolution: app.renderer.resolution,
+          heapStart,
+          heapEnd,
+          batteryEnd,
+          contextLost: watcher.contextLost,
+        },
+      };
     } finally {
       document.removeEventListener("visibilitychange", onVisibility);
       clearInstances();

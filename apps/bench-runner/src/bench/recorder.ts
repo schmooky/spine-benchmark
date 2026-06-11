@@ -1,4 +1,4 @@
-import type { RunCapture, ScenarioResult } from "@/types";
+import type { ImpactInputs, PerSecondRow, ScenarioResult } from "@/types";
 
 /**
  * Frame-by-frame metrics recorder. The engine feeds it one tick per
@@ -22,8 +22,18 @@ interface ScenarioMeta {
   kind: ScenarioResult["kind"];
 }
 
+export interface TickSample {
+  /** Scene totals (one instance x count). */
+  ri: number;
+  ci: number;
+  /** Raw formula inputs for ONE instance, or null before first sample. */
+  one: ImpactInputs | null;
+  heapMb: number | null;
+}
+
 export class Recorder {
-  private capture: RunCapture = { frames: [], perSecond: [] };
+  private frames: { scenarioId: string; dtMs: number[] }[] = [];
+  private perSecond: PerSecondRow[] = [];
   private results: ScenarioResult[] = [];
 
   private current: ScenarioMeta | null = null;
@@ -60,32 +70,34 @@ export class Recorder {
     this.secStart = 0;
   }
 
-  /** One rendered frame: dt in ms, current instance count, sampled RI/CI totals. */
-  tick(dtMs: number, instances: number, ri: number, ci: number): void {
+  /** One rendered frame: dt in ms, current instance count, latest sample. */
+  tick(dtMs: number, instances: number, sample: TickSample): void {
     if (!this.current) return;
     this.elapsedMs += dtMs;
     this.dts.push(Math.round(dtMs * 10) / 10);
     this.secDts.push(dtMs);
     this.maxInstances = Math.max(this.maxInstances, instances);
     this.lastInstances = instances;
-    this.lastRi = ri;
-    this.lastCi = ci;
-    this.riPeak = Math.max(this.riPeak, ri);
-    this.ciPeak = Math.max(this.ciPeak, ci);
+    this.lastRi = sample.ri;
+    this.lastCi = sample.ci;
+    this.riPeak = Math.max(this.riPeak, sample.ri);
+    this.ciPeak = Math.max(this.ciPeak, sample.ci);
 
     if (this.elapsedMs - this.secStart >= 1000) {
       const secMs = this.elapsedMs - this.secStart;
       const sorted = [...this.secDts].sort((a, b) => a - b);
       const avg = secMs / this.secDts.length;
-      this.capture.perSecond.push({
+      this.perSecond.push({
         t: ++this.secIndex,
         scenarioId: this.current.id,
         fps: Math.round((this.secDts.length / secMs) * 100000) / 100,
         frameMsAvg: Math.round(avg * 10) / 10,
         frameMsP95: Math.round(percentile(sorted, 95) * 10) / 10,
         instances,
-        ri: Math.round(ri * 10) / 10,
-        ci: Math.round(ci * 10) / 10,
+        ri: Math.round(sample.ri * 10) / 10,
+        ci: Math.round(sample.ci * 10) / 10,
+        heapMb: sample.heapMb,
+        one: sample.one,
       });
       this.secDts = [];
       this.secStart = this.elapsedMs;
@@ -111,7 +123,7 @@ export class Recorder {
     }
     const sorted = [...this.dts].sort((a, b) => a - b);
     const totalMs = this.dts.reduce((a, b) => a + b, 0);
-    this.capture.frames.push({ scenarioId: this.current.id, dtMs: this.dts });
+    this.frames.push({ scenarioId: this.current.id, dtMs: this.dts });
     this.results.push({
       id: this.current.id,
       label: this.current.label,
@@ -145,7 +157,8 @@ export class Recorder {
     );
     return {
       scenarios: this.results,
-      capture: this.capture,
+      frames: this.frames,
+      perSecond: this.perSecond,
       summary: {
         totalDurationMs: Math.round(totalDurationMs),
         totalFrames,

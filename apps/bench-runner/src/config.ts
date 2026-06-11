@@ -1,4 +1,4 @@
-export const CLIENT_VERSION = "0.1.0";
+export const CLIENT_VERSION = "0.2.0";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =

@@ -22,6 +22,30 @@ export interface FrameImpact {
   total: number;
 }
 
+/**
+ * Raw formula inputs for ONE instance, captured alongside the scores so
+ * fleet analysis can regress real frame cost against the features and
+ * re-fit the RI/CI weights instead of trusting them.
+ */
+export interface ImpactInputs {
+  vertices: number;
+  nonNormalBlends: number;
+  clippingMasks: number;
+  meshes: number;
+  weightedMeshes: number;
+  deformedMeshes: number;
+  ik: number;
+  transform: number;
+  path: number;
+  physics: number;
+  /** Classic page+blend batching estimate for one instance. */
+  drawCallEst: number;
+}
+
+export interface DetailedImpact extends FrameImpact {
+  inputs: ImpactInputs;
+}
+
 function isSlotActive(slot: Slot): boolean {
   if (slot.color.a <= 0) return false;
   if (!slot.bone.active) return false;
@@ -34,13 +58,23 @@ function countActive(constraints: ReadonlyArray<{ active: boolean }>): number {
   return n;
 }
 
-export function measureFrameImpact(skeleton: Skeleton): FrameImpact {
+/** Atlas page of a renderable attachment, for the draw-call estimate. */
+function pageOf(att: unknown): string | null {
+  const region = (att as { region?: { page?: { name?: string } } }).region;
+  const name = region?.page?.name;
+  return typeof name === "string" ? name : null;
+}
+
+export function measureFrameImpactDetailed(skeleton: Skeleton): DetailedImpact {
   let totalVertices = 0;
   let activeClippingMasks = 0;
   let activeNonNormalBlends = 0;
   let activeMeshCount = 0;
   let weightedMeshCount = 0;
   let deformedMeshCount = 0;
+  let drawCallEst = 0;
+  let prevPage: string | null = null;
+  let prevBlend = -1;
 
   for (const slot of skeleton.drawOrder) {
     const att = slot.getAttachment();
@@ -51,13 +85,28 @@ export function measureFrameImpact(skeleton: Skeleton): FrameImpact {
       continue;
     }
     if (slot.data.blendMode !== BlendMode.Normal) activeNonNormalBlends++;
-    if (!(att instanceof MeshAttachment)) continue;
 
+    const page = pageOf(att);
+    if (page != null) {
+      const blend: number = slot.data.blendMode;
+      if (drawCallEst === 0 || page !== prevPage || blend !== prevBlend) {
+        drawCallEst++;
+      }
+      prevPage = page;
+      prevBlend = blend;
+    }
+
+    if (!(att instanceof MeshAttachment)) continue;
     activeMeshCount++;
     totalVertices += att.worldVerticesLength / 2;
     if (att.bones && att.bones.length > 0) weightedMeshCount++;
     if (slot.deform.length > 0) deformedMeshCount++;
   }
+
+  const ik = countActive(skeleton.ikConstraints);
+  const transform = countActive(skeleton.transformConstraints);
+  const path = countActive(skeleton.pathConstraints);
+  const physics = countActive(skeleton.physicsConstraints);
 
   const ri = renderingImpactCost({
     activeNonNormalBlends,
@@ -65,17 +114,34 @@ export function measureFrameImpact(skeleton: Skeleton): FrameImpact {
     totalVertices,
   });
   const ci = computationalImpactCost({
-    constraints: {
-      ik: countActive(skeleton.ikConstraints),
-      transform: countActive(skeleton.transformConstraints),
-      path: countActive(skeleton.pathConstraints),
-      physics: countActive(skeleton.physicsConstraints),
-    },
+    constraints: { ik, transform, path, physics },
     totalVertices,
     activeMeshCount,
     weightedMeshCount,
     deformedMeshCount,
   });
 
-  return { ri, ci, total: ri + ci };
+  return {
+    ri,
+    ci,
+    total: ri + ci,
+    inputs: {
+      vertices: totalVertices,
+      nonNormalBlends: activeNonNormalBlends,
+      clippingMasks: activeClippingMasks,
+      meshes: activeMeshCount,
+      weightedMeshes: weightedMeshCount,
+      deformedMeshes: deformedMeshCount,
+      ik,
+      transform,
+      path,
+      physics,
+      drawCallEst,
+    },
+  };
+}
+
+export function measureFrameImpact(skeleton: Skeleton): FrameImpact {
+  const d = measureFrameImpactDetailed(skeleton);
+  return { ri: d.ri, ci: d.ci, total: d.total };
 }
