@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useSkeletonStore, analyzeAnimations } from "@/entities/skeleton";
+import {
+  useSkeletonStore,
+  analyzeAnimations,
+  measureAnimationMaxImpacts,
+} from "@/entities/skeleton";
+import { useDeviceStore } from "@/entities/device";
+import {
+  budgetStatus,
+  deviceById,
+  type BudgetStatus,
+} from "@/shared/config/devices";
+import { cn } from "@/shared/lib/utils";
 import {
   Drawer,
   DrawerContent,
@@ -16,6 +27,12 @@ function heatColor(value: number, max: number): string {
   const a = 0.14 + 0.86 * (value / max);
   return `rgba(255,255,255,${a.toFixed(3)})`;
 }
+
+const IMPACT_CHIP: Record<BudgetStatus, string> = {
+  ok: "border-emerald-400/40 text-emerald-400",
+  warn: "border-amber-400/50 text-amber-400",
+  over: "border-red-400/60 text-red-400",
+};
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
@@ -37,6 +54,11 @@ export function AnimationsDrawer() {
     () => (spine ? analyzeAnimations(spine) : []),
     [spine],
   );
+  const impacts = useMemo(
+    () => (spine ? measureAnimationMaxImpacts(spine) : null),
+    [spine],
+  );
+  const device = deviceById(useDeviceStore((s) => s.deviceId));
 
   const [open, setOpen] = useState(true);
 
@@ -74,6 +96,22 @@ export function AnimationsDrawer() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{a.name}</span>
                     <Chip>{a.duration.toFixed(2)}s</Chip>
+                    {(() => {
+                      const imp = impacts?.get(a.name);
+                      if (!imp) return null;
+                      const fraction = imp.total / device.capacity;
+                      return (
+                        <span
+                          title={`Worst frame on ${device.name}: RI ${imp.ri.toFixed(1)} + CI ${imp.ci.toFixed(1)} = ${imp.total.toFixed(1)} of ${device.capacity} units`}
+                          className={cn(
+                            "rounded-md border bg-secondary/40 px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+                            IMPACT_CHIP[budgetStatus(fraction)],
+                          )}
+                        >
+                          max {Math.round(fraction * 100)}%
+                        </span>
+                      );
+                    })()}
                     <span className="flex-1" />
                     <Chip>{a.timelineCount} timelines</Chip>
                     <Chip>{a.keyCount} keys</Chip>

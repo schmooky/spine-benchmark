@@ -14,6 +14,11 @@ export {
   type BoneHeatRow,
 } from "./lib/animation-analysis";
 export {
+  measureFrameImpact,
+  measureAnimationMaxImpacts,
+  type FrameImpact,
+} from "./lib/impact";
+export {
   analyzeDrawCalls,
   type DrawCallAnalysis,
   type DrawBatch,
