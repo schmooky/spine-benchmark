@@ -30,11 +30,6 @@ const STATUS_TEXT: Record<BudgetStatus, string> = {
   warn: "text-amber-400",
   over: "text-red-400",
 };
-const STATUS_BORDER: Record<BudgetStatus, string> = {
-  ok: "border-emerald-400/30",
-  warn: "border-amber-400/40",
-  over: "border-red-400/50",
-};
 
 const KINDS: DeviceKind[] = ["phone", "tablet", "desktop"];
 
@@ -80,25 +75,17 @@ export function DeviceMeter() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`RI ${frame.ri.toFixed(1)} + CI ${frame.ci.toFixed(1)} = ${frame.total.toFixed(1)} of ${device.capacity} units - click to change device`}
-        className={cn(
-          "pointer-events-auto absolute left-4 top-4 z-30 flex items-center gap-2.5 rounded-2xl border bg-card/80 px-3 py-2 shadow-xl backdrop-blur-md transition-colors hover:bg-accent/60",
-          STATUS_BORDER[state],
-        )}
+        title={`${device.name} - RI ${frame.ri.toFixed(1)} + CI ${frame.ci.toFixed(1)} = ${frame.total.toFixed(1)} of ${device.capacity} units - click to change device`}
+        className="pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-1.5 transition-opacity hover:opacity-75"
       >
-        <Icon className={cn("size-5", STATUS_TEXT[state])} />
-        <span className="flex flex-col items-start leading-none">
-          <span
-            className={cn(
-              "text-lg font-semibold tabular-nums",
-              STATUS_TEXT[state],
-            )}
-          >
-            {pct}%
-          </span>
-          <span className="mt-0.5 text-[10px] text-muted-foreground">
-            {device.name}
-          </span>
+        <Icon className={cn("size-4", STATUS_TEXT[state])} />
+        <span
+          className={cn(
+            "text-sm font-semibold tabular-nums",
+            STATUS_TEXT[state],
+          )}
+        >
+          {pct}%
         </span>
       </button>
 
