@@ -23,7 +23,7 @@ const initial = {
   selectedAnimation: null,
   selectedSkin: null,
   isPlaying: false,
-  loop: true,
+  loop: false,
   speed: 1,
 };
 

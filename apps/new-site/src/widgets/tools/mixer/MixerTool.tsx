@@ -120,7 +120,7 @@ export function MixerTool() {
       : 0;
     useMixerStore
       .getState()
-      .addTrack({ id: s.allocId(), index, animation: null, loop: true, alpha: 1 });
+      .addTrack({ id: s.allocId(), index, animation: null, loop: false, alpha: 1 });
   };
   const onRemove = (id: number) => {
     const t = store().tracks.find((x) => x.id === id);
