@@ -1,5 +1,5 @@
 export { usePlaybackStore } from "./model/store";
-export { useMixerStore, type MixerTrack } from "./model/mixer-store";
+export { useMixerStore, type MixerClip } from "./model/mixer-store";
 export {
   useEventLogStore,
   type EventLogEntry,
