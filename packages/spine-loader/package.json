@@ -20,7 +20,7 @@
   },
   "peerDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101",
-    "pixi.js": "^8.16.0"
+    "pixi.js": "^8.19.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

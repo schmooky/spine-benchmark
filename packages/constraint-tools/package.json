@@ -23,7 +23,7 @@
     "@spine-benchmark/metrics-sampling": "^0.1.1"
   },
   "devDependencies": {
-    "@esotericsoftware/spine-core": "^4.2.101",
+    "@esotericsoftware/spine-core": "^4.3.9",
     "@spine-benchmark/metrics-sampling": "^0.1.1",
     "typescript": "^5.9.3"
   },
