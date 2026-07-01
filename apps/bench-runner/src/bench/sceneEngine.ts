@@ -57,6 +57,13 @@ const STRESS_WEIGHT = 2.5;
 /** Cap stress density on mobile GPUs (iOS Safari loses the WebGL context well
  * before fps gates if you pile on hundreds of heavy mesh spines). */
 const MOBILE_STRESS_CAP = 80;
+/** Hard safety ceiling for the adaptive ramp on desktop. */
+const DESKTOP_STRESS_MAX = 8192;
+/** Time held at each ramp density before doubling. */
+const STRESS_STEP_MS = 1100;
+/** Breaking point (thesis #6): a step whose true GPU time exceeds this is
+ * "over budget", independent of vsync. Used when the timer query is available. */
+const GPU_KNEE_MS = 14;
 
 function isMobileDevice(): boolean {
   const ua = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
@@ -104,6 +111,13 @@ function sampleSceneImpact(spines: Spine[]): { ri: number; ci: number; one: Impa
     if (!one) one = d.inputs;
   }
   return { ri, ci, one };
+}
+
+/** p95 of a small unsorted sample. */
+function percentile95(xs: number[]): number {
+  if (xs.length === 0) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.max(0, Math.ceil(0.95 * s.length) - 1))];
 }
 
 /** Render app.stage, swallowing a broken-attachment crash. Returns false when
@@ -304,16 +318,12 @@ export function startSceneBenchmark(
         buildStats.missingRegions = 0;
         buildStats.spines = 0;
         const stress = d.stress;
-        // on mobile GPUs, clamp the density ramp so we don't blow the WebGL
-        // context (which renders black without throwing) before the fps gate.
-        const stressSteps = stress
-          ? (() => {
-              const capped = isMobileDevice()
-                ? stress.steps.filter((n) => n <= MOBILE_STRESS_CAP)
-                : stress.steps;
-              return capped.length ? capped : [Math.min(stress.steps[0], MOBILE_STRESS_CAP)];
-            })()
-          : [];
+        // ADAPTIVE ramp (thesis #5): start small and DOUBLE each step until the
+        // measured cost crosses a fixed ms knee - so every device, however
+        // strong, actually reaches its breaking point instead of topping out at
+        // a fixed ceiling. Mobile keeps a hard safety cap (context loss).
+        const stressStart = stress ? Math.max(4, stress.steps[0]) : 0;
+        const stressMax = isMobileDevice() ? MOBILE_STRESS_CAP : DESKTOP_STRESS_MAX;
         let root: Container;
         let fit: FitResult;
         // the live pool. For a grid scene it's the built spines; for a stress
@@ -355,7 +365,7 @@ export function startSceneBenchmark(
               s.autoUpdate = false;
               spines.push(s);
             }
-            spawnTo(stressSteps[0]);
+            spawnTo(Math.min(stressStart, stressMax));
           } else {
             fit = fitContainer(root, app.screen.width, app.screen.height, d.refWidth, d.refHeight);
             for (const s of sceneSpines(root)) {
@@ -406,17 +416,18 @@ export function startSceneBenchmark(
             description: d.description,
             fitScale: Math.round(fit.scale * 10000) / 10000,
             onScreenAreaPx: Math.round(fit.areaPx),
-            spineCount: stress ? stressSteps[stressSteps.length - 1] : buildStats.spines,
+            spineCount: stress ? stressMax : buildStats.spines,
             tier: d.tier ?? "unknown",
             missingRegions: buildStats.missingRegions,
           },
         });
 
-        // stress ramp bookkeeping (per-step fps -> the capacity curve)
-        let stepIdx = 0;
+        // adaptive stress ramp bookkeeping (density-doubling capacity curve)
+        let currentCount = Math.min(stressStart, stressMax);
+        let stepStartMs = 0;
         let stepDts: number[] = [];
+        let stepGpu: number[] = [];
         let rampCapped = false;
-        const stepDur = stress ? sceneDur / stressSteps.length : Infinity;
 
         let elapsed = 0;
         let impactAge = Infinity;
@@ -440,7 +451,7 @@ export function startSceneBenchmark(
         };
         const finish = (reason: string | null) => {
           // record the final (open) ramp step so the last density is captured
-          if (stress && stepDts.length > 0) recorder.closeStep(stressSteps[stepIdx], stepDts);
+          if (stress && stepDts.length > 0) recorder.closeStep(currentCount, stepDts);
           if (reason) recorder.markAborted(reason);
           cleanup();
           const fin = recorder.finalize(false);
@@ -564,23 +575,36 @@ export function startSceneBenchmark(
             });
           }
 
-          // density ramp: at each step boundary record the step's fps and grow
-          // the pool - unless we've dropped below the gate (breaking point).
+          // adaptive density ramp: hold each density for STRESS_STEP_MS, record
+          // its cost, then DOUBLE - until the true GPU time (vsync-independent)
+          // crosses GPU_KNEE_MS, or fps collapses when no timer is available, or
+          // we hit the safety ceiling. That crossing IS the device's breaking
+          // point (thesis #5/#6).
           if (stress && !rampCapped) {
             stepDts.push(dt);
-            if (elapsed >= (stepIdx + 1) * stepDur && stepIdx < stressSteps.length - 1) {
-              recorder.closeStep(stressSteps[stepIdx], stepDts);
-              const avg = recentDts.reduce((a, b) => a + b, 0) / Math.max(1, recentDts.length);
-              const stepFps = avg > 0 ? 1000 / avg : 0;
+            if (lastGpuMs != null) stepGpu.push(lastGpuMs);
+            if (elapsed - stepStartMs >= STRESS_STEP_MS) {
+              recorder.closeStep(currentCount, stepDts);
+              const p95Dt = percentile95(stepDts);
+              const stepFps = p95Dt > 0 ? 1000 / (stepDts.reduce((a, b) => a + b, 0) / stepDts.length) : 0;
+              const gpuP95 = stepGpu.length ? percentile95(stepGpu) : null;
               stepDts = [];
-              if (stepFps < RAMP_GATE_FPS) {
+              stepGpu = [];
+              stepStartMs = elapsed;
+              const overGpu = gpuP95 != null && gpuP95 > GPU_KNEE_MS;
+              const overCpu = gpuP95 == null && stepFps < RAMP_GATE_FPS;
+              if (overGpu || overCpu || currentCount >= stressMax) {
                 rampCapped = true;
                 recorder.markAborted(
-                  `capped at ${stressSteps[stepIdx]} instances (${stepFps.toFixed(0)} fps < ${RAMP_GATE_FPS})`,
+                  overGpu
+                    ? `knee at ${currentCount} instances (GPU ${gpuP95!.toFixed(1)}ms > ${GPU_KNEE_MS}ms)`
+                    : currentCount >= stressMax
+                      ? `reached safety ceiling ${stressMax} instances (still ${stepFps.toFixed(0)} fps)`
+                      : `knee at ${currentCount} instances (${stepFps.toFixed(0)} fps < ${RAMP_GATE_FPS})`,
                 );
               } else {
-                stepIdx++;
-                spawnTo(stressSteps[stepIdx]);
+                currentCount = Math.min(currentCount * 2, stressMax);
+                spawnTo(currentCount);
               }
             }
           }
