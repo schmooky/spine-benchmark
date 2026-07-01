@@ -22,8 +22,10 @@ import {
   buildScene,
   buildStats,
   fitContainer,
+  makeStressSpine,
   preloadAllScenes,
   sceneSpines,
+  type FitResult,
 } from "@/scenes/reconstruct";
 import type { SceneDescriptor } from "@/scenes/types";
 import type { HudState } from "./engine";
@@ -36,6 +38,11 @@ const HEAP_ABORT_RATIO = 0.85;
 const MAX_FRAMEBUFFER_AREA = 2_600_000;
 /** Blank gap between scenes: lets GC + GPU settle so metrics stay clean. */
 const SETTLE_MS = 700;
+/** Stress ramp stops raising the density once a step drops below this fps -
+ * that instance count is the device's breaking point for that spine mix. */
+const RAMP_GATE_FPS = 15;
+/** Stress scenes get more of the time budget (they carry the capacity curve). */
+const STRESS_WEIGHT = 2.5;
 
 export interface SceneHooks {
   onHud: (hud: HudState) => void;
@@ -221,29 +228,74 @@ export function startSceneBenchmark(
     };
     document.addEventListener("visibilitychange", onVisibility);
 
-    const sceneMs = Math.max(
-      3000,
-      Math.floor((totalSeconds * 1000) / playable.length) - SETTLE_MS,
-    );
-    const totalMs = (sceneMs + SETTLE_MS) * playable.length;
+    // weighted time budget: stress scenes get more time (they ramp density).
+    const weightOf = (d: SceneDescriptor) => (d.stress ? STRESS_WEIGHT : 1);
+    const sumWeight = playable.reduce((a, d) => a + weightOf(d), 0);
+    const budgetMs = Math.max(1, totalSeconds * 1000 - SETTLE_MS * (playable.length - 1));
+    const durOf = (d: SceneDescriptor) =>
+      Math.max(3000, Math.floor((budgetMs * weightOf(d)) / sumWeight));
+    const totalMs =
+      playable.reduce((a, d) => a + durOf(d), 0) + SETTLE_MS * (playable.length - 1);
     const startedAt = new Date().toISOString();
     let runElapsed = 0;
 
-    /** Play + measure one scene for sceneMs; resolves with abort reason or null. */
-    const runScene = (d: SceneDescriptor, index: number) =>
+    /** Play + measure one scene for sceneDur ms; resolves with abort reason or null. */
+    const runScene = (d: SceneDescriptor, index: number, sceneDur: number) =>
       new Promise<string | null>((resolve, reject) => {
         if (!app) return reject(new BenchCancelled());
 
         buildStats.missingRegions = 0;
         buildStats.spines = 0;
-        let root;
-        let fit;
-        let spines: Spine[];
+        const stress = d.stress;
+        let root: Container;
+        let fit: FitResult;
+        // the live pool. For a grid scene it's the built spines; for a stress
+        // scene it starts with the background and grows as the ramp climbs.
+        const spines: Spine[] = [];
+
+        /** Add random symbols (random pos/size/anim - "not normalized") until
+         * the pool reaches `count`. */
+        const spawnTo = (count: number) => {
+          if (!stress) return;
+          let attempts = 0;
+          while (spines.length < count && attempts < count * 4 + 8) {
+            attempts++;
+            const sym = stress.symbols[Math.floor(Math.random() * stress.symbols.length)];
+            const s = makeStressSpine(sym, stress.anims ?? "mix");
+            if (!s) continue;
+            s.x = (Math.random() - 0.5) * d.refWidth;
+            s.y = (Math.random() - 0.5) * d.refHeight;
+            s.scale.set(0.45 + Math.random() * 0.5);
+            root.addChild(s);
+            spines.push(s);
+          }
+        };
+
         try {
-          root = buildScene(d);
+          root = buildScene(d); // bg (+ overlays) only when grid is undefined
           app.stage.addChild(root);
-          fit = fitContainer(root, app.screen.width, app.screen.height, d.refWidth, d.refHeight);
-          spines = sceneSpines(root);
+          if (stress) {
+            // fixed reference-frame fit - the content grows as the ramp climbs,
+            // so we must NOT refit to the (ever-larger) content bounds.
+            const sc = Math.min(
+              (app.screen.width * 0.94) / d.refWidth,
+              (app.screen.height * 0.94) / d.refHeight,
+            );
+            root.scale.set(sc);
+            root.position.set(app.screen.width / 2, app.screen.height / 2);
+            fit = { scale: sc, areaPx: d.refWidth * sc * (d.refHeight * sc), bounds: { w: d.refWidth, h: d.refHeight } };
+            for (const s of sceneSpines(root)) {
+              s.autoUpdate = false;
+              spines.push(s);
+            }
+            spawnTo(stress.steps[0]);
+          } else {
+            fit = fitContainer(root, app.screen.width, app.screen.height, d.refWidth, d.refHeight);
+            for (const s of sceneSpines(root)) {
+              s.autoUpdate = false;
+              spines.push(s);
+            }
+          }
         } catch (err) {
           console.warn(`[scene] build failed for ${d.id}, skipping: ${(err as Error).message}`);
           resolve(null);
@@ -256,9 +308,6 @@ export function startSceneBenchmark(
           resolve(null);
           return;
         }
-        // we drive updates ourselves (autoUpdate rides Pixi's shared ticker,
-        // which we stopped) so animation never stalls independently of timing
-        for (const s of spines) s.autoUpdate = false;
         // first paint - if a broken attachment crashes render here, skip scene
         if (!safeRender(app)) {
           console.warn(`[scene] first render failed for ${d.id}, skipping`);
@@ -279,11 +328,17 @@ export function startSceneBenchmark(
             description: d.description,
             fitScale: Math.round(fit.scale * 10000) / 10000,
             onScreenAreaPx: Math.round(fit.areaPx),
-            spineCount: buildStats.spines,
+            spineCount: stress ? stress.steps[stress.steps.length - 1] : buildStats.spines,
             tier: d.tier ?? "unknown",
             missingRegions: buildStats.missingRegions,
           },
         });
+
+        // stress ramp bookkeeping (per-step fps -> the capacity curve)
+        let stepIdx = 0;
+        let stepDts: number[] = [];
+        let rampCapped = false;
+        const stepDur = stress ? sceneDur / stress.steps.length : Infinity;
 
         let elapsed = 0;
         let impactAge = Infinity;
@@ -305,6 +360,8 @@ export function startSceneBenchmark(
           root.destroy({ children: true });
         };
         const finish = (reason: string | null) => {
+          // record the final (open) ramp step so the last density is captured
+          if (stress && stepDts.length > 0) recorder.closeStep(stress.steps[stepIdx], stepDts);
           if (reason) recorder.markAborted(reason);
           cleanup();
           resolve(reason);
@@ -419,7 +476,28 @@ export function startSceneBenchmark(
             });
           }
 
-          if (elapsed >= sceneMs) finish(null);
+          // density ramp: at each step boundary record the step's fps and grow
+          // the pool - unless we've dropped below the gate (breaking point).
+          if (stress && !rampCapped) {
+            stepDts.push(dt);
+            if (elapsed >= (stepIdx + 1) * stepDur && stepIdx < stress.steps.length - 1) {
+              recorder.closeStep(stress.steps[stepIdx], stepDts);
+              const avg = recentDts.reduce((a, b) => a + b, 0) / Math.max(1, recentDts.length);
+              const stepFps = avg > 0 ? 1000 / avg : 0;
+              stepDts = [];
+              if (stepFps < RAMP_GATE_FPS) {
+                rampCapped = true;
+                recorder.markAborted(
+                  `capped at ${stress.steps[stepIdx]} instances (${stepFps.toFixed(0)} fps < ${RAMP_GATE_FPS})`,
+                );
+              } else {
+                stepIdx++;
+                spawnTo(stress.steps[stepIdx]);
+              }
+            }
+          }
+
+          if (elapsed >= sceneDur) finish(null);
         };
 
         lastNow = performance.now();
@@ -433,7 +511,7 @@ export function startSceneBenchmark(
     try {
       let consecutiveAborts = 0;
       for (let i = 0; i < playable.length; i++) {
-        const aborted = await runScene(playable[i], i);
+        const aborted = await runScene(playable[i], i, durOf(playable[i]));
         if (aborted) {
           consecutiveAborts++;
           if (consecutiveAborts >= 2) {

@@ -47,6 +47,23 @@ export interface GridSpec {
   winCells?: [number, number][];
 }
 
+/**
+ * Density stress ramp: instead of a fixed grid, spawn random symbols from a
+ * pool and ramp the instance count up through `steps` until fps drops below
+ * the gate (the device's breaking point). Which symbol, where, at what size,
+ * and which animation is randomized per instance ("not normalized") so each
+ * step samples a different slice of the RI/CI space. Produces the per-device
+ * capacity curve (fps vs instance count) the calibration study needs.
+ */
+export interface StressSpec {
+  /** symbol pool to draw from (random pick per spawned instance). */
+  symbols: { skel: string; atlas: string }[];
+  /** instance-count targets, ascending, e.g. [16,32,64,128,256,512]. */
+  steps: number[];
+  /** animation policy per instance: idle, win, or a random mix. */
+  anims?: "idle" | "win" | "mix";
+}
+
 export type ImpactTier = "low" | "moderate" | "high" | "very-high" | "mixed";
 
 export interface SceneDescriptor {
@@ -67,4 +84,6 @@ export interface SceneDescriptor {
   overlays: Placement[];
   /** authored/estimated impact tier for scheduling a spread. */
   tier?: ImpactTier;
+  /** when set, this is a density ramp (see {@link StressSpec}); grid is ignored. */
+  stress?: StressSpec;
 }

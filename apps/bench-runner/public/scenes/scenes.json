@@ -194,6 +194,70 @@
     "tier": "high"
   },
   {
+    "id": "fortune-numbers--stress",
+    "game": "gambit/fortune-numbers",
+    "state": "stress",
+    "description": "fortune-numbers density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_8.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_0.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_6.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_9.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_4.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_3.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_5.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_2.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_7.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/symbols/symbol_1.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/symbols/1/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "magic-pipes--base",
     "game": "gambit/magic-pipes",
     "state": "base",
@@ -436,6 +500,78 @@
     "tier": "high"
   },
   {
+    "id": "magic-pipes--stress",
+    "game": "gambit/magic-pipes",
+    "state": "stress",
+    "description": "magic-pipes density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/magic-pipes/assets/spine/feature_symbol/f_symbol.json",
+          "atlas": "gambit/magic-pipes/assets/spine/feature_symbol/1/f_symbol.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/expanding_wild.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/scatter/scatter.json",
+          "atlas": "gambit/magic-pipes/assets/spine/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/1.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/wild.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/2.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/crash.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/3.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/7.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/4.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/6.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "gambit/magic-pipes/assets/spine/symbols/5.json",
+          "atlas": "gambit/magic-pipes/assets/spine/symbols/1/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "gems-of-olympus--base",
     "game": "gambit/gems-of-olympus",
     "state": "base",
@@ -662,6 +798,70 @@
     "tier": "high"
   },
   {
+    "id": "gems-of-olympus--stress",
+    "game": "gambit/gems-of-olympus",
+    "state": "stress",
+    "description": "gems-of-olympus density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/low_symbols/low_2.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/low_symbols/1/low_symbols_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/low_symbols/low_3.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/low_symbols/1/low_symbols_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/low_symbols/low_4.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/low_symbols/1/low_symbols_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/low_symbols/low_1.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/low_symbols/1/low_symbols_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/high_symbols/high_3.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/high_symbols/1/Symbols_high_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/high_symbols/high_4.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/high_symbols/1/Symbols_high_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/low_symbols/low_5.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/low_symbols/1/low_symbols_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/high_symbols/high_2.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/high_symbols/1/Symbols_high_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/high_symbols/high_1.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/high_symbols/1/Symbols_high_fix.atlas"
+        },
+        {
+          "skel": "gambit/gems-of-olympus/assets/spine/high_symbols/scatter.json",
+          "atlas": "gambit/gems-of-olympus/assets/spine/high_symbols/1/Symbols_high_fix.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "book-of-zombies--base",
     "game": "gambit/book-of-zombies",
     "state": "base",
@@ -854,6 +1054,54 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "book-of-zombies--stress",
+    "game": "gambit/book-of-zombies",
+    "state": "stress",
+    "description": "book-of-zombies density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/book-of-zombies/assets/spine/symbols/scatter/scatter_x6.json",
+          "atlas": "gambit/book-of-zombies/assets/spine/symbols/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/book-of-zombies/assets/spine/symbols/scatter/scatter_x5.json",
+          "atlas": "gambit/book-of-zombies/assets/spine/symbols/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/book-of-zombies/assets/spine/symbols/scatter/scatter_x4.json",
+          "atlas": "gambit/book-of-zombies/assets/spine/symbols/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/book-of-zombies/assets/spine/symbols/scatter/scatter_x1.json",
+          "atlas": "gambit/book-of-zombies/assets/spine/symbols/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/book-of-zombies/assets/spine/symbols/scatter/scatter_x2.json",
+          "atlas": "gambit/book-of-zombies/assets/spine/symbols/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/book-of-zombies/assets/spine/symbols/scatter/scatter_x3.json",
+          "atlas": "gambit/book-of-zombies/assets/spine/symbols/scatter/1/scatter.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   },
   {
     "id": "coin-odyssey--base",
@@ -1064,6 +1312,78 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "coin-odyssey--stress",
+    "game": "gambit/coin-odyssey",
+    "state": "stress",
+    "description": "coin-odyssey density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/scatter/scatter.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols_win_fx/win_fx.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols_win_fx/1/symbols_win_fx.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_6.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_7.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_0.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_1.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_2.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_3.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_8.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_4.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_5.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        },
+        {
+          "skel": "gambit/coin-odyssey/assets/spine/symbols/symbol_9.json",
+          "atlas": "gambit/coin-odyssey/assets/spine/symbols/1/symbols_export.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   },
   {
     "id": "bang-bang--base",
@@ -1308,6 +1628,78 @@
     "tier": "high"
   },
   {
+    "id": "bang-bang--stress",
+    "game": "gambit/bang-bang",
+    "state": "stress",
+    "description": "bang-bang density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/wild/wild.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/wild/1/wild.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/high_5/h_5.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/high_5/1/h_5.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/scatter/scatter.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/scatter/1/scatter.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/high_2/h_2.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/high_2/1/h_2.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/shooting_wild/s_wild.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/shooting_wild/1/s_wild.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/hold_and_win/shooting/shooting.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/hold_and_win/shooting/1/shooting.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/high_4/h_4.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/high_4/1/h_4.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/high_1/h_1.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/high_1/1/h_1.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/high_3/h_3.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/high_3/1/h_3.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/low_2/l_2.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/low_2/1/l_2.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/low_3/l_3.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/low_3/1/l_3.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/low_1/l_1.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/low_1/1/l_1.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "legends-of-aztecs--base",
     "game": "gambit/legends-of-aztecs",
     "state": "base",
@@ -1492,6 +1884,66 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "legends-of-aztecs--stress",
+    "game": "gambit/legends-of-aztecs",
+    "state": "stress",
+    "description": "legends-of-aztecs density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/high_2.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/1/high_2.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/high_1.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/1/high_2.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/high_3.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/1/high_2.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/high_4.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/high_symbols/1/high_2.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/low_symbols/low_3.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/low_symbols/low_1.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/low_symbols/low_2.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/scatter/scatter.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/scatter/1/Scatter.atlas"
+        },
+        {
+          "skel": "gambit/legends-of-aztecs/assets/spine/symbols/empty_symbol/symbol_0.json",
+          "atlas": "gambit/legends-of-aztecs/assets/spine/symbols/empty_symbol/1/symbol_0.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   },
   {
     "id": "net-cash--base",
@@ -1736,6 +2188,78 @@
     "tier": "high"
   },
   {
+    "id": "net-cash--stress",
+    "game": "gambit/net-cash",
+    "state": "stress",
+    "description": "net-cash density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/net-cash/assets/spine/High_symbols/high_4/high_4.json",
+          "atlas": "gambit/net-cash/assets/spine/High_symbols/high_4/1/high_4.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Low_symbols/low_5.json",
+          "atlas": "gambit/net-cash/assets/spine/Low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Middle_symbols/middle_1/middle_1.json",
+          "atlas": "gambit/net-cash/assets/spine/Middle_symbols/middle_1/1/middle_1.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Special_symbols/wild/wild.json",
+          "atlas": "gambit/net-cash/assets/spine/Special_symbols/wild/1/wild.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/High_symbols/high_2/high_2.json",
+          "atlas": "gambit/net-cash/assets/spine/High_symbols/high_2/1/high_2.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Special_symbols/Pearls/pearl_bronze.json",
+          "atlas": "gambit/net-cash/assets/spine/Special_symbols/Pearls/1/pearls.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Special_symbols/Pearls/pearl_gold.json",
+          "atlas": "gambit/net-cash/assets/spine/Special_symbols/Pearls/1/pearls.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Special_symbols/Pearls/pearl_silver.json",
+          "atlas": "gambit/net-cash/assets/spine/Special_symbols/Pearls/1/pearls.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Low_symbols/low_3.json",
+          "atlas": "gambit/net-cash/assets/spine/Low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Low_symbols/low_2.json",
+          "atlas": "gambit/net-cash/assets/spine/Low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/Low_symbols/low_1.json",
+          "atlas": "gambit/net-cash/assets/spine/Low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/High_symbols/high_3/high_3.json",
+          "atlas": "gambit/net-cash/assets/spine/High_symbols/high_3/1/high_3.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "mummy-money-hw--base",
     "game": "reelnroll/mummy-money-hw",
     "state": "base",
@@ -1938,6 +2462,74 @@
     "tier": "high"
   },
   {
+    "id": "mummy-money-hw--stress",
+    "game": "reelnroll/mummy-money-hw",
+    "state": "stress",
+    "description": "mummy-money-hw density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/scatter.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/wild.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/m4.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/m2.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/h1.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/m3.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/low_3.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/low_2.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/low_4.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/low_1.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/m1.json",
+          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "merhaba-bazaar--base",
     "game": "reelnroll/merhaba-bazaar",
     "state": "base",
@@ -2130,6 +2722,78 @@
     "tier": "high"
   },
   {
+    "id": "merhaba-bazaar--stress",
+    "game": "reelnroll/merhaba-bazaar",
+    "state": "stress",
+    "description": "merhaba-bazaar density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/scatter_blue.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/scatter_white.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/scatter_black.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h3.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/wild.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h2.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h1.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/l1.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/l3.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/l2.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h4.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/l4.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "three-kings--base",
     "game": "reelnroll/three-kings",
     "state": "base",
@@ -2288,6 +2952,62 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "three-kings--stress",
+    "game": "reelnroll/three-kings",
+    "state": "stress",
+    "description": "three-kings density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/h1.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/h2.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/l1.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/l3.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/wild.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/l5.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/l2.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/three-kings/assets/spine/symbols/l4.json",
+          "atlas": "reelnroll/three-kings/assets/spine/symbols/1/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   },
   {
     "id": "sands-of-olympus3-hw-c--base",
@@ -2500,6 +3220,78 @@
     "tier": "high"
   },
   {
+    "id": "sands-of-olympus3-hw-c--stress",
+    "game": "reelnroll/sands-of-olympus3-hw-c",
+    "state": "stress",
+    "description": "sands-of-olympus3-hw-c density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/m2.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/m1.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/m3.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/wild.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/m4.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/scatter.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/mystery.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/l1.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/l2.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/l3.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/l4.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/empty.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "fruit-garden--base",
     "game": "check-in-gaming/fruit-garden",
     "state": "base",
@@ -2692,6 +3484,70 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "fruit-garden--stress",
+    "game": "check-in-gaming/fruit-garden",
+    "state": "stress",
+    "description": "fruit-garden density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/wild.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/low_4.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/low_1.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/high_1.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/low_3.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_3.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/low_2.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_1.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_2.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/empty.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   },
   {
     "id": "bonbon-bonanza--base",
@@ -2936,6 +3792,78 @@
     "tier": "high"
   },
   {
+    "id": "bonbon-bonanza--stress",
+    "game": "check-in-gaming/bonbon-bonanza",
+    "state": "stress",
+    "description": "bonbon-bonanza density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/high_4.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/scatter_1.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/high_3.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/high_1.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/high_2.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/medium_2.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/medium_1.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/fly.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/low_1.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/low_3.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/reelsbox.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/low_2.json",
+          "atlas": "check-in-gaming/bonbon-bonanza/assets/spine/symbols/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "falconcash-hw--base",
     "game": "check-in-gaming/falconcash-hw",
     "state": "base",
@@ -3128,6 +4056,70 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "falconcash-hw--stress",
+    "game": "check-in-gaming/falconcash-hw",
+    "state": "stress",
+    "description": "falconcash-hw density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/wild_1.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/high_1.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/medium_1.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/medium_3.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/medium_2.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_2.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_3.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_1.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_4.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/empty.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   },
   {
     "id": "sweet-crumbs--base",
@@ -3354,6 +4346,70 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "sweet-crumbs--stress",
+    "game": "playcognito/sweet-crumbs",
+    "state": "stress",
+    "description": "sweet-crumbs density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/cherry.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/scatter.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/highBlue.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/sweetHighSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/highRed.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/sweetHighSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/highGreen.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/sweetHighSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/highOrange.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportHighSymbols/sweetHighSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/orange.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/kiwi.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/grape.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
+        },
+        {
+          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/blueberry.json",
+          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   },
   {
     "id": "biochrome-city--base",
@@ -3586,6 +4642,78 @@
     "tier": "high"
   },
   {
+    "id": "biochrome-city--stress",
+    "game": "playcognito/biochrome-city",
+    "state": "stress",
+    "description": "biochrome-city density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/cat.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/monkey.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/braclet.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/low_braclet_075/low_braclet_075.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/low_braclet_075/braclet.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/low_braclet_1/low_braclet_1.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/low_braclet_1/braclet.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/Rabbit.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/low_glasses_1/low_glasses_1.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/low_glasses_1/glasses.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/glasses.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/low_glasses_075/low_glasses_075.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/low_glasses_075/glasses.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/doberman.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/Fox.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        },
+        {
+          "skel": "playcognito/biochrome-city/assets/main/spine/hl_symbols/scatter.json",
+          "atlas": "playcognito/biochrome-city/assets/main/spine/hl_symbols/symbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
     "id": "alice-bloody-rush--base",
     "game": "playcognito/alice-bloody-rush",
     "state": "base",
@@ -3802,5 +4930,135 @@
       }
     ],
     "tier": "high"
+  },
+  {
+    "id": "alice-bloody-rush--stress",
+    "game": "playcognito/alice-bloody-rush",
+    "state": "stress",
+    "description": "alice-bloody-rush density stress: random symbols from the reel set (non-normalized position / size / animation) ramped [12, 24, 48, 96, 192, 384] instances to the fps breaking point - the per-device capacity curve for this symbol mix.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/H1.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/H2.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/H3.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/H5.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/WILD.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/H4.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/up_golden.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/1/up_golden.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolKnife.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolHat.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolChess.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolMashroom.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolTeapot.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
+        }
+      ],
+      "steps": [
+        12,
+        24,
+        48,
+        96,
+        192,
+        384
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
+    "id": "calib--ri-heavy",
+    "game": "calibration",
+    "state": "stress",
+    "description": "RI-heavy calibration ramp: fortune-numbers--background (RI=3834.08, CI=10.201 - fill/overdraw dominated), ramped alone to isolate the rendering-impact coefficient.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "gambit/fortune-numbers/assets/spine/background/background.json",
+          "atlas": "gambit/fortune-numbers/assets/spine/background/1/background.atlas"
+        }
+      ],
+      "steps": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "anims": "idle"
+    },
+    "tier": "very-high"
+  },
+  {
+    "id": "calib--ci-heavy",
+    "game": "calibration",
+    "state": "stress",
+    "description": "CI-heavy calibration ramp: alice-bloody-rush--transition (CI=42.403, RI=19.015 - physics/deform dominated), ramped alone to isolate the computational-impact coefficient.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/transition/transition.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/transition/transition.atlas"
+        }
+      ],
+      "steps": [
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
   }
 ]

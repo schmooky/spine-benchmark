@@ -85,6 +85,7 @@ function collectAssets(d: SceneDescriptor): Map<string, { skel: string; atlas: s
   for (const p of d.background) add(p.skel, p.atlas);
   for (const p of d.overlays) add(p.skel, p.atlas);
   if (d.grid) for (const s of d.grid.symbols) add(s.skel, s.atlas);
+  if (d.stress) for (const s of d.stress.symbols) add(s.skel, s.atlas);
   return out;
 }
 
@@ -273,6 +274,35 @@ export function buildScene(d: SceneDescriptor): Container {
 /** Every live Spine in a built scene (all are direct children of the root). */
 export function sceneSpines(root: Container): Spine[] {
   return root.children.filter((c): c is Spine => c instanceof Spine);
+}
+
+/**
+ * One randomized symbol instance for a density stress ramp. Animation is chosen
+ * per {@link mode} (idle / win / a random mix) and desynced; the caller places
+ * and scales it. autoUpdate is off (the engine drives updates). Returns null if
+ * the asset failed so the caller can try another.
+ */
+export function makeStressSpine(
+  sym: { skel: string; atlas: string },
+  mode: "idle" | "win" | "mix" = "mix",
+): Spine | null {
+  let spine: Spine;
+  try {
+    spine = spineFrom(aliasFor(sym.skel), aliasFor(sym.atlas));
+  } catch {
+    return null;
+  }
+  const all = spine.skeleton.data.animations;
+  let name: string | undefined;
+  if (mode === "win") name = all.find((a) => /win/i.test(a.name))?.name ?? pickLoopAnim(all);
+  else if (mode === "mix") name = all.length ? all[Math.floor(Math.random() * all.length)].name : undefined;
+  else name = pickLoopAnim(all);
+  if (name) {
+    const entry = spine.state.setAnimation(0, name, true);
+    entry.trackTime = Math.random() * Math.max(0.01, entry.animation!.duration);
+  }
+  spine.autoUpdate = false;
+  return spine;
 }
 
 export interface FitResult {

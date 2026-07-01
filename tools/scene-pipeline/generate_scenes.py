@@ -177,7 +177,59 @@ def build_for(game, entry):
         "grid": {**grid, "winAnim": "win" if has_win else None, "winCells": win_cells},
         "overlays": overlays, "tier": "high",
     })
+
+    # density stress: spawn random symbols from this game's set and ramp the
+    # count to the fps breaking point (non-normalized pos/size/anim). No bg, so
+    # it's a clean per-device capacity curve for this game's symbol mix.
+    scenes.append({
+        "id": f"{gname}--stress", "game": game, "state": "stress",
+        "description": f"{gname} density stress: random symbols from the reel set "
+                       f"(non-normalized position / size / animation) ramped "
+                       f"{STRESS_STEPS} instances to the fps breaking point - the "
+                       f"per-device capacity curve for this symbol mix.",
+        "refWidth": 1920, "refHeight": 1080,
+        "background": [], "overlays": [],
+        "stress": {"symbols": [sym_ref(s) for s in symbols], "steps": STRESS_STEPS, "anims": "mix"},
+        "tier": "very-high",
+    })
     return scenes
+
+
+STRESS_STEPS = [12, 24, 48, 96, 192, 384]
+
+
+def orthogonal_scenes():
+    """Two calibration ramps from catalog extremes so RI and CI can be
+    separated in the regression: a pure-fill (high-RI/low-CI) spine and a
+    pure-compute (high-CI/low-RI) spine, each ramped alone."""
+    allsp = [s for g in CATALOG.values() for s in g["spines"]
+             if s["atlas"] and not BACKUP_RE.search(s["skel"])]
+    if not allsp:
+        return []
+    ri_heavy = max(allsp, key=lambda s: s["ri"] - s["ci"])
+    ci_heavy = max(allsp, key=lambda s: s["ci"] - s["ri"] * 0.05)
+    out = []
+    out.append({
+        "id": "calib--ri-heavy", "game": "calibration", "state": "stress",
+        "description": f"RI-heavy calibration ramp: {ri_heavy['id']} "
+                       f"(RI={ri_heavy['ri']}, CI={ri_heavy['ci']} - fill/overdraw dominated), "
+                       f"ramped alone to isolate the rendering-impact coefficient.",
+        "refWidth": 1920, "refHeight": 1080, "background": [], "overlays": [],
+        "stress": {"symbols": [{"skel": ri_heavy["skel"], "atlas": ri_heavy["atlas"]}],
+                   "steps": [1, 2, 4, 8, 16, 32, 64], "anims": "idle"},
+        "tier": "very-high",
+    })
+    out.append({
+        "id": "calib--ci-heavy", "game": "calibration", "state": "stress",
+        "description": f"CI-heavy calibration ramp: {ci_heavy['id']} "
+                       f"(CI={ci_heavy['ci']}, RI={ci_heavy['ri']} - physics/deform dominated), "
+                       f"ramped alone to isolate the computational-impact coefficient.",
+        "refWidth": 1920, "refHeight": 1080, "background": [], "overlays": [],
+        "stress": {"symbols": [{"skel": ci_heavy["skel"], "atlas": ci_heavy["atlas"]}],
+                   "steps": [2, 4, 8, 16, 32, 64, 128], "anims": "mix"},
+        "tier": "very-high",
+    })
+    return out
 
 
 def main():
@@ -186,6 +238,7 @@ def main():
         if game in SKIP or game not in CATALOG:
             continue
         all_scenes.extend(build_for(game, CATALOG[game]))
+    all_scenes.extend(orthogonal_scenes())
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(all_scenes, indent=2))
     import collections
