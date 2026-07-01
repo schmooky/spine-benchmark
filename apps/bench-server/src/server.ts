@@ -43,8 +43,31 @@ const readLimiter = rateLimit({
 // livez: the process is up and serving.
 // healthz: dependencies (postgres + s3) are reachable too.
 
+import { getModel, setModel, type CoefficientTable } from "./model.js";
+
 app.get("/livez", (_req, res) => {
   res.json({ status: "live" });
+});
+
+// Fitted cost-model coefficients (per-GPU-family weights + ms budgets). Clients
+// (new-site meter) fetch this to predict ms and % of budget. GET is public;
+// POST (offline fit pushing a new table) needs MODEL_WRITE_TOKEN if set.
+app.get("/api/model", (_req, res) => {
+  res.json(getModel());
+});
+
+app.post("/api/model", (req, res) => {
+  const token = process.env.MODEL_WRITE_TOKEN;
+  if (token && req.header("authorization") !== `Bearer ${token}`) {
+    res.status(401).json({ error: "unauthorized" });
+    return;
+  }
+  try {
+    setModel(req.body as CoefficientTable);
+    res.json({ ok: true });
+  } catch {
+    res.status(400).json({ error: "invalid model" });
+  }
 });
 
 app.get("/healthz", async (_req, res) => {

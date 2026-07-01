@@ -21,7 +21,9 @@
   "dependencies": {
     "@spine-benchmark/metrics-factors": "^0.1.1",
     "@spine-benchmark/metrics-scoring": "^0.1.1",
-    "@spine-benchmark/metrics-sampling": "^0.1.1"
+    "@spine-benchmark/metrics-sampling": "^0.1.1",
+    "@spine-benchmark/metrics-model": "^0.1.0",
+    "@spine-benchmark/metrics-impact-formula": "^0.1.1"
   },
   "peerDependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.101"

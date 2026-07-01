@@ -1,6 +1,7 @@
 import {
   renderingImpactCost,
   computationalImpactCost,
+  type ImpactFeatures,
 } from "@spine-benchmark/metrics-impact-formula";
 import {
   BlendMode,
@@ -86,6 +87,61 @@ export function measureFrameImpact(skeleton: Skeleton): FrameImpact {
   });
 
   return { ri, ci, total: ri + ci };
+}
+
+/**
+ * The canonical per-instance feature vector for the fitted ms cost model.
+ * Coverage/overdraw default to 0/1 here (needs a render pass - measureRenderCost
+ * fills them accurately); everything else is the live active-pose counts.
+ */
+export function measureFrameFeatures(
+  skeleton: Skeleton,
+  coverage?: { coveredKpx: number; overdrawFactor: number },
+): ImpactFeatures {
+  let totalVertices = 0;
+  let activeClippingMasks = 0;
+  let activeNonNormalBlends = 0;
+  let activeMeshCount = 0;
+  let weightedMeshCount = 0;
+  let deformedMeshCount = 0;
+  let prevPage: unknown = null;
+  let drawCallEst = 0;
+
+  for (const slot of skeleton.drawOrder) {
+    const att = slot.getAttachment();
+    if (!att || !isSlotActive(slot)) continue;
+    if (att instanceof ClippingAttachment) {
+      activeClippingMasks++;
+      continue;
+    }
+    if (slot.data.blendMode !== BlendMode.Normal) activeNonNormalBlends++;
+    const page = (att as { region?: { page?: unknown } }).region?.page ?? null;
+    if (page !== prevPage) {
+      drawCallEst++;
+      prevPage = page;
+    }
+    if (!(att instanceof MeshAttachment)) continue;
+    activeMeshCount++;
+    totalVertices += att.worldVerticesLength / 2;
+    if (att.bones && att.bones.length > 0) weightedMeshCount++;
+    if (slot.deform.length > 0) deformedMeshCount++;
+  }
+
+  return {
+    vertices: totalVertices,
+    nonNormalBlends: activeNonNormalBlends,
+    clippingMasks: activeClippingMasks,
+    meshes: activeMeshCount,
+    weightedMeshes: weightedMeshCount,
+    deformedMeshes: deformedMeshCount,
+    ik: countActive(skeleton.ikConstraints),
+    transform: countActive(skeleton.transformConstraints),
+    path: countActive(skeleton.pathConstraints),
+    physics: countActive(skeleton.physicsConstraints),
+    drawCallEst,
+    coveredKpx: coverage?.coveredKpx ?? 0,
+    overdrawFactor: coverage?.overdrawFactor ?? 1,
+  };
 }
 
 const SAMPLE_FPS = 30;

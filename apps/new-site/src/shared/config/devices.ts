@@ -18,9 +18,19 @@ export interface DeviceProfile {
   /** Representative hardware, shown as the secondary line in the picker. */
   example: string;
   kind: DeviceKind;
-  /** Total RI+CI budget in impact units. Calibrate later. */
+  /** Legacy RI+CI budget in impact units (kept for the old meter). */
   capacity: number;
+  /** GPU family key used to pick the fitted cost model (thesis #9). */
+  gpuFamily: string;
 }
+
+/**
+ * Frame-time budget target, ms, split GPU / CPU (thesis #6/#7). Replaces
+ * "RI+CI units" and "fps < Hz": a scene is "over" when its predicted GPU or CPU
+ * time exceeds this, independent of refresh rate. Overridable from the fitted
+ * /api/model, but this is a sane default (half a 60fps frame each).
+ */
+export const DEFAULT_BUDGET_MS = { gpu: 8, cpu: 8 } as const;
 
 export const DEVICES: DeviceProfile[] = [
   {
@@ -29,6 +39,7 @@ export const DEVICES: DeviceProfile[] = [
     example: "Redmi 9A · Mali-G52",
     kind: "phone",
     capacity: 12,
+    gpuFamily: "Mali",
   },
   {
     id: "phone-mid",
@@ -36,6 +47,7 @@ export const DEVICES: DeviceProfile[] = [
     example: "iPhone 11 / Pixel 6a",
     kind: "phone",
     capacity: 22,
+    gpuFamily: "Apple GPU",
   },
   {
     id: "phone-high",
@@ -43,6 +55,7 @@ export const DEVICES: DeviceProfile[] = [
     example: "iPhone 15 Pro class",
     kind: "phone",
     capacity: 40,
+    gpuFamily: "Apple GPU",
   },
   {
     id: "tablet-low",
@@ -50,6 +63,7 @@ export const DEVICES: DeviceProfile[] = [
     example: "iPad 9th gen",
     kind: "tablet",
     capacity: 26,
+    gpuFamily: "Apple GPU",
   },
   {
     id: "tablet-high",
@@ -57,6 +71,7 @@ export const DEVICES: DeviceProfile[] = [
     example: "iPad Pro M2",
     kind: "tablet",
     capacity: 55,
+    gpuFamily: "Apple GPU",
   },
   {
     id: "desktop-low",
@@ -64,6 +79,7 @@ export const DEVICES: DeviceProfile[] = [
     example: "integrated GPU",
     kind: "desktop",
     capacity: 45,
+    gpuFamily: "Intel",
   },
   {
     id: "desktop-high",
@@ -71,6 +87,7 @@ export const DEVICES: DeviceProfile[] = [
     example: "discrete GPU",
     kind: "desktop",
     capacity: 90,
+    gpuFamily: "NVIDIA RTX",
   },
 ];
 

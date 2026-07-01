@@ -15,9 +15,11 @@ export {
 } from "./lib/animation-analysis";
 export {
   measureFrameImpact,
+  measureFrameFeatures,
   measureAnimationMaxImpacts,
   type FrameImpact,
 } from "./lib/impact";
+export { measureRenderCost, type RenderCost } from "./lib/measure-cost";
 export {
   analyzeDrawCalls,
   type DrawCallAnalysis,

@@ -4,8 +4,10 @@ import { Check } from "lucide-react";
 import {
   useSkeletonStore,
   measureFrameImpact,
+  measureFrameFeatures,
   type FrameImpact,
 } from "@/entities/skeleton";
+import { predictDeviceCost, type DeviceCost } from "@/shared/lib/cost-budget";
 import { useDeviceStore } from "@/entities/device";
 import {
   DEVICES,
@@ -49,25 +51,31 @@ export function DeviceMeter() {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [frame, setFrame] = useState<FrameImpact | null>(null);
+  const [cost, setCost] = useState<DeviceCost | null>(null);
+
+  const device = deviceById(deviceId);
 
   useEffect(() => {
     if (status !== "ready" || !spine) {
       setFrame(null);
+      setCost(null);
       return;
     }
-    setFrame(measureFrameImpact(spine.skeleton));
-    const id = window.setInterval(
-      () => setFrame(measureFrameImpact(spine.skeleton)),
-      200,
-    );
+    const sample = () => {
+      setFrame(measureFrameImpact(spine.skeleton));
+      // predicted GPU/CPU ms vs this device's ms budget (thesis #6/#7)
+      setCost(predictDeviceCost(measureFrameFeatures(spine.skeleton), device));
+    };
+    sample();
+    const id = window.setInterval(sample, 200);
     return () => window.clearInterval(id);
-  }, [spine, status]);
+  }, [spine, status, device]);
 
-  if (status !== "ready" || !spine || !frame) return null;
+  if (status !== "ready" || !spine || !frame || !cost) return null;
 
-  const device = deviceById(deviceId);
   const fraction = frame.total / device.capacity;
-  const state = budgetStatus(fraction);
+  const bindingMs = cost.binding === "gpu" ? cost.gpuMs : cost.cpuMs;
+  const state: BudgetStatus = cost.status;
   const Icon = DEVICE_KIND_ICON[device.kind];
 
   return (
@@ -75,20 +83,15 @@ export function DeviceMeter() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`${device.name} - RI ${frame.ri.toFixed(1)} + CI ${frame.ci.toFixed(1)} = ${frame.total.toFixed(1)} of ${device.capacity} units (fits ${budgetHeadroom(fraction)} of these) - click to change device`}
+        title={`${device.name} (${device.gpuFamily}) - GPU ${cost.gpuMs.toFixed(2)}ms, CPU ${cost.cpuMs.toFixed(2)}ms; binding: ${cost.binding.toUpperCase()} at ${Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}% of budget - click to change device`}
         className="pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-1.5 transition-opacity hover:opacity-75"
       >
         <Icon className={cn("size-4", STATUS_TEXT[state])} />
-        <span
-          className={cn(
-            "text-sm font-semibold tabular-nums",
-            STATUS_TEXT[state],
-          )}
-        >
-          {formatBudgetPct(fraction)}
+        <span className={cn("text-sm font-semibold tabular-nums", STATUS_TEXT[state])}>
+          {bindingMs.toFixed(2)}ms
         </span>
-        <span className="text-[11px] tabular-nums text-muted-foreground">
-          {budgetHeadroom(fraction)}
+        <span className="text-[11px] uppercase tabular-nums text-muted-foreground">
+          {cost.binding} {Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}%
         </span>
       </button>
 
