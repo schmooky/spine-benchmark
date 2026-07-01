@@ -90,8 +90,52 @@ function collectAssets(d: SceneDescriptor): Map<string, { skel: string; atlas: s
 
 const aliasFor = (skel: string) => skel.replace(/[^\w]+/g, "_");
 
+/** Aliases already registered with Assets, so we never re-`add` (which spams
+ * pixi's "already has key overwriting" warning). */
+const registered = new Set<string>();
+function addOnce(alias: string, src: string): void {
+  if (registered.has(alias)) return;
+  Assets.add({ alias, src });
+  registered.add(alias);
+}
+
 export interface LoadProgress {
   (loaded: number, total: number): void;
+}
+
+/**
+ * One dedup'd preload of every asset across ALL scenes. This is the load-all
+ * gate: it resolves only when every asset has settled (loaded or failed), so
+ * the runner never starts measuring on a cold cache. Each alias is registered
+ * exactly once (no re-add spam); `allSettled` keeps a bad path non-fatal.
+ * `onProgress` reports a 0..1 fraction.
+ */
+export async function preloadAllScenes(
+  scenes: SceneDescriptor[],
+  onProgress?: (fraction: number) => void,
+): Promise<void> {
+  const base = assetBase();
+  const srcByAlias = new Map<string, string>();
+  for (const d of scenes) {
+    for (const { skel, atlas } of collectAssets(d).values()) {
+      srcByAlias.set(aliasFor(skel), base + skel);
+      srcByAlias.set(aliasFor(atlas), base + atlas);
+    }
+  }
+  const entries = [...srcByAlias.entries()];
+  for (const [alias, src] of entries) addOnce(alias, src);
+  let done = 0;
+  onProgress?.(0);
+  await Promise.allSettled(
+    entries.map(async ([alias]) => {
+      try {
+        await Assets.load(alias);
+      } finally {
+        done++;
+        onProgress?.(done / entries.length);
+      }
+    }),
+  );
 }
 
 /** Register + load every asset a descriptor needs. Resolves when ready. */
@@ -105,17 +149,22 @@ export async function loadSceneAssets(
   for (const { skel, atlas } of assets.values()) {
     const skAlias = aliasFor(skel);
     const atAlias = aliasFor(atlas);
-    if (!Assets.cache.has(skAlias)) Assets.add({ alias: skAlias, src: base + skel });
-    if (!Assets.cache.has(atAlias)) Assets.add({ alias: atAlias, src: base + atlas });
+    addOnce(skAlias, base + skel);
+    addOnce(atAlias, base + atlas);
     aliases.push(skAlias, atAlias);
   }
   const unique = [...new Set(aliases)];
   let done = 0;
-  await Promise.all(
+  // allSettled: a single bad asset path must not fail the whole scene load -
+  // the reconstructor tolerates the missing piece (blank) and renders the rest.
+  await Promise.allSettled(
     unique.map(async (a) => {
-      await Assets.load(a);
-      done++;
-      onProgress?.(done, unique.length);
+      try {
+        await Assets.load(a);
+      } finally {
+        done++;
+        onProgress?.(done, unique.length);
+      }
     }),
   );
 }
@@ -135,10 +184,23 @@ function makeSpine(p: Placement): Spine {
  * Build the scene into a fresh container (already asset-loaded). Does NOT fit;
  * call {@link fitContainer} with the current viewport afterwards.
  */
+/** Build a placement spine, tolerating a failed/absent asset (returns null). */
+function tryMakeSpine(p: Placement): Spine | null {
+  try {
+    return makeSpine(p);
+  } catch (err) {
+    console.warn(`[scene] placement ${p.id} failed: ${(err as Error).message}`);
+    return null;
+  }
+}
+
 export function buildScene(d: SceneDescriptor): Container {
   const root = new Container();
 
-  for (const p of d.background) root.addChild(makeSpine(p));
+  for (const p of d.background) {
+    const s = tryMakeSpine(p);
+    if (s) root.addChild(s);
+  }
 
   if (d.grid) {
     const g = d.grid;
@@ -152,7 +214,12 @@ export function buildScene(d: SceneDescriptor): Container {
       for (let c = 0; c < g.cols; c++) {
         const sym = g.symbols[k % g.symbols.length];
         k++;
-        const spine = spineFrom(aliasFor(sym.skel), aliasFor(sym.atlas));
+        let spine: Spine;
+        try {
+          spine = spineFrom(aliasFor(sym.skel), aliasFor(sym.atlas));
+        } catch {
+          continue;
+        }
         spine.x = x0 + c * g.cellW;
         spine.y = y0 + r * g.cellH;
         if (g.scale != null) spine.scale.set(g.scale);
@@ -172,9 +239,17 @@ export function buildScene(d: SceneDescriptor): Container {
     }
   }
 
-  for (const p of d.overlays) root.addChild(makeSpine(p));
+  for (const p of d.overlays) {
+    const s = tryMakeSpine(p);
+    if (s) root.addChild(s);
+  }
 
   return root;
+}
+
+/** Every live Spine in a built scene (all are direct children of the root). */
+export function sceneSpines(root: Container): Spine[] {
+  return root.children.filter((c): c is Spine => c instanceof Spine);
 }
 
 export interface FitResult {
@@ -226,7 +301,7 @@ export function fitContainer(
   root.position.set(0, 0);
   let b: Rectangle;
   try {
-    b = root.getLocalBounds();
+    b = root.getLocalBounds().rectangle;
     if (!Number.isFinite(b.width) || !Number.isFinite(b.height) || b.width <= 0 || b.height <= 0) {
       b = safeBounds(root);
     }

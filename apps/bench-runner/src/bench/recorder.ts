@@ -20,6 +20,7 @@ interface ScenarioMeta {
   label: string;
   spine: string;
   kind: ScenarioResult["kind"];
+  scene?: ScenarioResult["scene"];
 }
 
 export interface TickSample {
@@ -141,6 +142,7 @@ export class Recorder {
       label: this.current.label,
       spine: this.current.spine,
       kind: this.current.kind,
+      ...(this.current.scene ? { scene: this.current.scene } : {}),
       startMs: Math.round(this.startMs),
       durationMs: Math.round(totalMs),
       stats: {

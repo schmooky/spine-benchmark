@@ -2,13 +2,17 @@ import { useEffect, useRef } from "react";
 
 import { totalSeconds } from "@/config";
 import { useRunnerStore } from "@/store";
-import { startBenchmark, BenchCancelled } from "@/bench/engine";
+import { BenchCancelled } from "@/bench/engine";
+import { startSceneBenchmark } from "@/bench/sceneEngine";
+import { configureAssetBase, loadAllScenes } from "@/scenes/load";
 import { collectDevice } from "@/lib/device";
 import { buildUpload, uploadRun } from "@/lib/upload";
-import { rememberRun } from "@/lib/history";
+import { rememberRun, pastRuns } from "@/lib/history";
 import { loadStash, clearStash } from "@/lib/stash";
 import type { RunUpload } from "@/types";
 import { Landing } from "@/ui/Landing";
+import { Countdown } from "@/ui/Countdown";
+import { Loading } from "@/ui/Loading";
 import { Hud } from "@/ui/Hud";
 import { Done } from "@/ui/Done";
 import { ErrorView } from "@/ui/ErrorView";
@@ -20,10 +24,12 @@ export default function App() {
   const reportUrl = useRunnerStore((s) => s.reportUrl);
   const error = useRunnerStore((s) => s.error);
   const pendingPayload = useRunnerStore((s) => s.pendingPayload);
+  const loadProgress = useRunnerStore((s) => s.loadProgress);
 
   const hostRef = useRef<HTMLDivElement>(null);
   const cancelRef = useRef<(() => void) | null>(null);
   const lastUploadRef = useRef<RunUpload | null>(null);
+  const startedRef = useRef(false);
 
   const doUpload = async (upload: RunUpload) => {
     const store = useRunnerStore.getState();
@@ -42,10 +48,15 @@ export default function App() {
   };
 
   const start = async () => {
+    if (startedRef.current) return; // guard against double-invocation
+    startedRef.current = true;
     const store = useRunnerStore.getState();
-    store.setStage("running");
-    // give React a tick to mount the canvas host (NOT rAF - that never
-    // fires in a hidden tab and would hang the start forever)
+    configureAssetBase();
+    const scenes = await loadAllScenes();
+    // stage "loading" mounts the canvas host; the engine preloads every scene's
+    // assets (progress via onLoad) before the first frame is measured.
+    store.setStage("loading");
+    store.setLoadProgress(0, 100);
     await new Promise((r) => window.setTimeout(r, 50));
     if (!hostRef.current) {
       store.setError("canvas host missing");
@@ -53,10 +64,16 @@ export default function App() {
     }
     const startedAt = new Date().toISOString();
     const device = await collectDevice();
-    const { result, cancel } = startBenchmark(
+    const { result, cancel } = startSceneBenchmark(
       hostRef.current,
+      scenes,
       totalSeconds(),
-      { onHud: (h) => useRunnerStore.getState().setHud(h) },
+      {
+        onHud: (h) => useRunnerStore.getState().setHud(h),
+        onProgress: (frac) =>
+          useRunnerStore.getState().setLoadProgress(Math.round(frac * 100), 100),
+        onMeasureStart: () => useRunnerStore.getState().setStage("running"),
+      },
     );
     cancelRef.current = cancel;
     try {
@@ -73,6 +90,13 @@ export default function App() {
 
   useEffect(() => {
     return () => cancelRef.current?.();
+  }, []);
+
+  // first visit on this device (no history, no crash stash) -> auto-run after a
+  // short countdown. Repeat visits land on Landing which reports past runs.
+  useEffect(() => {
+    if (loadStash()) return; // crash-upload path owns this visit
+    if (pastRuns().length === 0) useRunnerStore.getState().setStage("countdown");
   }, []);
 
   // a leftover crash stash means the browser died mid-run last time -
@@ -136,10 +160,21 @@ export default function App() {
     <div className="h-full">
       {stage === "landing" && <Landing onStart={() => void start()} />}
 
-      {(stage === "running" || stage === "uploading") && (
+      {stage === "countdown" && (
+        <Countdown
+          seconds={5}
+          onDone={() => void start()}
+          onCancel={() => useRunnerStore.getState().setStage("landing")}
+        />
+      )}
+
+      {(stage === "loading" || stage === "running" || stage === "uploading") && (
         <>
           <div ref={hostRef} className="fixed inset-0" />
-          {hud && <Hud hud={hud} />}
+          {stage === "loading" && (
+            <Loading loaded={loadProgress[0]} total={loadProgress[1]} />
+          )}
+          {stage === "running" && hud && <Hud hud={hud} />}
           {stage === "uploading" && (
             <div className="fixed inset-0 z-20 flex items-center justify-center bg-neutral-950/70 backdrop-blur-sm">
               <p className="animate-pulse text-sm text-neutral-300">

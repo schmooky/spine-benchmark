@@ -126,13 +126,33 @@ export interface DeviceInfo {
   runtime: RuntimeProbes | null;
 }
 
+/** Per-scene detail shipped with a "scene" scenario so the report shows what
+ * was actually on screen, in what layout, at what fit. */
+export interface SceneReport {
+  game: string;
+  state: string;
+  description: string;
+  /** uniform contain-fit scale applied to the whole scene for this device. */
+  fitScale: number;
+  /** resulting on-screen area in px^2 (for normalising RI across screens). */
+  onScreenAreaPx: number;
+  /** spine instance count in the scene. */
+  spineCount: number;
+  /** authored/estimated impact tier. */
+  tier: string;
+  /** atlas regions the paired atlas lacked (blank-rendered), for QA. */
+  missingRegions: number;
+}
+
 export interface ScenarioResult {
   id: string;
   label: string;
   spine: string;
-  kind: "solo" | "ramp" | "swarm";
+  kind: "solo" | "ramp" | "swarm" | "scene";
   startMs: number;
   durationMs: number;
+  /** present when kind === "scene". */
+  scene?: SceneReport;
   stats: {
     frames: number;
     avgFps: number;
