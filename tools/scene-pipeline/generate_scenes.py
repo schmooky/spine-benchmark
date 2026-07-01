@@ -56,7 +56,13 @@ ANNOUNCER_RE = re.compile(r"(big[_-]?win|mega[_-]?win|super[_-]?win|huge[_-]?win
 # symbol (low_/high_/med_/hl_ prefixes, single letters, wild/scatter)
 SYMBOL_SEG_RE = re.compile(r"symbol|/hl_|/low_|/high_|/med_", re.I)
 SYMBOL_NAME_RE = re.compile(r"^(low|high|med|hl|h|l|m|sym)[_\-0-9]|^(wild|scatter)$", re.I)
-NOT_SYMBOL_RE = re.compile(r"(boss|button|vfx|logo|trail|winbox|character|transition|wide|counter|shaker|frame|light|coin|snitch|multip|spin)", re.I)
+# exclude non-reel specials AND the coin/bonus/collect symbols, whose long
+# texture-sequence attachments (coin_transition frames) frequently reference
+# atlas regions that aren't present -> blank -> renderer crash (texture._source).
+NOT_SYMBOL_RE = re.compile(
+    r"(boss|button|vfx|logo|trail|winbox|character|transition|wide|counter|"
+    r"shaker|frame|light|coin|snitch|multip|spin|bonus|collect|ante|jackpot|chest)",
+    re.I)
 # main background: broad, so games with names like main_game / bg_main / layout
 # bg / background_base are caught (bonus + symbols are filtered out first).
 MAIN_BG_RE = re.compile(

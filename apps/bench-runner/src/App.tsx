@@ -12,7 +12,6 @@ import { loadStash, clearStash } from "@/lib/stash";
 import type { RunUpload } from "@/types";
 import { Landing } from "@/ui/Landing";
 import { Countdown } from "@/ui/Countdown";
-import { Loading } from "@/ui/Loading";
 import { Hud } from "@/ui/Hud";
 import { Done } from "@/ui/Done";
 import { ErrorView } from "@/ui/ErrorView";
@@ -24,7 +23,6 @@ export default function App() {
   const reportUrl = useRunnerStore((s) => s.reportUrl);
   const error = useRunnerStore((s) => s.error);
   const pendingPayload = useRunnerStore((s) => s.pendingPayload);
-  const loadProgress = useRunnerStore((s) => s.loadProgress);
 
   const hostRef = useRef<HTMLDivElement>(null);
   const cancelRef = useRef<(() => void) | null>(null);
@@ -170,10 +168,9 @@ export default function App() {
 
       {(stage === "loading" || stage === "running" || stage === "uploading") && (
         <>
+          {/* the loading progress is drawn on the pixi canvas itself (an
+              animated spinner + %), so nothing overlays the host here */}
           <div ref={hostRef} className="fixed inset-0" />
-          {stage === "loading" && (
-            <Loading loaded={loadProgress[0]} total={loadProgress[1]} />
-          )}
           {stage === "running" && hud && <Hud hud={hud} />}
           {stage === "uploading" && (
             <div className="fixed inset-0 z-20 flex items-center justify-center bg-neutral-950/70 backdrop-blur-sm">

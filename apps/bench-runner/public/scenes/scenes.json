@@ -1095,10 +1095,6 @@
           "atlas": "gambit/bang-bang/assets/spine/symbols/wild/1/wild.atlas"
         },
         {
-          "skel": "gambit/bang-bang/assets/spine/symbols/bonus/bonus.json",
-          "atlas": "gambit/bang-bang/assets/spine/symbols/bonus/1/bonus.atlas"
-        },
-        {
           "skel": "gambit/bang-bang/assets/spine/symbols/high_5/h_5.json",
           "atlas": "gambit/bang-bang/assets/spine/symbols/high_5/1/h_5.atlas"
         },
@@ -1137,6 +1133,10 @@
         {
           "skel": "gambit/bang-bang/assets/spine/symbols/low_3/l_3.json",
           "atlas": "gambit/bang-bang/assets/spine/symbols/low_3/1/l_3.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/low_1/l_1.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/low_1/1/l_1.atlas"
         }
       ],
       "idleAnim": "idle"
@@ -1174,10 +1174,6 @@
           "atlas": "gambit/bang-bang/assets/spine/symbols/wild/1/wild.atlas"
         },
         {
-          "skel": "gambit/bang-bang/assets/spine/symbols/bonus/bonus.json",
-          "atlas": "gambit/bang-bang/assets/spine/symbols/bonus/1/bonus.atlas"
-        },
-        {
           "skel": "gambit/bang-bang/assets/spine/symbols/high_5/h_5.json",
           "atlas": "gambit/bang-bang/assets/spine/symbols/high_5/1/h_5.atlas"
         },
@@ -1216,6 +1212,10 @@
         {
           "skel": "gambit/bang-bang/assets/spine/symbols/low_3/l_3.json",
           "atlas": "gambit/bang-bang/assets/spine/symbols/low_3/1/l_3.atlas"
+        },
+        {
+          "skel": "gambit/bang-bang/assets/spine/symbols/low_1/l_1.json",
+          "atlas": "gambit/bang-bang/assets/spine/symbols/low_1/1/l_1.atlas"
         }
       ],
       "idleAnim": "idle",
@@ -1519,10 +1519,6 @@
       "y": 0,
       "symbols": [
         {
-          "skel": "gambit/net-cash/assets/spine/Special_symbols/Collect/collect.json",
-          "atlas": "gambit/net-cash/assets/spine/Special_symbols/Collect/1/collect.atlas"
-        },
-        {
           "skel": "gambit/net-cash/assets/spine/High_symbols/high_4/high_4.json",
           "atlas": "gambit/net-cash/assets/spine/High_symbols/high_4/1/high_4.atlas"
         },
@@ -1565,6 +1561,10 @@
         {
           "skel": "gambit/net-cash/assets/spine/Low_symbols/low_1.json",
           "atlas": "gambit/net-cash/assets/spine/Low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/High_symbols/high_3/high_3.json",
+          "atlas": "gambit/net-cash/assets/spine/High_symbols/high_3/1/high_3.atlas"
         }
       ],
       "idleAnim": "idle"
@@ -1598,10 +1598,6 @@
       "y": 0,
       "symbols": [
         {
-          "skel": "gambit/net-cash/assets/spine/Special_symbols/Collect/collect.json",
-          "atlas": "gambit/net-cash/assets/spine/Special_symbols/Collect/1/collect.atlas"
-        },
-        {
           "skel": "gambit/net-cash/assets/spine/High_symbols/high_4/high_4.json",
           "atlas": "gambit/net-cash/assets/spine/High_symbols/high_4/1/high_4.atlas"
         },
@@ -1644,6 +1640,10 @@
         {
           "skel": "gambit/net-cash/assets/spine/Low_symbols/low_1.json",
           "atlas": "gambit/net-cash/assets/spine/Low_symbols/1/low.atlas"
+        },
+        {
+          "skel": "gambit/net-cash/assets/spine/High_symbols/high_3/high_3.json",
+          "atlas": "gambit/net-cash/assets/spine/High_symbols/high_3/1/high_3.atlas"
         }
       ],
       "idleAnim": "idle",
@@ -1739,7 +1739,7 @@
     "id": "mummy-money-hw--base",
     "game": "reelnroll/mummy-money-hw",
     "state": "base",
-    "description": "mummy-money-hw main game: animated background + 5x4 reel grid of 12 idle symbol spines (160x150px cells), authored 1920x1080, uniform-fit to viewport.",
+    "description": "mummy-money-hw main game: animated background + 5x4 reel grid of 11 idle symbol spines (160x150px cells), authored 1920x1080, uniform-fit to viewport.",
     "refWidth": 1920,
     "refHeight": 1080,
     "background": [
@@ -1762,10 +1762,6 @@
       "symbols": [
         {
           "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/scatter.json",
-          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/bonus.json",
           "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
         },
         {
@@ -1841,10 +1837,6 @@
       "symbols": [
         {
           "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/scatter.json",
-          "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "reelnroll/mummy-money-hw/assets/spine/symbols/bonus.json",
           "atlas": "reelnroll/mummy-money-hw/assets/spine/symbols/symbols.atlas"
         },
         {
@@ -1986,10 +1978,6 @@
           "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
         },
         {
-          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/bonus.json",
-          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
-        },
-        {
           "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h1.json",
           "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
         },
@@ -2007,6 +1995,10 @@
         },
         {
           "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h4.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/l4.json",
           "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -2056,10 +2048,6 @@
           "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
         },
         {
-          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/bonus.json",
-          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
-        },
-        {
           "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h1.json",
           "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
         },
@@ -2077,6 +2065,10 @@
         },
         {
           "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/h4.json",
+          "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/merhaba-bazaar/assets/spine/symbols/l4.json",
           "atlas": "reelnroll/merhaba-bazaar/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -2331,10 +2323,6 @@
           "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
         },
         {
-          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/bonus.json",
-          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
-        },
-        {
           "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/m3.json",
           "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
         },
@@ -2368,6 +2356,10 @@
         },
         {
           "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/l4.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/empty.json",
           "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -2410,10 +2402,6 @@
           "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
         },
         {
-          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/bonus.json",
-          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
-        },
-        {
           "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/m3.json",
           "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
         },
@@ -2447,6 +2435,10 @@
         },
         {
           "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/l4.json",
+          "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/empty.json",
           "atlas": "reelnroll/sands-of-olympus3-hw-c/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -2511,7 +2503,7 @@
     "id": "fruit-garden--base",
     "game": "check-in-gaming/fruit-garden",
     "state": "base",
-    "description": "fruit-garden main game: animated background + 5x4 reel grid of 12 idle symbol spines (344x226px cells), authored 1920x1080, uniform-fit to viewport.",
+    "description": "fruit-garden main game: animated background + 5x4 reel grid of 10 idle symbol spines (344x226px cells), authored 1920x1080, uniform-fit to viewport.",
     "refWidth": 1920,
     "refHeight": 1080,
     "background": [
@@ -2532,30 +2524,6 @@
       "x": 0,
       "y": 0,
       "symbols": [
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/collect_1.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_4.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_2.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_3.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_1.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/bonus_1.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
         {
           "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/wild.json",
           "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
@@ -2578,6 +2546,22 @@
         },
         {
           "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_3.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/low_2.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_1.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_2.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/empty.json",
           "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -2612,30 +2596,6 @@
       "y": 0,
       "symbols": [
         {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/collect_1.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_4.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_2.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_3.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/jackpot_1.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/bonus_1.json",
-          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
-        },
-        {
           "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/wild.json",
           "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
         },
@@ -2657,6 +2617,22 @@
         },
         {
           "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_3.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/low_2.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_1.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/medium_2.json",
+          "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/fruit-garden/assets/spine/symbols/empty.json",
           "atlas": "check-in-gaming/fruit-garden/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -2963,7 +2939,7 @@
     "id": "falconcash-hw--base",
     "game": "check-in-gaming/falconcash-hw",
     "state": "base",
-    "description": "falconcash-hw main game: animated background + 5x4 reel grid of 12 idle symbol spines (344x226px cells), authored 1920x1080, uniform-fit to viewport.",
+    "description": "falconcash-hw main game: animated background + 5x4 reel grid of 10 idle symbol spines (344x226px cells), authored 1920x1080, uniform-fit to viewport.",
     "refWidth": 1920,
     "refHeight": 1080,
     "background": [
@@ -2985,35 +2961,11 @@
       "y": 0,
       "symbols": [
         {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/collect_1.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
           "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/wild_1.json",
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         },
         {
           "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/high_1.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_4.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_2.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_3.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_1.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/bonus_1.json",
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         },
         {
@@ -3029,7 +2981,23 @@
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         },
         {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/collect_fly.json",
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_2.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_3.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_1.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_4.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/empty.json",
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -3064,35 +3032,11 @@
       "y": 0,
       "symbols": [
         {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/collect_1.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
           "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/wild_1.json",
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         },
         {
           "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/high_1.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_4.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_2.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_3.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/jackpot_1.json",
-          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
-        },
-        {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/bonus_1.json",
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         },
         {
@@ -3108,7 +3052,23 @@
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         },
         {
-          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/collect_fly.json",
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_2.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_3.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_1.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/low_4.json",
+          "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
+        },
+        {
+          "skel": "check-in-gaming/falconcash-hw/assets/spine/symbols/empty.json",
           "atlas": "check-in-gaming/falconcash-hw/assets/spine/symbols/symbols.atlas"
         }
       ],
@@ -3173,7 +3133,7 @@
     "id": "sweet-crumbs--base",
     "game": "playcognito/sweet-crumbs",
     "state": "base",
-    "description": "sweet-crumbs main game: animated background + 6x5 reel grid of 11 idle symbol spines (125x125px cells), authored 1920x1080, uniform-fit to viewport.",
+    "description": "sweet-crumbs main game: animated background + 6x5 reel grid of 10 idle symbol spines (125x125px cells), authored 1920x1080, uniform-fit to viewport.",
     "refWidth": 1920,
     "refHeight": 1080,
     "background": [
@@ -3194,10 +3154,6 @@
       "x": 0,
       "y": 0,
       "symbols": [
-        {
-          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/bonus.json",
-          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
-        },
         {
           "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/cherry.json",
           "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
@@ -3269,10 +3225,6 @@
       "x": 0,
       "y": 0,
       "symbols": [
-        {
-          "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/bonus.json",
-          "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
-        },
         {
           "skel": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/cherry.json",
           "atlas": "playcognito/sweet-crumbs/assets/spine/Symbols/exportLowSymbols/sweetlow.atlas"
@@ -3683,10 +3635,6 @@
           "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
         },
         {
-          "skel": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/golden_bonus.json",
-          "atlas": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/1/up_golden.atlas"
-        },
-        {
           "skel": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/up_golden.json",
           "atlas": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/1/up_golden.atlas"
         },
@@ -3704,6 +3652,10 @@
         },
         {
           "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolMashroom.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolTeapot.json",
           "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
         }
       ],
@@ -3762,10 +3714,6 @@
           "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_High/highs.atlas"
         },
         {
-          "skel": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/golden_bonus.json",
-          "atlas": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/1/up_golden.atlas"
-        },
-        {
           "skel": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/up_golden.json",
           "atlas": "playcognito/alice-bloody-rush/assets/spines/Bonus_symbol/export/1/up_golden.atlas"
         },
@@ -3783,6 +3731,10 @@
         },
         {
           "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolMashroom.json",
+          "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
+        },
+        {
+          "skel": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/aliceLowSymbolTeapot.json",
           "atlas": "playcognito/alice-bloody-rush/assets/spines/Symbols_low/lowSymbols.atlas"
         }
       ],

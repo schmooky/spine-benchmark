@@ -8,7 +8,7 @@
  * instance-ramp engine; differs only in what's on screen (a composed scene vs.
  * grids of one spine) and in the per-scene report detail.
  */
-import { Application } from "pixi.js";
+import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
 
 import type { BenchResult, ImpactInputs } from "@/types";
@@ -57,6 +57,83 @@ function sampleSceneImpact(spines: Spine[]): { ri: number; ci: number; one: Impa
     if (!one) one = d.inputs;
   }
   return { ri, ci, one };
+}
+
+/** Render app.stage, swallowing a broken-attachment crash. Returns false when
+ * the render threw (so the caller can skip the offending scene). */
+function safeRender(app: Application): boolean {
+  try {
+    app.render();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * On-canvas loading indicator: an animated arc + progress text, so it's obvious
+ * the app is fetching assets (not frozen/broken). Spins itself via rAF and
+ * renders each frame; call setProgress as assets settle, stop when done.
+ */
+function createLoader(app: Application): {
+  setProgress: (frac: number) => void;
+  stop: () => void;
+} {
+  const layer = new Container();
+  const cx = app.screen.width / 2;
+  const cy = app.screen.height / 2;
+  const ring = new Graphics();
+  const label = new Text({
+    text: "Loading scene assets  0%",
+    style: { fill: 0xe6e6e6, fontSize: 20, fontFamily: "ui-monospace, monospace" },
+  });
+  label.anchor.set(0.5);
+  label.position.set(cx, cy + 64);
+  const sub = new Text({
+    text: "preparing all scenes - this is not an error, just loading",
+    style: { fill: 0x8a8a8a, fontSize: 12, fontFamily: "ui-monospace, monospace" },
+  });
+  sub.anchor.set(0.5);
+  sub.position.set(cx, cy + 92);
+  layer.addChild(ring, label, sub);
+  app.stage.addChild(layer);
+
+  let frac = 0;
+  let angle = -Math.PI / 2;
+  let raf = 0;
+  let alive = true;
+  const draw = () => {
+    ring.clear();
+    ring.circle(cx, cy, 42).stroke({ width: 6, color: 0x2c2c30 });
+    ring.arc(cx, cy, 42, angle, angle + Math.max(0.25, frac * Math.PI * 2)).stroke({
+      width: 6,
+      color: 0xffffff,
+      cap: "round",
+    });
+    label.text = `Loading scene assets  ${Math.round(frac * 100)}%`;
+  };
+  const loop = () => {
+    if (!alive) return;
+    angle += 0.14;
+    draw();
+    safeRender(app);
+    raf = requestAnimationFrame(loop);
+  };
+  draw();
+  safeRender(app);
+  raf = requestAnimationFrame(loop);
+
+  return {
+    setProgress: (f) => {
+      frac = f;
+    },
+    stop: () => {
+      alive = false;
+      if (raf) cancelAnimationFrame(raf);
+      app.stage.removeChild(layer);
+      layer.destroy({ children: true });
+    },
+  };
 }
 
 export function startSceneBenchmark(
@@ -117,10 +194,15 @@ export function startSceneBenchmark(
       wakeLock = null;
     }
 
-    // ── load stuff: ONE dedup'd preload of every scene's assets. The gate only
-    // resolves when all assets have settled, so measuring never starts cold.
-    // Individually failed assets are tolerated (blank) by the reconstructor. ──
-    await preloadAllScenes(scenes, (frac) => hooks.onProgress(frac));
+    // ── load stuff: ONE dedup'd preload of every scene's assets, with an
+    // on-canvas spinner + progress so it's clearly loading (not broken). The
+    // gate only resolves when all assets have settled. ──
+    const loader = createLoader(app);
+    await preloadAllScenes(scenes, (frac) => {
+      loader.setProgress(frac);
+      hooks.onProgress(frac);
+    });
+    loader.stop();
     if (cancelled) throw new BenchCancelled();
     const playable = scenes; // build-time resilience handles any bad scene
     hooks.onMeasureStart();
@@ -177,7 +259,14 @@ export function startSceneBenchmark(
         // we drive updates ourselves (autoUpdate rides Pixi's shared ticker,
         // which we stopped) so animation never stalls independently of timing
         for (const s of spines) s.autoUpdate = false;
-        app.render(); // paint the first frame immediately
+        // first paint - if a broken attachment crashes render here, skip scene
+        if (!safeRender(app)) {
+          console.warn(`[scene] first render failed for ${d.id}, skipping`);
+          app.stage.removeChild(root);
+          root.destroy({ children: true });
+          resolve(null);
+          return;
+        }
 
         recorder.beginScenario({
           id: d.id,
@@ -246,9 +335,13 @@ export function startSceneBenchmark(
           const dtSec = dt / 1000;
           try {
             for (const s of spines) s.update(dtSec);
-            app.render();
           } catch (err) {
-            console.warn(`[scene] render failed for ${d.id}, skipping: ${(err as Error).message}`);
+            console.warn(`[scene] update failed for ${d.id}, skipping: ${(err as Error).message}`);
+            finish(null);
+            return;
+          }
+          if (!safeRender(app)) {
+            console.warn(`[scene] render failed for ${d.id}, skipping`);
             finish(null);
             return;
           }
