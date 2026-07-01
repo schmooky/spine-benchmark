@@ -1,0 +1,24 @@
+{
+  "note": "Representative set for the calibration study: spread across 4 studios and the full impact spectrum. Each will get base/bonus/big-win scene states where assets exist.",
+  "games": [
+    "gambit/fortune-numbers",
+    "gambit/magic-pipes",
+    "gambit/gems-of-olympus",
+    "gambit/book-of-zombies",
+    "gambit/coin-odyssey",
+    "gambit/bang-bang",
+    "gambit/legends-of-aztecs",
+    "gambit/net-cash",
+    "reelnroll/mummy-money-hw",
+    "reelnroll/merhaba-bazaar",
+    "reelnroll/three-kings",
+    "reelnroll/stars-of-egypt",
+    "reelnroll/sands-of-olympus3-hw-c",
+    "check-in-gaming/fruit-garden",
+    "check-in-gaming/bonbon-bonanza",
+    "check-in-gaming/falconcash-hw",
+    "playcognito/sweet-crumbs",
+    "playcognito/biochrome-city",
+    "playcognito/alice-bloody-rush"
+  ]
+}
