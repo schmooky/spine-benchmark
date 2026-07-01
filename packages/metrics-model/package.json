@@ -1,0 +1,19 @@
+{
+  "name": "@spine-benchmark/metrics-model",
+  "version": "0.1.0",
+  "description": "Fit a linear feature -> milliseconds cost model (ridge regression) from measured device runs, overall and per GPU family, with cross-validation. Replaces the hand-tuned RI/CI weights with data-fitted coefficients.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist"],
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "dependencies": { "@spine-benchmark/metrics-impact-formula": "^0.1.1" },
+  "devDependencies": { "typescript": "^5.9.3" }
+}

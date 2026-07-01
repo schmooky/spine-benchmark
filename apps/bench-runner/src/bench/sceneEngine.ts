@@ -11,6 +11,8 @@
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { GpuTimer, getGl2 } from "@spine-benchmark/gpu-timing";
+import { sampleCoverage } from "@spine-benchmark/render-tools";
+import type { Renderer } from "pixi.js";
 
 import type {
   ImpactInputs,
@@ -379,6 +381,20 @@ export function startSceneBenchmark(
           return;
         }
 
+        // measure fill coverage/overdraw ONCE for a representative instance -
+        // the RI term the formula was missing. Cheap (one offscreen read) and
+        // roughly animation-stable, so we reuse it for every per-frame sample.
+        let coverage = { coveredKpx: 0, overdrawFactor: 1 };
+        try {
+          const rep = spines[spines.length - 1] ?? spines[0];
+          if (rep) {
+            const c = sampleCoverage(app.renderer as Renderer, rep);
+            coverage = { coveredKpx: c.coveredKpx, overdrawFactor: c.overdrawFactor };
+          }
+        } catch {
+          /* coverage is best-effort */
+        }
+
         recorder.beginScenario({
           id: d.id,
           label: `${d.game} / ${d.state}`,
@@ -500,7 +516,11 @@ export function startSceneBenchmark(
           if (impactAge >= IMPACT_SAMPLE_MS && spines.length > 0) {
             const s = sampleSceneImpact(spines);
             lastImpact = { ri: s.ri, ci: s.ci };
-            lastInputs = s.one;
+            // attach the measured fill term so the captured feature vector
+            // carries coverage/overdraw for the offline fit
+            lastInputs = s.one
+              ? { ...s.one, coveredKpx: coverage.coveredKpx, overdrawFactor: coverage.overdrawFactor }
+              : null;
             impactAge = 0;
           }
           heapAge += dt;

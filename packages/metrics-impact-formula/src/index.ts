@@ -94,19 +94,50 @@ export interface RenderingImpactInputs {
   activeClippingMasks: number;
   /** Sum of vertices across all visible mesh attachments. */
   totalVertices: number;
+  /** Rasterized coverage in thousands of pixels (fill work). Optional so
+   * existing callers that can't measure coverage keep the legacy behavior. */
+  coveredKpx?: number;
+  /** Mean overdraw depth over the covered region (layered/semi-transparent
+   * fill multiplies fragment cost). Optional; defaults to 1. */
+  overdrawFactor?: number;
 }
 
+/** Tunable RI weights. Defaults reproduce the original formula exactly; the
+ * fitted values from @spine-benchmark/metrics-model can be injected instead. */
+export interface RenderingWeights {
+  nonNormalBlend: number;
+  clippingMask: number;
+  vertex: number;
+  /** per 1000 covered px (0 in the legacy formula - the missing fill term). */
+  coveredKpx: number;
+}
+
+export const DEFAULT_RENDERING_WEIGHTS: RenderingWeights = {
+  nonNormalBlend: 3,
+  clippingMask: 5,
+  vertex: 1 / 200,
+  coveredKpx: 0,
+};
+
 /**
- * RI formula:
+ * RI formula (parameterized):
  *
- *   RI = (activeNonNormalBlends × 3) + (activeClippingMasks × 5)
- *      + (totalVertices / 200)
+ *   RI = blends·w_blend + clips·w_clip + vertices·w_vertex
+ *      + coveredKpx·overdrawFactor·w_coveredKpx
+ *
+ * With {@link DEFAULT_RENDERING_WEIGHTS} and no coverage this equals the
+ * original `blends·3 + clips·5 + vertices/200`.
  */
-export function renderingImpactCost(inputs: RenderingImpactInputs): number {
+export function renderingImpactCost(
+  inputs: RenderingImpactInputs,
+  weights: RenderingWeights = DEFAULT_RENDERING_WEIGHTS,
+): number {
+  const overdraw = inputs.overdrawFactor ?? 1;
   return (
-    inputs.activeNonNormalBlends * 3 +
-    inputs.activeClippingMasks * 5 +
-    inputs.totalVertices / 200
+    inputs.activeNonNormalBlends * weights.nonNormalBlend +
+    inputs.activeClippingMasks * weights.clippingMask +
+    inputs.totalVertices * weights.vertex +
+    (inputs.coveredKpx ?? 0) * overdraw * weights.coveredKpx
   );
 }
 
@@ -161,22 +192,128 @@ export interface ComputationalImpactInputs {
  * mesh weights scale by per-mesh vertex density because deformation/skinning
  * is the dominant cost rather than mesh count alone.
  */
-export function computationalImpactCost(inputs: ComputationalImpactInputs): number {
+/** Tunable CI weights. Defaults reproduce the original formula. */
+export interface ComputationalWeights {
+  physics: number;
+  path: number;
+  ik: number;
+  transform: number;
+  deformedMeshBase: number;
+  weightedMeshBase: number;
+  vertex: number;
+}
+
+export const DEFAULT_COMPUTATIONAL_WEIGHTS: ComputationalWeights = {
+  physics: 0.7,
+  path: 0.55,
+  ik: 0.35,
+  transform: 0.2,
+  deformedMeshBase: 0.08,
+  weightedMeshBase: 0.1,
+  vertex: 1 / 2000,
+};
+
+export function computationalImpactCost(
+  inputs: ComputationalImpactInputs,
+  weights: ComputationalWeights = DEFAULT_COMPUTATIONAL_WEIGHTS,
+): number {
   const meshCount = Math.max(inputs.activeMeshCount, 1);
   const averageVerticesPerMesh = inputs.totalVertices / meshCount;
 
   const constraintCost =
-    inputs.constraints.physics * 0.7 +
-    inputs.constraints.path * 0.55 +
-    inputs.constraints.ik * 0.35 +
-    inputs.constraints.transform * 0.2;
+    inputs.constraints.physics * weights.physics +
+    inputs.constraints.path * weights.path +
+    inputs.constraints.ik * weights.ik +
+    inputs.constraints.transform * weights.transform;
 
-  const deformedMeshWeight = 0.08 + Math.min(0.5, averageVerticesPerMesh / 500);
-  const weightedMeshWeight = 0.1 + Math.min(0.55, averageVerticesPerMesh / 450);
+  const deformedMeshWeight = weights.deformedMeshBase + Math.min(0.5, averageVerticesPerMesh / 500);
+  const weightedMeshWeight = weights.weightedMeshBase + Math.min(0.55, averageVerticesPerMesh / 450);
   const meshComputationCost =
     inputs.deformedMeshCount * deformedMeshWeight +
     inputs.weightedMeshCount * weightedMeshWeight +
-    inputs.totalVertices / 2000;
+    inputs.totalVertices * weights.vertex;
 
   return constraintCost + meshComputationCost;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Fitted ms cost model (#2/#6/#7)
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Canonical per-instance feature vector. This is the contract between the
+ * runner (which captures these live), the offline fit (metrics-model), and the
+ * predictors here. Keep the keys stable - they are the columns of the fit.
+ */
+export interface ImpactFeatures {
+  vertices: number;
+  nonNormalBlends: number;
+  clippingMasks: number;
+  meshes: number;
+  weightedMeshes: number;
+  deformedMeshes: number;
+  ik: number;
+  transform: number;
+  path: number;
+  physics: number;
+  drawCallEst: number;
+  /** rasterized coverage, thousands of px (the missing RI/fill term). */
+  coveredKpx: number;
+  /** mean overdraw depth over the covered region. */
+  overdrawFactor: number;
+}
+
+export const FEATURE_KEYS: readonly (keyof ImpactFeatures)[] = [
+  "vertices", "nonNormalBlends", "clippingMasks", "meshes", "weightedMeshes",
+  "deformedMeshes", "ik", "transform", "path", "physics", "drawCallEst",
+  "coveredKpx", "overdrawFactor",
+];
+
+/** A fitted linear map feature-vector -> milliseconds (per instance). */
+export interface LinearCostModel {
+  /** fixed per-draw overhead, ms. */
+  intercept: number;
+  /** ms per unit of each feature (missing keys = 0). */
+  weights: Partial<Record<keyof ImpactFeatures, number>>;
+  /** optional provenance (e.g. GPU family this was fit on). */
+  fitFor?: string;
+}
+
+/** Predict milliseconds for one instance's features under a fitted model. */
+export function predictMs(features: ImpactFeatures, model: LinearCostModel): number {
+  let ms = model.intercept;
+  for (const k of FEATURE_KEYS) {
+    const w = model.weights[k];
+    if (w) ms += (features[k] ?? 0) * w;
+  }
+  return Math.max(0, ms);
+}
+
+/**
+ * Placeholder default models until real coefficients are fit from the fleet.
+ * GPU model carries the rendering/fill features; CPU model the compute ones.
+ * The magnitudes are seeded from the current unitless formula so behavior is
+ * sane before calibration; metrics-model replaces these.
+ */
+export const DEFAULT_GPU_COST_MODEL: LinearCostModel = {
+  intercept: 0.05,
+  weights: { vertices: 0.0005, nonNormalBlends: 0.003, clippingMasks: 0.01, coveredKpx: 0.002, drawCallEst: 0.02 },
+  fitFor: "placeholder",
+};
+
+export const DEFAULT_CPU_COST_MODEL: LinearCostModel = {
+  intercept: 0.02,
+  weights: { physics: 0.02, path: 0.015, ik: 0.008, transform: 0.004, deformedMeshes: 0.01, weightedMeshes: 0.008, vertices: 0.0002 },
+  fitFor: "placeholder",
+};
+
+/** Predicted GPU ms and CPU ms for one instance (the two-budget model, #7). */
+export function predictCostMs(
+  features: ImpactFeatures,
+  gpu: LinearCostModel = DEFAULT_GPU_COST_MODEL,
+  cpu: LinearCostModel = DEFAULT_CPU_COST_MODEL,
+): { gpuMs: number; cpuMs: number; totalMs: number } {
+  const g = predictMs(features, gpu);
+  const c = predictMs(features, cpu);
+  return { gpuMs: g, cpuMs: c, totalMs: g + c };
 }

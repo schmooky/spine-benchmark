@@ -10,3 +10,4 @@ export * from './debug/layers/MeshDebugLayer.js';
 export * from './debug/layers/PathConstraintDebugLayer.js';
 export * from './debug/layers/PhysicsConstraintDebugLayer.js';
 export * from './debug/layers/TransformConstraintDebugLayer.js';
+export * from './coverageSampler.js';
