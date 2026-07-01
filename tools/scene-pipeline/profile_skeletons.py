@@ -2,6 +2,13 @@
 """
 Offline skeleton profiler for the spine-bench scene pipeline.
 
+NOTE (thesis #4): the static counts here are for asset DISCOVERY / shortlisting
+ONLY. They over-read a complex spine's real cost by ~150x (they count every
+attachment in the skin, not the few active in any live pose). The authoritative
+cost grade is LIVE - the runner's per-frame RI/CI and the reusable timeline
+grader gradeOverTimeline() in @spine-benchmark/metrics-sampling. Do NOT use these
+static ri/ci as cost inputs to the fit.
+
 Walks the extracted game sources, finds every Spine skeleton (.json), pairs it
 with its atlas, and computes a STATIC approximation of the canonical
 Rendering-Impact (RI) and Computational-Impact (CI) scores used by the runner

@@ -29,7 +29,8 @@
     "tailwind-merge": "^3.0.2",
     "vaul": "^1.1.2",
     "zustand": "^5.0.3",
-    "@spine-benchmark/gpu-timing": "^0.1.0"
+    "@spine-benchmark/gpu-timing": "^0.1.0",
+    "@spine-benchmark/metrics-sampling": "*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.9",
