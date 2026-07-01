@@ -163,6 +163,13 @@ export interface ScenarioResult {
     maxInstances: number;
     riPeak: number;
     ciPeak: number;
+    /** True GPU render time (EXT timer query); null when unsupported. The
+     * vsync-independent cost signal used to validate/refit RI. */
+    gpuMsAvg?: number | null;
+    gpuMsP95?: number | null;
+    /** CPU time advancing spines (spine.update); the compute-side (CI) signal. */
+    cpuMsAvg?: number | null;
+    cpuMsP95?: number | null;
   };
   steps?: { instances: number; fps: number; frameMsP95: number }[];
   /** Set when the scenario was cut short or capped (reason). */
@@ -226,6 +233,10 @@ export interface PerSecondRow {
   heapMb: number | null;
   /** Raw formula inputs for ONE instance at sample time. */
   one: ImpactInputs | null;
+  /** Mean true GPU render time this second (EXT timer query), or null. */
+  gpuMs?: number | null;
+  /** Mean CPU spine-update time this second, or null. */
+  cpuMs?: number | null;
 }
 
 export interface RunCapture {

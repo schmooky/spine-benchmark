@@ -10,6 +10,7 @@
  */
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
+import { GpuTimer, getGl2 } from "@spine-benchmark/gpu-timing";
 
 import type {
   ImpactInputs,
@@ -225,6 +226,9 @@ export function startSceneBenchmark(
     // and renders each frame itself. Stop Pixi's own ticker so the two don't
     // fight (and so animation can't stall while the run keeps timing).
     app.ticker.stop();
+    // true GPU render cost per frame (vsync-independent). Null on Safari/mobile
+    // where the extension is missing - CPU timing still works.
+    const gpuTimer = new GpuTimer(getGl2(app.renderer));
 
     const watcher = new PerfWatcher();
     watcher.start(app.canvas);
@@ -406,6 +410,7 @@ export function startSceneBenchmark(
         let lastImpact = { ri: 0, ci: 0 };
         let lastInputs: ImpactInputs | null = null;
         let lastHeapMb: number | null = null;
+        let lastGpuMs: number | null = null;
         let lastHud = 0;
         const recentDts: number[] = [];
 
@@ -456,8 +461,11 @@ export function startSceneBenchmark(
           // advance every spine and paint - this is what actually animates the
           // scene (spine.update takes seconds), independent of any Pixi ticker.
           // A blank attachment (missing region) can throw in render; skip that
-          // scene rather than wedge the whole run.
+          // scene rather than wedge the whole run. We time the CPU (update) and
+          // GPU (render) separately - that separation is what lets us fit the
+          // computational vs rendering cost and dodge the vsync floor.
           const dtSec = dt / 1000;
+          const cpuStart = performance.now();
           try {
             for (const s of spines) s.update(dtSec);
           } catch (err) {
@@ -465,7 +473,14 @@ export function startSceneBenchmark(
             finish(null);
             return;
           }
-          if (!safeRender(app)) {
+          const cpuMs = performance.now() - cpuStart;
+          gpuTimer.begin();
+          const ok = safeRender(app);
+          gpuTimer.end();
+          gpuTimer.poll((ms) => {
+            lastGpuMs = ms;
+          });
+          if (!ok) {
             console.warn(`[scene] render failed for ${d.id}, skipping`);
             finish(null);
             return;
@@ -508,6 +523,8 @@ export function startSceneBenchmark(
             ci: lastImpact.ci,
             one: lastInputs,
             heapMb: lastHeapMb,
+            gpuMs: gpuTimer.supported ? lastGpuMs : null,
+            cpuMs,
           });
 
           recentDts.push(dt);
@@ -633,6 +650,7 @@ export function startSceneBenchmark(
     } finally {
       document.removeEventListener("visibilitychange", onVisibility);
       void wakeLock?.release().catch(() => undefined);
+      gpuTimer.dispose();
       try {
         app?.destroy(true, { children: true });
       } catch {

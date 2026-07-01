@@ -6,6 +6,12 @@ import type { ImpactInputs, PerSecondRow, ScenarioResult } from "@/types";
  * derives per-second rows and per-scenario aggregate stats.
  */
 
+/** Mean rounded to 1dp, or null for an empty sample (GPU timing unsupported). */
+function mean1(xs: number[]): number | null {
+  if (xs.length === 0) return null;
+  return Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10;
+}
+
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
   const idx = Math.min(
@@ -30,6 +36,11 @@ export interface TickSample {
   /** Raw formula inputs for ONE instance, or null before first sample. */
   one: ImpactInputs | null;
   heapMb: number | null;
+  /** True GPU render time for the frame (EXT timer query), or null when the
+   * extension is unavailable. This is the vsync-independent cost signal. */
+  gpuMs?: number | null;
+  /** CPU time spent advancing spines this frame (spine.update), ms. */
+  cpuMs?: number;
 }
 
 export class Recorder {
@@ -46,6 +57,12 @@ export class Recorder {
   private ciPeak = 0;
   private steps: NonNullable<ScenarioResult["steps"]> = [];
   private abortedReason: string | null = null;
+
+  // GPU/CPU cost samples (the vsync-independent signal)
+  private gpuMs: number[] = [];
+  private cpuMs: number[] = [];
+  private secGpu: number[] = [];
+  private secCpu: number[] = [];
 
   // rolling per-second window
   private secDts: number[] = [];
@@ -69,6 +86,10 @@ export class Recorder {
     this.ciPeak = 0;
     this.steps = [];
     this.abortedReason = null;
+    this.gpuMs = [];
+    this.cpuMs = [];
+    this.secGpu = [];
+    this.secCpu = [];
     this.secDts = [];
     this.secStart = 0;
   }
@@ -95,6 +116,14 @@ export class Recorder {
     this.lastCi = sample.ci;
     this.riPeak = Math.max(this.riPeak, sample.ri);
     this.ciPeak = Math.max(this.ciPeak, sample.ci);
+    if (sample.gpuMs != null) {
+      this.gpuMs.push(sample.gpuMs);
+      this.secGpu.push(sample.gpuMs);
+    }
+    if (sample.cpuMs != null) {
+      this.cpuMs.push(sample.cpuMs);
+      this.secCpu.push(sample.cpuMs);
+    }
 
     if (this.elapsedMs - this.secStart >= 1000) {
       const secMs = this.elapsedMs - this.secStart;
@@ -111,8 +140,12 @@ export class Recorder {
         ci: Math.round(sample.ci * 10) / 10,
         heapMb: sample.heapMb,
         one: sample.one,
+        gpuMs: mean1(this.secGpu),
+        cpuMs: mean1(this.secCpu),
       });
       this.secDts = [];
+      this.secGpu = [];
+      this.secCpu = [];
       this.secStart = this.elapsedMs;
     }
   }
@@ -155,6 +188,16 @@ export class Recorder {
         maxInstances: this.maxInstances,
         riPeak: Math.round(this.riPeak * 10) / 10,
         ciPeak: Math.round(this.ciPeak * 10) / 10,
+        gpuMsAvg: mean1(this.gpuMs),
+        gpuMsP95:
+          this.gpuMs.length > 0
+            ? Math.round(percentile([...this.gpuMs].sort((a, b) => a - b), 95) * 10) / 10
+            : null,
+        cpuMsAvg: mean1(this.cpuMs),
+        cpuMsP95:
+          this.cpuMs.length > 0
+            ? Math.round(percentile([...this.cpuMs].sort((a, b) => a - b), 95) * 10) / 10
+            : null,
       },
       steps: this.steps.length > 0 ? this.steps : undefined,
       ...(this.abortedReason ? { aborted: this.abortedReason } : {}),

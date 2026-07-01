@@ -1,0 +1,28 @@
+{
+  "name": "@spine-benchmark/gpu-timing",
+  "version": "0.1.0",
+  "description": "GPU timer-query (EXT_disjoint_timer_query_webgl2) wrapper for reading true render cost per scene, independent of vsync, with a CPU fallback. Zero runtime dependencies.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "devDependencies": { "typescript": "^5.9.3" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schmooky/spine-benchmark.git",
+    "directory": "packages/gpu-timing"
+  }
+}

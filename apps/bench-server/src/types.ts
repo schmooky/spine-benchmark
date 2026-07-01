@@ -51,6 +51,12 @@ export interface ScenarioResult {
     /** RI/CI of one instance times instance count, sampled per second. */
     riPeak: number;
     ciPeak: number;
+    /** True GPU render time (EXT timer query) - the vsync-independent cost. */
+    gpuMsAvg?: number | null;
+    gpuMsP95?: number | null;
+    /** CPU spine-update time (compute-side cost). */
+    cpuMsAvg?: number | null;
+    cpuMsP95?: number | null;
   };
   /** For ramp scenarios: per-step rows (instances vs achieved fps). */
   steps?: { instances: number; fps: number; frameMsP95: number }[];
