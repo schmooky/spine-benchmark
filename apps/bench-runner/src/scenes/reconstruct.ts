@@ -169,13 +169,36 @@ export async function loadSceneAssets(
   );
 }
 
+interface AnimDef {
+  name: string;
+  duration: number;
+}
+
+/**
+ * Pick an animation to loop. Prefers an exact requested name, then a
+ * conventional idle/loop name, then the longest animation (the most
+ * representative continuous motion) - so a symbol without a literal "idle"
+ * still visibly animates instead of sitting in its setup pose.
+ */
+function pickLoopAnim(anims: AnimDef[], preferred?: string | null): string | undefined {
+  if (anims.length === 0) return undefined;
+  if (preferred) {
+    const exact = anims.find((a) => a.name === preferred);
+    if (exact) return exact.name;
+  }
+  const idle =
+    anims.find((a) => /^(idle|loop|idle_?loop|idle_?1|main|animation)$/i.test(a.name)) ??
+    anims.find((a) => /idle|loop/i.test(a.name));
+  if (idle) return idle.name;
+  return anims.reduce((a, b) => (b.duration > a.duration ? b : a)).name;
+}
+
 function makeSpine(p: Placement): Spine {
   const spine = spineFrom(aliasFor(p.skel), aliasFor(p.atlas));
   spine.x = p.x;
   spine.y = p.y;
   if (p.scale != null) spine.scale.set(p.scale);
-  const anims = spine.skeleton.data.animations;
-  const want = p.anim && anims.find((a) => a.name === p.anim) ? p.anim : anims[0]?.name;
+  const want = pickLoopAnim(spine.skeleton.data.animations, p.anim);
   if (want) spine.state.setAnimation(0, want, p.loop ?? true);
   return spine;
 }
@@ -226,10 +249,10 @@ export function buildScene(d: SceneDescriptor): Container {
         const anims = spine.skeleton.data.animations;
         const isWin = winSet.has(`${c},${r}`);
         // winning-line cells play their heavier `win` animation when present;
-        // everything else idles (desynced so they don't blink in unison)
-        const winName = g.winAnim && anims.find((a) => a.name === g.winAnim) ? g.winAnim : null;
-        const idleName = g.idleAnim && anims.find((a) => a.name === g.idleAnim) ? g.idleAnim : anims[0]?.name;
-        const want = isWin && winName ? winName : idleName;
+        // everything else loops an idle (desynced so they don't blink in unison)
+        const winName =
+          isWin && g.winAnim ? anims.find((a) => a.name === g.winAnim)?.name : undefined;
+        const want = winName ?? pickLoopAnim(anims, g.idleAnim);
         if (want) {
           const entry = spine.state.setAnimation(0, want, true);
           entry.trackTime = Math.random() * Math.max(0.01, entry.animation!.duration);
@@ -263,10 +286,17 @@ export interface FitResult {
  * fit inside viewport with `margin` (0..1) padding, centered. Returns the
  * applied scale + resulting on-screen area (for the report to normalise RI).
  */
-/** Union of children's bounds, skipping any child whose bounds are degenerate
- * or non-finite (a blank attachment from the lenient loader can poison a whole
- * getLocalBounds()). Falls back to the reference frame if nothing is valid. */
-function safeBounds(root: Container): Rectangle {
+/**
+ * Robust fit bounds. Unions each child's bounds but DISCARDS outliers - a
+ * background spine with a stray far-off bone/attachment (or a blank attachment
+ * from the lenient loader) would otherwise blow the union up and shrink the
+ * whole scene to a black speck. Anything wider/taller than `maxW`/`maxH`
+ * (a multiple of the game's reference frame) is ignored, and the result is
+ * unioned with the reference frame so small scenes don't over-zoom.
+ */
+function robustBounds(root: Container, refW: number, refH: number): Rectangle {
+  const maxW = refW * 2.5;
+  const maxH = refH * 2.5;
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const child of root.children) {
     let cb: Rectangle;
@@ -278,7 +308,8 @@ function safeBounds(root: Container): Rectangle {
     if (
       !Number.isFinite(cb.x) || !Number.isFinite(cb.y) ||
       !Number.isFinite(cb.width) || !Number.isFinite(cb.height) ||
-      cb.width <= 0 || cb.height <= 0
+      cb.width <= 0 || cb.height <= 0 ||
+      cb.width > maxW || cb.height > maxH
     ) {
       continue;
     }
@@ -287,7 +318,12 @@ function safeBounds(root: Container): Rectangle {
     maxX = Math.max(maxX, cb.x + cb.width);
     maxY = Math.max(maxY, cb.y + cb.height);
   }
-  if (!Number.isFinite(minX)) return new Rectangle(-960, -540, 1920, 1080);
+  // anchor to the reference frame (centered on origin) so the scene sits at a
+  // sane scale even when content is tiny or entirely skipped
+  minX = Math.min(minX, -refW / 2);
+  minY = Math.min(minY, -refH / 2);
+  maxX = Math.max(maxX, refW / 2);
+  maxY = Math.max(maxY, refH / 2);
   return new Rectangle(minX, minY, maxX - minX, maxY - minY);
 }
 
@@ -295,19 +331,13 @@ export function fitContainer(
   root: Container,
   vw: number,
   vh: number,
+  refW = 1920,
+  refH = 1080,
   margin = 0.94,
 ): FitResult {
   root.scale.set(1);
   root.position.set(0, 0);
-  let b: Rectangle;
-  try {
-    b = root.getLocalBounds().rectangle;
-    if (!Number.isFinite(b.width) || !Number.isFinite(b.height) || b.width <= 0 || b.height <= 0) {
-      b = safeBounds(root);
-    }
-  } catch {
-    b = safeBounds(root);
-  }
+  const b = robustBounds(root, refW, refH);
   const w = Math.max(1, b.width);
   const h = Math.max(1, b.height);
   const scale = Math.min((vw * margin) / w, (vh * margin) / h);

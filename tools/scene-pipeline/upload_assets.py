@@ -61,13 +61,18 @@ def main():
     bucket = env["S3_BUCKET"]
     s3 = client(env)
 
-    # gather files
+    # gather files: asset spine trees only (dirs named spine OR spines that live
+    # under an assets/ path - never source dirs like src/libs/spine).
     files: list[tuple[Path, str, int]] = []  # (path, key, size)
     for g in games:
-        spine_dirs = list((root / g).rglob("spine")) or list((root / g).rglob("spines"))
+        gdir = root / g
+        spine_dirs = [
+            d
+            for name in ("spine", "spines")
+            for d in gdir.rglob(name)
+            if d.is_dir() and "assets" in d.relative_to(gdir).parts
+        ]
         for sd in spine_dirs:
-            if not sd.is_dir():
-                continue
             for f in sd.rglob("*"):
                 if f.is_file():
                     key = str(f.relative_to(root))

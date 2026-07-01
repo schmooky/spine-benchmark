@@ -99,6 +99,10 @@ export function startSceneBenchmark(
       throw new BenchCancelled();
     }
     host.appendChild(app.canvas);
+    // The measure loop is the single source of truth: it advances every spine
+    // and renders each frame itself. Stop Pixi's own ticker so the two don't
+    // fight (and so animation can't stall while the run keeps timing).
+    app.ticker.stop();
 
     const watcher = new PerfWatcher();
     watcher.start(app.canvas);
@@ -156,7 +160,7 @@ export function startSceneBenchmark(
         try {
           root = buildScene(d);
           app.stage.addChild(root);
-          fit = fitContainer(root, app.screen.width, app.screen.height);
+          fit = fitContainer(root, app.screen.width, app.screen.height, d.refWidth, d.refHeight);
           spines = sceneSpines(root);
         } catch (err) {
           console.warn(`[scene] build failed for ${d.id}, skipping: ${(err as Error).message}`);
@@ -170,6 +174,10 @@ export function startSceneBenchmark(
           resolve(null);
           return;
         }
+        // we drive updates ourselves (autoUpdate rides Pixi's shared ticker,
+        // which we stopped) so animation never stalls independently of timing
+        for (const s of spines) s.autoUpdate = false;
+        app.render(); // paint the first frame immediately
 
         recorder.beginScenario({
           id: d.id,
@@ -230,6 +238,20 @@ export function startSceneBenchmark(
           }
           elapsed += dt;
           runElapsed += dt;
+
+          // advance every spine and paint - this is what actually animates the
+          // scene (spine.update takes seconds), independent of any Pixi ticker.
+          // A blank attachment (missing region) can throw in render; skip that
+          // scene rather than wedge the whole run.
+          const dtSec = dt / 1000;
+          try {
+            for (const s of spines) s.update(dtSec);
+            app.render();
+          } catch (err) {
+            console.warn(`[scene] render failed for ${d.id}, skipping: ${(err as Error).message}`);
+            finish(null);
+            return;
+          }
 
           if (dt >= STALL_FRAME_MS) {
             stallMs += dt;

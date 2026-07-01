@@ -39,11 +39,11 @@ async function main() {
 
   let idx = 0;
   const params = new URLSearchParams(location.search);
-  // ?src=s3 loads assets from the bucket; otherwise the local /games/ symlink.
-  if (params.get("src") === "s3") {
-    (window as unknown as { __ASSET_BASE: string }).__ASSET_BASE =
-      "https://s3.twcstorage.ru/spine-run/";
-  }
+  // S3 is the default asset source; ?src=local uses the local /games/ symlink.
+  (window as unknown as { __ASSET_BASE: string }).__ASSET_BASE =
+    params.get("src") === "local"
+      ? "/games/"
+      : "https://s3.twcstorage.ru/spine-run/";
   const want = params.get("scene");
   if (want) {
     const i = SCENES.findIndex((s) => s.id === want);
@@ -80,7 +80,7 @@ async function main() {
       return;
     }
     app.stage.addChild(current);
-    const fit = fitContainer(current, app.screen.width, app.screen.height);
+    const fit = fitContainer(current, app.screen.width, app.screen.height, d.refWidth, d.refHeight);
     hud.textContent =
       `${d.id}  (${idx + 1}/${SCENES.length})  tier=${d.tier}\n` +
       `${d.description}\n` +

@@ -23,10 +23,10 @@ export function Landing({ onStart }: { onStart: () => void }) {
       <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 shadow-2xl">
         <h1 className="text-xl font-semibold">Spine Run</h1>
         <p className="mt-1 text-sm text-neutral-400">
-          Device benchmark for Spine animation budgets. It plays bundled
-          scenes for about{" "}
+          Device benchmark for Spine animation budgets. It plays real game
+          scenes for{" "}
           <span className="text-neutral-200">
-            {quick ? `${totalSeconds()} seconds (quick mode)` : `${mins} minutes`}
+            {quick ? `${totalSeconds()} seconds (quick mode)` : `~${mins} minutes`}
           </span>{" "}
           while recording frame timings, then uploads the result and gives
           you a short run code.

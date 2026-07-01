@@ -57,8 +57,13 @@ ANNOUNCER_RE = re.compile(r"(big[_-]?win|mega[_-]?win|super[_-]?win|huge[_-]?win
 SYMBOL_SEG_RE = re.compile(r"symbol|/hl_|/low_|/high_|/med_", re.I)
 SYMBOL_NAME_RE = re.compile(r"^(low|high|med|hl|h|l|m|sym)[_\-0-9]|^(wild|scatter)$", re.I)
 NOT_SYMBOL_RE = re.compile(r"(boss|button|vfx|logo|trail|winbox|character|transition|wide|counter|shaker|frame|light|coin|snitch|multip|spin)", re.I)
-MAIN_BG_RE = re.compile(r"(background_main|bg_main|/bg/|/main/maingame|maingame\.json|background\.json|/background/)", re.I)
-BONUS_BG_RE = re.compile(r"(background_bonus|bg_bonus|/bonus)", re.I)
+# main background: broad, so games with names like main_game / bg_main / layout
+# bg / background_base are caught (bonus + symbols are filtered out first).
+MAIN_BG_RE = re.compile(
+    r"(background|bg_main|main_?game|maingame|/bg/|/layout/.*bg|background_base)", re.I)
+BONUS_BG_RE = re.compile(r"(background_bonus|bg_bonus)", re.I)
+# never pick assets out of backup / old export dirs
+BACKUP_RE = re.compile(r"(/_bak|/bak/|backup|/old/|_old|/deprecated)", re.I)
 
 
 def pick_anim(anims, *prefer):
@@ -79,7 +84,7 @@ def classify(spines):
     for s in spines:
         skel = s["skel"].lower()
         name = s["id"].split("--", 1)[1].lower()
-        if s["atlas"] is None:
+        if s["atlas"] is None or BACKUP_RE.search(skel):
             continue
         if BONUS_BG_RE.search(skel):
             if bonus_bg is None or s["total"] > bonus_bg["total"]:
@@ -142,17 +147,16 @@ def build_for(game, entry):
         "background": bg_layers, "grid": grid, "overlays": [], "tier": tier_from(grid_total),
     })
 
-    if bonus_bg:
-        scenes.append({
-            "id": f"{gname}--bonus", "game": game, "state": "bonus",
-            "description": f"{gname} bonus/free-spins: bonus background spine + the "
-                           f"{cols}x{rows} idle symbol grid.",
-            "refWidth": 1920, "refHeight": 1080,
-            "background": [placement(bonus_bg)], "grid": grid, "overlays": [],
-            "tier": tier_from(grid_total + bonus_bg["total"]),
-        })
+    # NOTE: no separate "bonus" state - bonus-background detection is unreliable
+    # (often a symbol named "bonus" or a bg paired with the wrong atlas, giving
+    # black scenes). base + big-win cover idle and the win path, which is what
+    # the calibration study needs.
 
-    win_cells = [[c, rows // 2] for c in range(cols)]
+    # play the win animation across several lines so plenty of symbols show
+    # their win state (not just the middle row) - keep a couple rows idling for
+    # contrast / the idle-vs-win RI step.
+    win_rows = sorted({rows // 2, 0, max(0, rows - 2)})
+    win_cells = [[c, r] for r in win_rows for c in range(cols)]
     overlays = []
     if announcers:
         a = announcers[0]
