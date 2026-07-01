@@ -185,6 +185,10 @@ export interface RunSummary {
   abortReason?: string;
   /** Reconstructed from a crash stash - the browser died mid-run. */
   crashed?: boolean;
+  /** Scene ids that crashed the tab (killed the page) and were skipped on resume. */
+  crashedScenes?: string[];
+  /** Scene ids skipped (crash or un-loadable/broken). */
+  skippedScenes?: string[];
 }
 
 export interface TimelineEvent {

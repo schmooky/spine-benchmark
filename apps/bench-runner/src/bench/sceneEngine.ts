@@ -11,13 +11,19 @@
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
 
-import type { BenchResult, ImpactInputs } from "@/types";
+import type {
+  ImpactInputs,
+  LoafSummary,
+  LongTaskSummary,
+  PerSecondRow,
+  RuntimeProbes,
+  ScenarioResult,
+  TimelineEvent,
+} from "@/types";
 import { Recorder } from "./recorder";
 import { measureFrameImpactDetailed } from "./impact";
 import { cpuScore, heapSnapshot, measureDisplayHz, readBattery } from "./probes";
 import { PerfWatcher, spineResourceTimings } from "./watcher";
-import { saveStash } from "@/lib/stash";
-import { CLIENT_VERSION } from "@/config";
 import {
   buildScene,
   buildStats,
@@ -61,6 +67,26 @@ export interface SceneHooks {
   onProgress: (fraction: number) => void;
   /** Fired once the gate is fully loaded and measuring is about to begin. */
   onMeasureStart: () => void;
+  /** Fired right BEFORE a scene is measured (persist "in progress" = crash marker). */
+  onSceneEnter: (sceneId: string) => void;
+  /** Fired when a scene finishes (result) or is skipped (result null). */
+  onSceneDone: (
+    sceneId: string,
+    result: ScenarioResult | null,
+    perSecond: PerSecondRow[],
+  ) => void;
+}
+
+/** What a single measuring segment (one page load) reports back for the final
+ * assembled upload. Per-scene data arrives via onSceneDone. */
+export interface SegmentResult {
+  environment: RuntimeProbes;
+  contextLost: boolean;
+  longTasks: LongTaskSummary | null;
+  loaf: LoafSummary | null;
+  events: TimelineEvent[];
+  resources: { name: string; durationMs: number; transferSize: number }[];
+  hiddenMs: number;
 }
 
 /** Sum the live RI/CI across every spine in the scene (real composite cost). */
@@ -158,8 +184,9 @@ export function startSceneBenchmark(
   host: HTMLElement,
   scenes: SceneDescriptor[],
   totalSeconds: number,
+  skip: Set<string>,
   hooks: SceneHooks,
-): { result: Promise<BenchResult>; cancel: () => void } {
+): { result: Promise<SegmentResult>; cancel: () => void } {
   let cancelled = false;
   let app: Application | null = null;
   let wakeLock: { release: () => Promise<void> } | null = null;
@@ -168,7 +195,7 @@ export function startSceneBenchmark(
     cancelled = true;
   };
 
-  const result = (async (): Promise<BenchResult> => {
+  const result = (async (): Promise<SegmentResult> => {
     // pre-run probes
     const displayHz = await measureDisplayHz();
     const cpuScoreStart = cpuScore();
@@ -212,48 +239,61 @@ export function startSceneBenchmark(
       wakeLock = null;
     }
 
-    // ── load stuff: ONE dedup'd preload of every scene's assets, with an
-    // on-canvas spinner + progress so it's clearly loading (not broken). The
-    // gate only resolves when all assets have settled. ──
+    // scenes we still need to measure this segment (skip already-done / crashed).
+    const toMeasure = scenes.filter((d) => !skip.has(d.id));
+
+    // ── load stuff: preload only the scenes this segment will measure, with an
+    // on-canvas spinner + progress. Loading less on a resume also lowers the
+    // memory that killed the tab last time. ──
     const loader = createLoader(app);
-    await preloadAllScenes(scenes, (frac) => {
+    await preloadAllScenes(toMeasure, (frac) => {
       loader.setProgress(frac);
       hooks.onProgress(frac);
     });
     loader.stop();
     if (cancelled) throw new BenchCancelled();
-    const playable = scenes; // build-time resilience handles any bad scene
     hooks.onMeasureStart();
 
-    const recorder = new Recorder();
+    let hiddenMs = 0;
     let hiddenAt: number | null = null;
     let resumeSkip = false;
     const onVisibility = () => {
       if (document.hidden) {
         hiddenAt = performance.now();
       } else if (hiddenAt != null) {
-        recorder.hiddenMs += performance.now() - hiddenAt;
+        hiddenMs += performance.now() - hiddenAt;
         hiddenAt = null;
         resumeSkip = true;
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
 
-    // weighted time budget: stress scenes get more time (they ramp density).
+    // weighted time budget computed over the FULL run (stress scenes get more
+    // time) so a scene's duration is identical whether it runs now or after a
+    // resume. We only MEASURE toMeasure, but weight over all `scenes`.
     const weightOf = (d: SceneDescriptor) => (d.stress ? STRESS_WEIGHT : 1);
-    const sumWeight = playable.reduce((a, d) => a + weightOf(d), 0);
-    const budgetMs = Math.max(1, totalSeconds * 1000 - SETTLE_MS * (playable.length - 1));
+    const sumWeight = scenes.reduce((a, d) => a + weightOf(d), 0);
+    const budgetMs = Math.max(1, totalSeconds * 1000 - SETTLE_MS * (scenes.length - 1));
     const durOf = (d: SceneDescriptor) =>
       Math.max(3000, Math.floor((budgetMs * weightOf(d)) / sumWeight));
     const totalMs =
-      playable.reduce((a, d) => a + durOf(d), 0) + SETTLE_MS * (playable.length - 1);
-    const startedAt = new Date().toISOString();
+      scenes.reduce((a, d) => a + durOf(d), 0) + SETTLE_MS * (scenes.length - 1);
     let runElapsed = 0;
 
-    /** Play + measure one scene for sceneDur ms; resolves with abort reason or null. */
+    /** Play + measure one scene for sceneDur ms. Emits onSceneDone (result, or
+     * null when skipped) and resolves with the abort reason or null. Uses its
+     * own recorder so each scene is an atomic, independently-uploadable unit. */
     const runScene = (d: SceneDescriptor, index: number, sceneDur: number) =>
       new Promise<string | null>((resolve, reject) => {
         if (!app) return reject(new BenchCancelled());
+
+        const recorder = new Recorder();
+        /** Skip this scene (bad assets / crash-in-render) - no result. */
+        const skipScene = (why: string) => {
+          console.warn(`[scene] ${why} for ${d.id}, skipping`);
+          hooks.onSceneDone(d.id, null, []);
+          resolve(null);
+        };
 
         buildStats.missingRegions = 0;
         buildStats.spines = 0;
@@ -318,23 +358,20 @@ export function startSceneBenchmark(
             }
           }
         } catch (err) {
-          console.warn(`[scene] build failed for ${d.id}, skipping: ${(err as Error).message}`);
-          resolve(null);
+          skipScene(`build failed (${(err as Error).message})`);
           return;
         }
         if (spines.length === 0) {
-          // nothing rendered (all assets for this scene failed) - skip
           app.stage.removeChild(root);
           root.destroy({ children: true });
-          resolve(null);
+          skipScene("nothing rendered (assets failed)");
           return;
         }
         // first paint - if a broken attachment crashes render here, skip scene
         if (!safeRender(app)) {
-          console.warn(`[scene] first render failed for ${d.id}, skipping`);
           app.stage.removeChild(root);
           root.destroy({ children: true });
-          resolve(null);
+          skipScene("first render failed");
           return;
         }
 
@@ -385,6 +422,8 @@ export function startSceneBenchmark(
           if (stress && stepDts.length > 0) recorder.closeStep(stressSteps[stepIdx], stepDts);
           if (reason) recorder.markAborted(reason);
           cleanup();
+          const fin = recorder.finalize(false);
+          hooks.onSceneDone(d.id, fin.scenarios[0] ?? null, fin.perSecond);
           resolve(reason);
         };
 
@@ -462,23 +501,6 @@ export function startSceneBenchmark(
               finish(`heap at ${heap.usedMb}/${heap.limitMb} MB`);
               return;
             }
-            saveStash({
-              startedAt,
-              updatedAt: new Date().toISOString(),
-              clientVersion: CLIENT_VERSION,
-              scenarioId: d.id,
-              scenarioIndex: index,
-              scenarioCount: playable.length,
-              elapsedMs: Math.round(runElapsed),
-              instances: spines.length,
-              fps: recentDts.length
-                ? Math.round((1000 / (recentDts.reduce((a, b) => a + b, 0) / recentDts.length)) * 10) / 10
-                : 0,
-              heapMb: lastHeapMb,
-              displayHz,
-              cpuScoreStart,
-              recentSeconds: recorder.recentPerSecond(30),
-            });
           }
 
           recorder.tick(dt, spines.length, {
@@ -497,7 +519,7 @@ export function startSceneBenchmark(
             hooks.onHud({
               scenarioLabel: `${d.game} / ${d.state}`,
               scenarioIndex: index,
-              scenarioCount: playable.length,
+              scenarioCount: scenes.length,
               elapsedMs: runElapsed,
               totalMs,
               fps: avg > 0 ? 1000 / avg : 0,
@@ -549,68 +571,49 @@ export function startSceneBenchmark(
     // when each alias is last needed, so we can free a game's textures as soon
     // as its scenes are done (bounds resident GPU memory to the working set).
     const aliasLastUse = new Map<string, number>();
-    playable.forEach((d, i) => {
+    toMeasure.forEach((d, i) => {
       for (const a of sceneAssetAliases(d)) aliasLastUse.set(a, i);
     });
 
-    let runAbortReason: string | null = null;
     try {
-      let consecutiveAborts = 0;
-      for (let i = 0; i < playable.length; i++) {
-        const aborted = await runScene(playable[i], i, durOf(playable[i]));
-        // context loss makes every later scene black - end the run now with
-        // whatever we've measured so far.
-        if (watcher.contextLost) {
-          runAbortReason = "webgl context lost (GPU out of memory) - ended early";
-          break;
-        }
-        if (aborted) {
-          consecutiveAborts++;
-          if (consecutiveAborts >= 2) {
-            runAbortReason = `device floor reached: ${aborted}`;
-            break;
-          }
-        } else {
-          consecutiveAborts = 0;
-        }
-        // release textures no later scene needs, then GC, so 18 games' atlases
+      // iterate the FULL scene list (so the global index is stable); measure the
+      // ones not already done/crashed. Each scene emits onSceneEnter/onSceneDone
+      // so the run survives a tab crash and resumes on reload.
+      let measuredIndex = -1;
+      for (let i = 0; i < scenes.length; i++) {
+        const d = scenes[i];
+        if (skip.has(d.id)) continue;
+        measuredIndex++;
+        hooks.onSceneEnter(d.id);
+        await runScene(d, i, durOf(d));
+        // a tab crash never reaches here; context loss does - end the segment.
+        if (watcher.contextLost) break;
+        // release textures no later scene needs, then GC, so games' atlases
         // don't pile up on the GPU (iOS context loss).
         const doneAliases = [...aliasLastUse]
-          .filter(([, last]) => last === i)
+          .filter(([, last]) => last === measuredIndex)
           .map(([a]) => a);
         if (doneAliases.length) void unloadAliases(doneAliases);
         gpuGc();
-        if (i < playable.length - 1) await settle(SETTLE_MS);
+        await settle(SETTLE_MS);
       }
-      recorder.endScenario();
 
       const cpuScoreEnd = cpuScore();
       const heapEnd = heapSnapshot();
       const batteryEnd = await readBattery();
       const watched = watcher.stop();
-      const base = recorder.finalize(totalSeconds < 120);
 
       const rendererType =
         (app.renderer as unknown as { name?: string }).name ??
         String(app.renderer.type);
 
       return {
-        scenarios: base.scenarios,
-        summary: {
-          ...base.summary,
-          displayHz,
-          longTaskCount: watched.longTasks.count,
-          longTaskTotalMs: watched.longTasks.totalMs,
-          ...(runAbortReason ? { aborted: true, abortReason: runAbortReason } : {}),
-        },
-        capture: {
-          frames: base.frames,
-          perSecond: base.perSecond,
-          longTasks: watched.longTasks,
-          loaf: watched.loaf,
-          events: watched.events,
-          resources: spineResourceTimings(),
-        },
+        contextLost: watcher.contextLost,
+        longTasks: watched.longTasks,
+        loaf: watched.loaf,
+        events: watched.events,
+        resources: spineResourceTimings(),
+        hiddenMs,
         environment: {
           displayHz,
           cpuScoreStart,

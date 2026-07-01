@@ -1,14 +1,24 @@
 import { useEffect, useRef } from "react";
 
-import { totalSeconds } from "@/config";
+import { CLIENT_VERSION, totalSeconds } from "@/config";
 import { useRunnerStore } from "@/store";
 import { BenchCancelled } from "@/bench/engine";
 import { startSceneBenchmark } from "@/bench/sceneEngine";
 import { configureAssetBase, loadAllScenes } from "@/scenes/load";
 import { collectDevice } from "@/lib/device";
-import { buildUpload, uploadRun } from "@/lib/upload";
+import { assembleUpload, uploadRun } from "@/lib/upload";
 import { rememberRun, pastRuns } from "@/lib/history";
-import { loadStash, clearStash } from "@/lib/stash";
+import {
+  clearSession,
+  isComplete,
+  loadSession,
+  newSession,
+  PRELOAD_MARK,
+  reconcileOnLoad,
+  saveSession,
+  skipIds,
+  type RunSession,
+} from "@/lib/session";
 import type { RunUpload } from "@/types";
 import { Landing } from "@/ui/Landing";
 import { Countdown } from "@/ui/Countdown";
@@ -34,124 +44,126 @@ export default function App() {
     store.setStage("uploading");
     try {
       const ok = await uploadRun(upload);
-      clearStash();
+      clearSession(); // whole multi-reload run is done
       rememberRun(ok.id);
       store.setResult(ok.id, ok.reportUrl ?? null);
     } catch (err) {
-      store.setError(
-        `Upload failed: ${(err as Error).message}`,
-        JSON.stringify(upload),
-      );
+      store.setError(`Upload failed: ${(err as Error).message}`, JSON.stringify(upload));
     }
   };
 
-  const start = async () => {
-    if (startedRef.current) return; // guard against double-invocation
-    startedRef.current = true;
+  /**
+   * Measure one segment (one page load) of a resumable run. The engine measures
+   * every scene not already done/crashed; each scene is persisted to the session
+   * as it finishes so a tab crash mid-scene is recoverable on reload.
+   */
+  const runSegment = async (session: RunSession) => {
     const store = useRunnerStore.getState();
     configureAssetBase();
     const scenes = await loadAllScenes();
-    // stage "loading" mounts the canvas host; the engine preloads every scene's
-    // assets (progress via onLoad) before the first frame is measured.
+    // if a previous preload OOM'd the tab, drop the heaviest scenes (the density
+    // stress ramps) this time so the load fits in memory.
+    if (session.preloadCrashed) {
+      for (const d of scenes) {
+        if (d.stress && !session.skipped.includes(d.id)) session.skipped.push(d.id);
+      }
+      session.preloadCrashed = false;
+      saveSession(session);
+    }
     store.setStage("loading");
     store.setLoadProgress(0, 100);
+    // mark the preload as in-progress: a tab crash here is detected on reload
+    session.inProgress = PRELOAD_MARK;
+    saveSession(session);
     await new Promise((r) => window.setTimeout(r, 50));
     if (!hostRef.current) {
       store.setError("canvas host missing");
       return;
     }
-    const startedAt = new Date().toISOString();
-    const device = await collectDevice();
     const { result, cancel } = startSceneBenchmark(
       hostRef.current,
       scenes,
       totalSeconds(),
+      skipIds(session),
       {
         onHud: (h) => useRunnerStore.getState().setHud(h),
         onProgress: (frac) =>
           useRunnerStore.getState().setLoadProgress(Math.round(frac * 100), 100),
-        onMeasureStart: () => useRunnerStore.getState().setStage("running"),
+        onMeasureStart: () => {
+          // preload finished without crashing - clear the preload marker
+          session.inProgress = null;
+          saveSession(session);
+          useRunnerStore.getState().setStage("running");
+        },
+        // persist BEFORE measuring - if the tab dies now, this marker survives
+        onSceneEnter: (id) => {
+          session.inProgress = id;
+          session.attempts[id] = (session.attempts[id] ?? 0) + 1;
+          saveSession(session);
+        },
+        onSceneDone: (id, res, perSecond) => {
+          session.inProgress = null;
+          if (res) {
+            session.results.push(res);
+            session.perSecond.push(...perSecond);
+          } else if (!session.skipped.includes(id)) {
+            session.skipped.push(id);
+          }
+          const idx = session.sceneIds.indexOf(id);
+          if (idx >= 0) session.cursor = Math.max(session.cursor, idx + 1);
+          saveSession(session);
+        },
       },
     );
     cancelRef.current = cancel;
     try {
-      const bench = await result;
-      device.runtime = bench.environment;
-      const upload = buildUpload(device, startedAt, bench);
-      lastUploadRef.current = upload;
-      await doUpload(upload);
+      const seg = await result;
+      if (!session.environment) session.environment = seg.environment;
+      saveSession(session);
+      if (isComplete(session)) {
+        const upload = assembleUpload(session, seg, totalSeconds() < 120);
+        lastUploadRef.current = upload;
+        await doUpload(upload);
+      } else if (seg.contextLost) {
+        // GPU context is dead for this page - reload to continue with a fresh
+        // one, resuming from where we left off. No user interaction.
+        window.setTimeout(() => window.location.reload(), 500);
+      }
     } catch (err) {
       if (err instanceof BenchCancelled) return;
       store.setError(`Benchmark failed: ${(err as Error).message}`);
     }
   };
 
+  /** Fresh run: create a session, then measure the first segment. */
+  const start = async () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    configureAssetBase();
+    const scenes = await loadAllScenes();
+    const device = await collectDevice();
+    const session = newSession(device, CLIENT_VERSION, scenes.map((s) => s.id));
+    saveSession(session);
+    await runSegment(session);
+  };
+
   useEffect(() => {
     return () => cancelRef.current?.();
   }, []);
 
-  // first visit on this device (no history, no crash stash) -> auto-run after a
-  // short countdown. Repeat visits land on Landing which reports past runs.
+  // On load: resume an in-progress run automatically (recording any scene that
+  // crashed the tab), else offer a first-visit countdown.
   useEffect(() => {
-    if (loadStash()) return; // crash-upload path owns this visit
+    const session = loadSession();
+    if (session && !isComplete(session)) {
+      startedRef.current = true; // this visit is a resume, not a fresh start
+      reconcileOnLoad(session); // a leftover in-progress scene = tab crash -> skip it
+      void runSegment(session);
+      return;
+    }
+    if (session) clearSession(); // stale/complete session
     if (pastRuns().length === 0) useRunnerStore.getState().setStage("countdown");
-  }, []);
-
-  // a leftover crash stash means the browser died mid-run last time -
-  // upload it as a crash report so the breaking point is never lost
-  useEffect(() => {
-    const stash = loadStash();
-    if (!stash) return;
-    void (async () => {
-      try {
-        const device = await collectDevice();
-        const crashUpload: RunUpload = {
-          clientVersion: stash.clientVersion,
-          startedAt: stash.startedAt,
-          device,
-          scenarios: [],
-          summary: {
-            totalDurationMs: stash.elapsedMs,
-            totalFrames: 0,
-            avgFps: stash.fps,
-            worstFrameMsP99: 0,
-            hiddenMs: 0,
-            degraded: true,
-            quick: false,
-            displayHz: stash.displayHz,
-            longTaskCount: 0,
-            longTaskTotalMs: 0,
-            aborted: true,
-            crashed: true,
-            abortReason: `browser died during "${stash.scenarioId}" (${stash.scenarioIndex + 1}/${stash.scenarioCount}) at ${stash.instances} instances, ~${stash.fps} fps, heap ${stash.heapMb ?? "?"} MB`,
-          },
-          capture: {
-            frames: [],
-            perSecond: stash.recentSeconds,
-            longTasks: null,
-            loaf: null,
-            events: [
-              {
-                t: stash.elapsedMs,
-                type: "crash",
-                detail: `${stash.scenarioId} @ ${stash.instances} instances`,
-              },
-            ],
-            resources: [],
-          },
-        };
-        const ok = await uploadRun(crashUpload);
-        clearStash();
-        rememberRun(ok.id);
-        useRunnerStore.getState().setCrashReport({
-          id: ok.id,
-          scenario: stash.scenarioId,
-          instances: stash.instances,
-        });
-      } catch {
-        // upload failed - keep the stash for the next visit
-      }
-    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -189,9 +201,7 @@ export default function App() {
           error={error}
           pendingPayload={pendingPayload}
           onRetry={
-            lastUploadRef.current
-              ? () => void doUpload(lastUploadRef.current!)
-              : null
+            lastUploadRef.current ? () => void doUpload(lastUploadRef.current!) : null
           }
         />
       )}
