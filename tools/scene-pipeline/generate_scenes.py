@@ -199,36 +199,31 @@ STRESS_STEPS = [12, 24, 48, 96, 192, 384]
 
 
 def orthogonal_scenes():
-    """Two calibration ramps from catalog extremes so RI and CI can be
-    separated in the regression: a pure-fill (high-RI/low-CI) spine and a
-    pure-compute (high-CI/low-RI) spine, each ramped alone."""
-    allsp = [s for g in CATALOG.values() for s in g["spines"]
-             if s["atlas"] and not BACKUP_RE.search(s["skel"])]
-    if not allsp:
-        return []
-    ri_heavy = max(allsp, key=lambda s: s["ri"] - s["ci"])
-    ci_heavy = max(allsp, key=lambda s: s["ci"] - s["ri"] * 0.05)
+    """Calibration ramps from the procedural single-axis primitives
+    (@spine-benchmark/calibration-primitives, emitted by emit_calibration.mjs).
+    pure-fill isolates the rendering coefficient, pure-compute the computational
+    one - cleanly, unlike the old catalog extremes which were contaminated and
+    mis-graded (static RI over-read live by ~150x)."""
+    prims = [
+        ("calib-fill-light", "fill", "pure fill (coverage/overdraw), light"),
+        ("calib-fill-heavy", "fill", "pure fill (coverage/overdraw), heavy"),
+        ("calib-compute-light", "compute", "pure compute (physics/IK/deform), light"),
+        ("calib-compute-heavy", "compute", "pure compute (physics/IK/deform), heavy"),
+    ]
     out = []
-    out.append({
-        "id": "calib--ri-heavy", "game": "calibration", "state": "stress",
-        "description": f"RI-heavy calibration ramp: {ri_heavy['id']} "
-                       f"(RI={ri_heavy['ri']}, CI={ri_heavy['ci']} - fill/overdraw dominated), "
-                       f"ramped alone to isolate the rendering-impact coefficient.",
-        "refWidth": 1920, "refHeight": 1080, "background": [], "overlays": [],
-        "stress": {"symbols": [{"skel": ri_heavy["skel"], "atlas": ri_heavy["atlas"]}],
-                   "steps": [1, 2, 4, 8, 16, 32, 64], "anims": "idle"},
-        "tier": "very-high",
-    })
-    out.append({
-        "id": "calib--ci-heavy", "game": "calibration", "state": "stress",
-        "description": f"CI-heavy calibration ramp: {ci_heavy['id']} "
-                       f"(CI={ci_heavy['ci']}, RI={ci_heavy['ri']} - physics/deform dominated), "
-                       f"ramped alone to isolate the computational-impact coefficient.",
-        "refWidth": 1920, "refHeight": 1080, "background": [], "overlays": [],
-        "stress": {"symbols": [{"skel": ci_heavy["skel"], "atlas": ci_heavy["atlas"]}],
-                   "steps": [2, 4, 8, 16, 32, 64, 128], "anims": "mix"},
-        "tier": "very-high",
-    })
+    for pid, kind, label in prims:
+        skel = f"calibration/assets/spine/{pid}/{pid}.json"
+        atlas = f"calibration/assets/spine/{pid}/white.atlas"
+        out.append({
+            "id": f"calib--{pid}", "game": "calibration", "state": "stress",
+            "description": f"Calibration ramp: {label}. Adaptive density ramp of a "
+                           f"single-axis primitive to isolate the "
+                           f"{'rendering' if kind == 'fill' else 'computational'} coefficient.",
+            "refWidth": 1920, "refHeight": 1080, "background": [], "overlays": [],
+            "stress": {"symbols": [{"skel": skel, "atlas": atlas}],
+                       "steps": [4], "anims": "idle" if kind == "fill" else "mix"},
+            "tier": "very-high",
+        })
     return out
 
 

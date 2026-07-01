@@ -5004,10 +5004,10 @@
     "tier": "very-high"
   },
   {
-    "id": "calib--ri-heavy",
+    "id": "calib--calib-fill-light",
     "game": "calibration",
     "state": "stress",
-    "description": "RI-heavy calibration ramp: fortune-numbers--background (RI=3834.08, CI=10.201 - fill/overdraw dominated), ramped alone to isolate the rendering-impact coefficient.",
+    "description": "Calibration ramp: pure fill (coverage/overdraw), light. Adaptive density ramp of a single-axis primitive to isolate the rendering coefficient.",
     "refWidth": 1920,
     "refHeight": 1080,
     "background": [],
@@ -5015,28 +5015,22 @@
     "stress": {
       "symbols": [
         {
-          "skel": "gambit/fortune-numbers/assets/spine/background/background.json",
-          "atlas": "gambit/fortune-numbers/assets/spine/background/1/background.atlas"
+          "skel": "calibration/assets/spine/calib-fill-light/calib-fill-light.json",
+          "atlas": "calibration/assets/spine/calib-fill-light/white.atlas"
         }
       ],
       "steps": [
-        1,
-        2,
-        4,
-        8,
-        16,
-        32,
-        64
+        4
       ],
       "anims": "idle"
     },
     "tier": "very-high"
   },
   {
-    "id": "calib--ci-heavy",
+    "id": "calib--calib-fill-heavy",
     "game": "calibration",
     "state": "stress",
-    "description": "CI-heavy calibration ramp: alice-bloody-rush--transition (CI=42.403, RI=19.015 - physics/deform dominated), ramped alone to isolate the computational-impact coefficient.",
+    "description": "Calibration ramp: pure fill (coverage/overdraw), heavy. Adaptive density ramp of a single-axis primitive to isolate the rendering coefficient.",
     "refWidth": 1920,
     "refHeight": 1080,
     "background": [],
@@ -5044,18 +5038,58 @@
     "stress": {
       "symbols": [
         {
-          "skel": "playcognito/alice-bloody-rush/assets/spines/transition/transition.json",
-          "atlas": "playcognito/alice-bloody-rush/assets/spines/transition/transition.atlas"
+          "skel": "calibration/assets/spine/calib-fill-heavy/calib-fill-heavy.json",
+          "atlas": "calibration/assets/spine/calib-fill-heavy/white.atlas"
         }
       ],
       "steps": [
-        2,
-        4,
-        8,
-        16,
-        32,
-        64,
-        128
+        4
+      ],
+      "anims": "idle"
+    },
+    "tier": "very-high"
+  },
+  {
+    "id": "calib--calib-compute-light",
+    "game": "calibration",
+    "state": "stress",
+    "description": "Calibration ramp: pure compute (physics/IK/deform), light. Adaptive density ramp of a single-axis primitive to isolate the computational coefficient.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "calibration/assets/spine/calib-compute-light/calib-compute-light.json",
+          "atlas": "calibration/assets/spine/calib-compute-light/white.atlas"
+        }
+      ],
+      "steps": [
+        4
+      ],
+      "anims": "mix"
+    },
+    "tier": "very-high"
+  },
+  {
+    "id": "calib--calib-compute-heavy",
+    "game": "calibration",
+    "state": "stress",
+    "description": "Calibration ramp: pure compute (physics/IK/deform), heavy. Adaptive density ramp of a single-axis primitive to isolate the computational coefficient.",
+    "refWidth": 1920,
+    "refHeight": 1080,
+    "background": [],
+    "overlays": [],
+    "stress": {
+      "symbols": [
+        {
+          "skel": "calibration/assets/spine/calib-compute-heavy/calib-compute-heavy.json",
+          "atlas": "calibration/assets/spine/calib-compute-heavy/white.atlas"
+        }
+      ],
+      "steps": [
+        4
       ],
       "anims": "mix"
     },
