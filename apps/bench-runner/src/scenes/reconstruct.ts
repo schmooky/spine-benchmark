@@ -139,6 +139,29 @@ export async function preloadAllScenes(
   );
 }
 
+/** The Assets aliases (skeleton + atlas) a scene references. */
+export function sceneAssetAliases(d: SceneDescriptor): string[] {
+  const out: string[] = [];
+  for (const { skel, atlas } of collectAssets(d).values()) {
+    out.push(aliasFor(skel), aliasFor(atlas));
+  }
+  return out;
+}
+
+/** Unload assets (frees CPU + GPU texture memory). Used to release a game's
+ * atlases once no later scene needs them, so 18 games' textures don't all stay
+ * resident on the GPU (the main cause of iOS WebGL context loss). */
+export async function unloadAliases(aliases: string[]): Promise<void> {
+  for (const a of aliases) {
+    registered.delete(a);
+    try {
+      await Assets.unload(a);
+    } catch {
+      /* not loaded / already gone */
+    }
+  }
+}
+
 /** Register + load every asset a descriptor needs. Resolves when ready. */
 export async function loadSceneAssets(
   d: SceneDescriptor,

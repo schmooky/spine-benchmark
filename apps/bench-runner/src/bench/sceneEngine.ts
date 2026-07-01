@@ -24,7 +24,9 @@ import {
   fitContainer,
   makeStressSpine,
   preloadAllScenes,
+  sceneAssetAliases,
   sceneSpines,
+  unloadAliases,
   type FitResult,
 } from "@/scenes/reconstruct";
 import type { SceneDescriptor } from "@/scenes/types";
@@ -43,6 +45,15 @@ const SETTLE_MS = 700;
 const RAMP_GATE_FPS = 15;
 /** Stress scenes get more of the time budget (they carry the capacity curve). */
 const STRESS_WEIGHT = 2.5;
+/** Cap stress density on mobile GPUs (iOS Safari loses the WebGL context well
+ * before fps gates if you pile on hundreds of heavy mesh spines). */
+const MOBILE_STRESS_CAP = 80;
+
+function isMobileDevice(): boolean {
+  const ua = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
+  if (typeof ua.userAgentData?.mobile === "boolean") return ua.userAgentData.mobile;
+  return /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
+}
 
 export interface SceneHooks {
   onHud: (hud: HudState) => void;
@@ -247,6 +258,16 @@ export function startSceneBenchmark(
         buildStats.missingRegions = 0;
         buildStats.spines = 0;
         const stress = d.stress;
+        // on mobile GPUs, clamp the density ramp so we don't blow the WebGL
+        // context (which renders black without throwing) before the fps gate.
+        const stressSteps = stress
+          ? (() => {
+              const capped = isMobileDevice()
+                ? stress.steps.filter((n) => n <= MOBILE_STRESS_CAP)
+                : stress.steps;
+              return capped.length ? capped : [Math.min(stress.steps[0], MOBILE_STRESS_CAP)];
+            })()
+          : [];
         let root: Container;
         let fit: FitResult;
         // the live pool. For a grid scene it's the built spines; for a stress
@@ -288,7 +309,7 @@ export function startSceneBenchmark(
               s.autoUpdate = false;
               spines.push(s);
             }
-            spawnTo(stress.steps[0]);
+            spawnTo(stressSteps[0]);
           } else {
             fit = fitContainer(root, app.screen.width, app.screen.height, d.refWidth, d.refHeight);
             for (const s of sceneSpines(root)) {
@@ -328,7 +349,7 @@ export function startSceneBenchmark(
             description: d.description,
             fitScale: Math.round(fit.scale * 10000) / 10000,
             onScreenAreaPx: Math.round(fit.areaPx),
-            spineCount: stress ? stress.steps[stress.steps.length - 1] : buildStats.spines,
+            spineCount: stress ? stressSteps[stressSteps.length - 1] : buildStats.spines,
             tier: d.tier ?? "unknown",
             missingRegions: buildStats.missingRegions,
           },
@@ -338,7 +359,7 @@ export function startSceneBenchmark(
         let stepIdx = 0;
         let stepDts: number[] = [];
         let rampCapped = false;
-        const stepDur = stress ? sceneDur / stress.steps.length : Infinity;
+        const stepDur = stress ? sceneDur / stressSteps.length : Infinity;
 
         let elapsed = 0;
         let impactAge = Infinity;
@@ -361,7 +382,7 @@ export function startSceneBenchmark(
         };
         const finish = (reason: string | null) => {
           // record the final (open) ramp step so the last density is captured
-          if (stress && stepDts.length > 0) recorder.closeStep(stress.steps[stepIdx], stepDts);
+          if (stress && stepDts.length > 0) recorder.closeStep(stressSteps[stepIdx], stepDts);
           if (reason) recorder.markAborted(reason);
           cleanup();
           resolve(reason);
@@ -384,6 +405,14 @@ export function startSceneBenchmark(
           }
           elapsed += dt;
           runElapsed += dt;
+
+          // WebGL context lost (iOS Safari GPU OOM): every render from here on
+          // is black even though the loop keeps timing. Stop this scene; the run
+          // loop sees watcher.contextLost and ends the run cleanly.
+          if (watcher.contextLost) {
+            finish("webgl context lost (GPU out of memory)");
+            return;
+          }
 
           // advance every spine and paint - this is what actually animates the
           // scene (spine.update takes seconds), independent of any Pixi ticker.
@@ -480,19 +509,19 @@ export function startSceneBenchmark(
           // the pool - unless we've dropped below the gate (breaking point).
           if (stress && !rampCapped) {
             stepDts.push(dt);
-            if (elapsed >= (stepIdx + 1) * stepDur && stepIdx < stress.steps.length - 1) {
-              recorder.closeStep(stress.steps[stepIdx], stepDts);
+            if (elapsed >= (stepIdx + 1) * stepDur && stepIdx < stressSteps.length - 1) {
+              recorder.closeStep(stressSteps[stepIdx], stepDts);
               const avg = recentDts.reduce((a, b) => a + b, 0) / Math.max(1, recentDts.length);
               const stepFps = avg > 0 ? 1000 / avg : 0;
               stepDts = [];
               if (stepFps < RAMP_GATE_FPS) {
                 rampCapped = true;
                 recorder.markAborted(
-                  `capped at ${stress.steps[stepIdx]} instances (${stepFps.toFixed(0)} fps < ${RAMP_GATE_FPS})`,
+                  `capped at ${stressSteps[stepIdx]} instances (${stepFps.toFixed(0)} fps < ${RAMP_GATE_FPS})`,
                 );
               } else {
                 stepIdx++;
-                spawnTo(stress.steps[stepIdx]);
+                spawnTo(stressSteps[stepIdx]);
               }
             }
           }
@@ -507,11 +536,34 @@ export function startSceneBenchmark(
     const settle = (ms: number) =>
       new Promise<void>((r) => window.setTimeout(r, ms));
 
+    // free GPU textures of the finished scene so they don't accumulate across
+    // 18 games (the main driver of iOS context loss). Best-effort.
+    const gpuGc = () => {
+      try {
+        (app?.renderer as unknown as { textureGC?: { run?: () => void } })?.textureGC?.run?.();
+      } catch {
+        /* renderer may lack a texture GC - ignore */
+      }
+    };
+
+    // when each alias is last needed, so we can free a game's textures as soon
+    // as its scenes are done (bounds resident GPU memory to the working set).
+    const aliasLastUse = new Map<string, number>();
+    playable.forEach((d, i) => {
+      for (const a of sceneAssetAliases(d)) aliasLastUse.set(a, i);
+    });
+
     let runAbortReason: string | null = null;
     try {
       let consecutiveAborts = 0;
       for (let i = 0; i < playable.length; i++) {
         const aborted = await runScene(playable[i], i, durOf(playable[i]));
+        // context loss makes every later scene black - end the run now with
+        // whatever we've measured so far.
+        if (watcher.contextLost) {
+          runAbortReason = "webgl context lost (GPU out of memory) - ended early";
+          break;
+        }
         if (aborted) {
           consecutiveAborts++;
           if (consecutiveAborts >= 2) {
@@ -521,6 +573,13 @@ export function startSceneBenchmark(
         } else {
           consecutiveAborts = 0;
         }
+        // release textures no later scene needs, then GC, so 18 games' atlases
+        // don't pile up on the GPU (iOS context loss).
+        const doneAliases = [...aliasLastUse]
+          .filter(([, last]) => last === i)
+          .map(([a]) => a);
+        if (doneAliases.length) void unloadAliases(doneAliases);
+        gpuGc();
         if (i < playable.length - 1) await settle(SETTLE_MS);
       }
       recorder.endScenario();
@@ -571,7 +630,11 @@ export function startSceneBenchmark(
     } finally {
       document.removeEventListener("visibilitychange", onVisibility);
       void wakeLock?.release().catch(() => undefined);
-      app?.destroy(true, { children: true });
+      try {
+        app?.destroy(true, { children: true });
+      } catch {
+        /* destroying a lost GL context can throw - the report is already built */
+      }
       app = null;
     }
   })();
