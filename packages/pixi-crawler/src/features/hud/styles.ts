@@ -133,6 +133,11 @@ const CSS = `
     font-size: 10px; color: var(--sbc-fg-muted); text-transform: uppercase; letter-spacing: 0.07em;
     flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* frame-time sparkline - flat muted line + a dashed budget reference, no
+   per-point color (matches the plain/premium HUD aesthetic). */
+.sbc-spark { display: block; margin-top: 4px; overflow: visible; }
+.sbc-spark-line { fill: none; stroke: var(--sbc-fg-dim); stroke-width: 1.25; stroke-linejoin: round; stroke-linecap: round; }
+.sbc-spark-budget { stroke: var(--sbc-line-2); stroke-width: 1; stroke-dasharray: 2 2; }
 .sbc-total { font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--sbc-fg); }
 .sbc-sub { font-size: 9px; color: var(--sbc-fg-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sbc-collapse-btn {

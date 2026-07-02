@@ -635,6 +635,58 @@ export class CrawlerHud {
     this.badgeFpsEl.style.color = fpsColorFor(fps, budget);
   }
 
+  /** How many recent frames the header sparkline plots. */
+  private static readonly SPARK_WINDOW = 60;
+  private static readonly SPARK_W = 168;
+  private static readonly SPARK_H = 22;
+
+  /** Small inline-SVG frame-time sparkline for the last N frames - turns the
+   * fps number into a live signal (a steady vs. jittery line reads instantly,
+   * a bare "58fps" does not). Flat muted stroke + a dashed budget reference
+   * line; no per-point color, matching the plain/premium HUD aesthetic. */
+  private _buildSparkline(budget: number): SVGSVGElement | null {
+    const frames = this.profiler.getFrames();
+    if (frames.length < 2) return null;
+    const recent = frames.slice(-CrawlerHud.SPARK_WINDOW);
+    const w = CrawlerHud.SPARK_W;
+    const h = CrawlerHud.SPARK_H;
+    const pad = 2;
+    // scale to the worse of budget*1.6 or the observed max, so a calm window
+    // shows a calm line and a spike still fits on-chart.
+    const maxMs = Math.max(budget * 1.6, ...recent.map((f) => f.rafDeltaMs));
+    const x = (i: number) => pad + (i / Math.max(1, recent.length - 1)) * (w - pad * 2);
+    const y = (ms: number) => h - pad - (Math.min(ms, maxMs) / maxMs) * (h - pad * 2);
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "sbc-spark");
+    svg.setAttribute("width", String(w));
+    svg.setAttribute("height", String(h));
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+
+    if (budget <= maxMs) {
+      const budgetLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      budgetLine.setAttribute("x1", "0");
+      budgetLine.setAttribute("x2", String(w));
+      budgetLine.setAttribute("y1", String(y(budget)));
+      budgetLine.setAttribute("y2", String(y(budget)));
+      budgetLine.setAttribute("class", "sbc-spark-budget");
+      svg.append(budgetLine);
+    }
+
+    const points = recent.map((f, i) => `${x(i).toFixed(1)},${y(f.rafDeltaMs).toFixed(1)}`).join(" ");
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    line.setAttribute("points", points);
+    line.setAttribute("class", "sbc-spark-line");
+    svg.append(line);
+
+    const overCount = recent.filter((f) => f.rafDeltaMs > budget).length;
+    const titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    titleEl.textContent = `frame time, last ${recent.length} frames (${overCount} over budget)`;
+    svg.append(titleEl);
+    return svg;
+  }
+
   private _renderHeader(
     fps: number,
     avgRafDelta: number,
@@ -685,6 +737,9 @@ export class CrawlerHud {
     fpsLabel.textContent = `fps · ${avgRafDelta.toFixed(1)}ms · drop ${dropped}/${windowFrames}`;
     fpsRow.append(dot, fpsNum, fpsLabel);
     left.append(fpsRow);
+
+    const spark = this._buildSparkline(budget);
+    if (spark) left.append(spark);
 
     // Workload-cost chip. The bare number is meaningless on an open measure, so
     // the chip names WHAT dominates (bottleneck driver) right on the face - that's
