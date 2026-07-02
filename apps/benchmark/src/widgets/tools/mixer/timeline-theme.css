@@ -1,0 +1,67 @@
+/* react-timeline-editor, themed into the grey workbench look (no blue). */
+@import "@xzdarcy/react-timeline-editor/dist/react-timeline-editor.css";
+
+.mixer-timeline .timeline-editor {
+  background: transparent;
+  font-family: inherit;
+}
+
+/* time ruler */
+.mixer-timeline .timeline-editor-time-area {
+  background: color-mix(in oklab, var(--card) 70%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+.mixer-timeline .timeline-editor-time-unit {
+  border-color: var(--border);
+}
+.mixer-timeline .timeline-editor-time-unit-scale {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* rows */
+.mixer-timeline .timeline-editor-edit-area {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--secondary) 22%, transparent) 0,
+      color-mix(in oklab, var(--secondary) 22%, transparent) var(--mixer-row-h, 34px),
+      transparent var(--mixer-row-h, 34px),
+      transparent calc(var(--mixer-row-h, 34px) * 2)
+    );
+}
+.mixer-timeline .timeline-editor-edit-row {
+  background-size: 0 0; /* drop the lib default grid image */
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+}
+
+/* clips: we render our own content, kill the default action chrome */
+.mixer-timeline .timeline-editor-action {
+  background: transparent;
+  border-radius: 6px;
+  overflow: visible;
+}
+.mixer-timeline .timeline-editor-action-left-stretch::after,
+.mixer-timeline .timeline-editor-action-right-stretch::after {
+  display: none; /* no resize handles - duration is locked */
+}
+
+/* selected track */
+.mixer-timeline .timeline-editor-edit-row.mixer-row-active {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+/* playhead */
+.mixer-timeline .timeline-editor-cursor {
+  border-left-color: var(--foreground);
+}
+.mixer-timeline .timeline-editor-cursor-top {
+  border-top-color: var(--foreground);
+}
+
+/* drag alignment guides */
+.mixer-timeline .timeline-editor-drag-line {
+  background: var(--primary);
+}
