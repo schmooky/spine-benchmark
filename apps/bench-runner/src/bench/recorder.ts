@@ -88,6 +88,13 @@ export class Recorder {
   private secFrames: FrameMetrics[] = [];
   private secDisjoint = 0;
 
+  // Total per-frame CPU = spine.update (cpuMs) + all render-side CPU phases.
+  // This is the honest compute cost: cpuMs alone undercounts Spine because
+  // computeWorldVertices + the every-frame instruction rebuild land in the
+  // render phases (transformsMs / buildMs), not in spine.update.
+  private frameCpuMs: number[] = [];
+  private secFrameCpu: number[] = [];
+
   // rolling per-second window
   private secDts: number[] = [];
   private secStart = 0;
@@ -118,6 +125,8 @@ export class Recorder {
     this.secCpu = [];
     this.secFrames = [];
     this.secDisjoint = 0;
+    this.frameCpuMs = [];
+    this.secFrameCpu = [];
     this.secDts = [];
     this.secStart = 0;
   }
@@ -160,6 +169,16 @@ export class Recorder {
     }
     if (sample.frame) this.secFrames.push(sample.frame);
     if (sample.gpuDisjoint) this.secDisjoint++;
+    // total per-frame CPU: spine.update + every render-side CPU phase
+    if (sample.cpuMs != null || sample.frame) {
+      const f = sample.frame;
+      const renderCpu = f
+        ? f.buildMs + f.updateRendMs + f.batchUploadMs + f.transformsMs + f.executeMs + f.renderOtherMs + f.gcMs
+        : 0;
+      const total = (sample.cpuMs ?? 0) + renderCpu;
+      this.frameCpuMs.push(total);
+      this.secFrameCpu.push(total);
+    }
 
     if (this.elapsedMs - this.secStart >= 1000) {
       const secMs = this.elapsedMs - this.secStart;
@@ -179,6 +198,7 @@ export class Recorder {
         gpuMs: mean1(this.secGpu),
         cpuMs: mean1(this.secCpu),
         m: meanFrameMetrics(this.secFrames),
+        frameCpuMs: mean1(this.secFrameCpu),
         frames: this.secDts.length,
         gpuFrames: this.secGpu.length,
         gpuDisjoint: this.secDisjoint,
@@ -188,6 +208,7 @@ export class Recorder {
       this.secCpu = [];
       this.secFrames = [];
       this.secDisjoint = 0;
+      this.secFrameCpu = [];
       this.secStart = this.elapsedMs;
     }
   }
@@ -239,6 +260,11 @@ export class Recorder {
         cpuMsP95:
           this.cpuMs.length > 0
             ? Math.round(percentile([...this.cpuMs].sort((a, b) => a - b), 95) * 10) / 10
+            : null,
+        frameCpuMsAvg: mean1(this.frameCpuMs),
+        frameCpuMsP95:
+          this.frameCpuMs.length > 0
+            ? Math.round(percentile([...this.frameCpuMs].sort((a, b) => a - b), 95) * 10) / 10
             : null,
         sustainInstances: this.sustainInstances,
         collapseInstances: this.collapseInstances,

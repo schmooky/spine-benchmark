@@ -167,6 +167,7 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
       <td class="num">${ms(sc.stats.gpuMsP95)}</td>
       <td class="num">${ms(sc.stats.cpuMsAvg)}</td>
       <td class="num">${ms(sc.stats.cpuMsP95)}</td>
+      <td class="num"><strong>${ms(sc.stats.frameCpuMsAvg)}</strong></td>
       <td class="num">${sc.stats.riPeak.toFixed(0)} / ${sc.stats.ciPeak.toFixed(0)}</td>
       <td class="num">${sc.scene?.spineCount ?? sc.stats.maxInstances}</td>
       <td>${esc(sc.scene?.tier ?? "")}${sc.scene && sc.scene.missingRegions > 0 ? ` <span class="bad">(${sc.scene.missingRegions} missing)</span>` : ""}</td>
@@ -255,7 +256,7 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
 
   <h2>Scenes <span class="muted">(real game usage - true GPU/CPU ms)</span></h2>
   <table>
-    <tr><th>scene</th><th>fps</th><th>gpu avg</th><th>gpu p95</th><th>cpu avg</th><th>cpu p95</th><th>RI/CI</th><th>spines</th><th>tier</th></tr>
+    <tr><th>scene</th><th>fps</th><th>gpu avg</th><th>gpu p95</th><th>cpu upd</th><th>cpu p95</th><th title="Total per-frame CPU: spine.update + render-side (build/transform). The honest compute cost.">frame cpu</th><th>RI/CI</th><th>spines</th><th>tier</th></tr>
     ${scene.map(sceneRow).join("\n")}
   </table>
 

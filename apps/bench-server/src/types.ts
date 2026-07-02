@@ -71,9 +71,13 @@ export interface ScenarioResult {
     /** True GPU render time (EXT timer query) - the vsync-independent cost. */
     gpuMsAvg?: number | null;
     gpuMsP95?: number | null;
-    /** CPU spine-update time (compute-side cost). */
+    /** CPU spine-update time only. */
     cpuMsAvg?: number | null;
     cpuMsP95?: number | null;
+    /** Total per-frame CPU (spine.update + render-side); the honest compute
+     * (CI) signal the fit should use - cpuMs undercounts Spine. 0.4.1+. */
+    frameCpuMsAvg?: number | null;
+    frameCpuMsP95?: number | null;
     /** ramp knees (0.3.1+): instances where it first dropped below refresh
      * (sustain) and where it collapsed (hard stop). */
     sustainInstances?: number | null;
@@ -123,6 +127,9 @@ export interface RunCapture {
     /** true GPU/CPU ms (0.3.0+); gpuMs null when no timer (Safari/iOS). */
     gpuMs?: number | null;
     cpuMs?: number | null;
+    /** Total per-frame CPU = spine.update + render-side CPU (0.4.1+): the honest
+     * compute cost (cpuMs alone undercounts Spine's computeWorldVertices). */
+    frameCpuMs?: number | null;
     /** Full crawler measurement set meaned over the second (0.4.0+): the
      * ground-truth cost drivers + CPU render-phase split the fit regresses on.
      * Stored verbatim; keys mirror the runner's FrameMetrics. */

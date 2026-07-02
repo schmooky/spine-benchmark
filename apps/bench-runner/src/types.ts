@@ -169,9 +169,13 @@ export interface ScenarioResult {
      * vsync-independent cost signal used to validate/refit RI. */
     gpuMsAvg?: number | null;
     gpuMsP95?: number | null;
-    /** CPU time advancing spines (spine.update); the compute-side (CI) signal. */
+    /** CPU time advancing spines (spine.update) only. */
     cpuMsAvg?: number | null;
     cpuMsP95?: number | null;
+    /** TOTAL per-frame CPU (spine.update + render-side CPU); the honest
+     * compute-side (CI) signal the fit should use. 0.4.1+. */
+    frameCpuMsAvg?: number | null;
+    frameCpuMsP95?: number | null;
     /** Ramp knees: instances where it first dropped below refresh (sustain =
      * capacity) and the bracket top / hard stop (collapse). */
     sustainInstances?: number | null;
@@ -282,6 +286,10 @@ export interface PerSecondRow {
   gpuMs?: number | null;
   /** Mean CPU spine-update time this second, or null. */
   cpuMs?: number | null;
+  /** Mean TOTAL per-frame CPU this second = spine.update + all render-side CPU
+   * phases (build/transform/etc). The honest compute cost - cpuMs alone
+   * undercounts Spine (computeWorldVertices lands in transformsMs). 0.4.1+. */
+  frameCpuMs?: number | null;
   /** Full crawler measurement set, meaned over the second (0.4.0+). */
   m?: FrameMetrics | null;
   /** Total frames this second, and how many carried a resolved GPU reading -

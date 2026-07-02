@@ -5,7 +5,10 @@
 // 0.4.0 = full per-frame crawler measurement set captured per second (device-
 // invariant cost drivers + CPU render-phase split + textures + GPU-timer data
 // quality), measured with a honest config (spineProfile off, cpuMs uncorrupted).
-export const CLIENT_VERSION = "0.4.0";
+// 0.4.1 = frameCpuMs (spine.update + render-side CPU): the honest compute cost.
+// cpuMs alone undercounts Spine, whose computeWorldVertices + per-frame
+// instruction rebuild land in the render phases (transformsMs / buildMs).
+export const CLIENT_VERSION = "0.4.1";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =
