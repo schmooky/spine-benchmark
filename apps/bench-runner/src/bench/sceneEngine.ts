@@ -39,6 +39,7 @@ import {
 import type { SceneDescriptor } from "@/scenes/types";
 import type { HudState } from "./engine";
 import { BenchCancelled } from "./engine";
+import { initRamp, rampStep, type RampConfig, type RampState } from "./ramp";
 
 const IMPACT_SAMPLE_MS = 500;
 const STALL_FRAME_MS = 200;
@@ -47,9 +48,6 @@ const HEAP_ABORT_RATIO = 0.85;
 const MAX_FRAMEBUFFER_AREA = 2_600_000;
 /** Blank gap between scenes: lets GC + GPU settle so metrics stay clean. */
 const SETTLE_MS = 700;
-/** Stress ramp stops raising the density once a step drops below this fps -
- * that instance count is the device's breaking point for that spine mix. */
-const RAMP_GATE_FPS = 15;
 /** Stress scenes get more of the time budget (they carry the capacity curve). */
 const STRESS_WEIGHT = 2.5;
 /** Cap stress density on mobile GPUs (iOS Safari loses the WebGL context well
@@ -59,9 +57,14 @@ const MOBILE_STRESS_CAP = 80;
 const DESKTOP_STRESS_MAX = 8192;
 /** Time held at each ramp density before doubling. */
 const STRESS_STEP_MS = 1100;
-/** Breaking point (thesis #6): a step whose true GPU time exceeds this is
- * "over budget", independent of vsync. Used when the timer query is available. */
-const GPU_KNEE_MS = 14;
+/** Fraction of native refresh below which a ramp step is "not sustaining" - the
+ * sustain knee (capacity ceiling) is where fps first drops under this. */
+const SUSTAIN_FRAC = 0.92;
+/** Bisection probes spent pinning the sustain knee once the doubling ramp has
+ * bracketed it (thesis #5). */
+const KNEE_BISECTS = 4;
+/** Stop bisecting once the last-good / first-bad bracket is this tight. */
+const KNEE_MIN_GAP = 4;
 
 function isMobileDevice(): boolean {
   const ua = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
@@ -425,12 +428,20 @@ export function startSceneBenchmark(
           },
         });
 
-        // adaptive stress ramp bookkeeping (density-doubling capacity curve)
+        // adaptive stress ramp bookkeeping (double-then-bisect capacity curve)
         let currentCount = Math.min(stressStart, stressMax);
         let stepStartMs = 0;
         let stepDts: number[] = [];
         let stepGpu: number[] = [];
         let rampCapped = false;
+        const rampCfg: RampConfig = {
+          stressMax,
+          sustainFps: SUSTAIN_FRAC * displayHz,
+          ceilingBudgetMs: 1000 / displayHz,
+          maxBisects: KNEE_BISECTS,
+          minGap: KNEE_MIN_GAP,
+        };
+        let rampState: RampState = initRamp(currentCount);
 
         let elapsed = 0;
         let impactAge = Infinity;
@@ -579,10 +590,9 @@ export function startSceneBenchmark(
           }
 
           // adaptive density ramp: hold each density for STRESS_STEP_MS, record
-          // its cost, then DOUBLE - until the true GPU time (vsync-independent)
-          // crosses GPU_KNEE_MS, or fps collapses when no timer is available, or
-          // we hit the safety ceiling. That crossing IS the device's breaking
-          // point (thesis #5/#6).
+          // its cost, then let the ramp controller (ramp.ts) decide the next
+          // density - doubling until the device first drops below refresh, then
+          // bisecting to pin the sustain knee (its capacity). thesis #5/#6.
           if (stress && !rampCapped) {
             stepDts.push(dt);
             if (lastGpuMs != null) stepGpu.push(lastGpuMs);
@@ -594,19 +604,19 @@ export function startSceneBenchmark(
               stepDts = [];
               stepGpu = [];
               stepStartMs = elapsed;
-              const overGpu = gpuP95 != null && gpuP95 > GPU_KNEE_MS;
-              const overCpu = gpuP95 == null && stepFps < RAMP_GATE_FPS;
-              if (overGpu || overCpu || currentCount >= stressMax) {
+              // double until the device first drops below refresh, then bisect
+              // the bracket to pin the sustain knee (its capacity). See ramp.ts.
+              rampState = rampStep(
+                rampState,
+                { count: currentCount, fps: stepFps, gpuP95 },
+                rampCfg,
+              );
+              if (rampState.phase === "done") {
                 rampCapped = true;
-                recorder.markAborted(
-                  overGpu
-                    ? `knee at ${currentCount} instances (GPU ${gpuP95!.toFixed(1)}ms > ${GPU_KNEE_MS}ms)`
-                    : currentCount >= stressMax
-                      ? `reached safety ceiling ${stressMax} instances (still ${stepFps.toFixed(0)} fps)`
-                      : `knee at ${currentCount} instances (${stepFps.toFixed(0)} fps < ${RAMP_GATE_FPS})`,
-                );
+                recorder.markAborted(rampState.reason ?? "ramp complete");
+                recorder.setKnees(rampState.sustainInstances, rampState.collapseInstances);
               } else {
-                currentCount = Math.min(currentCount * 2, stressMax);
+                currentCount = rampState.next;
                 spawnTo(currentCount);
               }
             }

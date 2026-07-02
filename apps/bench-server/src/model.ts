@@ -16,6 +16,8 @@ export interface CoefficientTable {
   fleet: { gpu: LinearCostModel | null; cpu: LinearCostModel | null };
   byFamily: Record<string, { gpu: LinearCostModel | null; cpu: LinearCostModel | null }>;
   budgetMs: { gpu: number; cpu: number };
+  /** measured per-family frame ceiling (ms); anchors the client meter's "%". */
+  budgetByFamily?: Record<string, { gpu: number; cpu: number }>;
   quality?: unknown;
 }
 

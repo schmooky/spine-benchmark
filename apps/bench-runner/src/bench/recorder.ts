@@ -57,6 +57,8 @@ export class Recorder {
   private ciPeak = 0;
   private steps: NonNullable<ScenarioResult["steps"]> = [];
   private abortedReason: string | null = null;
+  private sustainInstances: number | null = null;
+  private collapseInstances: number | null = null;
 
   // GPU/CPU cost samples (the vsync-independent signal)
   private gpuMs: number[] = [];
@@ -86,6 +88,8 @@ export class Recorder {
     this.ciPeak = 0;
     this.steps = [];
     this.abortedReason = null;
+    this.sustainInstances = null;
+    this.collapseInstances = null;
     this.gpuMs = [];
     this.cpuMs = [];
     this.secGpu = [];
@@ -97,6 +101,12 @@ export class Recorder {
   /** Tag the current scenario as cut short / capped. */
   markAborted(reason: string): void {
     if (this.current && !this.abortedReason) this.abortedReason = reason;
+  }
+
+  /** Record the ramp's pinned knees (sustain = capacity, collapse = hard stop). */
+  setKnees(sustain: number | null, collapse: number | null): void {
+    this.sustainInstances = sustain;
+    this.collapseInstances = collapse;
   }
 
   /** Rolling tail of per-second rows for the crash stash. */
@@ -198,6 +208,8 @@ export class Recorder {
           this.cpuMs.length > 0
             ? Math.round(percentile([...this.cpuMs].sort((a, b) => a - b), 95) * 10) / 10
             : null,
+        sustainInstances: this.sustainInstances,
+        collapseInstances: this.collapseInstances,
       },
       steps: this.steps.length > 0 ? this.steps : undefined,
       ...(this.abortedReason ? { aborted: this.abortedReason } : {}),

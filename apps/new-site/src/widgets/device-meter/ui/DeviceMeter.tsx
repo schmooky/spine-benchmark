@@ -103,7 +103,7 @@ export function DeviceMeter() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`${device.name} (${device.gpuFamily}) - GPU ${cost.gpuMs.toFixed(2)}ms, CPU ${cost.cpuMs.toFixed(2)}ms; binding: ${cost.binding.toUpperCase()} at ${Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}% of budget - click to change device`}
+        title={`${device.name} (${device.gpuFamily}) - GPU ${cost.gpuMs.toFixed(2)}ms, CPU ${cost.cpuMs.toFixed(2)}ms; binding: ${cost.binding.toUpperCase()} at ${Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}% of ${cost.budgetSource} device capacity - click to change device`}
         className="pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-1.5 transition-opacity hover:opacity-75"
       >
         <Icon className={cn("size-4", STATUS_TEXT[state])} />

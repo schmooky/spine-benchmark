@@ -1,4 +1,10 @@
-import type { RunRecord, ScenarioResult } from "./types.js";
+import type { RunRecord, ScenarioResult, RunCapture } from "./types.js";
+import {
+  analyzeRunCapacity,
+  type CapacityRow,
+  type CapacityScenarioMeta,
+  type RunCapacityReport,
+} from "@spine-benchmark/metrics-model";
 
 /**
  * Self-contained HTML report for GET /r/:id. Surfaces the calibration signals
@@ -35,12 +41,119 @@ function gpuFamily(renderer: string | null | undefined): string {
 const ms = (v: number | null | undefined): string =>
   v == null ? "<span class='muted'>-</span>" : v.toFixed(2);
 
-export function renderRunReport(run: RunRecord): string {
+const n0 = (v: number | null | undefined): string => (v == null ? "-" : Math.round(v).toString());
+const pct1 = (v: number | null | undefined): string => (v == null ? "-" : `${v.toFixed(1)}%`);
+/** small ms/unit values need significant figures, not 2 decimals. */
+const sig = (v: number | null | undefined): string =>
+  v == null ? "-" : Number(v.toPrecision(3)).toString();
+
+/** Device Capacity: what the device can do, in RI/CI units + a plain statement. */
+function capacityHtml(cap: RunCapacityReport): string {
+  const kneeRows = cap.knees.scenes
+    .map(
+      (s) => `<tr>
+      <td>${esc(s.label)}</td>
+      <td class="num">${s.ri.toFixed(0)} / ${s.ci.toFixed(0)}</td>
+      <td class="num">${n0(s.measured)}</td>
+      <td class="num">${n0(s.predicted)}</td>
+      <td class="num ${s.errPct != null && s.errPct > 40 ? "bad" : ""}">${pct1(s.errPct)}</td>
+    </tr>`,
+    )
+    .join("\n");
+  const bind =
+    cap.binding === "ri"
+      ? "RI / fill (GPU)"
+      : cap.binding === "ci"
+        ? "CI / compute (CPU)"
+        : "unknown";
+  return `<h2>Device Capacity <span class="muted">(100% = can't hold ${cap.displayHz} Hz)</span></h2>
+  <p class="muted">${esc(cap.note)}</p>
+  <table>
+    <tr><th>frame budget (ceiling)</th><td class="num">${cap.ceilingBudgetMs.toFixed(2)} ms</td>
+        <th>safe budget (headroom)</th><td class="num">${cap.safeBudgetMs.toFixed(2)} ms</td></tr>
+    <tr><th>cost per RI unit</th><td class="num">${sig(cap.perUnit.riUnitMs)} ms</td>
+        <th>cost per CI unit</th><td class="num">${sig(cap.perUnit.ciUnitMs)} ms</td></tr>
+    <tr><th>RI units at ceiling</th><td class="num">${n0(cap.ceilingUnits.ri)}</td>
+        <th>CI units at ceiling</th><td class="num">${n0(cap.ceilingUnits.ci)}</td></tr>
+    <tr><th>binding axis</th><td><strong>${esc(bind)}</strong></td>
+        <th>GPU timer</th><td>${cap.gpuTimerAvailable ? '<span class="ok">yes</span>' : '<span class="muted">no (fps knee)</span>'}</td></tr>
+  </table>
+  ${
+    cap.capacity
+      ? `<p>Typical real spine here (RI ${cap.capacity.meanSceneRi.toFixed(0)} / CI ${cap.capacity.meanSceneCi.toFixed(0)}) costs
+      <strong>${pct1(cap.capacity.perInstancePct)}</strong> of this device;
+      about <strong>${n0(cap.capacity.maxConcurrent)}</strong> fit at 100%.</p>`
+      : ""
+  }
+  ${
+    kneeRows
+      ? `<table>
+      <tr><th>scene</th><th>RI/CI (1x)</th><th>measured knee</th><th>predicted knee</th><th>error</th></tr>
+      ${kneeRows}
+    </table>`
+      : ""
+  }`;
+}
+
+/** Measurement Quality: can we trust RI/CI on this device? */
+function qualityHtml(cap: RunCapacityReport): string {
+  const vClass =
+    cap.verdict === "good" ? "ok" : cap.verdict === "poor" ? "bad" : "muted";
+  const fitRow = (name: string, f: { r2: number; mae: number; n: number } | null) =>
+    f
+      ? `<tr><th>${name}</th><td class="num ${f.r2 >= 0.9 ? "ok" : f.r2 < 0.7 ? "bad" : ""}">R2 ${f.r2.toFixed(3)}</td><td class="num">MAE ${f.mae.toFixed(2)} ms</td><td class="num">${f.n} rows</td></tr>`
+      : "";
+  const rows = [
+    fitRow("GPU ms fit", cap.fit.gpu),
+    fitRow("CPU ms fit", cap.fit.cpu),
+    fitRow("frame-cost fit", cap.fit.combined),
+    fitRow("RI/CI model", cap.fit.riCi),
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return `<h2>Measurement Quality <span class="muted">(are RI/CI good predictors here?)</span></h2>
+  <p>Verdict: <strong class="${vClass}">${cap.verdict.toUpperCase()}</strong> - ${esc(cap.verdictReason)}</p>
+  <table>
+    ${rows || '<tr><td class="muted">not enough ms/ramp data to fit</td></tr>'}
+    <tr><th>knee prediction error</th><td class="num" colspan="3">${pct1(cap.knees.medianErrPct)} median across scenes</td></tr>
+  </table>`;
+}
+
+export function renderRunReport(run: RunRecord, capture?: RunCapture | null): string {
   const d = run.device;
   const s = run.summary;
   const rendererStr = d.gl?.renderer || d.gpu?.renderer || "";
   const family = gpuFamily(rendererStr);
   const gpuTimed = run.scenarios.some((sc) => sc.stats.gpuMsAvg != null);
+
+  // Per-run capacity + measurement self-fit, computed from the per-second ramp
+  // capture when available (loaded by the /r/:id handler).
+  let cap: RunCapacityReport | null = null;
+  const perSecond = capture?.perSecond;
+  if (perSecond && perSecond.length) {
+    const capRows: CapacityRow[] = perSecond.map((r) => ({
+      scenarioId: r.scenarioId,
+      instances: r.instances,
+      fps: r.fps,
+      frameMsP95: r.frameMsP95,
+      ri: r.ri,
+      ci: r.ci,
+      one: (r.one ?? null) as CapacityRow["one"],
+      gpuMs: r.gpuMs ?? null,
+      cpuMs: r.cpuMs ?? null,
+    }));
+    const scenMeta: CapacityScenarioMeta[] = run.scenarios.map((sc) => ({
+      id: sc.id,
+      label: sc.scene ? `${sc.scene.game} / ${sc.scene.state}` : sc.label,
+      kind: sc.kind,
+    }));
+    cap = analyzeRunCapacity({
+      perSecond: capRows,
+      scenarios: scenMeta,
+      displayHz: s.displayHz ?? d.runtime?.displayHz ?? 60,
+      gpuTimerSupported: d.gl?.gpuTimerSupported,
+    });
+  }
 
   const scene = run.scenarios.filter((sc) => sc.kind === "scene" && !sc.steps);
   const ramps = run.scenarios.filter((sc) => sc.steps && sc.steps.length > 0);
@@ -136,6 +249,9 @@ export function renderRunReport(run: RunRecord): string {
     ${crashedList}
     ${skippedList}
   </table>
+
+  ${cap ? capacityHtml(cap) : ""}
+  ${cap ? qualityHtml(cap) : ""}
 
   <h2>Scenes <span class="muted">(real game usage - true GPU/CPU ms)</span></h2>
   <table>

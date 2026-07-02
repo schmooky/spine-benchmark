@@ -107,12 +107,16 @@ export interface CoefficientTable {
   byFamily: Record<string, { gpu: LinearCostModel | null; cpu: LinearCostModel | null }>;
   /** frame-time budget target, ms, split GPU/CPU (thesis #6). */
   budgetMs: { gpu: number; cpu: number };
+  /** measured per-family frame ceiling (ms) so consumers can anchor "%" to the
+   * real device capacity instead of the global default. */
+  budgetByFamily?: Record<string, { gpu: number; cpu: number }>;
   quality: FleetModel["quality"];
 }
 
 export function toCoefficientTable(
   fit: DeviceFitResult,
   budgetMs = { gpu: 8, cpu: 8 },
+  budgetByFamily?: Record<string, { gpu: number; cpu: number }>,
 ): CoefficientTable {
   return {
     version: 1,
@@ -120,6 +124,7 @@ export function toCoefficientTable(
     fleet: { gpu: fit.fleet.gpu, cpu: fit.fleet.cpu },
     byFamily: fit.fleet.byFamily,
     budgetMs,
+    ...(budgetByFamily ? { budgetByFamily } : {}),
     quality: fit.fleet.quality,
   };
 }

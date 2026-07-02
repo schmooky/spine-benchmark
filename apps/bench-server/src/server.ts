@@ -172,7 +172,17 @@ app.get("/r/:id", readLimiter, async (req, res) => {
       res.status(404).type("text/html").send("<h1>run not found</h1>");
       return;
     }
-    res.type("text/html").send(renderRunReport(run));
+    // load the per-second capture so the report can compute per-run capacity +
+    // measurement self-fit; best-effort (report still renders without it).
+    let capture = null;
+    if (run.captureKey) {
+      try {
+        capture = await captureStore.get(run.captureKey);
+      } catch (err) {
+        logger.warn({ err, runId: run.id }, "capture load failed - report without capacity");
+      }
+    }
+    res.type("text/html").send(renderRunReport(run, capture));
   } catch (err) {
     logger.error({ err }, "report render failed");
     res.status(503).type("text/html").send("<h1>storage unavailable</h1>");

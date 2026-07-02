@@ -18,6 +18,7 @@ import {
 import { fitQuality, solveRidge } from "./ridge.js";
 
 export * from "./ridge.js";
+export * from "./analyzeRunCapacity.js";
 
 export interface TrainingRow {
   features: ImpactFeatures;

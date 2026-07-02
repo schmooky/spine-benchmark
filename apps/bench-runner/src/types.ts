@@ -9,6 +9,8 @@ export interface GlInfo {
   vendor: string;
   renderer: string;
   antialias: boolean | null;
+  /** true iff EXT_disjoint_timer_query_webgl2 is available (per-frame GPU ms). */
+  gpuTimerSupported: boolean;
   maxTextureSize: number;
   maxTextureImageUnits: number;
   maxCombinedTextureImageUnits: number;
@@ -170,6 +172,10 @@ export interface ScenarioResult {
     /** CPU time advancing spines (spine.update); the compute-side (CI) signal. */
     cpuMsAvg?: number | null;
     cpuMsP95?: number | null;
+    /** Ramp knees: instances where it first dropped below refresh (sustain =
+     * capacity) and the bracket top / hard stop (collapse). */
+    sustainInstances?: number | null;
+    collapseInstances?: number | null;
   };
   steps?: { instances: number; fps: number; frameMsP95: number }[];
   /** Set when the scenario was cut short or capped (reason). */

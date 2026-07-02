@@ -45,6 +45,7 @@ if (fittable.length === 0) {
 }
 
 const byFamily = {};
+const hzByFamily = {};
 let rows = 0;
 for (const item of fittable) {
   let run;
@@ -55,6 +56,8 @@ for (const item of fittable) {
     continue;
   }
   const fam = gpuFamily(run.device?.gl?.renderer || run.device?.gpu?.renderer);
+  const hz = run.summary?.displayHz || run.device?.runtime?.displayHz || 60;
+  (hzByFamily[fam] ??= []).push(hz);
   const perSecond = run.capture?.perSecond ?? [];
   for (const ps of perSecond) {
     if (ps.instances <= 0 || !ps.one) continue;
@@ -70,8 +73,21 @@ for (const item of fittable) {
 }
 console.log(`families: ${Object.keys(byFamily).join(", ") || "(none)"} | training rows: ${rows}`);
 
+// measured per-family frame ceiling (ms) = 1000 / median refresh, so the client
+// meter anchors "%" to the real device capacity (thesis: 100% = can't hold Hz).
+const median = (xs) => {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+const budgetByFamily = {};
+for (const [fam, hzs] of Object.entries(hzByFamily)) {
+  const ceil = Math.round((1000 / median(hzs)) * 100) / 100;
+  budgetByFamily[fam] = { gpu: ceil, cpu: ceil };
+}
+
 const fit = fitDevices(byFamily);
-const table = toCoefficientTable(fit);
+const table = toCoefficientTable(fit, { gpu: 8, cpu: 8 }, budgetByFamily);
 writeFileSync(OUT, JSON.stringify(table, null, 2));
 console.log(`\nwrote ${OUT}`);
 console.log("quality:", JSON.stringify(fit.fleet.quality, null, 2));

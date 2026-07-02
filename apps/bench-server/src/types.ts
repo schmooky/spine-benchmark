@@ -27,8 +27,9 @@ export interface DeviceInfo {
     contextLost?: boolean;
     [extra: string]: unknown;
   } | null;
-  /** WebGL caps (0.2.0+). */
-  gl?: { renderer?: string; maxTextureSize?: number } | null;
+  /** WebGL caps (0.2.0+). `gpuTimerSupported` (0.3.1+) is whether the device has
+   * EXT_disjoint_timer_query_webgl2 (absent on Safari/iOS -> no per-frame GPU ms). */
+  gl?: { renderer?: string; maxTextureSize?: number; gpuTimerSupported?: boolean } | null;
   /** WebGPU support (0.2.0+). */
   webgpu?: { supported?: boolean; vendor?: string; architecture?: string } | null;
   /** Client 0.2.0+ sends much more (ua-ch, media flags). Stored verbatim. */
@@ -73,6 +74,10 @@ export interface ScenarioResult {
     /** CPU spine-update time (compute-side cost). */
     cpuMsAvg?: number | null;
     cpuMsP95?: number | null;
+    /** ramp knees (0.3.1+): instances where it first dropped below refresh
+     * (sustain) and where it collapsed (hard stop). */
+    sustainInstances?: number | null;
+    collapseInstances?: number | null;
   };
   /** For ramp scenarios: per-step rows (instances vs achieved fps). */
   steps?: { instances: number; fps: number; frameMsP95: number }[];
@@ -115,6 +120,9 @@ export interface RunCapture {
     ci: number;
     heapMb?: number | null;
     one?: Record<string, number> | null;
+    /** true GPU/CPU ms (0.3.0+); gpuMs null when no timer (Safari/iOS). */
+    gpuMs?: number | null;
+    cpuMs?: number | null;
   }[];
   /** Client 0.2.0+: longtask / LoAF summaries, event timeline, resource timings. */
   longTasks?: unknown;

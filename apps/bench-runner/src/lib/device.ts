@@ -44,6 +44,9 @@ function glInfo(): GlInfo | null {
         ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL))
         : String(gl.getParameter(gl.RENDERER)),
       antialias: gl.getContextAttributes()?.antialias ?? null,
+      // whether true per-frame GPU timing is possible (absent on Safari/iOS);
+      // mirrors GpuTimer.supported so the report/fit can branch on it.
+      gpuTimerSupported: !!(gl2 && gl2.getExtension("EXT_disjoint_timer_query_webgl2")),
       maxTextureSize: param(gl.MAX_TEXTURE_SIZE),
       maxTextureImageUnits: param(gl.MAX_TEXTURE_IMAGE_UNITS),
       maxCombinedTextureImageUnits: param(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),

@@ -7,7 +7,7 @@
   "main": "./dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "prebuild": "npm run build --prefix ../.. --workspace @spine-benchmark/metrics-impact-formula",
+    "prebuild": "npm run build --prefix ../.. --workspace @spine-benchmark/metrics-impact-formula --workspace @spine-benchmark/metrics-model",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit"
@@ -25,7 +25,8 @@
     "pg": "^8.13.1",
     "pino": "^9.5.0",
     "pino-http": "^10.3.0",
-    "@spine-benchmark/metrics-impact-formula": "^0.1.1"
+    "@spine-benchmark/metrics-impact-formula": "^0.1.1",
+    "@spine-benchmark/metrics-model": "^0.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

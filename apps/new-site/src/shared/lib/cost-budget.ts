@@ -15,6 +15,9 @@ export interface CostModelTable {
   fleet: { gpu: LinearCostModel | null; cpu: LinearCostModel | null };
   byFamily: Record<string, { gpu: LinearCostModel | null; cpu: LinearCostModel | null }>;
   budgetMs: { gpu: number; cpu: number };
+  /** measured per-family frame ceiling (ms); when present the meter anchors the
+   * "%" to the real device capacity instead of the fixed default budget. */
+  budgetByFamily?: Record<string, { gpu: number; cpu: number }>;
 }
 
 export type CostStatus = "ok" | "warn" | "over";
@@ -27,6 +30,8 @@ export interface DeviceCost {
   /** which axis is the binding constraint. */
   binding: "gpu" | "cpu";
   status: CostStatus;
+  /** whether the % is anchored to a measured device ceiling or the default. */
+  budgetSource: "measured" | "default";
 }
 
 export function predictDeviceCost(
@@ -38,7 +43,10 @@ export function predictDeviceCost(
   const gpu = fam?.gpu ?? model?.fleet.gpu ?? undefined;
   const cpu = fam?.cpu ?? model?.fleet.cpu ?? undefined;
   const { gpuMs, cpuMs } = predictCostMs(features, gpu, cpu);
-  const budget = model?.budgetMs ?? DEFAULT_BUDGET_MS;
+  // prefer the measured per-family ceiling (thesis: 100% = that device's frame
+  // budget), else the published global budget, else the default.
+  const famBudget = model?.budgetByFamily?.[device.gpuFamily];
+  const budget = famBudget ?? model?.budgetMs ?? DEFAULT_BUDGET_MS;
   const gpuPct = gpuMs / budget.gpu;
   const cpuPct = cpuMs / budget.cpu;
   const worst = Math.max(gpuPct, cpuPct);
@@ -49,6 +57,7 @@ export function predictDeviceCost(
     cpuPct,
     binding: gpuPct >= cpuPct ? "gpu" : "cpu",
     status: worst > 1 ? "over" : worst > 0.8 ? "warn" : "ok",
+    budgetSource: famBudget ? "measured" : "default",
   };
 }
 
