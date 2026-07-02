@@ -14,7 +14,15 @@ import {
   type DeviceCost,
 } from "@/shared/lib/cost-budget";
 import { BENCH_API } from "@/shared/config/api";
+import { stage } from "@/widgets/stage";
 import { useDeviceStore } from "@/entities/device";
+
+/** Live measured cost read from the stage crawler each sample. */
+interface MeasuredCost {
+  workload: number;
+  gpu: number;
+  bottleneck: string;
+}
 import {
   DEVICES,
   DEVICE_KIND_ICON,
@@ -60,6 +68,7 @@ export function DeviceMeter() {
   const [frame, setFrame] = useState<FrameImpact | null>(null);
   const [cost, setCost] = useState<DeviceCost | null>(null);
   const [model, setModel] = useState<CostModelTable | null>(null);
+  const [measured, setMeasured] = useState<MeasuredCost | null>(null);
 
   const device = deviceById(deviceId);
 
@@ -86,6 +95,14 @@ export function DeviceMeter() {
       // predicted GPU/CPU ms vs this device's ms budget (thesis #6/#7),
       // using the fitted per-family model when available
       setCost(predictDeviceCost(measureFrameFeatures(spine.skeleton), device, model ?? undefined));
+      // LIVE measured cost from the stage crawler (actual frame, not predicted).
+      const wl = stage.getWorkloadCost();
+      const gc = stage.getGpuCost();
+      setMeasured(
+        wl
+          ? { workload: wl.cost, gpu: gc?.cost ?? 0, bottleneck: wl.bottleneck }
+          : null,
+      );
     };
     sample();
     const id = window.setInterval(sample, 200);
@@ -104,7 +121,7 @@ export function DeviceMeter() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`${device.name} (${device.gpuFamily}) - GPU ${cost.gpuMs.toFixed(2)}ms, CPU ${cost.cpuMs.toFixed(2)}ms; binding: ${cost.binding.toUpperCase()} at ${Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}% of ${cost.budgetSource} device capacity - click to change device`}
+        title={`${device.name} (${device.gpuFamily}) - GPU ${cost.gpuMs.toFixed(2)}ms, CPU ${cost.cpuMs.toFixed(2)}ms; binding: ${cost.binding.toUpperCase()} at ${Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}% of ${cost.budgetSource} device capacity - click to change device${measured ? `\nLive measured (crawler): workload ${measured.workload.toFixed(2)}, gpu ${measured.gpu.toFixed(2)}; dominant ${measured.bottleneck}` : ""}`}
         className="pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-1.5 transition-opacity hover:opacity-75"
       >
         <Icon className={cn("size-4", STATUS_TEXT[state])} />
@@ -114,6 +131,14 @@ export function DeviceMeter() {
         <span className="text-[11px] uppercase tabular-nums text-muted-foreground">
           {cost.binding} {Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}%
         </span>
+        {measured && (
+          <span
+            className="text-[11px] tabular-nums text-muted-foreground/70"
+            title="Live measured workload cost (crawler)"
+          >
+            · wl {measured.workload.toFixed(1)}
+          </span>
+        )}
       </button>
 
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>

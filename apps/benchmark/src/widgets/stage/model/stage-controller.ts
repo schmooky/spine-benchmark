@@ -1,4 +1,5 @@
 import { Application, Container, Graphics } from "pixi.js";
+import { mountCrawler, type Crawler } from "@spine-benchmark/pixi-crawler";
 import { animate } from "animejs";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
 
@@ -42,6 +43,9 @@ interface Camera {
  */
 class StageController {
   private app: Application | null = null;
+  /** Live performance crawler mounted on the stage - the site's measurement
+   *  instrument (workload/gpu cost, phase timing) for the budget meter. */
+  private crawler: Crawler | null = null;
   private gridLayer = new Graphics();
   private worldLayer = new Container();
   private spine: Spine | null = null;
@@ -95,6 +99,15 @@ class StageController {
       this.camDirty = true;
     });
     app.ticker.add(this.tick);
+
+    // Mount the crawler as the stage's live measurement instrument (headless).
+    // The DeviceMeter reads its measured workload/gpu cost each sample.
+    this.crawler = mountCrawler(app, {
+      hud: false,
+      spineProfile: { enabled: true },
+      bufferSize: 120,
+      autoDispose: false,
+    });
     this.camDirty = true;
   }
 
@@ -335,6 +348,17 @@ class StageController {
     this.overlayGfx = null;
   }
 
+  /** Live measured workload cost of the current frame window (device+game
+   *  independent open measure), or undefined before the crawler has frames. */
+  getWorkloadCost() {
+    return this.crawler?.getWorkloadCost();
+  }
+
+  /** Live measured GPU cost (fill footprint + filters) of the current frame. */
+  getGpuCost() {
+    return this.crawler?.getGpuCost();
+  }
+
   destroy(): void {
     if (this.app) {
       this.app.canvas.removeEventListener("wheel", this.onWheel);
@@ -343,6 +367,8 @@ class StageController {
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
     this.clearSpine();
+    void this.crawler?.dispose();
+    this.crawler = null;
     if (this.app) {
       this.app.destroy(true, { children: true });
       this.app = null;
