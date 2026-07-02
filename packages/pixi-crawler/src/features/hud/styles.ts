@@ -16,19 +16,19 @@ const HUD_STYLE_ID = "__sbc-hud-css";
 const CSS = `
 #sbc-crawler.sbc-hud {
     /* --- theme tokens (override these to re-skin) --- */
-    --sbc-bg: rgba(18, 19, 22, 0.94);
-    --sbc-fg: rgba(231, 232, 236, 0.92);
-    --sbc-fg-dim: rgba(166, 169, 178, 0.72);
-    --sbc-fg-muted: rgba(150, 153, 162, 0.5);
-    --sbc-fg-faint: rgba(142, 145, 154, 0.38);
-    --sbc-line: rgba(255, 255, 255, 0.05);
-    --sbc-line-2: rgba(255, 255, 255, 0.08);
-    --sbc-track: rgba(255, 255, 255, 0.05);
-    --sbc-hover: rgba(255, 255, 255, 0.05);
+    --sbc-bg: rgba(15, 16, 19, 0.96);
+    --sbc-fg: rgba(233, 234, 238, 0.94);
+    --sbc-fg-dim: rgba(170, 173, 182, 0.74);
+    --sbc-fg-muted: rgba(150, 153, 162, 0.52);
+    --sbc-fg-faint: rgba(142, 145, 154, 0.36);
+    --sbc-line: rgba(255, 255, 255, 0.045);
+    --sbc-line-2: rgba(255, 255, 255, 0.07);
+    --sbc-track: rgba(255, 255, 255, 0.045);
+    --sbc-hover: rgba(255, 255, 255, 0.045);
     --sbc-accent: #7d9cb2;
     --sbc-warn: #c2a878;
     --sbc-over: #c07f77;
-    --sbc-radius: 10px;
+    --sbc-radius: 12px;
 
     position: fixed;
     top: 10px;
@@ -54,7 +54,10 @@ const CSS = `
     flex-direction: column;
     max-height: calc(100vh - 20px);
     overflow: hidden;
-    box-shadow: 0 6px 26px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.46),
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
 /* Scroll container - pointer-events:auto so the wheel/touch reaches it (desktop
@@ -159,10 +162,12 @@ const CSS = `
 .sbc-kv-v { color: var(--sbc-fg); text-align: right; flex: 1; border-radius: 3px; padding-right: 3px; }
 
 /* ---- budget-score ---- */
+/* cpu/gpu readouts: flat text, no capsule. The driver value sits in a muted
+   hue (set inline), the rest reads as plain header text. */
 .sbc-budget-chip {
-    align-self: flex-start; font-size: 10px; font-weight: 600;
-    padding: 2px 8px; border: 1px solid var(--sbc-line-2); border-radius: 999px; white-space: nowrap; cursor: help;
-    color: var(--sbc-fg-dim); background: rgba(255, 255, 255, 0.03);
+    align-self: flex-start; font-size: 10px; font-weight: 500;
+    padding: 0; border: 0; border-radius: 0; background: none; white-space: nowrap; cursor: help;
+    color: var(--sbc-fg-dim); letter-spacing: 0.01em;
 }
 #sbc-crawler .sbc-budget-bottleneck .sbc-kv-l { color: var(--sbc-fg); font-weight: 600; }
 .sbc-budget-device { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--sbc-line-2); }

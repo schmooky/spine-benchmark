@@ -699,7 +699,6 @@ export class CrawlerHud {
       const over = !!workload.tier && workload.tier.ratio > 1;
       const color = over ? COLOR_OVERRUN : "rgba(158, 161, 170, 0.8)";
       chip.style.color = color;
-      chip.style.borderColor = `${color}66`;
       // Device-tier label (light/medium/heavy/over) + `/ceiling` on the face if a ceiling is set.
       const thr = workload.tier ? `/${workload.tier.ceiling}` : "";
       const tierTxt = workload.tier ? ` · ${workload.tier.label}` : "";
@@ -724,7 +723,6 @@ export class CrawlerHud {
       const over = !!gpuCost.tier && gpuCost.tier.ratio > 1;
       const color = over ? COLOR_OVERRUN : "rgba(158, 161, 170, 0.8)";
       chip.style.color = color;
-      chip.style.borderColor = `${color}66`;
       const cov = gpuCost.coverage;
       const gap = cov.missing.includes("particle-fill") || cov.boundsErrors > 0;
       // Device-tier label (separate gpuCeiling) if set.
