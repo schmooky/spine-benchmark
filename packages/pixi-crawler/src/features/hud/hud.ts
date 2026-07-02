@@ -510,7 +510,7 @@ export class CrawlerHud {
     const frames = this.profiler.getFrames();
     const last = frames[frames.length - 1];
     if (!last) {
-      if (this.headerEl) this.headerEl.textContent = "profiler: no frames yet";
+      if (this.headerEl) this.headerEl.textContent = "crawler: no frames yet";
       // Clear every section body so nothing stale lingers before the first frame.
       for (const el of [
         this.barsEl,

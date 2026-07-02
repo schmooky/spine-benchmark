@@ -1128,6 +1128,27 @@ export class Crawler {
     return this.attached;
   }
 
+  /**
+   * Manual-loop frame boundaries, for apps that drive their own render with the
+   * pixi ticker stopped (`app.ticker.stop()` + a custom rAF loop). Bracket each
+   * rendered frame:
+   *
+   *     crawler.frameStart();
+   *     // ...advance the scene, then app.render()...
+   *     crawler.frameEnd();     // flushes one FrameRecord
+   *
+   * Under a running ticker you do NOT call these - `attach()` already wires the
+   * boundaries to the ticker. Mixing the two double-counts, so pick one mode.
+   */
+  frameStart(): void {
+    this._onTickStart();
+  }
+
+  /** @see {@link Crawler.frameStart} - closes the frame and flushes its record. */
+  frameEnd(): void {
+    this._onTickEnd();
+  }
+
   /** Snapshot of the recorded frame ring buffer, oldest->newest. */
   getFrames(): FrameRecord[] {
     return this.buffer.toArray();
