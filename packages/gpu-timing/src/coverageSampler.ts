@@ -9,8 +9,30 @@
  * is resolution- and fit-scale-independent; the on-screen fill is
  * `coveredKpx * fitScale^2`. `overdrawFactor` is total drawn area over covered
  * area (>= 1); 1 means no overlap.
+ *
+ * Lives in gpu-timing (not render-tools) so leaf consumers get it without the
+ * camera/debug/gsap baggage. Typed structurally against the small slice of the
+ * Pixi renderer/container API it touches, so this package keeps zero runtime
+ * (and zero type) dependencies. Methods use call syntax on purpose: it makes a
+ * real Pixi `Renderer`/`Container` structurally assignable to these shapes.
  */
-import type { Container, Renderer } from "pixi.js";
+
+export interface CoverageRenderer {
+  extract: {
+    pixels(options: unknown): {
+      pixels: Uint8ClampedArray | Uint8Array;
+      width: number;
+      height: number;
+    };
+  };
+}
+
+export interface CoverageTarget {
+  getLocalBounds(): { width: number; height: number };
+  children?: CoverageTarget[];
+  visible?: boolean;
+  alpha?: number;
+}
 
 export interface CoverageSample {
   /** covered area in the object's local space, thousands of px. */
@@ -28,8 +50,8 @@ export interface CoverageSample {
  * renderer can't extract pixels.
  */
 export function sampleCoverage(
-  renderer: Renderer,
-  target: Container,
+  renderer: CoverageRenderer,
+  target: CoverageTarget,
   opts: { maxDim?: number } = {},
 ): CoverageSample {
   const maxDim = opts.maxDim ?? 200;
@@ -43,11 +65,7 @@ export function sampleCoverage(
   let pw = 0;
   let ph = 0;
   try {
-    const out = (
-      renderer as unknown as {
-        extract: { pixels: (o: unknown) => { pixels: Uint8ClampedArray; width: number; height: number } };
-      }
-    ).extract.pixels({ target, resolution });
+    const out = renderer.extract.pixels({ target, resolution });
     pixels = out.pixels;
     pw = out.width;
     ph = out.height;
@@ -75,14 +93,13 @@ export function sampleCoverage(
  * bounding area over the parent's covered area. A single flat layer -> ~1;
  * heavily stacked/layered art -> higher. Cheap and needs no extra GPU pass.
  */
-function overdrawProxy(target: Container): number {
+function overdrawProxy(target: CoverageTarget): number {
   const parent = target.getLocalBounds();
   const parentArea = Math.max(1, parent.width * parent.height);
   let drawn = 0;
-  const walk = (c: Container) => {
-    for (const child of c.children as Container[]) {
-      const vis = (child as { visible?: boolean; alpha?: number });
-      if (vis.visible === false || (vis.alpha ?? 1) <= 0.02) continue;
+  const walk = (c: CoverageTarget) => {
+    for (const child of c.children ?? []) {
+      if (child.visible === false || (child.alpha ?? 1) <= 0.02) continue;
       if ((child.children?.length ?? 0) > 0) {
         walk(child);
       } else {

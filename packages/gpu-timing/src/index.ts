@@ -18,6 +18,8 @@
  * no-ops so call sites don't branch.
  */
 
+export * from "./coverageSampler.js";
+
 type TimerExt = {
   TIME_ELAPSED_EXT: number;
   GPU_DISJOINT_EXT: number;

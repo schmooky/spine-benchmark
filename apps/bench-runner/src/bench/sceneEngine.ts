@@ -10,9 +10,7 @@
  */
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
-import { GpuTimer, getGl2 } from "@spine-benchmark/gpu-timing";
-import { sampleCoverage } from "@spine-benchmark/render-tools";
-import type { Renderer } from "pixi.js";
+import { GpuTimer, getGl2, sampleCoverage } from "@spine-benchmark/gpu-timing";
 
 import type {
   ImpactInputs,
@@ -403,7 +401,7 @@ export function startSceneBenchmark(
         try {
           const rep = spines[spines.length - 1] ?? spines[0];
           if (rep) {
-            const c = sampleCoverage(app.renderer as Renderer, rep);
+            const c = sampleCoverage(app.renderer, rep);
             coverage = { coveredKpx: c.coveredKpx, overdrawFactor: c.overdrawFactor };
           }
         } catch {

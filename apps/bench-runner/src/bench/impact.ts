@@ -41,7 +41,7 @@ export interface ImpactInputs {
   /** Classic page+blend batching estimate for one instance. */
   drawCallEst: number;
   /** Rasterized coverage (thousands of px, local space) - the missing fill term.
-   * Measured per scene (not per frame) via render-tools sampleCoverage; 0 when
+   * Measured per scene (not per frame) via gpu-timing sampleCoverage; 0 when
    * not measured. */
   coveredKpx?: number;
   /** Mean overdraw depth over the covered region (>= 1); 1 when not measured. */

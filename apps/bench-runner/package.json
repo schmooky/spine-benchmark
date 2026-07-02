@@ -17,8 +17,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "zustand": "^5.0.3",
-    "@spine-benchmark/gpu-timing": "^0.1.0",
-    "@spine-benchmark/render-tools": "*"
+    "@spine-benchmark/gpu-timing": "^0.1.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.9",
