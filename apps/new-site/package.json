@@ -6,6 +6,7 @@
   "description": "Spine Benchmark v4 site - fullscreen single-skeleton workbench",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run build --prefix ../.. --workspace @spine-benchmark/metrics-impact-formula --workspace @spine-benchmark/gpu-timing --workspace @spine-benchmark/metrics-sampling",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

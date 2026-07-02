@@ -6,6 +6,7 @@
   "description": "Device calibration benchmark client (spine-run.schmooky.dev). Runs bundled Spine scenarios for ~5 minutes, captures detailed metrics and uploads them to bench-server.",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run build --prefix ../.. --workspace @spine-benchmark/gpu-timing --workspace @spine-benchmark/metrics-impact-formula",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
