@@ -194,6 +194,8 @@ window.<span class="tok-fn">addEventListener</span>(<span class="tok-str">"pageh
     <tr><td><code>pipeProfile</code></td><td>off</td><td class="desc">Тайминг каждого вызова render-pipe. Самые тяжёлые накладные расходы.</td></tr>
     <tr><td><code>workloadCost</code></td><td>on</td><td class="desc">Открытая device-независимая мера нагрузки (произв., читается по запросу).</td></tr>
     <tr><td><code>gpuCost</code></td><td>on</td><td class="desc">Открытая мера GPU-тяжести (fill-footprint + фильтры).</td></tr>
+    <tr><td><code>hudTheme</code></td><td>"slate"</td><td class="desc">Цветовая тема HUD: <code>"slate"</code> (по умолч.), <code>"warm"</code> или <code>"contrast"</code>. Только CSS-переменные <code>--sbc-*</code> - на измерения не влияет.</td></tr>
+    <tr><td><code>hudMotion</code></td><td>on</td><td class="desc">Плавная микро-анимация сворачивания/разворачивания HUD. Чисто косметика; <code>false</code> - мгновенно, без переходов.</td></tr>
     <tr><td><code>selfProfile</code></td><td>off</td><td class="desc">Пофункциональный self-time через W3C JS Self-Profiling (нужен заголовок <code>Document-Policy: js-profiling</code>, только Chromium).</td></tr>
     <tr><td><code>memoryProfile</code></td><td>off</td><td class="desc">Память процесса через <code>measureUserAgentSpecificMemory()</code> (нужна cross-origin isolation).</td></tr>
     <tr><td><code>telemetry</code></td><td>off</td><td class="desc">Периодическая отправка агрегатов в ваш sink (см. ниже).</td></tr>
@@ -242,18 +244,26 @@ crawler.<span class="tok-fn">attach</span>(app.renderer, app.ticker);
 <span class="tok-com">// помечайте текущую сцену для атрибуции корпуса измерений</span>
 crawler.<span class="tok-fn">setTelemetryLabel</span>(<span class="tok-str">"bonus-game"</span>);</code></pre>
 
-<h2 id="hud">HUD и темы</h2>
+<h2 id="hud">HUD, темы и анимация</h2>
 <p>
   HUD - приглушённая, нейтральная панель поверх сцены (без «неона»). Клик по
-  «-» сворачивает её в бейдж FPS. Вся палитра задаётся CSS-переменными
-  <code>--sbc-*</code> на корне <code>#sbc-crawler</code> - переопределите пару
-  переменных и получите свою тему.
+  «-» сворачивает её в бейдж FPS. В заголовке - мини-график (спарклайн)
+  времени кадра за последние ~60 кадров: ровная или дёрганая линия читается
+  мгновенно. Вся палитра задаётся CSS-переменными <code>--sbc-*</code> на
+  корне <code>#sbc-crawler</code> - переопределите пару переменных сами, либо
+  выберите одну из трёх готовых тем через <code>config.hudTheme</code>.
 </p>
 <pre><code><span class="tok-key">import</span> { mountCrawler } <span class="tok-key">from</span> <span class="tok-str">"@spine-benchmark/pixi-crawler"</span>;
-<span class="tok-fn">mountCrawler</span>(app);
 
-<span class="tok-com">/* например, тёплая тема - в вашем CSS: */</span>
+<span class="tok-fn">mountCrawler</span>(app, { hudTheme: <span class="tok-str">"warm"</span> });
+
+<span class="tok-com">/* либо переопределите переменные сами, в своём CSS: */</span>
 <span class="tok-com">/* #sbc-crawler.sbc-hud { --sbc-bg: rgba(22,19,17,.95); --sbc-accent: #c2a878; } */</span></code></pre>
+<p>
+  Сворачивание/разворачивание по умолчанию проигрывает короткую анимацию
+  (<code>hudMotion: true</code>); задайте <code>false</code> для мгновенного
+  HUD без переходов.
+</p>
 
 <h2 id="record">Запись сессии</h2>
 <p>
@@ -269,6 +279,7 @@ crawler.<span class="tok-fn">stopRecording</span>();
   pixi-crawler - профайлер производительности для PixiJS 8. Публичный API:
   <code>mountCrawler</code>, <code>Crawler</code>. Требует Pixi 8 (peer-зависимость,
   версия точь-в-точь) и тикер приложения, отличный от <code>Ticker.shared</code>.
+  Английская версия - рядом, в файле <code>usage.en.html</code>.
 </footer>
 
 </div>

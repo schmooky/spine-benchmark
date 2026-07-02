@@ -4,273 +4,176 @@
 [![downloads](https://img.shields.io/npm/dm/@spine-benchmark/pixi-crawler?label=downloads)](https://www.npmjs.com/package/@spine-benchmark/pixi-crawler)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@spine-benchmark/pixi-crawler?label=minzip)](https://bundlephobia.com/package/@spine-benchmark/pixi-crawler)
 
-A real-time Spine animation profiler and performance analyzer for PixiJS applications. Provides in-game debugging overlay, frame recording, statistical analysis, and remote waterfall visualization for identifying and fixing performance bottlenecks.
+A drop-in **performance profiler for PixiJS 8**: a per-frame breakdown of
+where the milliseconds go (CPU pre-work, pixi build / transform / execute,
+Spine, true GPU time via `EXT_disjoint_timer_query`), device-invariant
+workload counters, an optional muted/plain HUD with a live frame-time
+sparkline, and a telemetry sink for shipping the same measurements from a
+live game. Add it to any app in one call.
 
-The RI/CI scoring here is the same as the
-[offline benchmark site](https://spine.schmooky.dev) - both paths
-import the formulas from
-[`@spine-benchmark/metrics-impact-formula`](https://www.npmjs.com/package/@spine-benchmark/metrics-impact-formula),
-so a number you see at runtime matches what the benchmark reports
-for the same skeleton. See the
-[architecture doc](https://github.com/schmooky/spine-benchmark/blob/main/docs/ARCHITECTURE.md)
-for how the two paths stay in sync.
+Its open workload/GPU cost measures are built on
+[`@spine-benchmark/metrics-impact-formula`](https://www.npmjs.com/package/@spine-benchmark/metrics-impact-formula) -
+the same formulas the [offline benchmark site](https://spine.schmooky.dev)
+uses, so a device-tier reading from the crawler and a prediction from the
+benchmark are grounded in the same math.
 
-## Features
+## Install
 
-- **Real-time Scene Analysis**: Traverse PixiJS scene graph, detect performance issues, track node statistics
-- **Spine Animation Profiling**: Deep analysis of Spine skeleton draw order, batch breaks, rendering and computational impact
-- **GL Draw Call Counting**: Intercept and count WebGL draw calls with state change detection
-- **Frame Recording & Playback**: Capture performance data over time, generate detailed reports
-- **In-Game Debug Overlay**: Toggle-able overlay showing FPS, draw calls, budget metrics, problem nodes, and detailed analysis
-- **Remote Waterfall Panel**: Open a separate browser window to view detailed flamechart, waterfall analysis, and frame thumbnails
-- **Budget Tracking**: Monitor rendering impact (RI) and computational impact (CI) per skeleton
-- **Keyboard Controls**: Quick toggles for overlay, graphs, issues, highlights, recording, reports
-
-## Installation
+`pixi.js` is a **peer dependency**. It is critical that your app's pixi
+version and the package's match exactly: the crawler patches pixi
+prototypes, and a version mismatch means it patches the wrong graph.
 
 ```bash
-npm install @spine-benchmark/pixi-crawler pixi.js
+npm install @spine-benchmark/pixi-crawler
 ```
 
-## Quick Start
+## Quick start
+
+One call: `mountCrawler(app)`. Shows the HUD by default and auto-disposes
+itself on `pagehide`.
 
 ```typescript
-import { Application } from 'pixi.js';
-import { Crawler } from '@spine-benchmark/pixi-crawler';
+import { Application } from "pixi.js";
+import { mountCrawler } from "@spine-benchmark/pixi-crawler";
 
 const app = new Application();
+await app.init({ background: "#101317", resizeTo: window });
 
-// Initialize crawler with default configuration
-const crawler = new Crawler(app, {
-  overlayEnabled: true,
-  scanInterval: 4, // scan every 4 frames
-  maxDepth: 20,    // traverse up to 20 levels deep
+// HUD visible, auto-dispose on pagehide
+const crawler = mountCrawler(app);
+
+// headless (no HUD) + telemetry
+const headless = mountCrawler(app, { hud: false, telemetry: { sink } });
+```
+
+`mountCrawler` accepts a Pixi `Application`, or any object with
+`{ renderer, ticker }` fields; the second argument is a config object plus
+an `autoDispose` flag (default `true`).
+
+For full lifecycle control, construct it directly:
+
+```typescript
+import { Crawler } from "@spine-benchmark/pixi-crawler";
+
+const crawler = new Crawler({
+  targetFrameMs: 1000 / 60,
+  hud: !import.meta.env.PROD,
+  spineProfile: { enabled: true },
+  telemetry: { sink, sampling: { windowMs: 5000 }, rawFrames: "on-overrun" },
 });
+crawler.attach(app.renderer, app.ticker);
 
-// Crawler automatically:
-// - Installs GL waterfall spy (if WebGL context available)
-// - Mounts overlay to stage
-// - Installs keyboard event listener
-// - Starts scanning and recording frame data
-
-// Keyboard shortcuts:
-// ~ - toggle overlay
-// G - toggle graph (FPS/DC/Budget)
-// I - toggle issues display
-// H - toggle highlights on problem nodes
-// R - start/stop recording
-// P - export report
-// T - dump configuration and thresholds
-// D - toggle detailed analysis mode
-// W - open remote waterfall panel
-// < > - cycle selected node
+window.addEventListener("pagehide", () => void crawler.dispose());
 ```
 
-## API
+## Contracts
 
-### Crawler
+- **The app's ticker must NOT be `Ticker.shared`.** The app must own its own
+  ticker - under the shared ticker Spine collides with the crawler. This is
+  the one hard incompatibility.
+- **Pixi versions must match exactly** - the crawler patches pixi prototypes.
+- **`gpuMs` is `null` on Safari / iOS** (no `EXT_disjoint_timer_query_webgl2`
+  there). CPU measurements still work; the crawler discards "disjoint"
+  (unreliable) GPU-timer readings itself.
+- **`dispose()` / `detach()` restore** every patched method. Call one of
+  them on unmount.
 
-Main class for profiling and analysis.
-
-```typescript
-const crawler = new Crawler(app, config);
-
-// Access components
-crawler.scanner    // Scene graph scanner
-crawler.recorder   // Frame recording and history
-crawler.overlay    // In-game debug overlay (nullable)
-
-// Configuration (mutable at runtime)
-crawler.config.overlayImpactThreshold = 5; // adjust threshold
-
-// Methods
-crawler.scan()              // Manually scan scene
-crawler.startRecording()    // Start recording frames
-crawler.stopRecording()     // Stop and return recording
-crawler.getReport()         // Get formatted report
-crawler.destroy()           // Cleanup
-```
-
-### Configuration
+If your app drives its own render loop (ticker stopped, your own
+`requestAnimationFrame`), bracket each frame manually instead of calling
+`attach()`:
 
 ```typescript
-type CrawlerConfig = {
-  scanInterval: number;                    // Frames between scans (default: 4)
-  historySize: number;                     // Frame history buffer size (default: 600)
-  maxDepth: number;                        // Max tree depth to scan (default: 20)
-  spineDrawCallThreshold: number;          // DCs for SPINE_HEAVY issue (default: 20)
-  maskComplexityThreshold: number;         // Instructions for MASK_COMPLEX (default: 5000)
-  excessiveChildrenThreshold: number;      // Children count for EXCESSIVE_CHILDREN (default: 50)
-  deepNestingThreshold: number;            // Depth for DEEP_NESTING (default: 15)
-  oversizedTextureThreshold: number;       // Pixels for OVERSIZED_TEXTURE (default: 2048)
-  invisibleChildrenThreshold: number;      // Invisible children for INVISIBLE_SUBTREE (default: 10)
-  overlayEnabled: boolean;                 // Show overlay (default: true)
-  overlayImpactThreshold: number;          // Min impact to show problem node (default: 3)
-  thumbnails: boolean;                     // Capture thumbnails (default: true)
-};
-```
+app.ticker.stop();
 
-### Types
-
-#### FrameSnapshot
-```typescript
-type FrameSnapshot = {
-  frame: number;
-  time: number;
-  fps: number;
-  dt: number;              // Delta time in ms
-  drawCalls: number;       // GL draw call count
-  nodeCount: number;       // Total nodes in scene
-  visibleNodes: number;    // Visible nodes
-  issueCount: number;      // Issues detected
-  heavyNodes: Array<{ node, label, score }>;
-  census: ObjectCensus;
-  budget: AggregateBudget;
-};
-```
-
-#### Issue
-```typescript
-type Issue = {
-  code: IssueCode;
-  severity: 'warning' | 'error';
-  message: string;
-};
-
-type IssueCode =
-  | 'EXCESSIVE_CHILDREN'
-  | 'DEEP_NESTING'
-  | 'INVISIBLE_SUBTREE'
-  | 'MASK_COMPLEX'
-  | 'FILTER_BREAK'
-  | 'BLEND_BREAK'
-  | 'OVERSIZED_TEXTURE'
-  | 'SPINE_HEAVY'
-  | 'SPINE_BATCH_BREAK'
-  | 'SPINE_CLIPPING';
-```
-
-#### SpineAnalysis
-```typescript
-type SpineAnalysis = {
-  skeletonName: string;
-  slotCount: number;
-  drawOrderLength: number;
-  batchBreaks: SpineBatchBreak[];
-  clippingMasks: number;
-  vertices: number;
-  renderingImpact: RenderingImpact;
-  computationalImpact: ComputationalImpact;
-  budget: SpineBudget;
-};
-
-type RenderingImpact = {
-  score: number;
-  level: ImpactLevel;
-};
-
-type ImpactLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'very-high';
-```
-
-### Functions
-
-#### analyzeSpine
-```typescript
-import { analyzeSpine, isSpine } from '@spine-benchmark/pixi-crawler';
-
-if (isSpine(node)) {
-  const analysis = analyzeSpine(node);
-  console.log(`Skeleton: ${analysis.skeletonName}`);
-  console.log(`Impact: ${analysis.budget.level}`);
-  console.log(`Batch breaks: ${analysis.batchBreaks.length}`);
+function frame() {
+  crawler.frameStart();
+  // ...advance the scene, then render...
+  app.render();
+  crawler.frameEnd(); // flushes one FrameRecord
+  requestAnimationFrame(frame);
 }
+requestAnimationFrame(frame);
 ```
 
-#### openRemotePanel
+## Configuration
+
+Every `CrawlerConfig` field is optional; each gates one subsystem.
+
+| Field | Default | What it does |
+| --- | --- | --- |
+| `hud` | off | Show the DOM HUD overlay. On via `mountCrawler`. |
+| `targetFrameMs` | 1000/60 | Frame budget in ms; the HUD normalizes bars and status against it. |
+| `bufferSize` | 600 | Frame ring-buffer size. |
+| `enableGpuTiming` | on | True per-frame GPU time via `EXT_disjoint_timer_query` (`gpuMs`). |
+| `deepRenderSplit` | on | CPU render-time split by phase (build / transform / execute / ...). |
+| `filterProfile` | on | Filter timing (push / apply / pop) and pass count. |
+| `textureTracking` | on | Texture uploads / unloads, bytes, active GPU count. |
+| `spineProfile` | off | Per-phase Spine breakdown. **Patches Spine's methods** - do not enable if you separately time inside `spine.update()`. |
+| `pipeProfile` | off | Per-render-pipe-call timing. The heaviest overhead of any flag. |
+| `workloadCost` | on | Open device-independent workload measure. |
+| `gpuCost` | on | Open GPU-heaviness measure (fill footprint + filters). |
+| `hudTheme` | `"slate"` | HUD color preset: `"slate"` (default), `"warm"`, or `"contrast"`. CSS variables only - no measurement effect. |
+| `hudMotion` | on | Smooth expand/collapse micro-interaction on the HUD. Purely cosmetic. |
+| `selfProfile` | off | Per-function self-time via the W3C JS Self-Profiling API (needs a `Document-Policy: js-profiling` header, Chromium only). |
+| `memoryProfile` | off | Process memory via `measureUserAgentSpecificMemory()` (needs cross-origin isolation). |
+| `telemetry` | off | Periodic aggregate flush to your sink. |
+
+## Reading measurements
+
+The crawler does not require the HUD - read frames directly and build your
+own panel:
+
 ```typescript
-import { openRemotePanel } from '@spine-benchmark/pixi-crawler';
+const f = crawler.getLastFrame(); // the latest FrameRecord (or undefined)
+f.gpuMs; // true GPU time, ms (null without a timer)
+f.counters.drawCalls;
+f.counters.verticesDrawn;
+f.counters.stencilMaskPasses;
+f.counters.renderTargetSwitches;
+f.renderSplit?.updateRenderablesMs; // CPU render phase, ms
 
-// Automatically called via 'W' key, but can be called manually:
-const window = openRemotePanel();
+crawler.getFrames(); // the whole ring buffer
+crawler.getWorkloadCost(); // open workload measure + bottleneck
+crawler.getGpuCost(); // open GPU-heaviness measure
+crawler.getWorstFrame(); // worst frame + a scene dump
+
+// GPU queries land 1-3 frames late; drain them at the end of a window:
+await crawler.flushPendingGpu();
 ```
 
-### SpineBudgetTracker
-
-Track Spine skeleton budgets across frames.
+## Telemetry
 
 ```typescript
-import { SpineBudgetTracker } from '@spine-benchmark/pixi-crawler';
+const sink = {
+  send(batch) {
+    navigator.sendBeacon("/telemetry", JSON.stringify(batch));
+  },
+};
 
-const tracker = new SpineBudgetTracker(maxHistory);
-tracker.recordBudget('skeleton-name', budget);
-const avg = tracker.calculateAverage('skeleton-name');
-const agg = tracker.calculateAggregate(visibleSkeletons);
+const crawler = new Crawler({
+  telemetry: { sink, sampling: { windowMs: 5000 }, rawFrames: "on-overrun" },
+});
+crawler.attach(app.renderer, app.ticker);
+
+crawler.setTelemetryLabel("bonus-game"); // tag the current scene
 ```
 
-## Keyboard Shortcuts
+## Recording a session
 
-| Key | Action |
-|-----|--------|
-| ` (backtick) | Toggle overlay |
-| G | Cycle graph (FPS / Draw Calls / Budget) |
-| I | Toggle issues panel |
-| H | Toggle problem node highlights |
-| R | Start/stop recording |
-| P | Export and download report |
-| T | Dump config and thresholds to console |
-| D | Toggle detailed analysis mode |
-| W | Open remote waterfall panel |
-| < / > | Cycle selected node (analysis mode) |
+```typescript
+crawler.startRecording();
+// ...reproduce the problem scenario...
+crawler.stopRecording();
+const recording = crawler.getRecording(); // -> serialize to JSON
+```
 
-## Remote Waterfall Panel
+## Full guide
 
-Press **W** to open a separate analysis window with:
+The quick reference above covers the common path; a longer walkthrough
+(with the same content in English and Russian) lives in this package:
 
-- **Timeline**: Flamechart of scan/overlay/other timings
-- **FPS Graph**: Live FPS mini-graph
-- **Waterfall**: Detailed GL draw call state changes
-- **Issues**: List of detected performance problems
-- **Thumbnails**: Hover to see frame previews
-- **Controls**: Space (pause), arrow keys (step frames), Home/End (jump)
-
-## Report Generation
-
-Press **P** to export a detailed performance report with:
-
-- Duration and frame count
-- FPS statistics (min, max, avg, p95)
-- Draw call statistics
-- Scene census (node kinds, spine skeletons, textures)
-- Issues grouped by code with explanations
-- Heavy frame analysis
-- Mask usage analysis
-
-## Performance Notes
-
-- Scanning is **configurable** - adjust `scanInterval` to every 2-4 frames for minimal overhead
-- GL spy uses **monkey-patching** - only active if WebGL context is available
-- Overlay rendering is **very lightweight** - uses BitmapText and reuses graphics
-- Remote panel uses **BroadcastChannel** for inter-window IPC - safe and isolated
-- Thumbnails are **captured at reduced resolution** (5% by default) for bandwidth efficiency
-
-## Troubleshooting
-
-### Remote panel won't open
-- Check if popup blocker is enabled
-- Ensure BroadcastChannel is supported (all modern browsers)
-
-### GL spy not active
-- Some environments don't expose WebGL context - falls back to estimation
-- Check console: `[crawler] GL waterfall spy installed` vs `GL context not found`
-
-### Overlay not visible
-- Check `overlayEnabled` config
-- Ensure overlay container is added to stage (automatic)
-
-### Performance overhead
-- Reduce `scanInterval` (scan less frequently)
-- Disable `thumbnails` if not using remote panel
-- Disable `overlayEnabled` if using programmatic API only
+- [`docs/usage.en.html`](./docs/usage.en.html)
+- [`docs/usage.ru.html`](./docs/usage.ru.html)
 
 ## Development
 
@@ -281,16 +184,14 @@ for the workflow. Local commands:
 
 ```bash
 npm run build       # Build for production
-npm run build:dev   # Build with source maps
 npm run type-check  # Check types without building
 npm run clean       # Remove dist directory
 ```
 
 ## See also
 
-- [`@spine-benchmark/metrics-impact-formula`](https://www.npmjs.com/package/@spine-benchmark/metrics-impact-formula) - the canonical RI/CI formulas this package depends on.
+- [`@spine-benchmark/metrics-impact-formula`](https://www.npmjs.com/package/@spine-benchmark/metrics-impact-formula) - the canonical cost formulas this package builds on.
 - [Spine Benchmark site](https://spine.schmooky.dev) - the offline analyzer that uses the same formulas.
-- [`@spine-benchmark/spinefolio`](https://www.npmjs.com/package/@spine-benchmark/spinefolio) - a PixiJS v8 Spine widget for portfolios, sibling package in the same repo.
 
 ## License
 
