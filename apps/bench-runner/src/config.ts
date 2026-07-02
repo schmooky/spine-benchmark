@@ -1,4 +1,8 @@
-export const CLIENT_VERSION = "0.2.0";
+// 0.3.0 = new calibration methodology: true GPU/CPU ms (timer query), coverage/
+// overdraw, adaptive ms-knee ramp, live grading, resumable runs. Runs stored
+// with clientVersion < "0.3.0" are LEGACY (fps/RI-CI only) - exclude them from
+// the cost-model fit (filter clientVersion >= "0.3.0").
+export const CLIENT_VERSION = "0.3.0";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =

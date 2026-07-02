@@ -15,6 +15,23 @@ import {
   type LinearCostModel,
 } from "@spine-benchmark/metrics-impact-formula";
 
+/** First client version with the new methodology (true GPU/CPU ms, coverage,
+ * adaptive ramp). Runs below this are legacy and must be excluded from the fit
+ * (they only have fps/RI-CI, not the ms cost the model needs). */
+export const MIN_FIT_VERSION = "0.3.0";
+
+/** Semver-ish >= compare (major.minor.patch). */
+export function isFittableVersion(clientVersion: string | null | undefined): boolean {
+  if (!clientVersion) return false;
+  const parse = (v: string) => v.split(".").map((n) => parseInt(n, 10) || 0);
+  const a = parse(clientVersion);
+  const b = parse(MIN_FIT_VERSION);
+  for (let i = 0; i < 3; i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return true;
+}
+
 /** Normalize a WebGL `RENDERER` string to a coarse GPU family for clustering. */
 export function gpuFamily(renderer: string | null | undefined): string {
   const r = (renderer ?? "").toLowerCase();

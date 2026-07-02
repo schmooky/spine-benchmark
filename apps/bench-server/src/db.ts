@@ -18,6 +18,8 @@ export interface RunListItem {
   avgFps: number;
   degraded: boolean;
   quick: boolean;
+  /** client that produced the run; < "0.3.0" is a LEGACY (pre-GPU-ms) run. */
+  clientVersion: string;
 }
 
 interface RunStore {
@@ -97,7 +99,7 @@ class PgStore implements RunStore {
 
   async list(limit: number): Promise<RunListItem[]> {
     const r = await this.pool.query(
-      `SELECT id, created_at, device->>'label' AS device_label,
+      `SELECT id, created_at, client_version, device->>'label' AS device_label,
               summary->>'avgFps' AS avg_fps,
               summary->>'degraded' AS degraded,
               summary->>'quick' AS quick
@@ -111,6 +113,7 @@ class PgStore implements RunStore {
       avgFps: Number(row.avg_fps ?? 0),
       degraded: row.degraded === "true",
       quick: row.quick === "true",
+      clientVersion: row.client_version ?? "0",
     }));
   }
 }
@@ -185,7 +188,7 @@ class MongoStore implements RunStore {
 
   async list(limit: number): Promise<RunListItem[]> {
     const docs = await this.coll()
-      .find({}, { projection: { device: 1, summary: 1, createdAt: 1 } })
+      .find({}, { projection: { device: 1, summary: 1, createdAt: 1, clientVersion: 1 } })
       .sort({ createdAt: -1 })
       .limit(limit)
       .toArray();
@@ -196,6 +199,7 @@ class MongoStore implements RunStore {
       avgFps: d.summary?.avgFps ?? 0,
       degraded: d.summary?.degraded ?? false,
       quick: d.summary?.quick ?? false,
+      clientVersion: d.clientVersion ?? "0",
     }));
   }
 }
@@ -239,6 +243,7 @@ class MemoryStore implements RunStore {
         avgFps: r.summary.avgFps,
         degraded: r.summary.degraded,
         quick: r.summary.quick,
+        clientVersion: r.clientVersion,
       }));
   }
 }
