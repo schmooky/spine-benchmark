@@ -44,8 +44,6 @@
     "demo:spinefolio": "npm run demo --workspace @spine-benchmark/spinefolio --",
     "publish:spinefolio": "npm publish --workspace @spine-benchmark/spinefolio --access public",
     "preview": "npm run preview --workspace @spine-benchmark/site",
-    "check:i18n": "npm run check:i18n --workspace @spine-benchmark/site",
-    "sync:locales": "npm run sync:locales --workspace @spine-benchmark/site",
     "check:no-duplicate-formulas": "node scripts/check-no-duplicate-impact-formulas.mjs",
     "check:no-fancy-unicode": "node scripts/check-no-fancy-unicode.mjs",
     "check:lint": "npm run check:no-duplicate-formulas && npm run check:no-fancy-unicode",
