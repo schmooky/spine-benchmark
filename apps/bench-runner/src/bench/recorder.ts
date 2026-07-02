@@ -1,4 +1,4 @@
-import type { ImpactInputs, PerSecondRow, ScenarioResult } from "@/types";
+import type { FrameMetrics, ImpactInputs, PerSecondRow, ScenarioResult } from "@/types";
 
 /**
  * Frame-by-frame metrics recorder. The engine feeds it one tick per
@@ -10,6 +10,20 @@ import type { ImpactInputs, PerSecondRow, ScenarioResult } from "@/types";
 function mean1(xs: number[]): number | null {
   if (xs.length === 0) return null;
   return Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10;
+}
+
+/** Mean each field of a per-second batch of frame metrics. null if empty. */
+function meanFrameMetrics(fs: FrameMetrics[]): FrameMetrics | null {
+  if (fs.length === 0) return null;
+  const keys = Object.keys(fs[0]) as (keyof FrameMetrics)[];
+  const out = {} as FrameMetrics;
+  for (const k of keys) {
+    let sum = 0;
+    for (const f of fs) sum += f[k];
+    // counts kept fractional (mean per frame), ms rounded to 2 dp
+    out[k] = Math.round((sum / fs.length) * 100) / 100;
+  }
+  return out;
 }
 
 function percentile(sorted: number[], p: number): number {
@@ -41,6 +55,10 @@ export interface TickSample {
   gpuMs?: number | null;
   /** CPU time spent advancing spines this frame (spine.update), ms. */
   cpuMs?: number;
+  /** Full crawler frame measurement (counters, render-split, textures), or null. */
+  frame?: FrameMetrics | null;
+  /** This frame's resolved GPU query came back disjoint (reading discarded). */
+  gpuDisjoint?: boolean;
 }
 
 export class Recorder {
@@ -65,6 +83,10 @@ export class Recorder {
   private cpuMs: number[] = [];
   private secGpu: number[] = [];
   private secCpu: number[] = [];
+
+  // full per-frame measurement set + data-quality counters, per second
+  private secFrames: FrameMetrics[] = [];
+  private secDisjoint = 0;
 
   // rolling per-second window
   private secDts: number[] = [];
@@ -94,6 +116,8 @@ export class Recorder {
     this.cpuMs = [];
     this.secGpu = [];
     this.secCpu = [];
+    this.secFrames = [];
+    this.secDisjoint = 0;
     this.secDts = [];
     this.secStart = 0;
   }
@@ -134,6 +158,8 @@ export class Recorder {
       this.cpuMs.push(sample.cpuMs);
       this.secCpu.push(sample.cpuMs);
     }
+    if (sample.frame) this.secFrames.push(sample.frame);
+    if (sample.gpuDisjoint) this.secDisjoint++;
 
     if (this.elapsedMs - this.secStart >= 1000) {
       const secMs = this.elapsedMs - this.secStart;
@@ -152,10 +178,16 @@ export class Recorder {
         one: sample.one,
         gpuMs: mean1(this.secGpu),
         cpuMs: mean1(this.secCpu),
+        m: meanFrameMetrics(this.secFrames),
+        frames: this.secDts.length,
+        gpuFrames: this.secGpu.length,
+        gpuDisjoint: this.secDisjoint,
       });
       this.secDts = [];
       this.secGpu = [];
       this.secCpu = [];
+      this.secFrames = [];
+      this.secDisjoint = 0;
       this.secStart = this.elapsedMs;
     }
   }

@@ -226,6 +226,45 @@ export interface LoafSummary {
   worst: { t: number; ms: number; blockingMs: number; script?: string }[];
 }
 
+/**
+ * The full per-frame measurement set from the crawler, meaned over the second.
+ * These are the ground-truth cost drivers (device-invariant counts) and the
+ * CPU render-phase split (device-dependent ms) the offline fit regresses against
+ * - richer and truer than the skeleton-derived `one` estimates. Captured with a
+ * measurement-honest crawler config (spineProfile off, so the spine-update cpuMs
+ * stays clean; the counter/render hooks run after cpuMs and off the gpuMs path).
+ */
+export interface FrameMetrics {
+  // device-invariant GPU/CPU cost drivers (mean count per frame)
+  drawCalls: number;
+  verticesDrawn: number;
+  stencilMasks: number;
+  renderTargets: number;
+  batchBreaks: number;
+  instructions: number;
+  renderablesUpdated: number;
+  renderGroupsRebuilt: number;
+  stateChanges: number;
+  shaderCompiles: number;
+  bufferUploads: number;
+  bufferKb: number;
+  // CPU render-phase split (mean ms per frame)
+  buildMs: number;
+  updateRendMs: number;
+  batchUploadMs: number;
+  transformsMs: number;
+  executeMs: number;
+  renderOtherMs: number;
+  gcMs: number;
+  // textures
+  texUploads: number;
+  texUnloads: number;
+  texBytesKb: number;
+  activeTextures: number;
+  // filter passes (post-process)
+  filterPasses: number;
+}
+
 export interface PerSecondRow {
   t: number;
   scenarioId: string;
@@ -243,6 +282,14 @@ export interface PerSecondRow {
   gpuMs?: number | null;
   /** Mean CPU spine-update time this second, or null. */
   cpuMs?: number | null;
+  /** Full crawler measurement set, meaned over the second (0.4.0+). */
+  m?: FrameMetrics | null;
+  /** Total frames this second, and how many carried a resolved GPU reading -
+   * the data-quality signal (gpuFrames/frames = GPU-timer coverage). */
+  frames?: number;
+  gpuFrames?: number;
+  /** Frames this second whose GPU query came back disjoint (discarded). */
+  gpuDisjoint?: number;
 }
 
 export interface RunCapture {

@@ -2,7 +2,10 @@
 // overdraw, adaptive ms-knee ramp, live grading, resumable runs. Runs stored
 // with clientVersion < "0.3.0" are LEGACY (fps/RI-CI only) - exclude them from
 // the cost-model fit (filter clientVersion >= "0.3.0").
-export const CLIENT_VERSION = "0.3.0";
+// 0.4.0 = full per-frame crawler measurement set captured per second (device-
+// invariant cost drivers + CPU render-phase split + textures + GPU-timer data
+// quality), measured with a honest config (spineProfile off, cpuMs uncorrupted).
+export const CLIENT_VERSION = "0.4.0";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =

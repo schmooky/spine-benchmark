@@ -11,9 +11,10 @@
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { sampleCoverage } from "@spine-benchmark/gpu-timing";
-import { mountCrawler, type Crawler } from "@spine-benchmark/pixi-crawler";
+import { mountCrawler, type Crawler, type FrameRecord } from "@spine-benchmark/pixi-crawler";
 
 import type {
+  FrameMetrics,
   ImpactInputs,
   LoafSummary,
   LongTaskSummary,
@@ -199,6 +200,39 @@ function createLoader(app: Application): {
   };
 }
 
+/** Flatten a crawler FrameRecord into the runner's captured measurement set. */
+function toFrameMetrics(r: FrameRecord): FrameMetrics {
+  const c = r.counters;
+  const rs = r.renderSplit;
+  const t = r.textures;
+  return {
+    drawCalls: c.drawCalls,
+    verticesDrawn: c.verticesDrawn,
+    stencilMasks: c.stencilMaskPasses,
+    renderTargets: c.renderTargetSwitches,
+    batchBreaks: c.batchBreaks,
+    instructions: c.instructions,
+    renderablesUpdated: c.renderablesUpdated,
+    renderGroupsRebuilt: c.renderGroupsRebuilt,
+    stateChanges: c.stateChanges,
+    shaderCompiles: c.shaderCompiles,
+    bufferUploads: c.bufferUploads,
+    bufferKb: c.bufferBytesUploaded / 1024,
+    buildMs: rs?.buildInstructionsMs ?? 0,
+    updateRendMs: rs?.updateRenderablesMs ?? 0,
+    batchUploadMs: rs?.batchUploadMs ?? 0,
+    transformsMs: rs?.transformsMs ?? 0,
+    executeMs: rs?.executeInstructionsMs ?? 0,
+    renderOtherMs: rs?.renderOtherMs ?? 0,
+    gcMs: r.phases.gcMs,
+    texUploads: t.uploadsThisFrame,
+    texUnloads: t.unloadsThisFrame,
+    texBytesKb: t.bytesUploadedThisFrame / 1024,
+    activeTextures: t.activeGpuCount,
+    filterPasses: r.filter?.passes ?? 0,
+  };
+}
+
 export function startSceneBenchmark(
   host: HTMLElement,
   scenes: SceneDescriptor[],
@@ -249,21 +283,20 @@ export function startSceneBenchmark(
     // plus the CPU phase split and workload counters. The ticker is stopped, so
     // we bracket each rendered frame manually with frameStart()/frameEnd(). A
     // small ring buffer is all we need (we only read the latest resolved gpuMs).
-    // Measurement-honest config: the crawler is a lean GPU-ms instrument here,
-    // nothing more. spineProfile is OFF on purpose - it prototype-patches
-    // Skeleton.update / AnimationState.apply, which run INSIDE the s.update()
-    // loop we time as cpuMs; leaving it on would fold the probe overhead into
-    // the very number we measure. The render-path hooks (deepRenderSplit /
-    // filterProfile / textureTracking) are off too, to keep per-frame observer
-    // effect minimal. enableGpuTiming stays on (that IS the reading we want).
+    // Full measurement, honest cpuMs. We capture EVERYTHING the crawler exposes
+    // per frame (device-invariant counters, CPU render-phase split, textures,
+    // filter passes, true GPU ms) so the offline fit has ground-truth drivers on
+    // every device. The ONE thing left off is spineProfile: it prototype-patches
+    // Skeleton.update / AnimationState.apply, which run INSIDE the s.update() loop
+    // we time as cpuMs - leaving it on would fold probe overhead into that number.
+    // The other hooks run in the render path (after cpuMs) and off the gpuMs
+    // (GPU-side) path, so they enrich the data without corrupting the two core
+    // signals; their only cost is a small, uniform bump to total frame time.
     const crawler: Crawler = mountCrawler(app, {
       hud: false,
       bufferSize: 32,
       autoDispose: false,
       spineProfile: { enabled: false },
-      deepRenderSplit: false,
-      filterProfile: false,
-      textureTracking: false,
     });
 
     const watcher = new PerfWatcher();
@@ -471,6 +504,7 @@ export function startSceneBenchmark(
         let lastInputs: ImpactInputs | null = null;
         let lastHeapMb: number | null = null;
         let lastGpuMs: number | null = null;
+        let lastResolvedGpuIdx = -1;
         let lastHud = 0;
         const recentDts: number[] = [];
 
@@ -537,14 +571,23 @@ export function startSceneBenchmark(
           const cpuMs = performance.now() - cpuStart;
           const ok = safeRender(app);
           crawler.frameEnd();
-          // Newest resolved GPU time from the crawler's ring. EXT queries land a
-          // few frames late, so scan back for the most recent non-null gpuMs
-          // (same "latest available" semantics the old poll callback had).
+          // Full measurement of the just-rendered frame (counters, render-split,
+          // textures, filter) - available synchronously on flush.
+          const rec = crawler.getLastFrame();
+          const frameMetrics = rec ? toFrameMetrics(rec) : null;
+          // Newest RESOLVED GPU query from the ring (EXT results land a few frames
+          // late). Track the newest resolved frameIdx so a disjoint reading is
+          // counted exactly once, and carry the latest good gpuMs forward.
+          let disjointThisFrame = false;
           const frames = crawler.getFrames();
           for (let i = frames.length - 1; i >= 0; i--) {
-            const g = frames[i]!.gpuMs;
-            if (g != null) {
-              lastGpuMs = g;
+            const f = frames[i]!;
+            if (f.gpuMs != null || f.gpuDisjoint) {
+              if (f.frameIdx > lastResolvedGpuIdx) {
+                lastResolvedGpuIdx = f.frameIdx;
+                if (f.gpuMs != null) lastGpuMs = f.gpuMs;
+                else disjointThisFrame = true;
+              }
               break;
             }
           }
@@ -597,6 +640,8 @@ export function startSceneBenchmark(
             heapMb: lastHeapMb,
             gpuMs: lastGpuMs,
             cpuMs,
+            frame: frameMetrics,
+            gpuDisjoint: disjointThisFrame,
           });
 
           recentDts.push(dt);

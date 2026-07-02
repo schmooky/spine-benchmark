@@ -123,6 +123,15 @@ export interface RunCapture {
     /** true GPU/CPU ms (0.3.0+); gpuMs null when no timer (Safari/iOS). */
     gpuMs?: number | null;
     cpuMs?: number | null;
+    /** Full crawler measurement set meaned over the second (0.4.0+): the
+     * ground-truth cost drivers + CPU render-phase split the fit regresses on.
+     * Stored verbatim; keys mirror the runner's FrameMetrics. */
+    m?: Record<string, number> | null;
+    /** Data quality: total frames vs frames with a resolved GPU reading, and
+     * how many GPU queries came back disjoint (discarded) - 0.4.0+. */
+    frames?: number;
+    gpuFrames?: number;
+    gpuDisjoint?: number;
   }[];
   /** Client 0.2.0+: longtask / LoAF summaries, event timeline, resource timings. */
   longTasks?: unknown;
