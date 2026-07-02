@@ -4,7 +4,7 @@
   "version": "3.0.0",
   "description": "Spine Benchmark monorepo",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "workspaces": [
     "apps/*",
@@ -58,8 +58,7 @@
     "size:update": "node scripts/size-check.mjs --update",
     "release": "npm run build:all && changeset publish",
     "snapshot": "node scripts/snapshot-release.mjs",
-    "prepare": "node node_modules/husky/bin.js || true",
-    "build:new-site": "npm run build --workspace @spine-benchmark/new-site"
+    "prepare": "node node_modules/husky/bin.js || true"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
