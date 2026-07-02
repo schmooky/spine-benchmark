@@ -47,6 +47,17 @@ export interface CapacityRow {
    * target. Preferred over cpuMs for the CPU-axis fit; cpuMs alone undercounts
    * Spine (computeWorldVertices lands in the render phases). */
   frameCpuMs?: number | null;
+  /** Measured (not skeleton-guessed) render drivers for this frame, from the
+   * crawler - already frame totals, NOT per-instance (no instance-scaling
+   * needed). Used to fit RI/fill against ground truth instead of the formula's
+   * blends/clips/vertices estimate; the only GPU-side signal on no-timer
+   * devices (most Android/Safari). */
+  m?: {
+    drawCalls: number;
+    verticesDrawn: number;
+    stencilMasks: number;
+    renderTargets: number;
+  } | null;
 }
 
 export interface CapacityScenarioMeta {
@@ -107,6 +118,10 @@ export interface RunCapacityReport {
     cpu: AxisFit | null;
     combined: AxisFit | null;
     riCi: AxisFit | null;
+    /** MEASURED render drivers (verticesDrawn/drawCalls/stencilMasks/
+     * renderTargets, not skeleton-guessed) vs cost. Runs regardless of GPU
+     * timer - the RI/fill grounding signal on no-timer devices. */
+    measuredFill: AxisFit | null;
   };
   knees: { scenes: SceneKnee[]; medianErrPct: number | null };
   /** what one typical real spine costs on this device. */
@@ -152,6 +167,30 @@ function scaledRow(
   const scaled = {} as ImpactFeatures;
   for (const k of FEATURE_KEYS) scaled[k] = k === "overdrawFactor" ? f[k] : f[k] * instances;
   return { features: scaled, gpuMs, cpuMs, family: "device" };
+}
+
+/** Ridge-fit MEASURED render drivers (already frame totals) against a cost
+ * picker; mirrors fitAxis's shape (r2/mae/n) but on a fixed 4-feature vector
+ * instead of the full ImpactFeatures set, since these are direct crawler
+ * counts, not per-instance estimates to scale. Needs at least 6 rows (4
+ * features + intercept + 1 degree of freedom) to be meaningful. */
+function fitMeasuredDrivers(
+  rows: readonly CapacityRow[],
+  costOf: (r: CapacityRow) => number | null,
+): AxisFit | null {
+  const X: number[][] = [];
+  const y: number[] = [];
+  for (const r of rows) {
+    const c = costOf(r);
+    if (c == null || !r.m) continue;
+    X.push([r.m.verticesDrawn, r.m.drawCalls, r.m.stencilMasks, r.m.renderTargets]);
+    y.push(c);
+  }
+  if (X.length < 6) return null;
+  const beta = solveRidge(X, y);
+  const pred = X.map((row) => row.reduce((s, v, i) => s + v * beta[i + 1], beta[0]));
+  const { r2, mae } = fitQuality(pred, y);
+  return { r2, mae, n: X.length };
 }
 
 /** collapse a scenario's rows to one (instances -> median cost) step per density. */
@@ -359,6 +398,17 @@ export function analyzeRunCapacity(input: AnalyzeRunInput): RunCapacityReport {
     combinedFit = toAxisFit(fitAxis(combRows, "gpuMs", "device"));
   }
 
+  // measured-fill fit: MEASURED render drivers (verticesDrawn/drawCalls/
+  // stencilMasks/renderTargets - already frame totals, no instance scaling)
+  // vs the true GPU ms when available, else the frame-time cost. This grounds
+  // the RI/fill axis in what the renderer actually did instead of the
+  // skeleton-derived blends/clips/vertices estimate - the only GPU-side signal
+  // on no-timer devices (most Android/Safari), where gpuFit cannot run at all.
+  const measuredFillFit = fitMeasuredDrivers(
+    perSecond.filter((r) => r.m != null && r.instances > 0),
+    costOf,
+  );
+
   // riCi: score the 2-axis RI/CI model against measured cost across real scenes.
   let riCiFit: AxisFit | null = null;
   if (riUnitMs != null || ciUnitMs != null) {
@@ -428,7 +478,7 @@ export function analyzeRunCapacity(input: AnalyzeRunInput): RunCapacityReport {
     perUnit: { riUnitMs, ciUnitMs },
     ceilingUnits,
     binding,
-    fit: { gpu: gpuFit, cpu: cpuFit, combined: combinedFit, riCi: riCiFit },
+    fit: { gpu: gpuFit, cpu: cpuFit, combined: combinedFit, riCi: riCiFit, measuredFill: measuredFillFit },
     knees: { scenes, medianErrPct },
     capacity,
     verdict,

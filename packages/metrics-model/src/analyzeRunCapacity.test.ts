@@ -149,3 +149,71 @@ describe("analyzeRunCapacity - degenerate input", () => {
     expect(report.capacity).toBeNull();
   });
 });
+
+describe("analyzeRunCapacity - measured-fill fit (RI grounding from real drivers)", () => {
+  // Ground truth: cost is a LINEAR function of MEASURED verticesDrawn only
+  // (drawCalls/stencilMasks/renderTargets held at fixed values), so a correct
+  // fit should recover it with a high R2 regardless of GPU-timer availability.
+  const VERT_COST = 0.002; // ms per vertex
+
+  function rows(withGpuTimer: boolean): CapacityRow[] {
+    const out: CapacityRow[] = [];
+    for (let i = 0; i < 20; i++) {
+      const verts = 1000 + i * 400;
+      const cost = VERT_COST * verts;
+      out.push({
+        scenarioId: "solo",
+        instances: 1,
+        fps: 60,
+        frameMsP95: cost,
+        ri: 0,
+        ci: 0,
+        one: null,
+        gpuMs: withGpuTimer ? cost : null,
+        cpuMs: null,
+        m: { verticesDrawn: verts, drawCalls: 20, stencilMasks: 0, renderTargets: 0 },
+      });
+    }
+    return out;
+  }
+
+  it("fits measured drivers to true GPU ms when the timer is available", () => {
+    const report = analyzeRunCapacity({
+      perSecond: rows(true),
+      scenarios: [{ id: "solo", label: "solo" }],
+      displayHz: 60,
+      gpuTimerSupported: true,
+    });
+    expect(report.fit.measuredFill).not.toBeNull();
+    expect(report.fit.measuredFill!.r2).toBeGreaterThan(0.99);
+    expect(report.fit.measuredFill!.n).toBe(20);
+  });
+
+  it("still fits measured drivers against the frame-time cost with NO GPU timer", () => {
+    const report = analyzeRunCapacity({
+      perSecond: rows(false),
+      scenarios: [{ id: "solo", label: "solo" }],
+      displayHz: 60,
+      gpuTimerSupported: false,
+    });
+    expect(report.fit.measuredFill).not.toBeNull();
+    expect(report.fit.measuredFill!.r2).toBeGreaterThan(0.99);
+  });
+
+  it("is null when there is not enough data or no rows carry m", () => {
+    const report = analyzeRunCapacity({
+      perSecond: rows(true).slice(0, 3),
+      scenarios: [{ id: "solo", label: "solo" }],
+      displayHz: 60,
+    });
+    expect(report.fit.measuredFill).toBeNull();
+
+    const noM = rows(true).map((r) => ({ ...r, m: null }));
+    const report2 = analyzeRunCapacity({
+      perSecond: noM,
+      scenarios: [{ id: "solo", label: "solo" }],
+      displayHz: 60,
+    });
+    expect(report2.fit.measuredFill).toBeNull();
+  });
+});

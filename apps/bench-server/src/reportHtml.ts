@@ -180,6 +180,7 @@ function qualityHtml(cap: RunCapacityReport): string {
     fitRow("frame-CPU fit (compute)", cap.fit.cpu),
     fitRow("frame-cost fit", cap.fit.combined),
     fitRow("RI/CI model", cap.fit.riCi),
+    fitRow("measured-fill fit (real driver counts, RI grounding)", cap.fit.measuredFill),
   ]
     .filter(Boolean)
     .join("\n");
@@ -214,6 +215,14 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
       gpuMs: r.gpuMs ?? null,
       cpuMs: r.cpuMs ?? null,
       frameCpuMs: r.frameCpuMs ?? null,
+      m: r.m
+        ? {
+            drawCalls: r.m.drawCalls ?? 0,
+            verticesDrawn: r.m.verticesDrawn ?? 0,
+            stencilMasks: r.m.stencilMasks ?? 0,
+            renderTargets: r.m.renderTargets ?? 0,
+          }
+        : null,
     }));
     const scenMeta: CapacityScenarioMeta[] = run.scenarios.map((sc) => ({
       id: sc.id,
