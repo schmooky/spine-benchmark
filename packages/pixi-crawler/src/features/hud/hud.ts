@@ -33,7 +33,7 @@ import {
   createBarRow,
   makeBarLegend,
 } from "./sections/bars";
-import { injectHudStyles } from "./styles";
+import { HUD_THEMES, injectHudStyles } from "./styles";
 import {
   type BarView,
   FPS_WINDOW_FRAMES,
@@ -159,6 +159,11 @@ export class CrawlerHud {
     const el = document.createElement("div");
     el.id = "sbc-crawler";
     el.className = "sbc-hud";
+    // Theme: CSS custom-property overrides on the root - "slate" (default) is
+    // empty, warm/contrast override a handful of --sbc-* tokens (styles.ts).
+    for (const [k, v] of Object.entries(HUD_THEMES[this.profiler.hudTheme])) {
+      el.style.setProperty(k, v);
+    }
 
     // Collapsed state: only this badge is shown; click expands.
     const badge = document.createElement("div");
@@ -350,6 +355,20 @@ export class CrawlerHud {
     // Expanding: the body was hidden and `_update` skipped the heavy render,
     // so the DOM is stale - redraw immediately, without waiting for a tick.
     if (!v) this._update();
+    this._playTogglePop();
+  }
+
+  /** Micro-interaction: a brief scale+opacity settle on expand/collapse,
+   *  instead of the instant display:none snap (config.hudMotion, default on -
+   *  see Crawler.hudMotion). Purely cosmetic; no-ops when disabled. */
+  private _playTogglePop(): void {
+    if (!this.profiler.hudMotion || !this.el) return;
+    const el = this.el;
+    el.classList.remove("sbc-toggle-pop");
+    // force reflow so re-adding the class restarts the animation
+    void el.offsetWidth;
+    el.classList.add("sbc-toggle-pop");
+    window.setTimeout(() => el.classList.remove("sbc-toggle-pop"), 200);
   }
 
   unmount(): void {

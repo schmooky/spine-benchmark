@@ -148,6 +148,17 @@ const CSS = `
 }
 .sbc-collapse-btn:hover { background: var(--sbc-hover); color: var(--sbc-fg); }
 
+/* ---- micro-interaction: expand/collapse pop (config.hudMotion, default on) ----
+   A brief scale+opacity settle on toggle, instead of the instant display:none
+   snap. Applied as a transient class by the HUD, removed after it plays; the
+   keyframes are always defined but only ever added to an element when
+   hudMotion is enabled - see CrawlerHud.mount()/_setCollapsed(). */
+@keyframes sbc-pop {
+    from { opacity: 0.55; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+}
+.sbc-toggle-pop { animation: sbc-pop 0.16s ease-out; }
+
 /* ---- counters grid ---- */
 .sbc-counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px 12px; font-size: 10px; }
 .sbc-counter { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; overflow: hidden; }
@@ -280,3 +291,43 @@ export function injectHudStyles(): void {
   style.textContent = CSS;
   document.head.appendChild(style);
 }
+
+/**
+ * HUD color presets, as `--sbc-*` custom-property overrides applied inline on
+ * the root element (config.hudTheme). "slate" is the shipped default (empty -
+ * no override needed). All three keep the SAME light-text-on-dark direction as
+ * the base theme: several elements (bar overlays, drop shadows) hardcode a
+ * light-on-dark assumption, so a true light/white theme would need those
+ * re-tuned too - out of scope here, hence no "light" preset.
+ */
+export const HUD_THEMES: Record<"slate" | "warm" | "contrast", Record<string, string>> = {
+  slate: {},
+  warm: {
+    "--sbc-bg": "rgba(23, 19, 16, 0.96)",
+    "--sbc-fg": "rgba(238, 231, 221, 0.94)",
+    "--sbc-fg-dim": "rgba(196, 182, 163, 0.74)",
+    "--sbc-fg-muted": "rgba(176, 160, 138, 0.52)",
+    "--sbc-fg-faint": "rgba(168, 152, 130, 0.36)",
+    "--sbc-line": "rgba(255, 232, 200, 0.05)",
+    "--sbc-line-2": "rgba(255, 232, 200, 0.08)",
+    "--sbc-track": "rgba(255, 232, 200, 0.05)",
+    "--sbc-hover": "rgba(255, 232, 200, 0.05)",
+    "--sbc-accent": "#c2a878",
+    "--sbc-warn": "#c2a878",
+    "--sbc-over": "#c4776a",
+  },
+  contrast: {
+    "--sbc-bg": "rgba(24, 25, 29, 0.99)",
+    "--sbc-fg": "rgba(245, 246, 248, 0.98)",
+    "--sbc-fg-dim": "rgba(196, 199, 206, 0.85)",
+    "--sbc-fg-muted": "rgba(172, 175, 184, 0.65)",
+    "--sbc-fg-faint": "rgba(160, 163, 172, 0.5)",
+    "--sbc-line": "rgba(255, 255, 255, 0.08)",
+    "--sbc-line-2": "rgba(255, 255, 255, 0.14)",
+    "--sbc-track": "rgba(255, 255, 255, 0.08)",
+    "--sbc-hover": "rgba(255, 255, 255, 0.08)",
+    "--sbc-accent": "#96b7cc",
+    "--sbc-warn": "#d4bd8f",
+    "--sbc-over": "#d4948a",
+  },
+};

@@ -842,6 +842,18 @@ export class Crawler {
     return this.config.targetFrameMs;
   }
 
+  /** HUD color preset (default "slate"). The HUD applies it as CSS custom
+   *  properties at mount - cosmetic only. */
+  get hudTheme(): "slate" | "warm" | "contrast" {
+    return this.config.hudTheme ?? "slate";
+  }
+
+  /** Whether the HUD's expand/collapse + hover transitions are enabled
+   *  (default true). Cosmetic only - no effect on measurement. */
+  get hudMotion(): boolean {
+    return this.config.hudMotion ?? true;
+  }
+
   /**
    * Resolved `workloadCost` config (`undefined` -> built-in defaults).
    *

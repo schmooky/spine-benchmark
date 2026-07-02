@@ -204,6 +204,17 @@ export interface CrawlerConfig {
 
   /** Mount the DOM HUD overlay at attach. Toggle later via `profiler.setHud()`. */
   hud?: boolean;
+  /** HUD color preset. "slate" (default) is the shipped muted/plain look;
+   *  "warm" is a warm-toned dark variant; "contrast" is a lighter, higher-
+   *  contrast dark variant (e.g. for screen recordings). All three keep the
+   *  same light-text-on-dark direction, so nothing else needs re-tuning. Sets
+   *  CSS custom properties only - zero effect on measurement. */
+  hudTheme?: "slate" | "warm" | "contrast";
+  /** Smooth expand/collapse + hover transitions on the HUD chrome. Default on;
+   *  set false for an instant, transition-free HUD (e.g. when recording a
+   *  frame-perfect video of the overlay itself). Purely cosmetic - CSS only,
+   *  no effect on measurement or the render loop. */
+  hudMotion?: boolean;
   /** Periodic telemetry flush to a game-owned sink. Omit to disable telemetry
    *  entirely (profiler still records frames; read via `getFrames()`). */
   telemetry?: TelemetryConfig;
@@ -260,6 +271,8 @@ export const DEFAULT_CRAWLER_CONFIG: Required<
     | "workloadCost"
     | "gpuCost"
     | "hud"
+    | "hudTheme"
+    | "hudMotion"
     | "telemetry"
   >
 > = {
