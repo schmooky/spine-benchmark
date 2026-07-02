@@ -298,7 +298,12 @@ export function startSceneBenchmark(
       Math.max(3000, Math.floor((budgetMs * weightOf(d)) / sumWeight));
     const totalMs =
       scenes.reduce((a, d) => a + durOf(d), 0) + SETTLE_MS * (scenes.length - 1);
-    let runElapsed = 0;
+    // seed elapsed with the time already covered by scenes done/skipped in
+    // earlier segments, so the progress bar stays tied to global N/total after
+    // a crash-reload instead of jumping back to 0.
+    let runElapsed = scenes
+      .filter((d) => skip.has(d.id))
+      .reduce((a, d) => a + durOf(d) + SETTLE_MS, 0);
 
     /** Play + measure one scene for sceneDur ms. Emits onSceneDone (result, or
      * null when skipped) and resolves with the abort reason or null. Uses its

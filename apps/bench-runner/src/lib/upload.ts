@@ -81,21 +81,42 @@ export function buildUpload(
   };
 }
 
-export async function uploadRun(upload: RunUpload): Promise<UploadOk> {
-  const res = await fetch(`${API_BASE}/api/runs`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(upload),
-  });
-  if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
+/** Statuses worth retrying: transient server/storage/network blips. */
+const RETRYABLE = new Set([0, 408, 429, 500, 502, 503, 504]);
+
+/**
+ * Upload the run, retrying transient failures (503 "storage unavailable",
+ * network drops, 5xx) with exponential backoff. The whole run's data survives
+ * in the session across a reload, so a persistent outage still isn't lost - but
+ * a momentary blip now recovers on its own instead of failing the run.
+ */
+export async function uploadRun(upload: RunUpload, attempts = 4): Promise<UploadOk> {
+  const body = JSON.stringify(upload);
+  let lastErr = "";
+  for (let i = 0; i < attempts; i++) {
+    let status = 0;
     try {
-      const body = (await res.json()) as { error?: string };
-      if (body.error) detail = body.error;
-    } catch {
-      // non-JSON error body
+      const res = await fetch(`${API_BASE}/api/runs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body,
+      });
+      if (res.ok) return (await res.json()) as UploadOk;
+      status = res.status;
+      lastErr = `HTTP ${status}`;
+      try {
+        const b = (await res.json()) as { error?: string };
+        if (b.error) lastErr = b.error;
+      } catch {
+        /* non-JSON body */
+      }
+    } catch (err) {
+      status = 0; // network error
+      lastErr = (err as Error).message;
     }
-    throw new Error(detail);
+    // last attempt, or a non-retryable client error (4xx except 408/429): stop
+    if (i === attempts - 1 || !RETRYABLE.has(status)) break;
+    await new Promise((r) => setTimeout(r, 800 * 2 ** i)); // 0.8s, 1.6s, 3.2s
   }
-  return (await res.json()) as UploadOk;
+  throw new Error(lastErr || "upload failed");
 }
