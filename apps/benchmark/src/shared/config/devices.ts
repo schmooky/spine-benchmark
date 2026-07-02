@@ -109,6 +109,14 @@ export const DEVICE_KIND_LABEL: Record<DeviceKind, string> = {
   desktop: "Desktops",
 };
 
+/**
+ * The portable device families the budget meter targets. Desktop PCs are
+ * deliberately excluded - the calibration study, and the "is this okay on the
+ * devices players actually use" question, are about phones and tablets, where
+ * the frame budget bites. Desktops have huge headroom and only dilute the view.
+ */
+export const PORTABLE_KINDS: DeviceKind[] = ["phone", "tablet"];
+
 /** Traffic-light status of a budget fraction (impact / capacity). */
 export type BudgetStatus = "ok" | "warn" | "over";
 

@@ -19,10 +19,10 @@ import {
   DEVICES,
   DEVICE_KIND_ICON,
   DEVICE_KIND_LABEL,
+  PORTABLE_KINDS,
   budgetStatus,
   deviceById,
   type BudgetStatus,
-  type DeviceKind,
 } from "@/shared/config/devices";
 import {
   Dialog,
@@ -40,7 +40,8 @@ const STATUS_TEXT: Record<BudgetStatus, string> = {
   over: "text-red-400",
 };
 
-const KINDS: DeviceKind[] = ["phone", "tablet", "desktop"];
+// Portable families only - desktops are excluded from the target picker.
+const KINDS = PORTABLE_KINDS;
 
 /**
  * Device budget meter - top-left corner. Shows the chosen target device and
