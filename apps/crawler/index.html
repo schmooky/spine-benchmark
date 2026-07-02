@@ -13,38 +13,27 @@
   <div id="welcome" class="welcome-overlay">
     <div class="welcome-card">
       <h1>Pixi Crawler</h1>
-      <p class="welcome-subtitle">Real-time scene-graph profiler for PixiJS&nbsp;+&nbsp;Spine</p>
+      <p class="welcome-subtitle">A drop-in performance crawler for PixiJS&nbsp;8</p>
 
       <div class="welcome-description">
         <p>
-          Crawler continuously scans your PixiJS stage for <strong>performance issues</strong> -
-          broken batches, hidden-but-updating skeletons, deep nesting, off-screen objects,
-          excessive children, and more. Every issue is categorised, highlighted directly on the
-          canvas, and scored with a <strong>Rendering&nbsp;Impact</strong> metric so you know what
-          to fix first.
+          Crawler instruments the renderer to break every frame down into
+          <strong>where the milliseconds go</strong> - CPU pre-work, pixi
+          build / transform / execute, Spine, and true GPU time - plus
+          device-invariant workload counters. It is added to any app in one call:
+          <code>mountCrawler(app)</code>.
         </p>
         <p>
-          This demo builds a <strong>12-cell showcase</strong> where each cell intentionally
-          triggers a specific issue category. Open the overlay and walk through them to see how
-          Crawler surfaces problems in a real scene.
+          This scene is a swarm of moving sprites with a filtered, masked panel,
+          just so the HUD has something to chew on.
         </p>
       </div>
 
-      <h2>Keyboard controls</h2>
-
+      <h2>Controls</h2>
       <div class="hotkey-grid">
         <div class="hotkey-group">
-          <div class="hotkey-row"><kbd>~</kbd><span>Toggle overlay panel</span></div>
-          <div class="hotkey-row"><kbd>G</kbd><span>Toggle graph <small>(FPS / DC / Budget)</small></span></div>
-          <div class="hotkey-row"><kbd>I</kbd><span>Toggle issues list</span></div>
-          <div class="hotkey-row"><kbd>H</kbd><span>Toggle highlights on scene nodes</span></div>
-          <div class="hotkey-row"><kbd>D</kbd><span>Toggle detailed analysis mode</span></div>
-        </div>
-        <div class="hotkey-group">
-          <div class="hotkey-row"><kbd>R</kbd><span>Start / stop recording</span></div>
-          <div class="hotkey-row"><kbd>P</kbd><span>Export report</span></div>
-          <div class="hotkey-row"><kbd>W</kbd><span>Open remote waterfall panel</span></div>
-          <div class="hotkey-row"><kbd>&larr;</kbd> <kbd>&rarr;</kbd><span>Cycle selected node</span></div>
+          <div class="hotkey-row"><kbd>+</kbd><span>Add 100 instances</span></div>
+          <div class="hotkey-row"><kbd>-</kbd><span>Remove 100 instances</span></div>
         </div>
       </div>
 

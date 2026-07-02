@@ -1,8 +1,8 @@
 {
   "name": "@spine-benchmark/pixi-crawler",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
-  "description": "Real-time Spine animation profiler and performance analyzer for PixiJS",
+  "description": "Drop-in PixiJS 8 performance crawler: per-frame phase timing, workload counters, HUD, worst-frame inspector, and telemetry",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -10,18 +10,6 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      }
-    },
-    "./core": {
-      "import": {
-        "types": "./dist/core/index.d.ts",
-        "default": "./dist/core/index.js"
-      }
-    },
-    "./ui": {
-      "import": {
-        "types": "./dist/ui/index.d.ts",
-        "default": "./dist/ui/index.js"
       }
     }
   },
@@ -44,12 +32,12 @@
   ],
   "author": "Spine Benchmark Contributors",
   "license": "MIT",
-  "dependencies": {
-    "@spine-benchmark/metrics-impact-formula": "^0.1.1",
+  "peerDependencies": {
     "pixi.js": "^8.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "pixi.js": "^8.0.0",
     "typescript": "^5.3.0"
   },
   "repository": {

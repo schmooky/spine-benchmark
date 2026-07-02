@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "apps/bench-runner"],
       "port": 5190
+    },
+    {
+      "name": "crawler-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "apps/crawler"],
+      "port": 8080
     }
   ]
 }
