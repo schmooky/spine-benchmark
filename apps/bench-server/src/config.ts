@@ -46,6 +46,11 @@ export const config = {
   // Public base URL of this server, used in report links.
   publicUrl: process.env.PUBLIC_URL || "https://spine-bench.schmooky.dev",
 
+  // Optional shared-secret gate for POST /api/model/refit (it re-reads many
+  // captures from S3, so it is worth guarding once this server is public).
+  // Unset = open, matching the existing /api/model posture.
+  refitToken: process.env.REFIT_TOKEN || "",
+
   // Max accepted payload (full capture rides in the POST body).
   bodyLimit: process.env.BODY_LIMIT || "25mb",
 

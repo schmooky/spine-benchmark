@@ -17,6 +17,14 @@
       },
       "types": "./dist/deviceClass.d.ts",
       "import": "./dist/deviceClass.js"
+    },
+    "./deviceFit": {
+      "development": {
+        "types": "./src/deviceFit.ts",
+        "import": "./src/deviceFit.ts"
+      },
+      "types": "./dist/deviceFit.d.ts",
+      "import": "./dist/deviceFit.js"
     }
   },
   "files": [

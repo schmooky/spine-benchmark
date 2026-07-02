@@ -42,6 +42,10 @@ const subpathAlias: { find: string; replacement: string }[] = [
     find: '@spine-benchmark/metrics-analyzers/deviceClass',
     replacement: r('packages', 'metrics-analyzers', 'src', 'deviceClass.ts'),
   },
+  {
+    find: '@spine-benchmark/metrics-analyzers/deviceFit',
+    replacement: r('packages', 'metrics-analyzers', 'src', 'deviceFit.ts'),
+  },
 ];
 
 export default defineConfig({

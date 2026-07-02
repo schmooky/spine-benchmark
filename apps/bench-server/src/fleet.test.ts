@@ -18,6 +18,7 @@ function run(opts: RunOpts): RunDeviceItem {
     clientVersion: opts.clientVersion ?? "0.3.1",
     avgFps: opts.avgFps ?? 60,
     device: opts.device as unknown as RunDeviceItem["device"],
+    captureKey: null,
   };
 }
 

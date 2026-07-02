@@ -22,14 +22,16 @@ export interface RunListItem {
   clientVersion: string;
 }
 
-/** A run reduced to what the fleet aggregation needs: the full device record
- * (for classification) plus a couple of headline stats. */
+/** A run reduced to what the fleet aggregation / refit need: the full device
+ * record (for classification) plus a couple of headline stats and the capture
+ * key (to fetch perSecond rows for the fit). */
 export interface RunDeviceItem {
   id: string;
   createdAt: string;
   clientVersion: string;
   avgFps: number;
   device: DeviceInfo;
+  captureKey: string | null;
 }
 
 interface RunStore {
@@ -131,7 +133,7 @@ class PgStore implements RunStore {
 
   async listDevices(limit: number): Promise<RunDeviceItem[]> {
     const r = await this.pool.query(
-      `SELECT id, created_at, client_version, device,
+      `SELECT id, created_at, client_version, device, capture_key,
               summary->>'avgFps' AS avg_fps
        FROM bench_runs ORDER BY created_at DESC LIMIT $1`,
       [limit],
@@ -142,6 +144,7 @@ class PgStore implements RunStore {
       clientVersion: row.client_version ?? "0",
       avgFps: Number(row.avg_fps ?? 0),
       device: row.device,
+      captureKey: row.capture_key ?? null,
     }));
   }
 }
@@ -233,7 +236,7 @@ class MongoStore implements RunStore {
 
   async listDevices(limit: number): Promise<RunDeviceItem[]> {
     const docs = await this.coll()
-      .find({}, { projection: { device: 1, summary: 1, createdAt: 1, clientVersion: 1 } })
+      .find({}, { projection: { device: 1, summary: 1, createdAt: 1, clientVersion: 1, captureKey: 1 } })
       .sort({ createdAt: -1 })
       .limit(limit)
       .toArray();
@@ -243,6 +246,7 @@ class MongoStore implements RunStore {
       clientVersion: d.clientVersion ?? "0",
       avgFps: d.summary?.avgFps ?? 0,
       device: d.device,
+      captureKey: d.captureKey ?? null,
     }));
   }
 }
@@ -299,6 +303,7 @@ class MemoryStore implements RunStore {
         clientVersion: r.clientVersion,
         avgFps: r.summary.avgFps,
         device: r.device,
+        captureKey: r.captureKey,
       }));
   }
 }

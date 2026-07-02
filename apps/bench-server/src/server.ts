@@ -39,12 +39,20 @@ const readLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+// Refit re-reads up to hundreds of captures from S3 per call - strict cap.
+const refitLimiter = rateLimit({
+  windowMs: 60 * 60_000,
+  max: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // ── Probes ─────────────────────────────────────────────────
 // livez: the process is up and serving.
 // healthz: dependencies (postgres + s3) are reachable too.
 
 import { getModel, setModel, type CoefficientTable } from "./model.js";
+import { runRefit } from "./refit.js";
 
 app.get("/livez", (_req, res) => {
   res.json({ status: "live" });
@@ -64,6 +72,44 @@ app.post("/api/model", (req, res) => {
     res.json({ ok: true });
   } catch {
     res.status(400).json({ error: "invalid model" });
+  }
+});
+
+// Live refit: reads recent portable-device runs' captures, fits a fresh
+// per-GPU-family coefficient table, and publishes it (subsequent GET /api/model
+// serves it immediately). Gated by REFIT_TOKEN if set (x-refit-token header).
+app.post("/api/model/refit", refitLimiter, async (req, res) => {
+  if (config.refitToken && req.get("x-refit-token") !== config.refitToken) {
+    res.status(401).json({ error: "invalid or missing x-refit-token" });
+    return;
+  }
+  try {
+    const result = await runRefit();
+    setModel(result.table);
+    logger.info(
+      {
+        runsConsidered: result.runsConsidered,
+        runsFittable: result.runsFittable,
+        runsUsed: result.runsUsed,
+        rowsUsed: result.rowsUsed,
+        familyCounts: result.familyCounts,
+        durationMs: result.durationMs,
+      },
+      "model refit published",
+    );
+    res.json({
+      ok: true,
+      runsConsidered: result.runsConsidered,
+      runsFittable: result.runsFittable,
+      runsUsed: result.runsUsed,
+      rowsUsed: result.rowsUsed,
+      familyCounts: result.familyCounts,
+      durationMs: result.durationMs,
+      quality: result.table.quality,
+    });
+  } catch (err) {
+    logger.error({ err }, "model refit failed");
+    res.status(503).json({ error: "refit failed" });
   }
 });
 
