@@ -8,7 +8,11 @@
 // 0.4.1 = frameCpuMs (spine.update + render-side CPU): the honest compute cost.
 // cpuMs alone undercounts Spine, whose computeWorldVertices + per-frame
 // instruction rebuild land in the render phases (transformsMs / buildMs).
-export const CLIENT_VERSION = "0.4.1";
+// 0.4.2 = ?mode=sweep isolation-sweep calibrator (kind:"sweep" scenarios):
+// ramps one GPU cost driver at a time (fill/vertices/stencilMasks/
+// renderTargets/filterPasses) and pairs its analytic driverValue with
+// measured GPU/CPU ms, for fitting the crawler's placeholder gpuCost weights.
+export const CLIENT_VERSION = "0.4.2";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =

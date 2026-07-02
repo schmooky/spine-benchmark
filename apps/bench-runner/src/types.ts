@@ -146,15 +146,38 @@ export interface SceneReport {
   missingRegions: number;
 }
 
+/** One isolation-sweep driver's ramp: an analytic driverValue(level) paired
+ * with the measured GPU/CPU cost at that level, for offline weight fitting
+ * (fixes the placeholder gpuCost weights against real gpu_ms). */
+export interface SweepReport {
+  /** GPU cost driver isolated (fill / vertices / stencilMasks / renderTargets
+   * / filterPasses - see @/bench/sweeps SweepDriver). */
+  driver: string;
+  /** unit label for driverValue (px, verts, passes, ...). */
+  unit: string;
+  pairs: {
+    level: number;
+    /** exact isolated-driver value at this level (device-invariant). */
+    driverValue: number;
+    /** median true GPU ms at this level, or null (no timer / all disjoint). */
+    gpuMsMedian: number | null;
+    /** median render-side CPU ms at this level (sweeps have no spine.update,
+     * so this IS the frame's CPU cost). */
+    frameCpuMsMedian: number | null;
+  }[];
+}
+
 export interface ScenarioResult {
   id: string;
   label: string;
   spine: string;
-  kind: "solo" | "ramp" | "swarm" | "scene";
+  kind: "solo" | "ramp" | "swarm" | "scene" | "sweep";
   startMs: number;
   durationMs: number;
   /** present when kind === "scene". */
   scene?: SceneReport;
+  /** present when kind === "sweep". */
+  sweep?: SweepReport;
   stats: {
     frames: number;
     avgFps: number;

@@ -241,6 +241,7 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
   const ramps = run.scenarios.filter((sc) => sc.steps && sc.steps.length > 0);
   const calib = ramps.filter((sc) => sc.scene?.game === "calibration");
   const density = ramps.filter((sc) => sc.scene?.game !== "calibration");
+  const sweeps = run.scenarios.filter((sc) => sc.kind === "sweep" && sc.sweep);
 
   const sceneRow = (sc: ScenarioResult) => `<tr>
       <td>${esc(sc.scene ? `${sc.scene.game} / ${sc.scene.state}` : sc.label)}</td>
@@ -264,6 +265,22 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
         <tr><th>fps</th>${steps.map((st) => `<td class="num ${st.fps < 30 ? "bad" : ""}">${st.fps.toFixed(0)}</td>`).join("")}</tr>
         <tr><th>p95 ms</th>${steps.map((st) => `<td class="num">${st.frameMsP95.toFixed(1)}</td>`).join("")}</tr>
       </table>`;
+  };
+
+  /** One isolation-sweep driver's ramp: level -> (driverValue, gpu ms, cpu ms).
+   * A clean monotonic gpu/cpu column across levels is the fit-readiness signal -
+   * that is what an offline weight fit regresses driverValue against. */
+  const sweepBlock = (sc: ScenarioResult) => {
+    const sw = sc.sweep!;
+    const gpuKnown = sw.pairs.some((p) => p.gpuMsMedian != null);
+    return `<h3>${esc(sw.driver)} <span class="muted">(${esc(sw.unit)})</span></h3>
+      <table>
+        <tr><th>level</th>${sw.pairs.map((p) => `<td class="num">${p.level}</td>`).join("")}</tr>
+        <tr><th>driver value</th>${sw.pairs.map((p) => `<td class="num">${n0(p.driverValue)}</td>`).join("")}</tr>
+        <tr><th>gpu ms</th>${sw.pairs.map((p) => `<td class="num">${ms(p.gpuMsMedian)}</td>`).join("")}</tr>
+        <tr><th>cpu ms</th>${sw.pairs.map((p) => `<td class="num">${ms(p.frameCpuMsMedian)}</td>`).join("")}</tr>
+      </table>
+      ${!gpuKnown ? '<p class="muted">No GPU timer on this device - only the CPU column carries signal for this sweep.</p>' : ""}`;
   };
 
   const crashedList = s.crashedScenes?.length
@@ -352,6 +369,11 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
   ${
     density.length
       ? `<h2>Density capacity ramps <span class="muted">(per-game breaking point)</span></h2>${density.map(rampBlock).join("\n")}`
+      : ""
+  }
+  ${
+    sweeps.length
+      ? `<h2>Isolation sweeps <span class="muted">(one GPU driver at a time - the gpuCost weight fit corpus)</span></h2>${sweeps.map(sweepBlock).join("\n")}`
       : ""
   }
 

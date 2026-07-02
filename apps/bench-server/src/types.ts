@@ -48,12 +48,27 @@ export interface SceneReport {
   missingRegions: number;
 }
 
+/** Per-driver detail carried on kind === "sweep" scenarios (0.4.2+): an
+ * isolation-sweep ramp pairing an analytic driverValue with measured GPU/CPU
+ * ms, for the offline gpuCost weight fit. */
+export interface SweepReport {
+  driver: string;
+  unit: string;
+  pairs: {
+    level: number;
+    driverValue: number;
+    gpuMsMedian: number | null;
+    frameCpuMsMedian: number | null;
+  }[];
+}
+
 export interface ScenarioResult {
   id: string;
   label: string;
   spine: string;
-  kind: "solo" | "ramp" | "swarm" | "scene";
+  kind: "solo" | "ramp" | "swarm" | "scene" | "sweep";
   scene?: SceneReport;
+  sweep?: SweepReport;
   startMs: number;
   durationMs: number;
   /** Aggregate stats for the whole scenario. */
