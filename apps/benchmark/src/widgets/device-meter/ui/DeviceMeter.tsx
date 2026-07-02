@@ -10,19 +10,13 @@ import {
 import {
   predictDeviceCost,
   fetchCostModel,
+  scoreAgainstBudget,
   type CostModelTable,
   type DeviceCost,
 } from "@/shared/lib/cost-budget";
 import { BENCH_API } from "@/shared/config/api";
 import { stage } from "@/widgets/stage";
 import { useDeviceStore } from "@/entities/device";
-
-/** Live measured cost read from the stage crawler each sample. */
-interface MeasuredCost {
-  workload: number;
-  gpu: number;
-  bottleneck: string;
-}
 import {
   DEVICES,
   DEVICE_KIND_ICON,
@@ -68,7 +62,12 @@ export function DeviceMeter() {
   const [frame, setFrame] = useState<FrameImpact | null>(null);
   const [cost, setCost] = useState<DeviceCost | null>(null);
   const [model, setModel] = useState<CostModelTable | null>(null);
-  const [measured, setMeasured] = useState<MeasuredCost | null>(null);
+  // ACTUAL measured ms of the last rendered frame (crawler.getLastFrame()),
+  // not a prediction from skeleton features - this is what the meter shows
+  // whenever it is available.
+  const [measuredMs, setMeasuredMs] = useState<{ gpuMs: number | null; cpuMs: number } | null>(
+    null,
+  );
 
   const device = deviceById(deviceId);
 
@@ -95,14 +94,8 @@ export function DeviceMeter() {
       // predicted GPU/CPU ms vs this device's ms budget (thesis #6/#7),
       // using the fitted per-family model when available
       setCost(predictDeviceCost(measureFrameFeatures(spine.skeleton), device, model ?? undefined));
-      // LIVE measured cost from the stage crawler (actual frame, not predicted).
-      const wl = stage.getWorkloadCost();
-      const gc = stage.getGpuCost();
-      setMeasured(
-        wl
-          ? { workload: wl.cost, gpu: gc?.cost ?? 0, bottleneck: wl.bottleneck }
-          : null,
-      );
+      // ACTUAL measured ms from the stage crawler's last rendered frame.
+      setMeasuredMs(stage.getMeasuredMs() ?? null);
     };
     sample();
     const id = window.setInterval(sample, 200);
@@ -112,16 +105,36 @@ export function DeviceMeter() {
   if (status !== "ready" || !spine || !frame || !cost) return null;
 
   const fraction = frame.total / device.capacity;
-  const bindingMs = cost.binding === "gpu" ? cost.gpuMs : cost.cpuMs;
-  const state: BudgetStatus = cost.status;
   const Icon = DEVICE_KIND_ICON[device.kind];
+
+  // Prefer the crawler's ACTUAL measured frame ms over the skeleton-feature
+  // prediction whenever a live frame is available (basically always - the
+  // crawler is mounted headlessly on this same stage). Scored against the
+  // SAME resolved budget predictDeviceCost used, so "measured" and
+  // "predicted" read on one consistent scale.
+  const measuredScored = measuredMs
+    ? scoreAgainstBudget(measuredMs.gpuMs ?? 0, measuredMs.cpuMs, cost.budgetMs)
+    : null;
+  const isMeasured = measuredScored != null;
+  const binding = isMeasured ? measuredScored.binding : cost.binding;
+  const bindingMs = isMeasured
+    ? binding === "gpu"
+      ? (measuredMs!.gpuMs ?? measuredMs!.cpuMs)
+      : measuredMs!.cpuMs
+    : cost.binding === "gpu"
+      ? cost.gpuMs
+      : cost.cpuMs;
+  const pct = isMeasured
+    ? Math.max(measuredScored.gpuPct, measuredScored.cpuPct)
+    : Math.max(cost.gpuPct, cost.cpuPct);
+  const state: BudgetStatus = isMeasured ? measuredScored.status : cost.status;
 
   return (
     <>
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`${device.name} (${device.gpuFamily}) - GPU ${cost.gpuMs.toFixed(2)}ms, CPU ${cost.cpuMs.toFixed(2)}ms; binding: ${cost.binding.toUpperCase()} at ${Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}% of ${cost.budgetSource} device capacity - click to change device${measured ? `\nLive measured (crawler): workload ${measured.workload.toFixed(2)}, gpu ${measured.gpu.toFixed(2)}; dominant ${measured.bottleneck}` : ""}`}
+        title={`${device.name} (${device.gpuFamily}) - ${isMeasured ? "MEASURED" : "predicted (no live frame yet)"}: GPU ${(measuredMs?.gpuMs ?? cost.gpuMs).toFixed(2)}ms, CPU ${(measuredMs?.cpuMs ?? cost.cpuMs).toFixed(2)}ms; binding: ${binding.toUpperCase()} at ${Math.round(pct * 100)}% of ${cost.budgetSource} device capacity${measuredMs?.gpuMs == null ? " (no GPU timer on this device - CPU only)" : ""} - click to change device`}
         className="pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-1.5 transition-opacity hover:opacity-75"
       >
         <Icon className={cn("size-4", STATUS_TEXT[state])} />
@@ -129,14 +142,11 @@ export function DeviceMeter() {
           {bindingMs.toFixed(2)}ms
         </span>
         <span className="text-[11px] uppercase tabular-nums text-muted-foreground">
-          {cost.binding} {Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100)}%
+          {binding} {Math.round(pct * 100)}%
         </span>
-        {measured && (
-          <span
-            className="text-[11px] tabular-nums text-muted-foreground/70"
-            title="Live measured workload cost (crawler)"
-          >
-            · wl {measured.workload.toFixed(1)}
+        {!isMeasured && (
+          <span className="text-[11px] tabular-nums text-muted-foreground/70" title="No live crawler frame yet - showing a prediction from skeleton features">
+            (predicted)
           </span>
         )}
       </button>

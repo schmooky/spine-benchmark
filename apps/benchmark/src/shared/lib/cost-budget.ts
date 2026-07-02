@@ -32,6 +32,29 @@ export interface DeviceCost {
   status: CostStatus;
   /** whether the % is anchored to a measured device ceiling or the default. */
   budgetSource: "measured" | "default";
+  /** the resolved ms budget this prediction was scored against - exposed so
+   *  callers can score a DIFFERENT ms value (e.g. the crawler's actually
+   *  measured frame cost) against the same denominator. */
+  budgetMs: { gpu: number; cpu: number };
+}
+
+/** Score an arbitrary (gpuMs, cpuMs) pair against a resolved budget - the
+ *  same status/binding/pct logic predictDeviceCost uses, factored out so a
+ *  REAL measured frame can be scored the same way as a predicted one. */
+export function scoreAgainstBudget(
+  gpuMs: number,
+  cpuMs: number,
+  budget: { gpu: number; cpu: number },
+): Pick<DeviceCost, "gpuPct" | "cpuPct" | "binding" | "status"> {
+  const gpuPct = gpuMs / budget.gpu;
+  const cpuPct = cpuMs / budget.cpu;
+  const worst = Math.max(gpuPct, cpuPct);
+  return {
+    gpuPct,
+    cpuPct,
+    binding: gpuPct >= cpuPct ? "gpu" : "cpu",
+    status: worst > 1 ? "over" : worst > 0.8 ? "warn" : "ok",
+  };
 }
 
 export function predictDeviceCost(
@@ -47,17 +70,13 @@ export function predictDeviceCost(
   // budget), else the published global budget, else the default.
   const famBudget = model?.budgetByFamily?.[device.gpuFamily];
   const budget = famBudget ?? model?.budgetMs ?? DEFAULT_BUDGET_MS;
-  const gpuPct = gpuMs / budget.gpu;
-  const cpuPct = cpuMs / budget.cpu;
-  const worst = Math.max(gpuPct, cpuPct);
+  const scored = scoreAgainstBudget(gpuMs, cpuMs, budget);
   return {
     gpuMs,
     cpuMs,
-    gpuPct,
-    cpuPct,
-    binding: gpuPct >= cpuPct ? "gpu" : "cpu",
-    status: worst > 1 ? "over" : worst > 0.8 ? "warn" : "ok",
+    ...scored,
     budgetSource: famBudget ? "measured" : "default",
+    budgetMs: budget,
   };
 }
 

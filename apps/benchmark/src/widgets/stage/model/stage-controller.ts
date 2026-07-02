@@ -359,6 +359,17 @@ class StageController {
     return this.crawler?.getGpuCost();
   }
 
+  /** ACTUAL measured ms of the latest rendered frame - true GPU time (EXT
+   *  timer query, null without one) and total CPU (the whole ticker-tick,
+   *  prePixi + pixi). This is a real measurement, not a prediction from
+   *  skeleton features - prefer it over predictDeviceCost's estimate when
+   *  a live crawler frame is available. */
+  getMeasuredMs(): { gpuMs: number | null; cpuMs: number } | undefined {
+    const frame = this.crawler?.getLastFrame();
+    if (!frame) return undefined;
+    return { gpuMs: frame.gpuMs ?? null, cpuMs: frame.measuredCpuMs };
+  }
+
   destroy(): void {
     if (this.app) {
       this.app.canvas.removeEventListener("wheel", this.onWheel);
