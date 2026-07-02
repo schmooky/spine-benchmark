@@ -8,6 +8,7 @@ import { runStore } from "./db.js";
 import { captureStore } from "./storage.js";
 import { newRunId } from "./ids.js";
 import { renderRunReport } from "./reportHtml.js";
+import { buildFleet, renderFleet } from "./fleet.js";
 import type { RunUpload } from "./types.js";
 
 const app = express();
@@ -162,6 +163,28 @@ app.get("/api/runs/:id", readLimiter, async (req, res) => {
   } catch (err) {
     logger.error({ err }, "run fetch failed");
     res.status(503).json({ error: "storage unavailable" });
+  }
+});
+
+// Fleet overview: recent runs grouped by portable device family (desktops
+// excluded). JSON for tooling; /fleet renders the same data as HTML.
+app.get("/api/fleet", readLimiter, async (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 1000, 5000);
+  try {
+    res.json(buildFleet(await runStore.listDevices(limit)));
+  } catch (err) {
+    logger.error({ err }, "fleet build failed");
+    res.status(503).json({ error: "storage unavailable" });
+  }
+});
+
+app.get("/fleet", readLimiter, async (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 1000, 5000);
+  try {
+    res.type("text/html").send(renderFleet(buildFleet(await runStore.listDevices(limit))));
+  } catch (err) {
+    logger.error({ err }, "fleet render failed");
+    res.status(503).type("text/html").send("<h1>storage unavailable</h1>");
   }
 });
 

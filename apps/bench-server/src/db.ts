@@ -22,6 +22,16 @@ export interface RunListItem {
   clientVersion: string;
 }
 
+/** A run reduced to what the fleet aggregation needs: the full device record
+ * (for classification) plus a couple of headline stats. */
+export interface RunDeviceItem {
+  id: string;
+  createdAt: string;
+  clientVersion: string;
+  avgFps: number;
+  device: DeviceInfo;
+}
+
 interface RunStore {
   init(): Promise<void>;
   healthy(): Promise<boolean>;
@@ -30,6 +40,8 @@ interface RunStore {
   exists(id: string): Promise<boolean>;
   get(id: string): Promise<RunRecord | null>;
   list(limit: number): Promise<RunListItem[]>;
+  /** Recent runs with their full device record, for fleet grouping. */
+  listDevices(limit: number): Promise<RunDeviceItem[]>;
 }
 
 // ── Postgres ───────────────────────────────────────────────
@@ -114,6 +126,22 @@ class PgStore implements RunStore {
       degraded: row.degraded === "true",
       quick: row.quick === "true",
       clientVersion: row.client_version ?? "0",
+    }));
+  }
+
+  async listDevices(limit: number): Promise<RunDeviceItem[]> {
+    const r = await this.pool.query(
+      `SELECT id, created_at, client_version, device,
+              summary->>'avgFps' AS avg_fps
+       FROM bench_runs ORDER BY created_at DESC LIMIT $1`,
+      [limit],
+    );
+    return r.rows.map((row) => ({
+      id: row.id,
+      createdAt: new Date(row.created_at).toISOString(),
+      clientVersion: row.client_version ?? "0",
+      avgFps: Number(row.avg_fps ?? 0),
+      device: row.device,
     }));
   }
 }
@@ -202,6 +230,21 @@ class MongoStore implements RunStore {
       clientVersion: d.clientVersion ?? "0",
     }));
   }
+
+  async listDevices(limit: number): Promise<RunDeviceItem[]> {
+    const docs = await this.coll()
+      .find({}, { projection: { device: 1, summary: 1, createdAt: 1, clientVersion: 1 } })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .toArray();
+    return docs.map((d) => ({
+      id: d._id,
+      createdAt: d.createdAt.toISOString(),
+      clientVersion: d.clientVersion ?? "0",
+      avgFps: d.summary?.avgFps ?? 0,
+      device: d.device,
+    }));
+  }
 }
 
 // ── In-memory (dev only) ───────────────────────────────────
@@ -244,6 +287,18 @@ class MemoryStore implements RunStore {
         degraded: r.summary.degraded,
         quick: r.summary.quick,
         clientVersion: r.clientVersion,
+      }));
+  }
+  async listDevices(limit: number): Promise<RunDeviceItem[]> {
+    return [...this.rows.values()]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, limit)
+      .map((r) => ({
+        id: r.id,
+        createdAt: r.createdAt,
+        clientVersion: r.clientVersion,
+        avgFps: r.summary.avgFps,
+        device: r.device,
       }));
   }
 }

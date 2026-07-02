@@ -9,6 +9,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./deviceClass": {
+      "development": {
+        "types": "./src/deviceClass.ts",
+        "import": "./src/deviceClass.ts"
+      },
+      "types": "./dist/deviceClass.d.ts",
+      "import": "./dist/deviceClass.js"
     }
   },
   "files": [
