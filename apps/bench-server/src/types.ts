@@ -27,16 +27,32 @@ export interface DeviceInfo {
     contextLost?: boolean;
     [extra: string]: unknown;
   } | null;
-  /** Client 0.2.0+ sends much more (gl caps, webgpu, ua-ch, media flags).
-   *  Stored verbatim; analysis reads it from the raw document. */
+  /** WebGL caps (0.2.0+). */
+  gl?: { renderer?: string; maxTextureSize?: number } | null;
+  /** WebGPU support (0.2.0+). */
+  webgpu?: { supported?: boolean; vendor?: string; architecture?: string } | null;
+  /** Client 0.2.0+ sends much more (ua-ch, media flags). Stored verbatim. */
   [extra: string]: unknown;
+}
+
+/** Per-scene detail carried on kind === "scene" scenarios. */
+export interface SceneReport {
+  game: string;
+  state: string;
+  description: string;
+  fitScale: number;
+  onScreenAreaPx: number;
+  spineCount: number;
+  tier: string;
+  missingRegions: number;
 }
 
 export interface ScenarioResult {
   id: string;
   label: string;
   spine: string;
-  kind: "solo" | "ramp" | "swarm";
+  kind: "solo" | "ramp" | "swarm" | "scene";
+  scene?: SceneReport;
   startMs: number;
   durationMs: number;
   /** Aggregate stats for the whole scenario. */
@@ -78,6 +94,9 @@ export interface RunSummary {
   aborted?: boolean;
   abortReason?: string;
   crashed?: boolean;
+  /** scenes that crashed the tab / were skipped (resumable run). */
+  crashedScenes?: string[];
+  skippedScenes?: string[];
 }
 
 export interface RunCapture {
