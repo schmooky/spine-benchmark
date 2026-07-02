@@ -7,7 +7,13 @@ import {
   measureFrameFeatures,
   type FrameImpact,
 } from "@/entities/skeleton";
-import { predictDeviceCost, type DeviceCost } from "@/shared/lib/cost-budget";
+import {
+  predictDeviceCost,
+  fetchCostModel,
+  type CostModelTable,
+  type DeviceCost,
+} from "@/shared/lib/cost-budget";
+import { BENCH_API } from "@/shared/config/api";
 import { useDeviceStore } from "@/entities/device";
 import {
   DEVICES,
@@ -52,8 +58,21 @@ export function DeviceMeter() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [frame, setFrame] = useState<FrameImpact | null>(null);
   const [cost, setCost] = useState<DeviceCost | null>(null);
+  const [model, setModel] = useState<CostModelTable | null>(null);
 
   const device = deviceById(deviceId);
+
+  // fetch the fitted per-GPU-family cost model once; falls back to the formula
+  // defaults (predictDeviceCost handles null) until one is published.
+  useEffect(() => {
+    let live = true;
+    void fetchCostModel(BENCH_API).then((m) => {
+      if (live) setModel(m);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (status !== "ready" || !spine) {
@@ -63,13 +82,14 @@ export function DeviceMeter() {
     }
     const sample = () => {
       setFrame(measureFrameImpact(spine.skeleton));
-      // predicted GPU/CPU ms vs this device's ms budget (thesis #6/#7)
-      setCost(predictDeviceCost(measureFrameFeatures(spine.skeleton), device));
+      // predicted GPU/CPU ms vs this device's ms budget (thesis #6/#7),
+      // using the fitted per-family model when available
+      setCost(predictDeviceCost(measureFrameFeatures(spine.skeleton), device, model ?? undefined));
     };
     sample();
     const id = window.setInterval(sample, 200);
     return () => window.clearInterval(id);
-  }, [spine, status, device]);
+  }, [spine, status, device, model]);
 
   if (status !== "ready" || !spine || !frame || !cost) return null;
 
