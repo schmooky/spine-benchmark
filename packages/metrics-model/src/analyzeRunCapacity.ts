@@ -43,6 +43,10 @@ export interface CapacityRow {
   one: Partial<ImpactFeatures> | null;
   gpuMs?: number | null;
   cpuMs?: number | null;
+  /** Total per-frame CPU (spine.update + render-side); the honest compute (CI)
+   * target. Preferred over cpuMs for the CPU-axis fit; cpuMs alone undercounts
+   * Spine (computeWorldVertices lands in the render phases). */
+  frameCpuMs?: number | null;
 }
 
 export interface CapacityScenarioMeta {
@@ -335,11 +339,16 @@ export function analyzeRunCapacity(input: AnalyzeRunInput): RunCapacityReport {
   // ── self-fit: full-feature ridge on measured ms ──
   const trainingRows = perSecond
     .filter((r) => r.one != null && r.instances > 0)
-    .map((r) => scaledRow(r.one, r.instances, r.gpuMs ?? null, r.cpuMs ?? null));
+    // The CPU-axis target is frameCpuMs (honest compute = spine.update +
+    // render-side CPU); fall back to cpuMs for pre-0.4.1 runs. It rides in the
+    // row's cpuMs slot so the axis fit reads it transparently.
+    .map((r) => scaledRow(r.one, r.instances, r.gpuMs ?? null, r.frameCpuMs ?? r.cpuMs ?? null));
   const toAxisFit = (f: ReturnType<typeof fitAxis>): AxisFit | null =>
     f ? { r2: f.r2, mae: f.mae, n: f.n } : null;
   const gpuFit = gpuTimerAvailable ? toAxisFit(fitAxis(trainingRows, "gpuMs", "device")) : null;
-  const cpuFit = gpuTimerAvailable ? toAxisFit(fitAxis(trainingRows, "cpuMs", "device")) : null;
+  // Compute-axis fit does NOT need the GPU timer - frameCpuMs is measured on
+  // every device (including the no-timer Android fleet where RI can't be fit).
+  const cpuFit = toAxisFit(fitAxis(trainingRows, "cpuMs", "device"));
 
   // combined frame-cost fit for the no-timer path (features -> frame ms excess).
   let combinedFit: AxisFit | null = null;

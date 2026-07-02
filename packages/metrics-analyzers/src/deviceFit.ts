@@ -63,6 +63,9 @@ export interface CaptureRow {
   features: ImpactFeatures;
   gpuMs: number | null;
   cpuMs: number | null;
+  /** Total per-frame CPU (spine.update + render-side); the honest compute
+   * target, preferred over cpuMs which undercounts Spine. */
+  frameCpuMs?: number | null;
 }
 
 /** Build training rows: composite features = per-instance x instances, paired
@@ -76,7 +79,8 @@ export function toTrainingRows(family: string, rows: CaptureRow[]): TrainingRow[
       // overdrawFactor is intensive (per-pixel), not multiplied by count
       scaled[k] = k === "overdrawFactor" ? row.features[k] : row.features[k] * row.instances;
     });
-    out.push({ features: scaled, gpuMs: row.gpuMs, cpuMs: row.cpuMs, family });
+    // CPU-axis target = frameCpuMs (honest compute), fallback to cpuMs.
+    out.push({ features: scaled, gpuMs: row.gpuMs, cpuMs: row.frameCpuMs ?? row.cpuMs, family });
   }
   return out;
 }

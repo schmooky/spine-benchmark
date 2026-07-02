@@ -105,7 +105,7 @@ function qualityHtml(cap: RunCapacityReport): string {
       : "";
   const rows = [
     fitRow("GPU ms fit", cap.fit.gpu),
-    fitRow("CPU ms fit", cap.fit.cpu),
+    fitRow("frame-CPU fit (compute)", cap.fit.cpu),
     fitRow("frame-cost fit", cap.fit.combined),
     fitRow("RI/CI model", cap.fit.riCi),
   ]
@@ -141,6 +141,7 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
       one: (r.one ?? null) as CapacityRow["one"],
       gpuMs: r.gpuMs ?? null,
       cpuMs: r.cpuMs ?? null,
+      frameCpuMs: r.frameCpuMs ?? null,
     }));
     const scenMeta: CapacityScenarioMeta[] = run.scenarios.map((sc) => ({
       id: sc.id,
