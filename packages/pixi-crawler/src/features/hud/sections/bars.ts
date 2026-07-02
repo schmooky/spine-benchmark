@@ -282,15 +282,15 @@ export function applyBarRow(
   const marker = item.hasChildren ? (item.isCollapsed ? "▸ " : "▾ ") : "";
   refs.label.textContent = `${indent}${marker}${item.label}`;
   if (item.info) {
-    refs.label.style.color = "rgba(180,200,220,0.45)";
+    refs.label.style.color = "rgba(158, 161, 170,0.45)";
     refs.label.style.fontStyle = "italic";
     refs.label.style.fontWeight = "";
   } else if (item.isHeader) {
-    refs.label.style.color = "rgba(232,240,246,0.92)";
+    refs.label.style.color = "rgba(231, 232, 236,0.92)";
     refs.label.style.fontWeight = "500";
     refs.label.style.fontStyle = "";
   } else {
-    refs.label.style.color = "rgba(180,200,220,0.7)";
+    refs.label.style.color = "rgba(158, 161, 170,0.7)";
     refs.label.style.fontWeight = "";
     refs.label.style.fontStyle = "";
   }
@@ -335,7 +335,7 @@ export function applyBarRow(
     refs.num.style.fontWeight = "600";
     refs.num.style.fontStyle = "";
   } else if (item.info) {
-    refs.num.style.color = "rgba(180,200,220,0.45)";
+    refs.num.style.color = "rgba(158, 161, 170,0.45)";
     refs.num.style.fontStyle = "italic";
     refs.num.style.fontWeight = "";
   } else {

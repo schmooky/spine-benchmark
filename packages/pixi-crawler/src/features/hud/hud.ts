@@ -58,7 +58,7 @@ function fmtDriverVal(
 function fpsColorFor(fps: number, budget: number): string {
   const target = budget > 0 ? 1000 / budget : 60;
   const ratio = fps / target;
-  return ratio < 0.85 ? COLOR_OVERRUN : ratio < 0.95 ? "#ffd060" : "#7fdc8c";
+  return ratio < 0.85 ? COLOR_OVERRUN : ratio < 0.95 ? "#c2a878" : "#8fb89a";
 }
 
 // Averaged view over the FPS window - what we feed the bar and the partition row.
@@ -621,7 +621,7 @@ export class CrawlerHud {
       value.title = label.title;
       // subtle inline bar via background gradient on the value
       const w = Math.min(100, (fn.selfMs / maxMs) * 100);
-      value.style.background = `linear-gradient(90deg, rgba(125,187,227,0.18) ${w.toFixed(0)}%, transparent ${w.toFixed(0)}%)`;
+      value.style.background = `linear-gradient(90deg, rgba(125, 156, 178,0.18) ${w.toFixed(0)}%, transparent ${w.toFixed(0)}%)`;
       row.append(label, value);
       el.append(row);
     }
@@ -659,7 +659,7 @@ export class CrawlerHud {
     const cpuMs = view ? view.prePixiMs + view.pixiMs : last.measuredCpuMs;
     const ratio = totalMs / budget;
     const statusColor =
-      ratio > 1 ? COLOR_OVERRUN : ratio > 0.85 ? "#ffd060" : "#7fdc8c";
+      ratio > 1 ? COLOR_OVERRUN : ratio > 0.85 ? "#c2a878" : "#8fb89a";
     const fpsColor = fpsColorFor(fps, budget);
 
     // Keep the collapsed badge's FPS readout live even while expanded.
@@ -697,7 +697,7 @@ export class CrawlerHud {
       // Red ONLY when a device ceiling resolves AND the scene is over it
       // (tier.ratio > 1). Open measure -> neutral otherwise.
       const over = !!workload.tier && workload.tier.ratio > 1;
-      const color = over ? COLOR_OVERRUN : "rgba(180, 200, 220, 0.8)";
+      const color = over ? COLOR_OVERRUN : "rgba(158, 161, 170, 0.8)";
       chip.style.color = color;
       chip.style.borderColor = `${color}66`;
       // Device-tier label (light/medium/heavy/over) + `/ceiling` on the face if a ceiling is set.
@@ -722,7 +722,7 @@ export class CrawlerHud {
       const chip = document.createElement("div");
       chip.className = "sbc-budget-chip";
       const over = !!gpuCost.tier && gpuCost.tier.ratio > 1;
-      const color = over ? COLOR_OVERRUN : "rgba(180, 200, 220, 0.8)";
+      const color = over ? COLOR_OVERRUN : "rgba(158, 161, 170, 0.8)";
       chip.style.color = color;
       chip.style.borderColor = `${color}66`;
       const cov = gpuCost.coverage;
@@ -1039,7 +1039,7 @@ export class CrawlerHud {
           v,
           `${d.name}: ${d.aggregation} ${v} x weight ${d.weight} = contribution ${d.contribution.toFixed(2)}`,
           maxC,
-          "#7dbbe32e"
+          "#7d9cb22e"
         );
       }
       // Device reality - a device-dependent indicator, does NOT affect cost.
@@ -1073,7 +1073,7 @@ export class CrawlerHud {
         gc.coverage.missing.length > 0 || gc.coverage.boundsErrors > 0;
       const note = document.createElement("div");
       note.className = "sbc-kv sbc-budget-note";
-      if (!dirty) note.style.color = "rgba(180, 200, 220, 0.5)"; // neutral - no missing/errors
+      if (!dirty) note.style.color = "rgba(158, 161, 170, 0.5)"; // neutral - no missing/errors
       const errNote =
         gc.coverage.boundsErrors > 0
           ? ` - ${gc.coverage.boundsErrors} bounds-err (fill underreported)`
@@ -1096,7 +1096,7 @@ export class CrawlerHud {
           valStr,
           `${d.name}: ${valStr} x weight ${d.weight} = contribution ${d.contribution.toFixed(2)}`,
           maxC,
-          "#e3a87d2e"
+          "#b58c782e"
         );
       }
     }
@@ -1600,7 +1600,7 @@ export class CrawlerHud {
       items.push({
         label: `Long Tasks · ${ltCnt.toFixed(1)} avg/frame`,
         ms: ltMs,
-        color: "#D08D9C",
+        color: "#bf94a0",
         depth: 0,
         info: true,
         parentMs: frameTotalMs,
@@ -1619,7 +1619,7 @@ export class CrawlerHud {
       items.push({
         label: `Audio · ${ctxN} ctx · ${active}/${peak} src · drift ${driftStr}ms`,
         ms: a?.decodeMs ?? 0,
-        color: "#6FB89D",
+        color: "#82ab98",
         depth: 0,
         info: true,
         isHeader: true,
@@ -1632,7 +1632,7 @@ export class CrawlerHud {
       items.push({
         label: `decode · ${a?.decodeCount ?? 0} ops`,
         ms: a?.decodeMs ?? 0,
-        color: "#6FB89D",
+        color: "#82ab98",
         depth: 1,
         info: true,
         parentMs: Math.max(a?.decodeMs ?? 0, 0.001),
@@ -1647,7 +1647,7 @@ export class CrawlerHud {
       items.push({
         label: `sources · started ${srcStarted} / stopped ${srcStopped}`,
         ms: 0,
-        color: "#6FB89D",
+        color: "#82ab98",
         depth: 1,
         info: true,
         parentMs: 1,
@@ -1655,7 +1655,7 @@ export class CrawlerHud {
       items.push({
         label: `automation · ${autoOps} ops`,
         ms: 0,
-        color: "#6FB89D",
+        color: "#82ab98",
         depth: 1,
         info: true,
         parentMs: 1,
@@ -1663,7 +1663,7 @@ export class CrawlerHud {
       items.push({
         label: `state transitions · ${stateTrans}`,
         ms: 0,
-        color: "#6FB89D",
+        color: "#82ab98",
         depth: 1,
         info: true,
         parentMs: 1,
@@ -1681,7 +1681,7 @@ export class CrawlerHud {
       items.push({
         label: `LoAF · ${scripts} scripts`,
         ms: loafMs,
-        color: "#D08D9C",
+        color: "#bf94a0",
         depth: 0,
         info: true,
         isHeader: true,
@@ -1692,7 +1692,7 @@ export class CrawlerHud {
       items.push({
         label: "script",
         ms: l?.scriptMs ?? 0,
-        color: "#D08D9C",
+        color: "#bf94a0",
         depth: 1,
         info: true,
         parentMs: lParent,
@@ -1700,7 +1700,7 @@ export class CrawlerHud {
       items.push({
         label: "style+layout",
         ms: l?.styleAndLayoutMs ?? 0,
-        color: "#D08D9C",
+        color: "#bf94a0",
         depth: 1,
         info: true,
         parentMs: lParent,
@@ -1708,7 +1708,7 @@ export class CrawlerHud {
       items.push({
         label: "render",
         ms: l?.renderMs ?? 0,
-        color: "#D08D9C",
+        color: "#bf94a0",
         depth: 1,
         info: true,
         parentMs: lParent,
@@ -1716,7 +1716,7 @@ export class CrawlerHud {
       items.push({
         label: "blocking",
         ms: l?.blockingMs ?? 0,
-        color: "#D08D9C",
+        color: "#bf94a0",
         depth: 1,
         info: true,
         parentMs: lParent,

@@ -3,6 +3,10 @@
  * styling lives here; render code only sets classNames + dynamic colors/widths
  * inline. Idempotent: injected once per document on first HUD mount.
  *
+ * Design: muted, neutral, plain - a calm dev-tool panel that sits over a live
+ * scene without shouting. All tone is driven by the `--sbc-*` custom properties
+ * on the root, so the whole HUD is themeable by overriding a handful of vars.
+ *
  * Includes the responsive (@media) rules for the HUD itself - the worst-frame
  * inspector keeps its own rules in shared/mobile-styles.ts. No `!important`: the
  * HUD is the only thing styling `#sbc-crawler` so plain class specificity wins.
@@ -11,28 +15,46 @@ const HUD_STYLE_ID = "__sbc-hud-css";
 
 const CSS = `
 #sbc-crawler.sbc-hud {
+    /* --- theme tokens (override these to re-skin) --- */
+    --sbc-bg: rgba(18, 19, 22, 0.94);
+    --sbc-fg: rgba(231, 232, 236, 0.92);
+    --sbc-fg-dim: rgba(166, 169, 178, 0.72);
+    --sbc-fg-muted: rgba(150, 153, 162, 0.5);
+    --sbc-fg-faint: rgba(142, 145, 154, 0.38);
+    --sbc-line: rgba(255, 255, 255, 0.05);
+    --sbc-line-2: rgba(255, 255, 255, 0.08);
+    --sbc-track: rgba(255, 255, 255, 0.05);
+    --sbc-hover: rgba(255, 255, 255, 0.05);
+    --sbc-accent: #7d9cb2;
+    --sbc-warn: #c2a878;
+    --sbc-over: #c07f77;
+    --sbc-radius: 10px;
+
     position: fixed;
-    top: 8px;
-    right: 8px;
+    top: 10px;
+    right: 10px;
     padding: 0;
     /* Opaque-ish solid fill - no backdrop blur: blurring the live scene behind a
        fixed overlay forces a full-viewport composite every frame, perturbing the
        very timings the HUD measures. Higher alpha keeps text readable instead. */
-    background: rgba(14, 18, 24, 0.97);
-    color: rgba(232, 240, 246, 0.95);
-    font: 11px/1.5 ui-monospace, "SF Mono", Consolas, monospace;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--sbc-bg);
+    color: var(--sbc-fg);
+    font: 11px/1.5 ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.005em;
+    -webkit-font-smoothing: antialiased;
+    border-radius: var(--sbc-radius);
+    border: 1px solid var(--sbc-line-2);
     pointer-events: none;
     z-index: 99999;
     min-width: 320px;
-    max-width: min(540px, calc(100vw - 16px));
+    max-width: min(540px, calc(100vw - 20px));
     /* cap height + clip to rounded corners so the body can scroll inside */
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 16px);
+    max-height: calc(100vh - 20px);
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 26px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* Scroll container - pointer-events:auto so the wheel/touch reaches it (desktop
@@ -47,7 +69,12 @@ const CSS = `
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
 }
+.sbc-body::-webkit-scrollbar { width: 8px; }
+.sbc-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
+.sbc-body::-webkit-scrollbar-track { background: transparent; }
 
 /* ---- collapse -> FPS badge ---- */
 .sbc-hud .sbc-badge { display: none; }
@@ -57,160 +84,164 @@ const CSS = `
 .sbc-hud.sbc-collapsed .sbc-badge {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 8px 12px;
+    gap: 8px;
+    padding: 8px 13px;
     pointer-events: auto;
     cursor: pointer;
     user-select: none;
 }
-.sbc-badge .sbc-badge-fps { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
-.sbc-badge .sbc-badge-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(180, 200, 220, 0.5); }
+.sbc-badge .sbc-badge-fps { font-size: 15px; font-weight: 600; line-height: 1; }
+.sbc-badge .sbc-badge-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sbc-fg-muted); }
 
 /* ---- sections ---- */
-.sbc-section { padding: 8px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.sbc-section { padding: 9px 13px; border-bottom: 1px solid var(--sbc-line); }
+.sbc-section:last-child { border-bottom: 0; }
 .sbc-section-title {
-    font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
-    color: rgba(180, 200, 220, 0.45); margin-bottom: 6px; font-weight: 600;
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--sbc-fg-muted); margin-bottom: 7px; font-weight: 600;
 }
 /* Collapsible section header - click toggles its body (delegated listener on
    .sbc-body reads data-section). Caret prefix drawn by render code. */
-.sbc-section-toggle { cursor: pointer; user-select: none; margin-bottom: 0; }
-.sbc-section-toggle:hover { color: rgba(232, 240, 246, 0.85); }
-.sbc-section-toggle.sbc-open { margin-bottom: 6px; }
+.sbc-section-toggle { cursor: pointer; user-select: none; margin-bottom: 0; transition: color 0.12s; }
+.sbc-section-toggle:hover { color: var(--sbc-fg-dim); }
+.sbc-section-toggle.sbc-open { margin-bottom: 7px; }
 /* Sub-block heading inside the merged Cost section. */
 .sbc-subhead {
-    font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em;
-    color: rgba(180, 200, 220, 0.6); font-weight: 600; margin: 6px 0 3px;
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--sbc-fg-dim); font-weight: 600; margin: 8px 0 4px;
 }
 .sbc-subhead:first-of-type { margin-top: 2px; }
 
 /* ---- header ---- */
 .sbc-header {
-    padding: 10px 12px; display: flex; align-items: baseline; flex-wrap: wrap;
-    gap: 6px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    padding: 11px 13px; display: flex; align-items: baseline; flex-wrap: wrap;
+    gap: 6px 10px; border-bottom: 1px solid var(--sbc-line-2);
     min-width: 0; flex: none;
 }
-.sbc-hd-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sbc-hd-col { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 /* left grows + may shrink (min-width:0) so it never forces overflow */
 .sbc-hd-left { flex: 1 1 auto; }
 .sbc-hd-right { align-items: flex-end; flex: 0 1 auto; }
 /* fps row: number is fixed-size, label takes the rest and truncates */
-.sbc-hd-fpsrow { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.sbc-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; align-self: center; }
-.sbc-fps { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; flex: none; }
+.sbc-hd-fpsrow { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.sbc-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; align-self: center; opacity: 0.9; }
+.sbc-fps { font-size: 21px; font-weight: 600; line-height: 1; flex: none; letter-spacing: -0.01em; }
 .sbc-fps-label {
-    font-size: 10px; color: rgba(180, 200, 220, 0.5); text-transform: uppercase; letter-spacing: 0.06em;
+    font-size: 10px; color: var(--sbc-fg-muted); text-transform: uppercase; letter-spacing: 0.07em;
     flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.sbc-total { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.sbc-sub { font-size: 9px; color: rgba(180, 200, 220, 0.5); font-variant-numeric: tabular-nums; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sbc-total { font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--sbc-fg); }
+.sbc-sub { font-size: 9px; color: var(--sbc-fg-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sbc-collapse-btn {
     pointer-events: auto; cursor: pointer; background: transparent; border: 0;
-    color: rgba(180, 200, 220, 0.55); font: 14px/1 ui-monospace, monospace;
-    padding: 2px 6px; border-radius: 4px; -webkit-tap-highlight-color: transparent;
-    flex: none; margin-left: auto; align-self: flex-start;
+    color: var(--sbc-fg-muted); font: 13px/1 ui-monospace, monospace;
+    padding: 3px 7px; border-radius: 6px; -webkit-tap-highlight-color: transparent;
+    flex: none; margin-left: auto; align-self: flex-start; transition: background 0.12s, color 0.12s;
 }
-.sbc-collapse-btn:hover { background: rgba(255, 255, 255, 0.08); color: rgba(232, 240, 246, 0.95); }
+.sbc-collapse-btn:hover { background: var(--sbc-hover); color: var(--sbc-fg); }
 
 /* ---- counters grid ---- */
-.sbc-counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 4px 10px; font-size: 10px; }
-.sbc-counter { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; overflow: hidden; }
+.sbc-counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px 12px; font-size: 10px; }
+.sbc-counter { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; overflow: hidden; }
 .sbc-counter-l {
-    color: rgba(180, 200, 220, 0.5); font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--sbc-fg-muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; cursor: help;
 }
 .sbc-counter-v {
-    color: rgba(232, 240, 246, 0.95); font-variant-numeric: tabular-nums; font-weight: 500;
+    color: var(--sbc-fg); font-weight: 500;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 
 /* ---- key/value detail rows ---- */
-.sbc-kv { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 10px; margin-bottom: 2px; }
-.sbc-kv-l { color: rgba(180, 200, 220, 0.55); cursor: help; }
-.sbc-kv-v { color: rgba(232, 240, 246, 0.9); font-variant-numeric: tabular-nums; text-align: right; flex: 1; border-radius: 2px; padding-right: 3px; }
+.sbc-kv { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 10px; margin-bottom: 3px; }
+.sbc-kv:last-child { margin-bottom: 0; }
+.sbc-kv-l { color: var(--sbc-fg-dim); cursor: help; }
+.sbc-kv-v { color: var(--sbc-fg); text-align: right; flex: 1; border-radius: 3px; padding-right: 3px; }
 
 /* ---- budget-score ---- */
 .sbc-budget-chip {
-    align-self: flex-start; font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums;
-    padding: 1px 7px; border: 1px solid transparent; border-radius: 10px; white-space: nowrap; cursor: help;
+    align-self: flex-start; font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border: 1px solid var(--sbc-line-2); border-radius: 999px; white-space: nowrap; cursor: help;
+    color: var(--sbc-fg-dim); background: rgba(255, 255, 255, 0.03);
 }
-#sbc-crawler .sbc-budget-bottleneck .sbc-kv-l { color: rgba(232, 240, 246, 0.95); font-weight: 600; }
-.sbc-budget-device { margin-top: 4px; padding-top: 4px; border-top: 1px dashed rgba(255,255,255,0.08); }
-.sbc-budget-device .sbc-kv-l { text-transform: uppercase; letter-spacing: 0.05em; font-size: 9px; }
-.sbc-budget-note { display: block; font-size: 9px; font-style: italic; color: rgba(255, 208, 96, 0.75); cursor: help; margin: 2px 0 4px; }
+#sbc-crawler .sbc-budget-bottleneck .sbc-kv-l { color: var(--sbc-fg); font-weight: 600; }
+.sbc-budget-device { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--sbc-line-2); }
+.sbc-budget-device .sbc-kv-l { text-transform: uppercase; letter-spacing: 0.06em; font-size: 9px; }
+.sbc-budget-note { display: block; font-size: 9px; font-style: italic; color: var(--sbc-warn); opacity: 0.85; cursor: help; margin: 3px 0 4px; }
 
 /* ---- bars ---- */
-.sbc-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 6px; }
-.sbc-legend-item { display: flex; align-items: center; gap: 4px; font-size: 9px; color: rgba(180, 200, 220, 0.55); }
-.sbc-legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; flex: none; }
-.sbc-bars { display: flex; flex-direction: column; gap: 5px; }
+.sbc-legend { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-bottom: 8px; }
+.sbc-legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--sbc-fg-muted); }
+.sbc-legend-dot { width: 7px; height: 7px; border-radius: 2px; display: inline-block; flex: none; }
+.sbc-bars { display: flex; flex-direction: column; gap: 6px; }
 .sbc-bar-row {
     display: grid; grid-template-columns: minmax(140px, 1.4fr) minmax(80px, 2fr) minmax(64px, auto);
-    align-items: center; gap: 8px; font-size: 10px; color: rgba(232, 240, 246, 0.75); min-width: 0;
+    align-items: center; gap: 9px; font-size: 10px; color: var(--sbc-fg-dim); min-width: 0;
 }
-.sbc-bar-sep { text-align: center; font-size: 9px; color: rgba(180,200,220,0.4); letter-spacing: 0.08em; padding-top: 2px; }
+.sbc-bar-sep { text-align: center; font-size: 9px; color: var(--sbc-fg-faint); letter-spacing: 0.08em; padding-top: 2px; }
 /* Parent rows (collapsible) - hover highlight + click affordance handled via a
    delegated listener on .sbc-bars (label read from data-label). */
-.sbc-bar-row.sbc-bar-parent { cursor: pointer; pointer-events: auto; user-select: none; border-radius: 2px; }
-.sbc-bar-row.sbc-bar-parent:hover { background: rgba(255, 255, 255, 0.04); }
+.sbc-bar-row.sbc-bar-parent { cursor: pointer; pointer-events: auto; user-select: none; border-radius: 4px; transition: background 0.12s; }
+.sbc-bar-row.sbc-bar-parent:hover { background: var(--sbc-hover); }
 .sbc-bar-label { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sbc-bar-track { position: relative; height: 12px; background: rgba(255, 255, 255, 0.04); border-radius: 2px; overflow: hidden; }
-.sbc-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; }
-.sbc-bar-marker { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, 0.3); }
+.sbc-bar-track { position: relative; height: 9px; background: var(--sbc-track); border-radius: 3px; overflow: hidden; }
+.sbc-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; opacity: 0.92; transition: width 0.18s ease-out; }
+.sbc-bar-marker { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, 0.28); }
 .sbc-bar-overlay {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 9px; font-weight: 600; font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9); pointer-events: none;
+    font-size: 8.5px; font-weight: 600;
+    color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65); pointer-events: none;
 }
-.sbc-bar-num { text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; color: rgba(232, 240, 246, 0.7); }
+.sbc-bar-num { text-align: right; font-size: 10px; color: var(--sbc-fg-dim); }
 
 /* ---- worst-frame row (only pointer-interactive region besides badge/buttons) ---- */
 .sbc-worst {
-    padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, 0.06); pointer-events: auto;
+    padding: 9px 13px; border-top: 1px solid var(--sbc-line); pointer-events: auto;
     cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between;
-    gap: 10px; font-size: 10px; transition: background 0.15s;
+    gap: 10px; font-size: 10px; transition: background 0.12s;
 }
-.sbc-worst:hover { background: rgba(255, 255, 255, 0.04); }
-.sbc-worst-l { color: rgba(180, 200, 220, 0.55); text-transform: uppercase; letter-spacing: 0.06em; font-size: 9px; font-weight: 600; }
-.sbc-worst-mid { flex: 1; text-align: right; color: rgba(232, 240, 246, 0.85); font-variant-numeric: tabular-nums; }
-.sbc-worst-action { color: rgba(125, 187, 227, 0.85); font-size: 10px; }
+.sbc-worst:hover { background: var(--sbc-hover); }
+.sbc-worst-l { color: var(--sbc-fg-muted); text-transform: uppercase; letter-spacing: 0.07em; font-size: 9px; font-weight: 600; }
+.sbc-worst-mid { flex: 1; text-align: right; color: var(--sbc-fg-dim); }
+.sbc-worst-action { color: var(--sbc-accent); font-size: 10px; }
 
 /* ---- record control ---- */
-.sbc-record { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); display: none; gap: 10px; align-items: center; justify-content: space-between; }
-.sbc-record-label { color: rgba(180,200,220,0.55); text-transform: uppercase; letter-spacing: 0.06em; font-size: 9px; font-weight: 600; }
+.sbc-record { padding: 9px 13px; border-bottom: 1px solid var(--sbc-line); display: none; gap: 10px; align-items: center; justify-content: space-between; }
+.sbc-record-label { color: var(--sbc-fg-muted); text-transform: uppercase; letter-spacing: 0.07em; font-size: 9px; font-weight: 600; }
 .sbc-btn {
-    pointer-events: auto; cursor: pointer; color: #fff; border: 0; border-radius: 4px; padding: 4px 12px;
+    pointer-events: auto; cursor: pointer; color: var(--sbc-fg); background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--sbc-line-2); border-radius: 6px; padding: 4px 12px;
     font: 11px ui-monospace, monospace; font-weight: 600; touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent; min-width: 84px; background: rgba(50, 130, 80, 0.85);
+    -webkit-tap-highlight-color: transparent; min-width: 84px; transition: background 0.12s, border-color 0.12s;
 }
-.sbc-btn.sbc-btn-active { background: rgba(220, 70, 70, 0.85); }
+.sbc-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.sbc-btn.sbc-btn-active { background: rgba(192, 127, 119, 0.18); border-color: rgba(192, 127, 119, 0.5); color: var(--sbc-over); }
 
 /* ---- capture toolbar (record / save / load) ---- */
 .sbc-capture {
-    padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.06);
-    display: flex; align-items: center; gap: 6px;
+    padding: 8px 13px; border-bottom: 1px solid var(--sbc-line);
+    display: flex; align-items: center; gap: 7px;
 }
 .sbc-capture-l {
-    color: rgba(180,200,220,0.55); text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--sbc-fg-muted); text-transform: uppercase; letter-spacing: 0.07em;
     font-size: 9px; font-weight: 600; margin-right: 2px;
 }
 .sbc-cap-btn {
-    pointer-events: auto; cursor: pointer; background: rgba(255,255,255,0.05);
-    color: rgba(200,216,230,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;
-    font: 10px ui-monospace, monospace; padding: 3px 9px; -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation; font-variant-numeric: tabular-nums;
+    pointer-events: auto; cursor: pointer; background: rgba(255, 255, 255, 0.05);
+    color: var(--sbc-fg-dim); border: 1px solid var(--sbc-line-2); border-radius: 6px;
+    font: 10px ui-monospace, monospace; padding: 3px 10px; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; transition: background 0.12s, color 0.12s;
 }
-.sbc-cap-btn:hover { background: rgba(255,255,255,0.1); color: rgba(232,240,246,0.95); }
-.sbc-cap-btn.sbc-cap-rec-on { background: rgba(220,70,70,0.85); color: #fff; border-color: rgba(220,70,70,0.5); }
+.sbc-cap-btn:hover { background: rgba(255, 255, 255, 0.1); color: var(--sbc-fg); }
+.sbc-cap-btn.sbc-cap-rec-on { background: rgba(192, 127, 119, 0.18); color: var(--sbc-over); border-color: rgba(192, 127, 119, 0.5); }
 
 /* ---- responsive: bottom-anchored, scrollable, touch-friendly on narrow/coarse ---- */
 @media (max-width: 720px), (pointer: coarse) {
     #sbc-crawler.sbc-hud {
         top: auto;
-        bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-        left: calc(8px + env(safe-area-inset-left, 0px));
-        right: calc(8px + env(safe-area-inset-right, 0px));
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        left: calc(10px + env(safe-area-inset-left, 0px));
+        right: calc(10px + env(safe-area-inset-right, 0px));
         min-width: 0;
         max-width: none;
         /* scrolling lives on .sbc-body (base rule) - only re-cap the height here */
@@ -221,7 +252,7 @@ const CSS = `
     #sbc-crawler .sbc-worst { font-size: 12px; }
     #sbc-crawler .sbc-bar-row {
         grid-template-columns: minmax(0, 1.2fr) minmax(56px, 1.4fr) minmax(52px, auto);
-        gap: 6px;
+        gap: 7px;
         font-size: 11px;
     }
     #sbc-crawler .sbc-bar-row > * { font-size: 11px; }
