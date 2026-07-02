@@ -50,18 +50,14 @@ app.get("/livez", (_req, res) => {
 });
 
 // Fitted cost-model coefficients (per-GPU-family weights + ms budgets). Clients
-// (new-site meter) fetch this to predict ms and % of budget. GET is public;
-// POST (offline fit pushing a new table) needs MODEL_WRITE_TOKEN if set.
+// (new-site meter) fetch this to predict ms and % of budget. Both GET and POST
+// are open (the offline fit publishes via POST); add auth later if this server
+// faces the open internet.
 app.get("/api/model", (_req, res) => {
   res.json(getModel());
 });
 
 app.post("/api/model", (req, res) => {
-  const token = process.env.MODEL_WRITE_TOKEN;
-  if (token && req.header("authorization") !== `Bearer ${token}`) {
-    res.status(401).json({ error: "unauthorized" });
-    return;
-  }
   try {
     setModel(req.body as CoefficientTable);
     res.json({ ok: true });

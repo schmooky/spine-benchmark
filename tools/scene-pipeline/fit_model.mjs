@@ -3,7 +3,7 @@
  * (optionally) publish it to the server. Run AFTER a device campaign:
  *
  *   node tools/scene-pipeline/fit_model.mjs [--api https://spine-bench.schmooky.dev] \
- *        [--post] [--token <MODEL_WRITE_TOKEN>] [--out coefficients.json]
+ *        [--post] [--out coefficients.json]
  *
  * Steps: list runs -> keep clientVersion >= 0.3.0 (legacy runs lack GPU/CPU ms)
  * -> pull each run's capture -> build (features x instances -> measured ms) rows
@@ -29,7 +29,6 @@ const opt = (k, d) => {
 const API = opt("--api", "https://spine-bench.schmooky.dev");
 const OUT = opt("--out", "coefficients.json");
 const POST = args.includes("--post");
-const TOKEN = opt("--token", process.env.MODEL_WRITE_TOKEN);
 
 async function getJson(url, init) {
   const r = await fetch(url, init);
@@ -79,10 +78,9 @@ console.log("quality:", JSON.stringify(fit.fleet.quality, null, 2));
 console.log("per-family rows:", JSON.stringify(fit.familyCounts));
 
 if (POST) {
-  if (!TOKEN) console.warn("--post given but no --token / MODEL_WRITE_TOKEN; server may reject.");
   const res = await fetch(`${API}/api/model`, {
     method: "POST",
-    headers: { "content-type": "application/json", ...(TOKEN ? { authorization: `Bearer ${TOKEN}` } : {}) },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(table),
   });
   console.log(`POST /api/model -> ${res.status}`, await res.text());
