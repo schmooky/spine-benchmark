@@ -95,6 +95,78 @@ function capacityHtml(cap: RunCapacityReport): string {
   }`;
 }
 
+/** Mean each numeric key of a batch of `m` driver objects (per-second means). */
+function meanDrivers(ms: Record<string, number>[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (ms.length === 0) return out;
+  const keys = Object.keys(ms[0]!);
+  for (const k of keys) {
+    let sum = 0;
+    for (const row of ms) sum += row[k] ?? 0;
+    out[k] = sum / ms.length;
+  }
+  return out;
+}
+
+/** Measurement Drivers: the device-invariant cost drivers + CPU render-phase
+ * split + GPU-timer coverage, meaned across the whole run. This is what makes
+ * a no-timer run (Safari/most Android) still legible - the counts are the
+ * only GPU-side signal available there. */
+function driversHtml(perSecond: RunCapture["perSecond"] | undefined): string {
+  if (!perSecond || perSecond.length === 0) return "";
+  const rowsWithM = perSecond
+    .map((r) => r.m)
+    .filter((m): m is Record<string, number> => !!m);
+  const totalFrames = perSecond.reduce((a, r) => a + (r.frames ?? 0), 0);
+  const totalGpuFrames = perSecond.reduce((a, r) => a + (r.gpuFrames ?? 0), 0);
+  const totalDisjoint = perSecond.reduce((a, r) => a + (r.gpuDisjoint ?? 0), 0);
+  const coveragePct = totalFrames > 0 ? (totalGpuFrames / totalFrames) * 100 : null;
+
+  if (rowsWithM.length === 0 && totalFrames === 0) return "";
+
+  const d = meanDrivers(rowsWithM);
+  const c = (k: string): string => (d[k] != null ? d[k].toFixed(1) : "-");
+  const cms = (k: string): string => (d[k] != null ? `${d[k].toFixed(2)} ms` : "-");
+
+  const coverageRow = totalFrames > 0
+    ? `<tr><th>GPU-timer coverage</th><td class="num ${coveragePct != null && coveragePct < 50 ? "bad" : coveragePct != null && coveragePct > 90 ? "ok" : ""}">${pct1(coveragePct)}</td>
+        <th>frames / gpu-timed / disjoint</th><td class="num">${totalFrames} / ${totalGpuFrames} / ${totalDisjoint}</td></tr>`
+    : "";
+
+  if (rowsWithM.length === 0) {
+    return `<h2>Measurement Drivers</h2>
+    <table>${coverageRow}</table>`;
+  }
+
+  return `<h2>Measurement Drivers <span class="muted">(device-invariant counts + CPU render split, mean/frame across the run)</span></h2>
+  <table>
+    ${coverageRow}
+    <tr><th>draw calls</th><td class="num">${c("drawCalls")}</td>
+        <th>vertices drawn</th><td class="num">${c("verticesDrawn")}</td></tr>
+    <tr><th>instructions</th><td class="num">${c("instructions")}</td>
+        <th>batch breaks</th><td class="num">${c("batchBreaks")}</td></tr>
+    <tr><th>stencil masks</th><td class="num">${c("stencilMasks")}</td>
+        <th>render-target switches</th><td class="num">${c("renderTargets")}</td></tr>
+    <tr><th>renderables updated</th><td class="num">${c("renderablesUpdated")}</td>
+        <th>render-groups rebuilt</th><td class="num">${c("renderGroupsRebuilt")}</td></tr>
+    <tr><th>state changes</th><td class="num">${c("stateChanges")}</td>
+        <th>shader compiles</th><td class="num">${c("shaderCompiles")}</td></tr>
+    <tr><th>active textures</th><td class="num">${c("activeTextures")}</td>
+        <th>filter passes</th><td class="num">${c("filterPasses")}</td></tr>
+    <tr><th>buffer uploads</th><td class="num">${c("bufferUploads")} <span class="muted">(${c("bufferKb")} KB)</span></td>
+        <th>texture uploads/unloads</th><td class="num">${c("texUploads")} / ${c("texUnloads")} <span class="muted">(${c("texBytesKb")} KB)</span></td></tr>
+    <tr><th colspan="4" class="muted">CPU render-phase split (mean ms/frame)</th></tr>
+    <tr><th>build</th><td class="num">${cms("buildMs")}</td>
+        <th>update renderables</th><td class="num">${cms("updateRendMs")}</td></tr>
+    <tr><th>batch upload</th><td class="num">${cms("batchUploadMs")}</td>
+        <th>transforms</th><td class="num">${cms("transformsMs")}</td></tr>
+    <tr><th>execute</th><td class="num">${cms("executeMs")}</td>
+        <th>render-other</th><td class="num">${cms("renderOtherMs")}</td></tr>
+    <tr><th>gc</th><td class="num">${cms("gcMs")}</td>
+        <th></th><td></td></tr>
+  </table>`;
+}
+
 /** Measurement Quality: can we trust RI/CI on this device? */
 function qualityHtml(cap: RunCapacityReport): string {
   const vClass =
@@ -251,6 +323,8 @@ export function renderRunReport(run: RunRecord, capture?: RunCapture | null): st
     ${crashedList}
     ${skippedList}
   </table>
+
+  ${driversHtml(capture?.perSecond)}
 
   ${cap ? capacityHtml(cap) : ""}
   ${cap ? qualityHtml(cap) : ""}
