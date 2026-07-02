@@ -10,7 +10,8 @@
  */
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
-import { GpuTimer, getGl2, sampleCoverage } from "@spine-benchmark/gpu-timing";
+import { sampleCoverage } from "@spine-benchmark/gpu-timing";
+import { mountCrawler, type Crawler } from "@spine-benchmark/pixi-crawler";
 
 import type {
   ImpactInputs,
@@ -243,9 +244,17 @@ export function startSceneBenchmark(
     // and renders each frame itself. Stop Pixi's own ticker so the two don't
     // fight (and so animation can't stall while the run keeps timing).
     app.ticker.stop();
-    // true GPU render cost per frame (vsync-independent). Null on Safari/mobile
-    // where the extension is missing - CPU timing still works.
-    const gpuTimer = new GpuTimer(getGl2(app.renderer));
+    // The crawler is the measurement instrument: it hooks the renderer for the
+    // true per-frame GPU time (EXT_disjoint_timer_query, null on Safari/mobile)
+    // plus the CPU phase split and workload counters. The ticker is stopped, so
+    // we bracket each rendered frame manually with frameStart()/frameEnd(). A
+    // small ring buffer is all we need (we only read the latest resolved gpuMs).
+    const crawler: Crawler = mountCrawler(app, {
+      hud: false,
+      spineProfile: { enabled: true },
+      bufferSize: 32,
+      autoDispose: false,
+    });
 
     const watcher = new PerfWatcher();
     watcher.start(app.canvas);
@@ -506,6 +515,7 @@ export function startSceneBenchmark(
           // GPU (render) separately - that separation is what lets us fit the
           // computational vs rendering cost and dodge the vsync floor.
           const dtSec = dt / 1000;
+          crawler.frameStart();
           const cpuStart = performance.now();
           try {
             for (const s of spines) s.update(dtSec);
@@ -515,12 +525,19 @@ export function startSceneBenchmark(
             return;
           }
           const cpuMs = performance.now() - cpuStart;
-          gpuTimer.begin();
           const ok = safeRender(app);
-          gpuTimer.end();
-          gpuTimer.poll((ms) => {
-            lastGpuMs = ms;
-          });
+          crawler.frameEnd();
+          // Newest resolved GPU time from the crawler's ring. EXT queries land a
+          // few frames late, so scan back for the most recent non-null gpuMs
+          // (same "latest available" semantics the old poll callback had).
+          const frames = crawler.getFrames();
+          for (let i = frames.length - 1; i >= 0; i--) {
+            const g = frames[i]!.gpuMs;
+            if (g != null) {
+              lastGpuMs = g;
+              break;
+            }
+          }
           if (!ok) {
             console.warn(`[scene] render failed for ${d.id}, skipping`);
             finish(null);
@@ -568,7 +585,7 @@ export function startSceneBenchmark(
             ci: lastImpact.ci,
             one: lastInputs,
             heapMb: lastHeapMb,
-            gpuMs: gpuTimer.supported ? lastGpuMs : null,
+            gpuMs: lastGpuMs,
             cpuMs,
           });
 
@@ -707,7 +724,7 @@ export function startSceneBenchmark(
     } finally {
       document.removeEventListener("visibilitychange", onVisibility);
       void wakeLock?.release().catch(() => undefined);
-      gpuTimer.dispose();
+      void crawler.dispose();
       try {
         app?.destroy(true, { children: true });
       } catch {
