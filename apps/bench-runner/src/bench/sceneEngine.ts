@@ -249,11 +249,21 @@ export function startSceneBenchmark(
     // plus the CPU phase split and workload counters. The ticker is stopped, so
     // we bracket each rendered frame manually with frameStart()/frameEnd(). A
     // small ring buffer is all we need (we only read the latest resolved gpuMs).
+    // Measurement-honest config: the crawler is a lean GPU-ms instrument here,
+    // nothing more. spineProfile is OFF on purpose - it prototype-patches
+    // Skeleton.update / AnimationState.apply, which run INSIDE the s.update()
+    // loop we time as cpuMs; leaving it on would fold the probe overhead into
+    // the very number we measure. The render-path hooks (deepRenderSplit /
+    // filterProfile / textureTracking) are off too, to keep per-frame observer
+    // effect minimal. enableGpuTiming stays on (that IS the reading we want).
     const crawler: Crawler = mountCrawler(app, {
       hud: false,
-      spineProfile: { enabled: true },
       bufferSize: 32,
       autoDispose: false,
+      spineProfile: { enabled: false },
+      deepRenderSplit: false,
+      filterProfile: false,
+      textureTracking: false,
     });
 
     const watcher = new PerfWatcher();
