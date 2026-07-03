@@ -19,14 +19,23 @@ export interface CoefficientTable {
   /** measured per-family frame ceiling (ms); anchors the client meter's "%". */
   budgetByFamily?: Record<string, { gpu: number; cpu: number }>;
   quality?: unknown;
-  /** per-family fit quality (r2/mae/n per axis), if published by a refit. */
+  /** per-family fit quality (r2/mae/relMae/n per axis + optional sweep
+   * pinnedScale), if published by a refit. */
   byFamilyQuality?: Record<
     string,
     {
-      gpu: { r2: number; mae: number; n: number } | null;
-      cpu: { r2: number; mae: number; n: number } | null;
+      gpu: { r2: number; mae: number; relMae?: number; n: number; pinnedScale?: number } | null;
+      cpu: { r2: number; mae: number; relMae?: number; n: number; pinnedScale?: number } | null;
     }
   >;
+  /** fitted composite-regression intercepts (per-frame scene overhead) - the
+   * published models are MARGINAL (intercept 0); kept for diagnostics. */
+  sceneOverheadMs?: {
+    fleet: { gpu: number; cpu: number };
+    byFamily: Record<string, { gpu: number; cpu: number }>;
+  };
+  /** families whose GPU axis was pinned by isolation sweeps. */
+  sweepPinned?: string[];
 }
 
 const DEFAULT_TABLE: CoefficientTable = {
