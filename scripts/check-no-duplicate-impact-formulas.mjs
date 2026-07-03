@@ -62,6 +62,35 @@ const MESH_CLAMP_SIGNATURE =
 const CONSTRAINT_WEIGHT_SIGNATURE =
   /\*\s*0\.7\b[\s\S]{0,300}\*\s*0\.55\b[\s\S]{0,300}\*\s*0\.35\b[\s\S]{0,300}\*\s*0\.2\b/;
 
+/**
+ *   3. A local pose-feature walk (the ADR 0002 input-drift bug class): the
+ *      `worldVerticesLength / 2` vertex-counting idiom outside the canonical
+ *      walker means someone is re-implementing feature extraction. Four
+ *      copies of that walk once drifted apart - two of them silently dropped
+ *      every region/sequence vertex from the fitted model's TRAINING data.
+ *      Use extractPoseFeatures / poseImpact from
+ *      `@spine-benchmark/metrics-impact-formula` instead.
+ */
+const POSE_WALK_SIGNATURE = /worldVerticesLength[^;\n]{0,40}\/\s*2\b/;
+
+// Files allowed to touch worldVerticesLength/2 for reasons that are NOT
+// impact-feature extraction (rendering/geometry code needs vertex counts too).
+const POSE_WALK_ALLOWLIST = new Set([
+  // the canonical walker + its coverage estimator and tests
+  'packages/metrics-impact-formula/src/poseFeatures.ts',
+  'packages/metrics-impact-formula/src/coverageEstimate.ts',
+  'packages/metrics-impact-formula/src/poseFeatures.test.ts',
+  // the crawler duck-types spine for its own workload counters (P3: cut over)
+  'packages/pixi-crawler/src/features/spine/collector.ts',
+  'packages/pixi-crawler/src/features/spine/types.ts',
+  // structural/display analyzers: per-attachment vertex DETAIL for the UI
+  // (mesh list, clipping report, overlay drawing), not impact features
+  'packages/metrics-analyzers/src/meshAnalyzer.ts',
+  'packages/metrics-analyzers/src/clippingAnalyzer.ts',
+  'apps/benchmark/src/entities/skeleton/lib/overlays.ts',
+  'scripts/check-no-duplicate-impact-formulas.mjs',
+]);
+
 /** Recursively walk the workspace, skipping node_modules / dist / .git. */
 async function* walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -90,6 +119,9 @@ async function main() {
     const matches = [];
     if (MESH_CLAMP_SIGNATURE.test(text)) matches.push('mesh-clamp');
     if (CONSTRAINT_WEIGHT_SIGNATURE.test(text)) matches.push('constraint-weights');
+    if (!POSE_WALK_ALLOWLIST.has(rel) && POSE_WALK_SIGNATURE.test(text)) {
+      matches.push('local-pose-walk (use extractPoseFeatures)');
+    }
     if (matches.length > 0) {
       offenders.push({ rel, matches });
     }

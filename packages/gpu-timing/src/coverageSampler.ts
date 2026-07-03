@@ -1,4 +1,13 @@
 /**
+ * @deprecated for FEATURE extraction - use `estimatePoseCoverage` from
+ * `@spine-benchmark/metrics-impact-formula` instead. This sampler is
+ * structurally broken for Spine targets: a Spine renders its attachments
+ * internally and has no pixi children, so the overdraw estimate below returns
+ * a constant 1, and the alpha readback measures the coverage UNION (a
+ * 16-layer stack reads identical pixels to one layer). Every capture that
+ * carried its numbers had a dead fill feature. Kept only for ad-hoc
+ * pixel-accurate coverage of ordinary pixi containers.
+ *
  * Measures the rendering-cost term RI was missing: how many pixels a display
  * object actually covers, and how deeply it overdraws them. RI counts vertices
  * and blend slots but never fill, which is why a big layered background beats

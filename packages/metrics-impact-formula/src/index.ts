@@ -317,3 +317,22 @@ export function predictCostMs(
   const c = predictMs(features, cpu);
   return { gpuMs: g, cpuMs: c, totalMs: g + c };
 }
+
+// ──────────────────────────────────────────────────────────────
+// Canonical pose walking (feature EXTRACTION - ADR 0001 extended
+// to formula inputs, not just formulas)
+// ──────────────────────────────────────────────────────────────
+
+export {
+  extractPoseFeatures,
+  poseImpact,
+  type PoseCoverage,
+  type PoseImpact,
+  type WalkableConstraint,
+  type WalkableSkeleton,
+  type WalkableSlot,
+} from "./poseFeatures.js";
+export {
+  estimatePoseCoverage,
+  type CoverageEstimateOptions,
+} from "./coverageEstimate.js";

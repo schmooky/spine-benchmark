@@ -88,3 +88,21 @@ references the matching formula version.
 - `.changeset/config.json` - `updateInternalDependencies: "patch"`.
 - ADR [0002](./0002-heatmap-crawler-parity.md) - the parity rule
   this decision exists to make tractable.
+
+## Addendum (2026-07-03): extended to formula INPUTS
+
+The 2026-07 measurement audit found the drift this ADR guards against had
+reappeared one level up: the FORMULAS were shared, but the pose WALK that
+produces their inputs was copied four times (workbench, bench-runner trainer,
+offline sampler, CLI/watcher) and the copies drifted - three different
+drawCallEst definitions, and two copies that silently dropped every
+region/sequence vertex, so the fitted cost model was trained on features that
+disagreed with the features it was applied to.
+
+Feature extraction now lives exclusively in
+`packages/metrics-impact-formula/src/poseFeatures.ts`
+(`extractPoseFeatures` / `poseImpact`) with the geometric coverage/overdraw
+estimator beside it (`coverageEstimate.ts`). The walker duck-types the
+skeleton so the package keeps zero runtime dependencies. The lint guard now
+also flags the `worldVerticesLength / 2` counting idiom outside the canonical
+owner (`local-pose-walk` signature).

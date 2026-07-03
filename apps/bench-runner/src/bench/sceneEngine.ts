@@ -10,7 +10,7 @@
  */
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
-import { sampleCoverage } from "@spine-benchmark/gpu-timing";
+import { estimatePoseCoverage, type WalkableSkeleton } from "@spine-benchmark/metrics-impact-formula";
 import { mountCrawler, type Crawler, type FrameRecord } from "@spine-benchmark/pixi-crawler";
 
 import type {
@@ -102,19 +102,39 @@ export interface SegmentResult {
   hiddenMs: number;
 }
 
+/** Combined on-screen scale of a spine (its world transform x renderer
+ * resolution) - what a skeleton-local px maps to in framebuffer px. */
+function worldScaleOf(s: Spine, resolution: number): number {
+  const m = s.worldTransform;
+  const det = Math.abs(m.a * m.d - m.b * m.c);
+  return Math.sqrt(det) * resolution;
+}
+
 /** Estimate the scene's live RI/CI: sample ONE spine (rotating through the
  * pool) and scale by the pool size. Walking every spine at stress densities
  * (hundreds..8192) is a multi-ms spike that would land inside the measured
  * window and contaminate the very frame times the ramp judges; rotation still
- * averages over the heterogeneous mix across successive samples. */
+ * averages over the heterogeneous mix across successive samples.
+ *
+ * Coverage/overdraw come from the geometric estimator (per-pose, no GL
+ * readback) so the captured feature vector's fill term actually MOVES with
+ * layered fill - the old one-shot readback proxy was a constant 1. */
 function sampleSceneImpact(
   spines: Spine[],
   rotate: number,
+  resolution: number,
 ): { ri: number; ci: number; one: ImpactInputs | null } {
   if (spines.length === 0) return { ri: 0, ci: 0, one: null };
   const rep = spines[rotate % spines.length];
   const d = measureFrameImpactDetailed(rep.skeleton);
-  return { ri: d.ri * spines.length, ci: d.ci * spines.length, one: d.inputs };
+  const coverage = estimatePoseCoverage(rep.skeleton as unknown as WalkableSkeleton, {
+    scale: worldScaleOf(rep, resolution),
+  });
+  return {
+    ri: d.ri * spines.length,
+    ci: d.ci * spines.length,
+    one: { ...d.inputs, ...coverage },
+  };
 }
 
 /** p95 of a small unsorted sample. */
@@ -467,20 +487,6 @@ export function startSceneBenchmark(
           return;
         }
 
-        // measure fill coverage/overdraw ONCE for a representative instance -
-        // the RI term the formula was missing. Cheap (one offscreen read) and
-        // roughly animation-stable, so we reuse it for every per-frame sample.
-        let coverage = { coveredKpx: 0, overdrawFactor: 1 };
-        try {
-          const rep = spines[spines.length - 1] ?? spines[0];
-          if (rep) {
-            const c = sampleCoverage(app.renderer, rep);
-            coverage = { coveredKpx: c.coveredKpx, overdrawFactor: c.overdrawFactor };
-          }
-        } catch {
-          /* coverage is best-effort */
-        }
-
         recorder.beginScenario({
           id: d.id,
           label: `${d.game} / ${d.state}`,
@@ -648,13 +654,9 @@ export function startSceneBenchmark(
 
           impactAge += dt;
           if (impactAge >= IMPACT_SAMPLE_MS && spines.length > 0) {
-            const s = sampleSceneImpact(spines, impactRotate++);
+            const s = sampleSceneImpact(spines, impactRotate++, app.renderer.resolution);
             lastImpact = { ri: s.ri, ci: s.ci };
-            // attach the measured fill term so the captured feature vector
-            // carries coverage/overdraw for the offline fit
-            lastInputs = s.one
-              ? { ...s.one, coveredKpx: coverage.coveredKpx, overdrawFactor: coverage.overdrawFactor }
-              : null;
+            lastInputs = s.one;
             impactAge = 0;
           }
           heapAge += dt;
