@@ -10,10 +10,16 @@ import {
   MixBlend,
   MixDirection,
   Physics,
+  RegionAttachment,
   type Skeleton,
   type Slot,
   type Spine,
 } from "@esotericsoftware/spine-pixi-v8";
+
+/** A RegionAttachment (incl. sequence-driven ones - the active frame is just
+ *  a different region/page on the same fixed quad) always renders exactly
+ *  4 vertices; unlike MeshAttachment it has no `worldVerticesLength` to read. */
+const REGION_VERTEX_COUNT = 4;
 
 /**
  * Live per-frame impact measurement. Walks the skeleton's current pose and
@@ -60,12 +66,19 @@ export function measureFrameImpact(skeleton: Skeleton): FrameImpact {
       continue;
     }
     if (slot.data.blendMode !== BlendMode.Normal) activeNonNormalBlends++;
-    if (!(att instanceof MeshAttachment)) continue;
 
-    activeMeshCount++;
-    totalVertices += att.worldVerticesLength / 2;
-    if (att.bones && att.bones.length > 0) weightedMeshCount++;
-    if (slot.deform.length > 0) deformedMeshCount++;
+    if (att instanceof MeshAttachment) {
+      activeMeshCount++;
+      totalVertices += att.worldVerticesLength / 2;
+      if (att.bones && att.bones.length > 0) weightedMeshCount++;
+      if (slot.deform.length > 0) deformedMeshCount++;
+    } else if (att instanceof RegionAttachment) {
+      // plain quad (incl. sequence-driven ones) - not a mesh, but still 4
+      // real vertices; dropping this undercounts totalVertices for any
+      // skeleton built mostly from region/sequence symbols (the common case
+      // for slot-game reels) rather than meshes.
+      totalVertices += REGION_VERTEX_COUNT;
+    }
   }
 
   const ri = renderingImpactCost({
@@ -120,11 +133,16 @@ export function measureFrameFeatures(
       drawCallEst++;
       prevPage = page;
     }
-    if (!(att instanceof MeshAttachment)) continue;
-    activeMeshCount++;
-    totalVertices += att.worldVerticesLength / 2;
-    if (att.bones && att.bones.length > 0) weightedMeshCount++;
-    if (slot.deform.length > 0) deformedMeshCount++;
+    if (att instanceof MeshAttachment) {
+      activeMeshCount++;
+      totalVertices += att.worldVerticesLength / 2;
+      if (att.bones && att.bones.length > 0) weightedMeshCount++;
+      if (slot.deform.length > 0) deformedMeshCount++;
+    } else if (att instanceof RegionAttachment) {
+      // see measureFrameImpact - a region/sequence quad is still 4 real
+      // vertices, just not a mesh; don't drop it from the feature vector.
+      totalVertices += REGION_VERTEX_COUNT;
+    }
   }
 
   return {
