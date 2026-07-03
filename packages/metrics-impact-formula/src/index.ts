@@ -336,3 +336,20 @@ export {
   estimatePoseCoverage,
   type CoverageEstimateOptions,
 } from "./coverageEstimate.js";
+
+/**
+ * Fold a feature vector into the fitted model's DESIGN space: physically,
+ * fragment cost scales with PAINTED pixels = union coverage x overdraw depth,
+ * which a linear model cannot express as two separate columns. So the design
+ * coveredKpx column carries the product and the intensive overdrawFactor
+ * column is dropped (zeroed). This is part of the model CONTRACT: apply the
+ * same fold when building training rows and when predicting - a model fit on
+ * folded rows read with unfolded features (or vice versa) is silently wrong.
+ */
+export function toDesignFeatures(f: ImpactFeatures): ImpactFeatures {
+  return {
+    ...f,
+    coveredKpx: (f.coveredKpx ?? 0) * Math.max(1, f.overdrawFactor ?? 1),
+    overdrawFactor: 0,
+  };
+}

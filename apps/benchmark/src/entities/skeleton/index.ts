@@ -17,6 +17,9 @@ export {
   measureFrameImpact,
   measureFrameFeatures,
   measureAnimationMaxImpacts,
+  measureAnimationCostCurves,
+  type AnimationCostCurve,
+  type AnimationCostSample,
   type FrameImpact,
 } from "./lib/impact";
 export { measureRenderCost, type RenderCost } from "./lib/measure-cost";

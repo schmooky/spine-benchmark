@@ -13,6 +13,7 @@ import {
 } from "@spine-benchmark/metrics-model";
 import {
   predictCostMs,
+  toDesignFeatures,
   type ImpactFeatures,
   type LinearCostModel,
 } from "@spine-benchmark/metrics-impact-formula";
@@ -77,20 +78,9 @@ export interface CaptureRow {
   frameCpuMs?: number | null;
 }
 
-/**
- * Fold a feature vector into the fit's DESIGN space: physically, fragment cost
- * scales with PAINTED pixels = union coverage x overdraw depth, which a linear
- * model can't express as two separate columns. So the design-space coveredKpx
- * column carries the product, and the intensive overdrawFactor column is
- * dropped (zeroed). Applied identically at fit AND predict time.
- */
-export function toDesignFeatures(f: ImpactFeatures): ImpactFeatures {
-  return {
-    ...f,
-    coveredKpx: (f.coveredKpx ?? 0) * Math.max(1, f.overdrawFactor ?? 1),
-    overdrawFactor: 0,
-  };
-}
+// The design-space fold (painted kpx) is part of the model contract and lives
+// in the canonical formula package; re-exported here for existing consumers.
+export { toDesignFeatures };
 
 /** Build training rows: composite features = per-instance x instances, paired
  * with the measured composite ms for that second. */

@@ -22,7 +22,19 @@ export interface DeviceProfile {
   capacity: number;
   /** GPU family key used to pick the fitted cost model (thesis #9). */
   gpuFamily: string;
+  /** Typical framebuffer size in device px (portrait). GPU fill cost depends
+   * on how many real pixels the skeleton rasterizes to on THAT device, so
+   * coverage is normalized to this screen before prediction. */
+  screenPx: { w: number; h: number };
 }
+
+/**
+ * The stated on-screen size assumption behind every fill/GPU prediction: the
+ * skeleton is assumed rendered at this fraction of the target device's screen
+ * HEIGHT. Without a stated basis the GPU axis is meaningless - the same
+ * skeleton is 4x the fill at 2x the size. Surfaced in the meter tooltip.
+ */
+export const ASSUMED_SCREEN_HEIGHT_FRACTION = 0.4;
 
 /**
  * Frame-time budget target, ms, split GPU / CPU (thesis #6/#7). Replaces
@@ -40,6 +52,7 @@ export const DEVICES: DeviceProfile[] = [
     kind: "phone",
     capacity: 12,
     gpuFamily: "Mali",
+    screenPx: { w: 720, h: 1600 },
   },
   {
     id: "phone-mid",
@@ -48,6 +61,7 @@ export const DEVICES: DeviceProfile[] = [
     kind: "phone",
     capacity: 22,
     gpuFamily: "Apple GPU",
+    screenPx: { w: 1080, h: 2340 },
   },
   {
     id: "phone-high",
@@ -56,6 +70,7 @@ export const DEVICES: DeviceProfile[] = [
     kind: "phone",
     capacity: 40,
     gpuFamily: "Apple GPU",
+    screenPx: { w: 1179, h: 2556 },
   },
   {
     id: "tablet-low",
@@ -64,6 +79,7 @@ export const DEVICES: DeviceProfile[] = [
     kind: "tablet",
     capacity: 26,
     gpuFamily: "Apple GPU",
+    screenPx: { w: 1620, h: 2160 },
   },
   {
     id: "tablet-high",
@@ -72,6 +88,7 @@ export const DEVICES: DeviceProfile[] = [
     kind: "tablet",
     capacity: 55,
     gpuFamily: "Apple GPU",
+    screenPx: { w: 2048, h: 2732 },
   },
   {
     id: "desktop-low",
@@ -80,6 +97,7 @@ export const DEVICES: DeviceProfile[] = [
     kind: "desktop",
     capacity: 45,
     gpuFamily: "Intel",
+    screenPx: { w: 1920, h: 1080 },
   },
   {
     id: "desktop-high",
@@ -88,6 +106,7 @@ export const DEVICES: DeviceProfile[] = [
     kind: "desktop",
     capacity: 90,
     gpuFamily: "NVIDIA RTX",
+    screenPx: { w: 2560, h: 1440 },
   },
 ];
 

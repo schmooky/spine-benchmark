@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 
-import {
-  useSkeletonStore,
-  measureFrameImpact,
-  measureFrameFeatures,
-  type FrameImpact,
-} from "@/entities/skeleton";
+import { useSkeletonStore, measureFrameFeatures } from "@/entities/skeleton";
+import { estimatePoseCoverage, type WalkableSkeleton } from "@spine-benchmark/metrics-impact-formula";
 import {
   predictDeviceCost,
   fetchCostModel,
-  scoreAgainstBudget,
+  provenanceLabel,
   type CostModelTable,
   type DeviceCost,
 } from "@/shared/lib/cost-budget";
@@ -18,13 +14,15 @@ import { BENCH_API } from "@/shared/config/api";
 import { stage } from "@/widgets/stage";
 import { useDeviceStore } from "@/entities/device";
 import {
+  ASSUMED_SCREEN_HEIGHT_FRACTION,
   DEVICES,
   DEVICE_KIND_ICON,
   DEVICE_KIND_LABEL,
   PORTABLE_KINDS,
-  budgetStatus,
+  DEFAULT_BUDGET_MS,
   deviceById,
   type BudgetStatus,
+  type DeviceProfile,
 } from "@/shared/config/devices";
 import {
   Dialog,
@@ -34,7 +32,6 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { cn } from "@/shared/lib/utils";
-import { budgetHeadroom, formatBudgetPct } from "@/shared/lib/format";
 
 const STATUS_TEXT: Record<BudgetStatus, string> = {
   ok: "text-emerald-400",
@@ -45,12 +42,25 @@ const STATUS_TEXT: Record<BudgetStatus, string> = {
 // Portable families only - desktops are excluded from the target picker.
 const KINDS = PORTABLE_KINDS;
 
+/** Skeleton-local px -> target-device px, under the stated size assumption
+ * (the skeleton rendered at a fixed fraction of the device's screen height).
+ * Without a stated basis the GPU/fill prediction is meaningless. */
+function coverageScaleFor(device: DeviceProfile, boundsH: number): number {
+  if (!(boundsH > 0)) return 1;
+  return (device.screenPx.h * ASSUMED_SCREEN_HEIGHT_FRACTION) / boundsH;
+}
+
 /**
- * Device budget meter - top-left corner. Shows the chosen target device and
- * how much of its impact budget (canonical RI+CI units) the current frame
- * eats, as a traffic-light percentage: the animator's one-glance "is this
- * okay right now". Click to pick a different device in a dialog. Budgets are
- * first-pass estimates, to be calibrated per device later.
+ * Device budget meter - top-left corner. THE promise widget: for the device
+ * picked in the modal, show how much time the current pose of this spine
+ * takes to render THERE - predicted through the fitted per-GPU-family model,
+ * scored against that device's frame budget, with provenance + error band so
+ * the number is only as confident as the data behind it.
+ *
+ * The crawler's locally-measured ms is shown SEPARATELY, clearly labeled as
+ * this-machine ground truth. It is deliberately never scored against the
+ * target device's budget: an M3 Mac measurement against an iPhone budget is
+ * how the meter used to lie.
  */
 export function DeviceMeter() {
   const spine = useSkeletonStore((s) => s.spine);
@@ -59,12 +69,10 @@ export function DeviceMeter() {
   const setDevice = useDeviceStore((s) => s.setDevice);
 
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [frame, setFrame] = useState<FrameImpact | null>(null);
   const [cost, setCost] = useState<DeviceCost | null>(null);
   const [model, setModel] = useState<CostModelTable | null>(null);
-  // ACTUAL measured ms of the last rendered frame (crawler.getLastFrame()),
-  // not a prediction from skeleton features - this is what the meter shows
-  // whenever it is available.
+  // this-machine measured ms (crawler.getLastFrame()) - a local reference
+  // readout, NOT comparable to the target device's budget.
   const [measuredMs, setMeasuredMs] = useState<{ gpuMs: number | null; cpuMs: number } | null>(
     null,
   );
@@ -85,16 +93,16 @@ export function DeviceMeter() {
 
   useEffect(() => {
     if (status !== "ready" || !spine) {
-      setFrame(null);
       setCost(null);
       return;
     }
     const sample = () => {
-      setFrame(measureFrameImpact(spine.skeleton));
-      // predicted GPU/CPU ms vs this device's ms budget (thesis #6/#7),
-      // using the fitted per-family model when available
-      setCost(predictDeviceCost(measureFrameFeatures(spine.skeleton), device, model ?? undefined));
-      // ACTUAL measured ms from the stage crawler's last rendered frame.
+      // current pose -> canonical features + geometric coverage normalized to
+      // the TARGET device's screen (the stated size assumption)
+      const walkable = spine.skeleton as unknown as WalkableSkeleton;
+      const scale = coverageScaleFor(device, spine.getLocalBounds().height);
+      const coverage = estimatePoseCoverage(walkable, { scale });
+      setCost(predictDeviceCost(measureFrameFeatures(spine.skeleton, coverage), device, model ?? undefined));
       setMeasuredMs(stage.getMeasuredMs() ?? null);
     };
     sample();
@@ -102,51 +110,39 @@ export function DeviceMeter() {
     return () => window.clearInterval(id);
   }, [spine, status, device, model]);
 
-  if (status !== "ready" || !spine || !frame || !cost) return null;
+  if (status !== "ready" || !spine || !cost) return null;
 
-  const fraction = frame.total / device.capacity;
   const Icon = DEVICE_KIND_ICON[device.kind];
-
-  // Prefer the crawler's ACTUAL measured frame ms over the skeleton-feature
-  // prediction whenever a live frame is available (basically always - the
-  // crawler is mounted headlessly on this same stage). Scored against the
-  // SAME resolved budget predictDeviceCost used, so "measured" and
-  // "predicted" read on one consistent scale.
-  const measuredScored = measuredMs
-    ? scoreAgainstBudget(measuredMs.gpuMs, measuredMs.cpuMs, cost.budgetMs)
-    : null;
-  const isMeasured = measuredScored != null;
-  const binding = isMeasured ? measuredScored.binding : cost.binding;
-  const bindingMs = isMeasured
-    ? binding === "gpu"
-      ? (measuredMs!.gpuMs ?? measuredMs!.cpuMs)
-      : measuredMs!.cpuMs
-    : cost.binding === "gpu"
-      ? cost.gpuMs
-      : cost.cpuMs;
-  const pct = isMeasured
-    ? Math.max(measuredScored.gpuPct, measuredScored.cpuPct)
-    : Math.max(cost.gpuPct, cost.cpuPct);
-  const state: BudgetStatus = isMeasured ? measuredScored.status : cost.status;
+  const pct = Math.max(cost.gpuPct, cost.cpuPct);
+  const provenance = provenanceLabel(cost);
 
   return (
     <>
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`${device.name} (${device.gpuFamily}) - ${isMeasured ? "MEASURED" : "predicted (no live frame yet)"}: GPU ${(measuredMs?.gpuMs ?? cost.gpuMs).toFixed(2)}ms, CPU ${(measuredMs?.cpuMs ?? cost.cpuMs).toFixed(2)}ms; binding: ${binding.toUpperCase()} at ${Math.round(pct * 100)}% of ${cost.budgetSource} device capacity${measuredMs?.gpuMs == null ? " (no GPU timer on this device - CPU only)" : ""} - click to change device`}
-        className="pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-1.5 transition-opacity hover:opacity-75"
+        title={`${device.name} (${device.gpuFamily}) - predicted for this device: CPU ${cost.cpuMs.toFixed(2)}ms (${Math.round(cost.cpuPct * 100)}% of ${cost.budgetMs.cpu}ms), GPU ${cost.gpuMs.toFixed(2)}ms (${Math.round(cost.gpuPct * 100)}% of ${cost.budgetMs.gpu}ms); binding: ${cost.binding.toUpperCase()}. Assumes the skeleton at ${Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% of the device's screen height. Model: ${provenance}. Budget source: ${cost.budgetSource}. Click to change device`}
+        className="pointer-events-auto absolute left-4 top-4 z-40 flex flex-col items-start gap-0.5 transition-opacity hover:opacity-75"
       >
-        <Icon className={cn("size-4", STATUS_TEXT[state])} />
-        <span className={cn("text-sm font-semibold tabular-nums", STATUS_TEXT[state])}>
-          {bindingMs.toFixed(2)}ms
+        <span className="flex items-center gap-1.5">
+          <Icon className={cn("size-4", STATUS_TEXT[cost.status])} />
+          <span className={cn("text-sm font-semibold tabular-nums", STATUS_TEXT[cost.status])}>
+            {(cost.gpuMs + cost.cpuMs).toFixed(2)}ms
+          </span>
+          <span className="text-[11px] uppercase tabular-nums text-muted-foreground">
+            {cost.binding} {Math.round(pct * 100)}% of frame
+          </span>
         </span>
-        <span className="text-[11px] uppercase tabular-nums text-muted-foreground">
-          {binding} {Math.round(pct * 100)}%
+        <span className="pl-[22px] text-[10px] tabular-nums text-muted-foreground/80">
+          cpu {cost.cpuMs.toFixed(2)} · gpu {cost.gpuMs.toFixed(2)} · {provenance}
         </span>
-        {!isMeasured && (
-          <span className="text-[11px] tabular-nums text-muted-foreground/70" title="No live crawler frame yet - showing a prediction from skeleton features">
-            (predicted)
+        {measuredMs && (
+          <span
+            className="pl-[22px] text-[10px] tabular-nums text-muted-foreground/50"
+            title="Ground truth measured by the crawler on THIS machine - shown for reference, never scored against the target device's budget"
+          >
+            this machine: cpu {measuredMs.cpuMs.toFixed(2)}
+            {measuredMs.gpuMs != null ? ` · gpu ${measuredMs.gpuMs.toFixed(2)}` : " · no gpu timer"}
           </span>
         )}
       </button>
@@ -156,8 +152,10 @@ export function DeviceMeter() {
           <DialogHeader>
             <DialogTitle>Target device</DialogTitle>
             <DialogDescription>
-              The meter shows how much of this device's impact budget the
-              current frame uses.
+              The meter predicts how many milliseconds the current pose costs
+              on the selected device, assuming the skeleton at{" "}
+              {Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% of its screen
+              height.
             </DialogDescription>
           </DialogHeader>
 
@@ -173,6 +171,9 @@ export function DeviceMeter() {
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {DEVICES.filter((d) => d.kind === kind).map((d) => {
                       const selected = d.id === deviceId;
+                      const budget =
+                        model?.budgetByFamily?.[d.gpuFamily] ?? model?.budgetMs ?? DEFAULT_BUDGET_MS;
+                      const fitted = !!model?.byFamily?.[d.gpuFamily];
                       return (
                         <button
                           key={d.id}
@@ -198,7 +199,8 @@ export function DeviceMeter() {
                             {d.example}
                           </span>
                           <span className="mt-1 text-[10px] tabular-nums text-muted-foreground/70">
-                            budget {d.capacity} units
+                            budget {budget.cpu}ms cpu / {budget.gpu}ms gpu
+                            {fitted ? " · fitted" : " · estimate"}
                           </span>
                         </button>
                       );

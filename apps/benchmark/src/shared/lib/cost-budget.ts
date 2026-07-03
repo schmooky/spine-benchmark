@@ -1,15 +1,34 @@
 /**
  * Predicts a frame's GPU and CPU cost in MILLISECONDS for a target device and
- * compares it to that device's ms budget (thesis #6/#7). Replaces "% of RI+CI
- * units". Uses the fitted per-GPU-family model when available (fetched from
- * /api/model), else the formula's default cost model.
+ * compares it to that device's ms budget (thesis #6/#7). Uses the fitted
+ * per-GPU-family model when available (fetched from /api/model), resolving
+ * family -> pooled fleet -> placeholder defaults, and reports WHICH model
+ * answered plus its fit quality - the trust layer of the meter: a prediction
+ * without provenance and an error band is just a number wearing confidence.
+ *
+ * Features are folded into the model's design space (painted kpx =
+ * coveredKpx x overdraw) via the canonical toDesignFeatures - the same fold
+ * the fit applied to its training rows. Published fitted models are MARGINAL
+ * (intercept 0): they price the spine itself, not the training scene's fixed
+ * per-frame overhead.
  */
 import {
   predictCostMs,
+  toDesignFeatures,
   type ImpactFeatures,
   type LinearCostModel,
 } from "@spine-benchmark/metrics-impact-formula";
 import { DEFAULT_BUDGET_MS, type DeviceProfile } from "@/shared/config/devices";
+
+export interface AxisQuality {
+  r2: number;
+  mae: number;
+  /** mae relative to the mean target - the "+-N%" error band. */
+  relMae?: number;
+  n: number;
+  /** stage-2 scale applied to sweep-pinned weights, when the family had them. */
+  pinnedScale?: number;
+}
 
 export interface CostModelTable {
   fleet: { gpu: LinearCostModel | null; cpu: LinearCostModel | null };
@@ -18,9 +37,15 @@ export interface CostModelTable {
   /** measured per-family frame ceiling (ms); when present the meter anchors the
    * "%" to the real device capacity instead of the fixed default budget. */
   budgetByFamily?: Record<string, { gpu: number; cpu: number }>;
+  quality?: { gpu: AxisQuality | null; cpu: AxisQuality | null } | null;
+  byFamilyQuality?: Record<string, { gpu: AxisQuality | null; cpu: AxisQuality | null }>;
+  sweepPinned?: string[];
 }
 
 export type CostStatus = "ok" | "warn" | "over";
+
+/** Where a prediction's weights came from - the provenance the meter shows. */
+export type ModelSource = "family" | "fleet" | "default";
 
 export interface DeviceCost {
   gpuMs: number;
@@ -33,9 +58,12 @@ export interface DeviceCost {
   /** whether the % is anchored to a measured device ceiling or the default. */
   budgetSource: "measured" | "default";
   /** the resolved ms budget this prediction was scored against - exposed so
-   *  callers can score a DIFFERENT ms value (e.g. the crawler's actually
-   *  measured frame cost) against the same denominator. */
+   *  callers can score a DIFFERENT ms value against the same denominator. */
   budgetMs: { gpu: number; cpu: number };
+  /** provenance: which model answered (family fit / pooled fleet /
+   * uncalibrated placeholder) and its fit quality when known. */
+  source: ModelSource;
+  quality: { gpu: AxisQuality | null; cpu: AxisQuality | null } | null;
 }
 
 /** Score an arbitrary (gpuMs, cpuMs) pair against a resolved budget - the
@@ -66,10 +94,18 @@ export function predictDeviceCost(
   device: DeviceProfile,
   model?: CostModelTable,
 ): DeviceCost {
+  const design = toDesignFeatures(features);
   const fam = model?.byFamily?.[device.gpuFamily];
   const gpu = fam?.gpu ?? model?.fleet.gpu ?? undefined;
   const cpu = fam?.cpu ?? model?.fleet.cpu ?? undefined;
-  const { gpuMs, cpuMs } = predictCostMs(features, gpu, cpu);
+  const { gpuMs, cpuMs } = predictCostMs(design, gpu, cpu);
+  const source: ModelSource = fam ? "family" : model?.fleet.gpu || model?.fleet.cpu ? "fleet" : "default";
+  const quality =
+    source === "family"
+      ? (model?.byFamilyQuality?.[device.gpuFamily] ?? null)
+      : source === "fleet"
+        ? (model?.quality ?? null)
+        : null;
   // prefer the measured per-family ceiling (thesis: 100% = that device's frame
   // budget), else the published global budget, else the default.
   const famBudget = model?.budgetByFamily?.[device.gpuFamily];
@@ -81,7 +117,19 @@ export function predictDeviceCost(
     ...scored,
     budgetSource: famBudget ? "measured" : "default",
     budgetMs: budget,
+    source,
+    quality,
   };
+}
+
+/** Human line for the meter's provenance chip: what answered + how far to
+ * trust it. "default" is the honest "uncalibrated" state. */
+export function provenanceLabel(cost: Pick<DeviceCost, "source" | "quality">): string {
+  if (cost.source === "default") return "uncalibrated estimate - no fleet fit yet";
+  const q = cost.quality?.cpu ?? cost.quality?.gpu;
+  const band = q?.relMae != null ? ` +-${Math.round(q.relMae * 100)}%` : "";
+  const n = q?.n != null ? ` - ${q.n} samples` : "";
+  return cost.source === "family" ? `family fit${band}${n}` : `fleet fit (no family data)${band}${n}`;
 }
 
 /** Fetch the fitted coefficient table; null on failure (callers fall back to

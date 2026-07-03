@@ -2,16 +2,28 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
-import { useSkeletonStore, analyzeAnimations } from "@/entities/skeleton";
+import {
+  useSkeletonStore,
+  analyzeAnimations,
+  measureAnimationCostCurves,
+  type AnimationCostCurve,
+} from "@/entities/skeleton";
 import { useDeviceStore } from "@/entities/device";
 import {
+  ASSUMED_SCREEN_HEIGHT_FRACTION,
+  DEFAULT_BUDGET_MS,
   budgetStatus,
   deviceById,
-  DEFAULT_BUDGET_MS,
   type BudgetStatus,
 } from "@/shared/config/devices";
 import { cn } from "@/shared/lib/utils";
-import { fetchCostModel, scoreAgainstBudget, type CostModelTable } from "@/shared/lib/cost-budget";
+import {
+  fetchCostModel,
+  predictDeviceCost,
+  provenanceLabel,
+  scoreAgainstBudget,
+  type CostModelTable,
+} from "@/shared/lib/cost-budget";
 import { BENCH_API } from "@/shared/config/api";
 import { stage, type AnimationMeasurement } from "@/widgets/stage";
 import {
@@ -32,23 +44,58 @@ const BAR_FILL: Record<BudgetStatus, string> = {
   warn: "bg-amber-400/70",
   over: "bg-red-400/70",
 };
+const SPARK_STROKE: Record<BudgetStatus, string> = {
+  ok: "stroke-emerald-400/80",
+  warn: "stroke-amber-400/80",
+  over: "stroke-red-400/80",
+};
 
-function Chip({ children }: { children: React.ReactNode }) {
+function Chip({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <span className="rounded-md border border-border bg-secondary/60 px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
+    <span
+      title={title}
+      className="rounded-md border border-border bg-secondary/60 px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground"
+    >
       {children}
     </span>
   );
 }
 
+/** Tiny ms(t) sparkline of one animation's predicted cost curve. */
+function CostSparkline({ curve, status }: { curve: AnimationCostCurve; status: BudgetStatus }) {
+  const w = 120;
+  const h = 20;
+  const max = Math.max(0.001, ...curve.samples.map((s) => s.totalMs));
+  const pts = curve.samples
+    .map((s, i) => {
+      const x = (i / Math.max(1, curve.samples.length - 1)) * w;
+      const y = h - (s.totalMs / max) * (h - 2) - 1;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+  return (
+    <svg
+      width={w}
+      height={h}
+      viewBox={`0 0 ${w} ${h}`}
+      className="shrink-0"
+      aria-label="predicted cost across the timeline"
+    >
+      <polyline points={pts} fill="none" strokeWidth="1.5" className={SPARK_STROKE[status]} />
+    </svg>
+  );
+}
+
 /**
- * Animations tool - a bottom shadcn Drawer that PLAYS every animation on the
- * live stage in turn (stage-controller.measureAnimations) and plots each
- * one's REAL measured cost (avg/p95/max CPU ms, avg GPU ms when a timer is
- * available) against the selected device's budget - not a static
- * keyframe-density heatmap and not a synthetic RI/CI pose estimate.
- * Auto-runs once when the drawer opens; the stage returns to its normal
- * static setup pose when the pass finishes.
+ * Animations tool. For every animation, the PRIMARY reading is the predicted
+ * cost on the SELECTED device: ms(t) across the timeline through the fitted
+ * per-family model (sparkline), with the worst moment called out ("peak 7.1ms
+ * @ 0:04, GPU-bound") and scored against that device's frame budget.
+ *
+ * The stage also plays each animation once and reports the REAL measured ms
+ * on THIS machine - shown as a reference chip, deliberately never scored
+ * against the target device's budget (a workstation measurement against a
+ * phone budget is a lie).
  */
 export function AnimationsDrawer() {
   const navigate = useNavigate();
@@ -61,6 +108,7 @@ export function AnimationsDrawer() {
 
   const [open, setOpen] = useState(true);
   const [model, setModel] = useState<CostModelTable | null>(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
   const [results, setResults] = useState<Map<string, AnimationMeasurement>>(new Map());
   const [progress, setProgress] = useState<{ name: string; index: number; total: number } | null>(
     null,
@@ -69,12 +117,32 @@ export function AnimationsDrawer() {
   useEffect(() => {
     let live = true;
     void fetchCostModel(BENCH_API).then((m) => {
-      if (live) setModel(m);
+      if (live) {
+        setModel(m);
+        setModelLoaded(true);
+      }
     });
     return () => {
       live = false;
     };
   }, []);
+
+  // predicted ms(t) curves on the selected device (recomputed when the device
+  // or the fitted model changes; waits for the model fetch to settle so the
+  // first paint isn't placeholder-weight predictions)
+  const curves = useMemo(() => {
+    if (!spine || !modelLoaded) return new Map<string, AnimationCostCurve>();
+    const boundsH = spine.getLocalBounds().height;
+    const scale = boundsH > 0 ? (device.screenPx.h * ASSUMED_SCREEN_HEIGHT_FRACTION) / boundsH : 1;
+    return measureAnimationCostCurves(
+      spine,
+      (features) => {
+        const c = predictDeviceCost(features, device, model ?? undefined);
+        return { gpuMs: c.gpuMs, cpuMs: c.cpuMs };
+      },
+      scale,
+    );
+  }, [spine, device, model, modelLoaded]);
 
   useEffect(() => {
     if (!spine || animations.length === 0) {
@@ -102,12 +170,19 @@ export function AnimationsDrawer() {
 
   const famBudget = model?.budgetByFamily?.[device.gpuFamily];
   const budget = famBudget ?? model?.budgetMs ?? DEFAULT_BUDGET_MS;
+  const provenance = provenanceLabel(
+    predictDeviceCost(
+      { vertices: 0, nonNormalBlends: 0, clippingMasks: 0, meshes: 0, weightedMeshes: 0, deformedMeshes: 0, ik: 0, transform: 0, path: 0, physics: 0, drawCallEst: 0, coveredKpx: 0, overdrawFactor: 1 },
+      device,
+      model ?? undefined,
+    ),
+  );
 
   const rows = animations
     .map((a) => {
-      const m = results.get(a.name);
-      const scored = m ? scoreAgainstBudget(m.avgGpuMs, m.avgCpuMs, budget) : null;
-      return { anim: a, measurement: m, scored };
+      const curve = curves.get(a.name);
+      const scored = curve ? scoreAgainstBudget(curve.peak.gpuMs, curve.peak.cpuMs, budget) : null;
+      return { anim: a, curve, scored, measurement: results.get(a.name) };
     })
     .sort((a, b) => {
       const av = a.scored ? Math.max(a.scored.gpuPct, a.scored.cpuPct) : -1;
@@ -115,7 +190,10 @@ export function AnimationsDrawer() {
       return bv - av;
     });
 
-  const maxPct = Math.max(0.001, ...rows.map((r) => (r.scored ? Math.max(r.scored.gpuPct, r.scored.cpuPct) : 0)));
+  const maxPct = Math.max(
+    0.001,
+    ...rows.map((r) => (r.scored ? Math.max(r.scored.gpuPct, r.scored.cpuPct) : 0)),
+  );
 
   return (
     <Drawer
@@ -130,12 +208,13 @@ export function AnimationsDrawer() {
           <DrawerHeader>
             <DrawerTitle>Animations</DrawerTitle>
             <DrawerDescription>
-              {animations.length} animation{animations.length === 1 ? "" : "s"} · real measured
-              cost on {device.name}, sorted heaviest first.
+              {animations.length} animation{animations.length === 1 ? "" : "s"} · predicted on{" "}
+              {device.name} at {Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% screen height ·{" "}
+              {provenance} · heaviest first.
               {progress && (
                 <span className="ml-2 inline-flex items-center gap-1 text-foreground">
                   <Loader2 className="size-3 animate-spin" />
-                  measuring {progress.name} ({progress.index + 1}/{progress.total})
+                  measuring locally: {progress.name} ({progress.index + 1}/{progress.total})
                 </span>
               )}
             </DrawerDescription>
@@ -149,32 +228,38 @@ export function AnimationsDrawer() {
                 </p>
               )}
 
-              {rows.map(({ anim: a, measurement: m, scored }) => {
-                const status = scored ? budgetStatus(Math.max(scored.gpuPct, scored.cpuPct)) : "ok";
+              {rows.map(({ anim: a, curve, scored, measurement: m }) => {
                 const pct = scored ? Math.max(scored.gpuPct, scored.cpuPct) : 0;
+                const status = scored ? budgetStatus(pct) : "ok";
                 const barWidth = Math.min(100, (pct / maxPct) * 100);
                 return (
                   <div key={a.name} className="rounded-xl border border-border bg-card/50 p-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{a.name}</span>
                       <Chip>{a.duration.toFixed(2)}s</Chip>
-                      {m ? (
+                      {curve && scored ? (
                         <span
-                          title={`avg ${m.avgCpuMs.toFixed(2)}ms · p95 ${m.p95CpuMs.toFixed(2)}ms · max ${m.maxCpuMs.toFixed(2)}ms CPU${m.avgGpuMs != null ? ` · avg ${m.avgGpuMs.toFixed(2)}ms GPU` : " · no GPU timer on this device"} over ${m.frames} real frames`}
+                          title={`worst sampled moment on ${device.name}: cpu ${curve.peak.cpuMs.toFixed(2)}ms (${Math.round(scored.cpuPct * 100)}% of ${budget.cpu}ms) + gpu ${curve.peak.gpuMs.toFixed(2)}ms (${Math.round(scored.gpuPct * 100)}% of ${budget.gpu}ms) at t=${curve.peak.t.toFixed(2)}s · avg cpu ${curve.avgCpuMs.toFixed(2)}ms / gpu ${curve.avgGpuMs.toFixed(2)}ms`}
                           className={cn(
                             "rounded-md border bg-secondary/40 px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
                             BAR_CHIP[status],
                           )}
                         >
-                          {m.avgCpuMs.toFixed(2)}ms avg · {(pct * 100).toFixed(0)}% of budget
+                          peak {curve.peak.totalMs.toFixed(2)}ms @ {curve.peak.t.toFixed(2)}s ·{" "}
+                          {scored.binding}-bound · {(pct * 100).toFixed(0)}% of budget
                         </span>
                       ) : (
-                        <Chip>measuring…</Chip>
+                        <Chip>predicting…</Chip>
+                      )}
+                      {m && (
+                        <Chip
+                          title={`REAL frames measured on THIS machine (not ${device.name}): avg ${m.avgCpuMs.toFixed(2)}ms · p95 ${m.p95CpuMs.toFixed(2)}ms · max ${m.maxCpuMs.toFixed(2)}ms CPU${m.avgGpuMs != null ? ` · avg ${m.avgGpuMs.toFixed(2)}ms GPU` : " · no GPU timer here"} over ${m.frames} frames - reference only, never scored against the target budget`}
+                        >
+                          this machine {m.avgCpuMs.toFixed(2)}ms
+                        </Chip>
                       )}
                       <span className="flex-1" />
-                      <Chip>{a.timelineCount} timelines</Chip>
-                      <Chip>{a.keyCount} keys</Chip>
-                      {a.eventCount > 0 && <Chip>{a.eventCount} events</Chip>}
+                      {curve && <CostSparkline curve={curve} status={status} />}
                     </div>
 
                     <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary/50">
