@@ -102,18 +102,19 @@ export interface SegmentResult {
   hiddenMs: number;
 }
 
-/** Sum the live RI/CI across every spine in the scene (real composite cost). */
-function sampleSceneImpact(spines: Spine[]): { ri: number; ci: number; one: ImpactInputs | null } {
-  let ri = 0;
-  let ci = 0;
-  let one: ImpactInputs | null = null;
-  for (const s of spines) {
-    const d = measureFrameImpactDetailed(s.skeleton);
-    ri += d.ri;
-    ci += d.ci;
-    if (!one) one = d.inputs;
-  }
-  return { ri, ci, one };
+/** Estimate the scene's live RI/CI: sample ONE spine (rotating through the
+ * pool) and scale by the pool size. Walking every spine at stress densities
+ * (hundreds..8192) is a multi-ms spike that would land inside the measured
+ * window and contaminate the very frame times the ramp judges; rotation still
+ * averages over the heterogeneous mix across successive samples. */
+function sampleSceneImpact(
+  spines: Spine[],
+  rotate: number,
+): { ri: number; ci: number; one: ImpactInputs | null } {
+  if (spines.length === 0) return { ri: 0, ci: 0, one: null };
+  const rep = spines[rotate % spines.length];
+  const d = measureFrameImpactDetailed(rep.skeleton);
+  return { ri: d.ri * spines.length, ci: d.ci * spines.length, one: d.inputs };
 }
 
 /** p95 of a small unsorted sample. */
@@ -251,6 +252,10 @@ export function startSceneBenchmark(
   const result = (async (): Promise<SegmentResult> => {
     // pre-run probes
     const displayHz = await measureDisplayHz();
+    // The probe resolves 0 when rAF never fires (hidden-tab start) and can read
+    // absurdly low on a throttled tab. A 0 here would make the ramp unfailable
+    // (sustainFps 0, budget Infinity) - budget on a sane floor, report raw.
+    const hzForBudget = displayHz >= 20 ? displayHz : 60;
     const cpuScoreStart = cpuScore();
     const heapStart = heapSnapshot();
 
@@ -388,10 +393,22 @@ export function startSceneBenchmark(
         // scene it starts with the background and grows as the ramp climbs.
         const spines: Spine[] = [];
 
-        /** Add random symbols (random pos/size/anim - "not normalized") until
-         * the pool reaches `count`. */
+        // Spines belonging to the base scene (never removed by the ramp).
+        // Stress spines are appended after them, so shrinking pops the tail.
+        let stressBaseCount = 0;
+
+        /** Grow OR shrink the stress pool to `count` on-stage spines. The
+         * bisect phase targets densities BELOW the failed step, so removal must
+         * work - a grow-only pool would silently measure the old (higher)
+         * density under the new label, fabricating the knee. */
         const spawnTo = (count: number) => {
           if (!stress) return;
+          const floor = Math.max(count, stressBaseCount);
+          while (spines.length > floor) {
+            const s = spines.pop()!;
+            root.removeChild(s);
+            s.destroy();
+          }
           let attempts = 0;
           while (spines.length < count && attempts < count * 4 + 8) {
             attempts++;
@@ -423,6 +440,7 @@ export function startSceneBenchmark(
               s.autoUpdate = false;
               spines.push(s);
             }
+            stressBaseCount = spines.length;
             spawnTo(Math.min(stressStart, stressMax));
           } else {
             fit = fitContainer(root, app.screen.width, app.screen.height, d.refWidth, d.refHeight);
@@ -474,7 +492,9 @@ export function startSceneBenchmark(
             description: d.description,
             fitScale: Math.round(fit.scale * 10000) / 10000,
             onScreenAreaPx: Math.round(fit.areaPx),
-            spineCount: stress ? stressMax : buildStats.spines,
+            // what is actually on stage as the scene starts (stress scenes grow
+            // from here; the reached density lives in stats.maxInstances)
+            spineCount: spines.length,
             tier: d.tier ?? "unknown",
             missingRegions: buildStats.missingRegions,
           },
@@ -488,8 +508,8 @@ export function startSceneBenchmark(
         let rampCapped = false;
         const rampCfg: RampConfig = {
           stressMax,
-          sustainFps: SUSTAIN_FRAC * displayHz,
-          ceilingBudgetMs: 1000 / displayHz,
+          sustainFps: SUSTAIN_FRAC * hzForBudget,
+          ceilingBudgetMs: 1000 / hzForBudget,
           maxBisects: KNEE_BISECTS,
           minGap: KNEE_MIN_GAP,
         };
@@ -497,6 +517,7 @@ export function startSceneBenchmark(
 
         let elapsed = 0;
         let impactAge = Infinity;
+        let impactRotate = 0;
         let heapAge = Infinity;
         let stallMs = 0;
         let lastNow = performance.now();
@@ -518,7 +539,13 @@ export function startSceneBenchmark(
         };
         const finish = (reason: string | null) => {
           // record the final (open) ramp step so the last density is captured
-          if (stress && stepDts.length > 0) recorder.closeStep(currentCount, stepDts);
+          if (stress && stepDts.length > 0) recorder.closeStep(spines.length, stepDts);
+          // an abort mid-ramp (stall/heap/context) still carries real capacity
+          // info: lo = the largest density that sustained refresh. Persist the
+          // partial bracket instead of discarding it with the scene.
+          if (stress && !rampCapped) {
+            recorder.setKnees(rampState.lo > 0 ? rampState.lo : null, rampState.hi);
+          }
           if (reason) recorder.markAborted(reason);
           cleanup();
           const fin = recorder.finalize(false);
@@ -575,19 +602,31 @@ export function startSceneBenchmark(
           // textures, filter) - available synchronously on flush.
           const rec = crawler.getLastFrame();
           const frameMetrics = rec ? toFrameMetrics(rec) : null;
-          // Newest RESOLVED GPU query from the ring (EXT results land a few frames
-          // late). Track the newest resolved frameIdx so a disjoint reading is
-          // counted exactly once, and carry the latest good gpuMs forward.
-          let disjointThisFrame = false;
+          // Drain ALL newly resolved GPU queries from the ring (EXT results
+          // land a few frames late, in submission order). Each resolved query
+          // is ingested exactly once - never carried forward into later ticks,
+          // which would duplicate samples, weight each reading by its staleness
+          // and fake the gpuFrames coverage counter at ~100%. lastGpuMs remains
+          // only as the HUD display value.
+          const newGpu: number[] = [];
+          let newDisjoints = 0;
           const frames = crawler.getFrames();
-          for (let i = frames.length - 1; i >= 0; i--) {
-            const f = frames[i]!;
-            if (f.gpuMs != null || f.gpuDisjoint) {
-              if (f.frameIdx > lastResolvedGpuIdx) {
-                lastResolvedGpuIdx = f.frameIdx;
-                if (f.gpuMs != null) lastGpuMs = f.gpuMs;
-                else disjointThisFrame = true;
-              }
+          for (const f of frames) {
+            if (f.frameIdx <= lastResolvedGpuIdx) continue;
+            if (f.gpuMs != null) {
+              newGpu.push(f.gpuMs);
+              lastGpuMs = f.gpuMs;
+              lastResolvedGpuIdx = f.frameIdx;
+            } else if (f.gpuDisjoint) {
+              newDisjoints++;
+              lastResolvedGpuIdx = f.frameIdx;
+            } else if (rec && f.frameIdx < rec.frameIdx - 8) {
+              // a query this old will never resolve (evicted/lost) - skip past
+              // it so one dead query can't block ingestion for the whole scene.
+              lastResolvedGpuIdx = f.frameIdx;
+            } else {
+              // queries resolve in order: the first still-pending frame ends
+              // the resolved prefix; later entries can't be resolved yet.
               break;
             }
           }
@@ -609,7 +648,7 @@ export function startSceneBenchmark(
 
           impactAge += dt;
           if (impactAge >= IMPACT_SAMPLE_MS && spines.length > 0) {
-            const s = sampleSceneImpact(spines);
+            const s = sampleSceneImpact(spines, impactRotate++);
             lastImpact = { ri: s.ri, ci: s.ci };
             // attach the measured fill term so the captured feature vector
             // carries coverage/overdraw for the offline fit
@@ -638,10 +677,10 @@ export function startSceneBenchmark(
             ci: lastImpact.ci,
             one: lastInputs,
             heapMb: lastHeapMb,
-            gpuMs: lastGpuMs,
+            gpuSamples: newGpu,
             cpuMs,
             frame: frameMetrics,
-            gpuDisjoint: disjointThisFrame,
+            gpuDisjoints: newDisjoints,
           });
 
           recentDts.push(dt);
@@ -667,9 +706,13 @@ export function startSceneBenchmark(
           // bisecting to pin the sustain knee (its capacity). thesis #5/#6.
           if (stress && !rampCapped) {
             stepDts.push(dt);
-            if (lastGpuMs != null) stepGpu.push(lastGpuMs);
+            // only newly-resolved GPU readings; carrying the stale lastGpuMs
+            // each frame would duplicate samples into the step's p95
+            stepGpu.push(...newGpu);
             if (elapsed - stepStartMs >= STRESS_STEP_MS) {
-              recorder.closeStep(currentCount, stepDts);
+              // label the step with what was ACTUALLY on stage (spawnTo can
+              // undershoot when symbol construction fails), never the target
+              recorder.closeStep(spines.length, stepDts);
               const p95Dt = percentile95(stepDts);
               const stepFps = p95Dt > 0 ? 1000 / (stepDts.reduce((a, b) => a + b, 0) / stepDts.length) : 0;
               const gpuP95 = stepGpu.length ? percentile95(stepGpu) : null;
@@ -680,7 +723,7 @@ export function startSceneBenchmark(
               // the bracket to pin the sustain knee (its capacity). See ramp.ts.
               rampState = rampStep(
                 rampState,
-                { count: currentCount, fps: stepFps, gpuP95 },
+                { count: spines.length, fps: stepFps, gpuP95 },
                 rampCfg,
               );
               if (rampState.phase === "done") {
@@ -690,6 +733,10 @@ export function startSceneBenchmark(
               } else {
                 currentCount = rampState.next;
                 spawnTo(currentCount);
+                // the spawn/destroy work + first paint of the new density all
+                // land in the NEXT frame's dt - skip that frame so step stats
+                // only ever contain steady-state frames of the labeled density
+                resumeSkip = true;
               }
             }
           }

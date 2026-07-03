@@ -50,15 +50,17 @@ export interface TickSample {
   /** Raw formula inputs for ONE instance, or null before first sample. */
   one: ImpactInputs | null;
   heapMb: number | null;
-  /** True GPU render time for the frame (EXT timer query), or null when the
-   * extension is unavailable. This is the vsync-independent cost signal. */
-  gpuMs?: number | null;
+  /** GPU render times (EXT timer query) newly RESOLVED this tick, ms. Results
+   * land a few frames late, so a tick can carry 0..n readings. Each reading is
+   * ingested exactly once - `gpuFrames` stays an honest coverage counter and
+   * the percentiles aren't weighted by how long a reading stayed "latest". */
+  gpuSamples?: number[];
   /** CPU time spent advancing spines this frame (spine.update), ms. */
   cpuMs?: number;
   /** Full crawler frame measurement (counters, render-split, textures), or null. */
   frame?: FrameMetrics | null;
-  /** This frame's resolved GPU query came back disjoint (reading discarded). */
-  gpuDisjoint?: boolean;
+  /** How many GPU queries resolved DISJOINT this tick (readings discarded). */
+  gpuDisjoints?: number;
 }
 
 export class Recorder {
@@ -159,16 +161,16 @@ export class Recorder {
     this.lastCi = sample.ci;
     this.riPeak = Math.max(this.riPeak, sample.ri);
     this.ciPeak = Math.max(this.ciPeak, sample.ci);
-    if (sample.gpuMs != null) {
-      this.gpuMs.push(sample.gpuMs);
-      this.secGpu.push(sample.gpuMs);
+    for (const g of sample.gpuSamples ?? []) {
+      this.gpuMs.push(g);
+      this.secGpu.push(g);
     }
     if (sample.cpuMs != null) {
       this.cpuMs.push(sample.cpuMs);
       this.secCpu.push(sample.cpuMs);
     }
     if (sample.frame) this.secFrames.push(sample.frame);
-    if (sample.gpuDisjoint) this.secDisjoint++;
+    this.secDisjoint += sample.gpuDisjoints ?? 0;
     // total per-frame CPU: spine.update + every render-side CPU phase
     if (sample.cpuMs != null || sample.frame) {
       const f = sample.frame;

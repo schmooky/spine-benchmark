@@ -47,9 +47,21 @@ export class GpuTimer {
     this.supported = !!gl && !!this.ext;
   }
 
-  /** Begin timing the draw work that follows. No-op if unsupported or already open. */
+  /** Begin timing the draw work that follows. No-op if unsupported. */
   begin(): void {
-    if (!this.supported || !this.gl || !this.ext || this.active) return;
+    if (!this.supported || !this.gl || !this.ext) return;
+    if (this.active) {
+      // unbalanced begin (an exception between begin/end skipped end()):
+      // close + drop the stale query instead of no-oping forever - a
+      // permanently-open TIME_ELAPSED query would block every later begin().
+      try {
+        this.gl.endQuery(this.ext.TIME_ELAPSED_EXT);
+      } catch {
+        /* query may already be closed by a context event */
+      }
+      this.gl.deleteQuery(this.active);
+      this.active = null;
+    }
     const q = this.gl.createQuery();
     if (!q) return;
     this.gl.beginQuery(this.ext.TIME_ELAPSED_EXT, q);
@@ -76,7 +88,18 @@ export class GpuTimer {
   poll(onResult: (gpuMs: number) => void): void {
     if (!this.supported || !this.gl || !this.ext) return;
     const gl = this.gl;
+    // Reading GPU_DISJOINT_EXT RESETS the flag. A disjoint invalidates every
+    // in-flight query - including ones whose results have not landed yet (the
+    // normal case: results arrive 1-3 frames late). Those must be dropped NOW;
+    // keeping them would deliver their corrupted timings on a later poll when
+    // the (already reset) flag reads false. This fires exactly on mobile GPU
+    // power-state transitions, so it is the case that matters most.
     const disjoint = gl.getParameter(this.ext.GPU_DISJOINT_EXT) as boolean;
+    if (disjoint) {
+      for (const q of this.inFlight) gl.deleteQuery(q);
+      this.inFlight.length = 0;
+      return;
+    }
     let i = 0;
     while (i < this.inFlight.length) {
       const q = this.inFlight[i];
@@ -85,10 +108,8 @@ export class GpuTimer {
         i++;
         continue;
       }
-      if (!disjoint) {
-        const ns = gl.getQueryParameter(q, gl.QUERY_RESULT) as number;
-        onResult(ns / 1e6); // nanoseconds -> milliseconds
-      }
+      const ns = gl.getQueryParameter(q, gl.QUERY_RESULT) as number;
+      onResult(ns / 1e6); // nanoseconds -> milliseconds
       gl.deleteQuery(q);
       this.inFlight.splice(i, 1);
     }

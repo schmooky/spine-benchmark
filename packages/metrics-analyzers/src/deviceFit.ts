@@ -15,10 +15,17 @@ import {
   type LinearCostModel,
 } from "@spine-benchmark/metrics-impact-formula";
 
-/** First client version with the new methodology (true GPU/CPU ms, coverage,
- * adaptive ramp). Runs below this are legacy and must be excluded from the fit
- * (they only have fps/RI-CI, not the ms cost the model needs). */
-export const MIN_FIT_VERSION = "0.3.0";
+/** First client version whose measurements are trusted by the fit.
+ *
+ * 0.5.0 = the measurement-audit remediation (2026-07-03). Everything below is
+ * QUARANTINED: earlier captures were recorded with (a) ramp bisect steps
+ * labeled with densities that were never on screen (grow-only spawnTo), (b)
+ * GPU samples duplicated via carry-forward (fake ~100% gpuFrames coverage,
+ * staleness-weighted percentiles), (c) skeleton re-parse spikes inside the
+ * measured window on doubling steps, and (d) feature vectors that dropped all
+ * non-mesh (region/sequence) vertices. Fitting on them launders those errors
+ * into the model weights. */
+export const MIN_FIT_VERSION = "0.5.0";
 
 /** Semver-ish >= compare (major.minor.patch). */
 export function isFittableVersion(clientVersion: string | null | undefined): boolean {

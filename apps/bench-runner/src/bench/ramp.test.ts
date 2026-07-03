@@ -66,4 +66,31 @@ describe("ramp controller (GPU-timer path)", () => {
     expect(s.phase).toBe("done");
     expect(Math.abs(s.sustainInstances! - 333) / 333).toBeLessThan(0.2);
   });
+
+  it("detects CPU-bound collapse even while the GPU stays under budget", () => {
+    // Spine workloads are dominantly CPU-bound: gpuP95 flat at 2ms (healthy),
+    // fps collapses past 300 instances. A gpu-only sustain check would double
+    // to stressMax and never report a knee.
+    let s = initRamp(4);
+    for (let guard = 0; guard < 40 && s.phase !== "done"; guard++) {
+      const n = s.next;
+      const fps = n <= 300 ? 60 : Math.max(5, (300 / n) * 60);
+      s = rampStep(s, { count: n, fps, gpuP95: 2 }, cfg);
+    }
+    expect(s.phase).toBe("done");
+    expect(s.sustainInstances).not.toBeNull();
+    expect(Math.abs(s.sustainInstances! - 300) / 300).toBeLessThan(0.2);
+  });
+});
+
+describe("ramp controller (degenerate cases)", () => {
+  it("reports NO knee (null) when the device fails at the minimum density", () => {
+    // reporting the failed count as capacity would overstate it
+    let s = initRamp(4);
+    s = rampStep(s, { count: 4, fps: 12, gpuP95: null }, CFG);
+    expect(s.phase).toBe("done");
+    expect(s.sustainInstances).toBeNull();
+    expect(s.collapseInstances).toBe(4);
+    expect(s.reason).toContain("minimum tested density");
+  });
 });

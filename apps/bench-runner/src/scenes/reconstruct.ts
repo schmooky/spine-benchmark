@@ -18,6 +18,7 @@ import {
   Spine,
   TextureAtlas,
 } from "@esotericsoftware/spine-pixi-v8";
+import type { SkeletonData } from "@esotericsoftware/spine-pixi-v8";
 import type { SceneDescriptor, Placement } from "./types";
 
 /**
@@ -55,15 +56,28 @@ class LenientAtlasAttachmentLoader extends AtlasAttachmentLoader {
 /** Missing-region tally for the scene currently being built (diagnostics). */
 export const buildStats = { missingRegions: 0, spines: 0 };
 
+/** Parsed-skeleton cache. Parsing costs ~ms per skeleton; without this, a
+ * stress-ramp doubling step (spawn 2048 instances inside one tick) re-parses
+ * the SAME skeleton thousands of times - a multi-second frame that lands
+ * inside the measured window and can trip the stall-abort on devices that
+ * render the density fine. SkeletonData is immutable + shareable across Spine
+ * instances (this mirrors what Spine.from does with its own Cache). */
+const skeletonDataCache = new Map<string, SkeletonData>();
+
 /** Build a Spine from already-loaded assets using the lenient loader. */
 function spineFrom(skelAlias: string, atlasAlias: string): Spine {
-  const atlas = Assets.get(atlasAlias) as TextureAtlas;
-  const loader = new LenientAtlasAttachmentLoader(atlas);
-  const raw = Assets.get(skelAlias) as unknown;
-  const parser =
-    raw instanceof Uint8Array ? new SkeletonBinary(loader) : new SkeletonJson(loader);
-  const skeletonData = parser.readSkeletonData(raw as never);
-  buildStats.missingRegions += loader.missing;
+  const key = `${skelAlias}\n${atlasAlias}`;
+  let skeletonData = skeletonDataCache.get(key);
+  if (!skeletonData) {
+    const atlas = Assets.get(atlasAlias) as TextureAtlas;
+    const loader = new LenientAtlasAttachmentLoader(atlas);
+    const raw = Assets.get(skelAlias) as unknown;
+    const parser =
+      raw instanceof Uint8Array ? new SkeletonBinary(loader) : new SkeletonJson(loader);
+    skeletonData = parser.readSkeletonData(raw as never);
+    skeletonDataCache.set(key, skeletonData);
+    buildStats.missingRegions += loader.missing;
+  }
   buildStats.spines++;
   return new Spine({ skeletonData, autoUpdate: true });
 }
@@ -152,6 +166,13 @@ export function sceneAssetAliases(d: SceneDescriptor): string[] {
  * atlases once no later scene needs them, so 18 games' textures don't all stay
  * resident on the GPU (the main cause of iOS WebGL context loss). */
 export async function unloadAliases(aliases: string[]): Promise<void> {
+  // parsed SkeletonData holds references into the unloaded atlas textures -
+  // drop every cache entry touching an unloaded alias so a later (resume)
+  // build can't construct spines over destroyed textures.
+  for (const key of [...skeletonDataCache.keys()]) {
+    const [sk, at] = key.split("\n");
+    if (aliases.includes(sk) || aliases.includes(at)) skeletonDataCache.delete(key);
+  }
   for (const a of aliases) {
     registered.delete(a);
     try {

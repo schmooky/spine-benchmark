@@ -366,7 +366,7 @@ export function startBenchmark(
             heapMb: lastHeapMb,
           });
 
-          if (sc.kind === "ramp") {
+          if (sc.kind === "ramp" && !rampCapped) {
             stepDts.push(dt);
             const boundary = (stepIdx + 1) * stepDur;
             if (elapsed >= boundary && stepIdx < sc.rampSteps!.length - 1) {

@@ -12,7 +12,14 @@
 // ramps one GPU cost driver at a time (fill/vertices/stencilMasks/
 // renderTargets/filterPasses) and pairs its analytic driverValue with
 // measured GPU/CPU ms, for fitting the crawler's placeholder gpuCost weights.
-export const CLIENT_VERSION = "0.4.2";
+// 0.5.0 = measurement-audit remediation. Ramp bisection actually shrinks the
+// pool (steps are labeled with what was ON SCREEN), sustain = fps AND gpu
+// budget, skeleton parse cached (no multi-second spawn frames in the measured
+// window), post-spawn frame excluded, GPU samples ingested exactly once
+// (honest gpuFrames coverage), disjoint handling drops pending queries,
+// displayHz=0 can no longer disable the ramp gates. Runs below 0.5.0 are
+// QUARANTINED from the cost-model fit (see deviceFit MIN_FIT_VERSION).
+export const CLIENT_VERSION = "0.5.0";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =

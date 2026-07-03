@@ -71,7 +71,12 @@ export function initRamp(start: number): RampState {
 }
 
 function sustains(m: RampMeasure, cfg: RampConfig): boolean {
-  return m.gpuP95 != null ? m.gpuP95 <= cfg.ceilingBudgetMs : m.fps >= cfg.sustainFps;
+  // Spine workloads are dominantly CPU-bound, so fps must ALWAYS gate: a device
+  // can hold gpuP95 well under budget while the main thread is at 60ms/frame.
+  // The GPU budget is an ADDITIONAL failure axis when the timer is available.
+  const fpsOk = m.fps >= cfg.sustainFps;
+  const gpuOk = m.gpuP95 == null || m.gpuP95 <= cfg.ceilingBudgetMs;
+  return fpsOk && gpuOk;
 }
 
 function midpoint(a: number, b: number): number {
@@ -79,14 +84,20 @@ function midpoint(a: number, b: number): number {
 }
 
 function finish(s: RampState): RampState {
-  const knee = s.lo > 0 ? s.lo : (s.hi ?? s.count);
+  // lo === 0 means the device never sustained ANY tested density - reporting
+  // the failed count as capacity would overstate it. The knee is unknown
+  // (somewhere below the minimum), so report null rather than a wrong number.
+  const knee = s.lo > 0 ? s.lo : null;
   return {
     ...s,
     phase: "done",
     next: s.count,
     sustainInstances: knee,
     collapseInstances: s.hi,
-    reason: `sustain knee at ${knee} instances (drops below refresh)`,
+    reason:
+      knee != null
+        ? `sustain knee at ${knee} instances (drops below refresh)`
+        : `below refresh at minimum tested density (${s.hi ?? s.count} instances)`,
   };
 }
 
