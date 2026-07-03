@@ -33,7 +33,9 @@ export interface AnimationMeasurement {
 
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
-  const idx = Math.min(sorted.length - 1, Math.floor(p * sorted.length));
+  // nearest-rank: ceil(p*n)-1. floor(p*n) is one rank high - at the 20-frame
+  // floor it made p95 === max on every short animation.
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil(p * sorted.length) - 1));
   return sorted[idx]!;
 }
 
@@ -83,6 +85,9 @@ class StageController {
   private gridLayer = new Graphics();
   private worldLayer = new Container();
   private spine: Spine | null = null;
+  /** bumped whenever the active spine changes; an in-flight measureAnimations
+   * pass reads it each iteration and aborts if it no longer matches. */
+  private measureGeneration = 0;
   private initialized = false;
 
   /** overlay graphics parented to the current spine, redrawn every tick */
@@ -136,10 +141,14 @@ class StageController {
 
     // Mount the crawler as the stage's live measurement instrument (headless).
     // The DeviceMeter reads its measured workload/gpu cost each sample.
+    // bufferSize must exceed the longest measurement window (measureAnimations
+    // waits up to 180 frames): a smaller ring evicts the first frames of a
+    // long/loop-opening animation before summarizeFrames reads them, so avg/
+    // p95/max would only cover the tail.
     this.crawler = mountCrawler(app, {
       hud: false,
       spineProfile: { enabled: true },
-      bufferSize: 120,
+      bufferSize: 256,
       autoDispose: false,
     });
     this.camDirty = true;
@@ -376,6 +385,9 @@ class StageController {
 
   private clearSpine(): void {
     if (!this.spine) return;
+    // invalidate any in-flight measureAnimations pass over the OLD spine so it
+    // stops touching a skeleton that is about to be destroyed
+    this.measureGeneration++;
     this.worldLayer.removeChild(this.spine);
     this.spine.destroy(); // also destroys the parented overlayGfx
     this.spine = null;
@@ -415,13 +427,32 @@ class StageController {
     return { gpuMs, cpuMs };
   }
 
-  /** Wait until the crawler has flushed at least `count` frames past `sinceIdx`. */
-  private waitForFrames(sinceIdx: number, count: number): Promise<void> {
+  /** Wait until at least `windowMs` of real playback has ELAPSED past
+   * `sinceIdx` (one full animation loop regardless of the display's refresh
+   * rate - a frame count would measure half a loop on a 120Hz panel), with a
+   * frame floor (smooths timer quantization) and a frame cap (must stay under
+   * the crawler ring so early frames aren't evicted before we read them).
+   * Aborts early - returning false - if the pass's generation is superseded
+   * (a new skeleton was dropped mid-measure). */
+  private waitForWindow(
+    sinceIdx: number,
+    windowMs: number,
+    minFrames: number,
+    maxFrames: number,
+    generation: number,
+  ): Promise<boolean> {
     return new Promise((resolve) => {
+      const startMs = performance.now();
       const check = () => {
-        const idx = this.crawler?.getLastFrameIdx() ?? -1;
-        if (idx - sinceIdx >= count) {
-          resolve();
+        if (generation !== this.measureGeneration || !this.crawler) {
+          resolve(false);
+          return;
+        }
+        const frames = this.crawler.getLastFrameIdx() - sinceIdx;
+        const elapsed = performance.now() - startMs;
+        const done = frames >= maxFrames || (elapsed >= windowMs && frames >= minFrames);
+        if (done) {
+          resolve(true);
           return;
         }
         requestAnimationFrame(check);
@@ -437,6 +468,10 @@ class StageController {
    * only place real per-frame ms for a given animation comes from. Restores
    * the static setup pose when done, so the stage returns to its normal
    * resting state.
+   *
+   * Guarded by a generation token: if the active spine changes mid-pass (a new
+   * file dropped, tool re-opened), the pass aborts instead of driving a
+   * destroyed skeleton or attributing frames to the wrong animation.
    */
   async measureAnimations(
     entries: { name: string; durationSec: number }[],
@@ -446,19 +481,22 @@ class StageController {
     const spine = this.spine;
     const crawler = this.crawler;
     if (!spine || !crawler) return out;
+    const generation = this.measureGeneration;
+    // frame cap that keeps the whole window inside the crawler ring buffer
+    const maxFrames = 200;
 
     for (let i = 0; i < entries.length; i++) {
+      if (generation !== this.measureGeneration || this.spine !== spine) break;
       const { name, durationSec } = entries[i]!;
       onProgress?.(name, i, entries.length);
 
       spine.state.setAnimation(0, name, true);
       crawler.setTelemetryLabel(name);
       const startIdx = crawler.getLastFrameIdx();
-      // one full loop of real playback, floor 20 frames (enough to smooth
-      // timer quantization noise), cap 180 (3s) so a long/slow animation
-      // doesn't stall the whole measurement pass.
-      const targetFrames = Math.min(180, Math.max(20, Math.round(durationSec * 60)));
-      await this.waitForFrames(startIdx, targetFrames);
+      // one full loop of real playback (time-based), floor 20 frames, cap 3s.
+      const windowMs = Math.min(3000, Math.max(350, durationSec * 1000));
+      const live = await this.waitForWindow(startIdx, windowMs, 20, maxFrames, generation);
+      if (!live) break; // superseded - captured spine may be destroyed
 
       const frames = crawler.getFrames().filter((f) => f.frameIdx > startIdx);
       out.set(name, summarizeFrames(frames));
@@ -466,11 +504,15 @@ class StageController {
 
     // restore the static setup pose (setSpine's contract: nothing animates
     // on the main stage outside of an explicit measurement pass like this one).
-    spine.state.setEmptyAnimation(0, 0);
-    spine.skeleton.setToSetupPose();
-    for (const slot of spine.skeleton.slots) slot.deform.length = 0;
-    spine.skeleton.updateWorldTransform(Physics.update);
-    crawler.setTelemetryLabel(undefined);
+    // Only if this pass still owns the live spine - otherwise clearSpine/a newer
+    // pass already has, and touching it would fight them.
+    if (generation === this.measureGeneration && this.spine === spine) {
+      spine.state.setEmptyAnimation(0, 0);
+      spine.skeleton.setToSetupPose();
+      for (const slot of spine.skeleton.slots) slot.deform.length = 0;
+      spine.skeleton.updateWorldTransform(Physics.update);
+      crawler.setTelemetryLabel(undefined);
+    }
 
     return out;
   }

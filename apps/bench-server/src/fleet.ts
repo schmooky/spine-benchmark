@@ -213,7 +213,48 @@ function esc(s: string): string {
 }
 
 /** Minimal self-contained HTML fleet report (matches the run report's style). */
-export function renderFleet(f: FleetSummary): string {
+/** A held-out validation snapshot (from validate.ts) - the "can I trust it"
+ * evidence rendered on /fleet. Kept structural so fleet.ts needn't import the
+ * validation module. */
+export interface FleetValidation {
+  generatedAt: string;
+  families: {
+    family: string;
+    testRuns: number;
+    testRows: number;
+    cpuMape: number | null;
+    gpuMape: number | null;
+    scatter: { predicted: number; measured: number }[];
+  }[];
+}
+
+/** Tiny inline predicted-vs-measured scatter SVG (log-friendly linear). A
+ * tight diagonal = trustworthy predictions; scatter off the y=x line = error. */
+function scatterSvg(points: { predicted: number; measured: number }[]): string {
+  if (points.length === 0) return "";
+  const size = 90;
+  const pad = 4;
+  const max = Math.max(1, ...points.flatMap((p) => [p.predicted, p.measured]));
+  const sc = (v: number) => pad + (v / max) * (size - 2 * pad);
+  const diag = `<line x1="${pad}" y1="${size - pad}" x2="${size - pad}" y2="${pad}" stroke="#3a444d" stroke-width="1" stroke-dasharray="3 3"/>`;
+  const dots = points
+    .map((p) => `<circle cx="${sc(p.predicted).toFixed(1)}" cy="${(size - sc(p.measured)).toFixed(1)}" r="1.6" fill="#7fd99a"/>`)
+    .join("");
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="predicted vs measured ms">${diag}${dots}</svg>`;
+}
+
+function mapePct(v: number | null): string {
+  return v == null ? "n/a" : `${Math.round(v * 100)}%`;
+}
+
+function mapeBadge(v: number | null): string {
+  if (v == null) return "low";
+  if (v > 0.35) return "high";
+  if (v > 0.18) return "medium";
+  return "low";
+}
+
+export function renderFleet(f: FleetSummary, validation?: FleetValidation): string {
   const rows = f.families
     .map((fam) => {
       const models = fam.models
@@ -231,6 +272,32 @@ export function renderFleet(f: FleetSummary): string {
     </tr>`;
     })
     .join("\n");
+
+  const validationRows = (validation?.families ?? [])
+    .map((v) => {
+      return `<tr>
+      <td><strong>${esc(v.family)}</strong></td>
+      <td><span class="badge badge-${mapeBadge(v.cpuMape)}">${mapePct(v.cpuMape)}</span></td>
+      <td class="num">${v.gpuMape != null ? mapePct(v.gpuMape) : "no timer"}</td>
+      <td class="num">${v.testRuns} runs · ${v.testRows} rows</td>
+      <td>${scatterSvg(v.scatter)}</td>
+    </tr>`;
+    })
+    .join("\n");
+
+  const validationSection = validation
+    ? `
+  <h2>Prediction accuracy <span class="muted">- held-out runs the model never saw: predicted vs measured (the trust number)</span></h2>
+  <p class="muted">${esc(validation.generatedAt)} - lower MAPE = the meter's ms are defensible; the scatter should hug the dashed y=x line.</p>
+  <div class="wrap"><table>
+    <thead><tr>
+      <th>GPU family</th><th>CPU MAPE</th><th>GPU MAPE</th><th>Holdout</th><th>Pred vs measured (ms)</th>
+    </tr></thead>
+    <tbody>
+${validationRows || `<tr><td colspan="5" class="muted">Not enough runs per family to hold out yet.</td></tr>`}
+    </tbody>
+  </table></div>`
+    : "";
 
   const coverageRows = f.gpuCoverage
     .map((c) => {
@@ -299,5 +366,6 @@ ${rows || `<tr><td colspan="6" class="muted">No portable runs yet.</td></tr>`}
 ${coverageRows || `<tr><td colspan="5" class="muted">No GPU coverage data yet - run a refit first.</td></tr>`}
     </tbody>
   </table></div>
+${validationSection}
 </main></body></html>`;
 }

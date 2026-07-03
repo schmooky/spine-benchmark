@@ -53,6 +53,11 @@ const refitLimiter = rateLimit({
 
 import { getModel, setModel, type CoefficientTable } from "./model.js";
 import { runRefit } from "./refit.js";
+import { runValidation, type ValidationResult } from "./validate.js";
+
+/** Latest held-out validation snapshot, recomputed on each refit and rendered
+ * on /fleet. In-process (small); recomputed on demand via /api/model/validate. */
+let latestValidation: ValidationResult | null = null;
 
 app.get("/livez", (_req, res) => {
   res.json({ status: "live" });
@@ -86,13 +91,22 @@ app.post("/api/model/refit", refitLimiter, async (req, res) => {
   try {
     const result = await runRefit();
     setModel(result.table);
+    // recompute the held-out validation snapshot against the new data so
+    // /fleet's "prediction accuracy" reflects the model that was just published
+    try {
+      latestValidation = await runValidation();
+    } catch (err) {
+      logger.warn({ err }, "post-refit validation failed (model still published)");
+    }
     logger.info(
       {
         runsConsidered: result.runsConsidered,
         runsFittable: result.runsFittable,
         runsUsed: result.runsUsed,
         rowsUsed: result.rowsUsed,
+        rowsGated: result.rowsGated,
         familyCounts: result.familyCounts,
+        sweepPointCounts: result.sweepPointCounts,
         durationMs: result.durationMs,
       },
       "model refit published",
@@ -103,13 +117,37 @@ app.post("/api/model/refit", refitLimiter, async (req, res) => {
       runsFittable: result.runsFittable,
       runsUsed: result.runsUsed,
       rowsUsed: result.rowsUsed,
+      rowsGated: result.rowsGated,
       familyCounts: result.familyCounts,
+      sweepPointCounts: result.sweepPointCounts,
+      sweepPinned: result.table.sweepPinned,
       durationMs: result.durationMs,
       quality: result.table.quality,
+      validation: latestValidation
+        ? latestValidation.families.map((v) => ({
+            family: v.family,
+            cpuMape: v.cpuMape,
+            gpuMape: v.gpuMape,
+            testRuns: v.testRuns,
+          }))
+        : null,
     });
   } catch (err) {
     logger.error({ err }, "model refit failed");
     res.status(503).json({ error: "refit failed" });
+  }
+});
+
+// Held-out validation on demand: fit on a train split, score the held-out
+// runs the model never saw, publish per-family MAPE + scatter. Read-only (does
+// not change the published model), so it's behind the normal read limiter.
+app.get("/api/model/validate", readLimiter, async (_req, res) => {
+  try {
+    latestValidation = await runValidation();
+    res.json(latestValidation);
+  } catch (err) {
+    logger.error({ err }, "validation failed");
+    res.status(503).json({ error: "validation failed" });
   }
 });
 
@@ -227,7 +265,9 @@ app.get("/api/fleet", readLimiter, async (req, res) => {
 app.get("/fleet", readLimiter, async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 1000, 5000);
   try {
-    res.type("text/html").send(renderFleet(buildFleet(await runStore.listDevices(limit), getModel())));
+    res
+      .type("text/html")
+      .send(renderFleet(buildFleet(await runStore.listDevices(limit), getModel()), latestValidation ?? undefined));
   } catch (err) {
     logger.error({ err }, "fleet render failed");
     res.status(503).type("text/html").send("<h1>storage unavailable</h1>");
