@@ -1,7 +1,7 @@
 import { Application, Container, Graphics } from "pixi.js";
-import { mountCrawler, type Crawler } from "@spine-benchmark/pixi-crawler";
+import { mountCrawler, type Crawler, type FrameRecord } from "@spine-benchmark/pixi-crawler";
 import { animate } from "animejs";
-import type { Spine } from "@esotericsoftware/spine-pixi-v8";
+import { Physics, type Spine } from "@esotericsoftware/spine-pixi-v8";
 
 import { MaterializeFilter } from "@/entities/skeleton";
 import { GRID_MINOR, GRID_MAJOR, MATERIALIZE_MS } from "@/shared/config/constants";
@@ -19,6 +19,40 @@ const EASE = 0.22; // camera smoothing per frame
  * directly in this local Y-down space) and updates live as bones move.
  */
 export type OverlayDraw = (g: Graphics, spine: Spine) => void;
+
+/** Real measured cost of one animation's playback window (see {@link
+ *  StageController.measureAnimations}) - avg/p95/max CPU ms, and avg GPU ms
+ *  when a timer is available on this device. */
+export interface AnimationMeasurement {
+  avgCpuMs: number;
+  p95CpuMs: number;
+  maxCpuMs: number;
+  avgGpuMs: number | null;
+  frames: number;
+}
+
+function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0;
+  const idx = Math.min(sorted.length - 1, Math.floor(p * sorted.length));
+  return sorted[idx]!;
+}
+
+function summarizeFrames(frames: FrameRecord[]): AnimationMeasurement {
+  if (frames.length === 0) {
+    return { avgCpuMs: 0, p95CpuMs: 0, maxCpuMs: 0, avgGpuMs: null, frames: 0 };
+  }
+  const cpu = frames.map((f) => f.measuredCpuMs).sort((a, b) => a - b);
+  const avgCpuMs = cpu.reduce((s, v) => s + v, 0) / cpu.length;
+  const gpuSamples = frames.map((f) => f.gpuMs).filter((v): v is number => v != null);
+  const avgGpuMs = gpuSamples.length > 0 ? gpuSamples.reduce((s, v) => s + v, 0) / gpuSamples.length : null;
+  return {
+    avgCpuMs,
+    p95CpuMs: percentile(cpu, 0.95),
+    maxCpuMs: cpu[cpu.length - 1]!,
+    avgGpuMs,
+    frames: frames.length,
+  };
+}
 
 interface Camera {
   /** screen-space offset of the world origin from the screen centre */
@@ -379,6 +413,66 @@ class StageController {
     const gpuSamples = recent.map((f) => f.gpuMs).filter((v): v is number => v != null);
     const gpuMs = gpuSamples.length > 0 ? gpuSamples.reduce((s, v) => s + v, 0) / gpuSamples.length : null;
     return { gpuMs, cpuMs };
+  }
+
+  /** Wait until the crawler has flushed at least `count` frames past `sinceIdx`. */
+  private waitForFrames(sinceIdx: number, count: number): Promise<void> {
+    return new Promise((resolve) => {
+      const check = () => {
+        const idx = this.crawler?.getLastFrameIdx() ?? -1;
+        if (idx - sinceIdx >= count) {
+          resolve();
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      requestAnimationFrame(check);
+    });
+  }
+
+  /**
+   * Actually PLAYS each animation in turn on the live stage and records its
+   * real measured cost from the crawler - not a synthetic pose sample. The
+   * skeleton otherwise never animates (see {@link setSpine}), so this is the
+   * only place real per-frame ms for a given animation comes from. Restores
+   * the static setup pose when done, so the stage returns to its normal
+   * resting state.
+   */
+  async measureAnimations(
+    entries: { name: string; durationSec: number }[],
+    onProgress?: (name: string, index: number, total: number) => void,
+  ): Promise<Map<string, AnimationMeasurement>> {
+    const out = new Map<string, AnimationMeasurement>();
+    const spine = this.spine;
+    const crawler = this.crawler;
+    if (!spine || !crawler) return out;
+
+    for (let i = 0; i < entries.length; i++) {
+      const { name, durationSec } = entries[i]!;
+      onProgress?.(name, i, entries.length);
+
+      spine.state.setAnimation(0, name, true);
+      crawler.setTelemetryLabel(name);
+      const startIdx = crawler.getLastFrameIdx();
+      // one full loop of real playback, floor 20 frames (enough to smooth
+      // timer quantization noise), cap 180 (3s) so a long/slow animation
+      // doesn't stall the whole measurement pass.
+      const targetFrames = Math.min(180, Math.max(20, Math.round(durationSec * 60)));
+      await this.waitForFrames(startIdx, targetFrames);
+
+      const frames = crawler.getFrames().filter((f) => f.frameIdx > startIdx);
+      out.set(name, summarizeFrames(frames));
+    }
+
+    // restore the static setup pose (setSpine's contract: nothing animates
+    // on the main stage outside of an explicit measurement pass like this one).
+    spine.state.setEmptyAnimation(0, 0);
+    spine.skeleton.setToSetupPose();
+    for (const slot of spine.skeleton.slots) slot.deform.length = 0;
+    spine.skeleton.updateWorldTransform(Physics.update);
+    crawler.setTelemetryLabel(undefined);
+
+    return out;
   }
 
   destroy(): void {
