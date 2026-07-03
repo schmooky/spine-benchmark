@@ -49,36 +49,32 @@ npm run test       # run tests
 
 ## Monorepo Layout
 
-| Path | Purpose |
-|---|---|
-| `apps/benchmark` | Benchmark UI/workbench |
-| `packages/metrics` | Compatibility facade over metrics packages |
-| `packages/metrics-pipeline` | End-to-end analysis orchestration |
-| `packages/metrics-factors` | Shared weights/constants |
-| `packages/metrics-scoring` | Impact calculators and impact UI helpers |
-| `packages/metrics-sampling` | Animation sampling + active component detection |
-| `packages/metrics-analyzers` | Low-level analyzers (bones/mesh/clipping/blend/constraints) |
-| `packages/metrics-reporting` | JSON/report export helpers |
-| `packages/asset-store` | Asset persistence + bundle validation |
-| `packages/spine-loader` | Spine JSON/SKEL + atlas loading utilities |
-| `packages/mesh-tools` | Mesh optimization + preview helpers |
-| `packages/constraint-tools` | Constraint inspection + bake tools |
-| `packages/drawcall-tools` | Draw-call analysis + atlas repack planning |
-| `packages/render-tools` | Camera/background/debug rendering tools |
-| `packages/file-tools` | File and drag-drop processing helpers |
-| `packages/workbench-core` | Compatibility aggregator for workbench tooling |
-| `packages/metrics-impact-formula` | Canonical RI / CI scoring formulas (single source of truth) |
-| `packages/pixi-crawler` | Real-time PixiJS scene-graph profiler (published) |
-| `packages/spinefolio` | PixiJS v8 Spine widget library (published) |
+The project measures Spine cost as fitted **milliseconds per GPU family**, not
+unitless RI/CI scores. The package set is deliberately small - the old RI/CI
+analyzer stack and the `workbench-core` tool engine were removed once nothing
+consumed them (see [ADR 0004](docs/adr/0004-drop-ri-ci-package-stack.md)).
+
+| Path | Purpose | npm |
+|---|---|---|
+| `apps/benchmark` | Benchmark UI/workbench (the site) | private |
+| `apps/bench-runner` | Calibration client (isolation sweeps + scene ramps) | private |
+| `apps/bench-server` | Fleet ingest, per-family fit, held-out validation | private |
+| `packages/metrics-impact-formula` | Canonical scoring formulas + pose-feature walker + coverage estimator (single source of truth) | **public** |
+| `packages/metrics-model` | Ridge fit of feature-vector to milliseconds | **public** |
+| `packages/metrics-analyzers` | Device cost-model toolkit: `deviceFit` (per-family fit) + `deviceClass` (portable-family classifier) | **public** |
+| `packages/cli` | Headless skeleton analyzer | **public** |
+| `packages/pixi-crawler` | Real-time PixiJS scene-graph profiler (embeddable) | **public** |
+| `packages/spinefolio` | PixiJS v8 Spine widget library | **public** |
+| `packages/gpu-timing` | WebGL2 timer-query + coverage sampling (internal) | private |
+| `packages/metrics-sampling` | Animation timeline sampling (internal) | private |
+| `packages/calibration-primitives` | Procedural single-axis calibration spines (tooling) | private |
 
 ## Build Specific Workspaces
 
 ```bash
-npm run build:metrics
-npm run build:metrics-pipeline
+npm run build:metrics-impact-formula
 npm run build:metrics-analyzers
 npm run build:spinefolio
-npm run build:workbench-core
 ```
 
 ## Reusing Packages
@@ -88,10 +84,10 @@ Use workspace packages directly from this monorepo, or vendor/submodule the repo
 Example:
 
 ```ts
-import { SpineAnalyzer } from '@spine-benchmark/metrics';
+import { poseImpact } from '@spine-benchmark/metrics-impact-formula';
 
-const result = SpineAnalyzer.analyze(spineInstance);
-console.log(result.skeleton.metrics.totalBones);
+const { ri, ci, features } = poseImpact(spine.skeleton);
+console.log(features.vertices, ri, ci);
 ```
 
 ## Releases

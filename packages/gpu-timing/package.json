@@ -11,18 +11,22 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "license": "MIT",
-  "publishConfig": { "access": "public" },
-  "devDependencies": { "typescript": "^5.9.3" },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/schmooky/spine-benchmark.git",
     "directory": "packages/gpu-timing"
-  }
+  },
+  "private": true
 }

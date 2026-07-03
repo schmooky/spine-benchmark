@@ -1,7 +1,7 @@
 {
   "name": "@spine-benchmark/metrics-analyzers",
   "version": "0.1.1",
-  "description": "Low-level Spine metrics analyzers for meshes, clipping, blend modes, skeleton, and constraints",
+  "description": "Device cost-model toolkit: per-GPU-family fitted ms model (deviceFit) and portable-family device classification (deviceClass)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,14 +35,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-factors": "^0.1.1",
-    "@spine-benchmark/metrics-scoring": "^0.1.1",
-    "@spine-benchmark/metrics-sampling": "^0.1.1",
     "@spine-benchmark/metrics-model": "^0.1.0",
     "@spine-benchmark/metrics-impact-formula": "^0.1.1"
-  },
-  "peerDependencies": {
-    "@esotericsoftware/spine-pixi-v8": "^4.2.101"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

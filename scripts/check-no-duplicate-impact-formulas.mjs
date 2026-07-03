@@ -37,8 +37,6 @@ const ALLOWLIST = new Set([
   // assert that the analyzer's adapter wires up the right inputs. The
   // numbers are intentional sanity checks, not a duplicated implementation.
   'packages/pixi-crawler/src/core/__tests__/spine-analyzer.test.ts',
-  // Likewise, the offline reporter's test file may exercise the formula.
-  'packages/metrics-reporting/src/impactReportModel.test.ts',
   // The guard script itself spells the canonical numbers in its regex.
   'scripts/check-no-duplicate-impact-formulas.mjs',
 ]);
@@ -83,10 +81,7 @@ const POSE_WALK_ALLOWLIST = new Set([
   // the crawler duck-types spine for its own workload counters (P3: cut over)
   'packages/pixi-crawler/src/features/spine/collector.ts',
   'packages/pixi-crawler/src/features/spine/types.ts',
-  // structural/display analyzers: per-attachment vertex DETAIL for the UI
-  // (mesh list, clipping report, overlay drawing), not impact features
-  'packages/metrics-analyzers/src/meshAnalyzer.ts',
-  'packages/metrics-analyzers/src/clippingAnalyzer.ts',
+  // display-only vertex detail for the mesh/weight overlays, not impact features
   'apps/benchmark/src/entities/skeleton/lib/overlays.ts',
   'scripts/check-no-duplicate-impact-formulas.mjs',
 ]);

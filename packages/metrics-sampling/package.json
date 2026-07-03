@@ -35,5 +35,6 @@
   },
   "dependencies": {
     "@spine-benchmark/metrics-impact-formula": "^0.1.1"
-  }
+  },
+  "private": true
 }
