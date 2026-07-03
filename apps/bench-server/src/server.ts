@@ -29,7 +29,7 @@ app.use(express.json({ limit: config.bodyLimit }));
 
 const ingestLimiter = rateLimit({
   windowMs: 60 * 60_000,
-  max: 30,
+  max: 150,
   standardHeaders: true,
   legacyHeaders: false,
 });
