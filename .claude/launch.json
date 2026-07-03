@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "apps/crawler"],
       "port": 8080
+    },
+    {
+      "name": "benchmark-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "apps/benchmark"],
+      "port": 5180
     }
   ]
 }

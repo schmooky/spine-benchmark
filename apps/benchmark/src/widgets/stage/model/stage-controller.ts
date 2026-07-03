@@ -359,15 +359,26 @@ class StageController {
     return this.crawler?.getGpuCost();
   }
 
-  /** ACTUAL measured ms of the latest rendered frame - true GPU time (EXT
-   *  timer query, null without one) and total CPU (the whole ticker-tick,
-   *  prePixi + pixi). This is a real measurement, not a prediction from
-   *  skeleton features - prefer it over predictDeviceCost's estimate when
-   *  a live crawler frame is available. */
-  getMeasuredMs(): { gpuMs: number | null; cpuMs: number } | undefined {
-    const frame = this.crawler?.getLastFrame();
-    if (!frame) return undefined;
-    return { gpuMs: frame.gpuMs ?? null, cpuMs: frame.measuredCpuMs };
+  /** ACTUAL measured ms, averaged over the last `windowFrames` rendered
+   *  frames - true GPU time (EXT timer query, null without one) and total CPU
+   *  (the whole ticker-tick, prePixi + pixi). This is a real measurement, not
+   *  a prediction from skeleton features - prefer it over predictDeviceCost's
+   *  estimate when a live crawler frame is available.
+   *
+   *  Averaged rather than a single last-frame read: `performance.now()` is
+   *  commonly coarsened to ~1ms resolution (Spectre/fingerprinting
+   *  mitigation) in non-cross-origin-isolated pages, so a genuinely
+   *  sub-millisecond per-frame cost (small/simple skeletons) quantizes to
+   *  literally 0 or 1ms depending on which side of a tick boundary a single
+   *  frame lands on - a single sample flickers, a window doesn't. */
+  getMeasuredMs(windowFrames = 20): { gpuMs: number | null; cpuMs: number } | undefined {
+    const frames = this.crawler?.getFrames();
+    if (!frames || frames.length === 0) return undefined;
+    const recent = frames.slice(-windowFrames);
+    const cpuMs = recent.reduce((sum, f) => sum + f.measuredCpuMs, 0) / recent.length;
+    const gpuSamples = recent.map((f) => f.gpuMs).filter((v): v is number => v != null);
+    const gpuMs = gpuSamples.length > 0 ? gpuSamples.reduce((s, v) => s + v, 0) / gpuSamples.length : null;
+    return { gpuMs, cpuMs };
   }
 
   destroy(): void {

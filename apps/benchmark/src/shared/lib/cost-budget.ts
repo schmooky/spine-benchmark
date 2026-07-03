@@ -40,19 +40,23 @@ export interface DeviceCost {
 
 /** Score an arbitrary (gpuMs, cpuMs) pair against a resolved budget - the
  *  same status/binding/pct logic predictDeviceCost uses, factored out so a
- *  REAL measured frame can be scored the same way as a predicted one. */
+ *  REAL measured frame can be scored the same way as a predicted one.
+ *
+ *  `gpuMs: null` means "no GPU timer on this device" (not "0ms of GPU cost")
+ *  - binding must never resolve to "gpu" in that case, even if cpuMs also
+ *  happens to read 0 that sample (it otherwise would, since 0 >= 0). */
 export function scoreAgainstBudget(
-  gpuMs: number,
+  gpuMs: number | null,
   cpuMs: number,
   budget: { gpu: number; cpu: number },
 ): Pick<DeviceCost, "gpuPct" | "cpuPct" | "binding" | "status"> {
-  const gpuPct = gpuMs / budget.gpu;
+  const gpuPct = gpuMs != null ? gpuMs / budget.gpu : 0;
   const cpuPct = cpuMs / budget.cpu;
   const worst = Math.max(gpuPct, cpuPct);
   return {
     gpuPct,
     cpuPct,
-    binding: gpuPct >= cpuPct ? "gpu" : "cpu",
+    binding: gpuMs != null && gpuPct >= cpuPct ? "gpu" : "cpu",
     status: worst > 1 ? "over" : worst > 0.8 ? "warn" : "ok",
   };
 }

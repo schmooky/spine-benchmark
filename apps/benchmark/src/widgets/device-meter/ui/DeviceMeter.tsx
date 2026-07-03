@@ -113,7 +113,7 @@ export function DeviceMeter() {
   // SAME resolved budget predictDeviceCost used, so "measured" and
   // "predicted" read on one consistent scale.
   const measuredScored = measuredMs
-    ? scoreAgainstBudget(measuredMs.gpuMs ?? 0, measuredMs.cpuMs, cost.budgetMs)
+    ? scoreAgainstBudget(measuredMs.gpuMs, measuredMs.cpuMs, cost.budgetMs)
     : null;
   const isMeasured = measuredScored != null;
   const binding = isMeasured ? measuredScored.binding : cost.binding;
