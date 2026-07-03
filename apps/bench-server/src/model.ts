@@ -19,6 +19,14 @@ export interface CoefficientTable {
   /** measured per-family frame ceiling (ms); anchors the client meter's "%". */
   budgetByFamily?: Record<string, { gpu: number; cpu: number }>;
   quality?: unknown;
+  /** per-family fit quality (r2/mae/n per axis), if published by a refit. */
+  byFamilyQuality?: Record<
+    string,
+    {
+      gpu: { r2: number; mae: number; n: number } | null;
+      cpu: { r2: number; mae: number; n: number } | null;
+    }
+  >;
 }
 
 const DEFAULT_TABLE: CoefficientTable = {

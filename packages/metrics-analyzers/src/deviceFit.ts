@@ -115,6 +115,9 @@ export interface CoefficientTable {
    * real device capacity instead of the global default. */
   budgetByFamily?: Record<string, { gpu: number; cpu: number }>;
   quality: FleetModel["quality"];
+  /** per-family fit quality - lets consumers (the fleet page) flag which
+   * families are still poorly explained and need more/better data. */
+  byFamilyQuality: FleetModel["byFamilyQuality"];
 }
 
 export function toCoefficientTable(
@@ -130,6 +133,7 @@ export function toCoefficientTable(
     budgetMs,
     ...(budgetByFamily ? { budgetByFamily } : {}),
     quality: fit.fleet.quality,
+    byFamilyQuality: fit.fleet.byFamilyQuality,
   };
 }
 

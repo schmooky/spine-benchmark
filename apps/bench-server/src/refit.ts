@@ -106,6 +106,7 @@ export async function runRefit(scanLimit = DEFAULT_SCAN_LIMIT): Promise<RefitRes
     byFamily: fitted.byFamily,
     budgetMs: fitted.budgetMs,
     quality: fitted.quality,
+    byFamilyQuality: fitted.byFamilyQuality,
   };
 
   return {

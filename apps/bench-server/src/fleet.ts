@@ -15,6 +15,7 @@ import {
 } from "@spine-benchmark/metrics-analyzers/deviceClass";
 
 import type { RunDeviceItem } from "./db.js";
+import type { CoefficientTable } from "./model.js";
 
 /** First client version whose runs carry true GPU/CPU ms (fittable). Kept in
  * sync with metrics-analyzers MIN_FIT_VERSION without importing the pixi-laden
@@ -77,6 +78,23 @@ export interface FleetFamily {
   latestAt: string;
 }
 
+/** A GPU-family row on the coverage table: how many runs we have, whether the
+ * last refit could explain them, and how urgently it needs more/better data.
+ * This is the axis the *cost model* actually clusters by - separate from the
+ * device-family table above, which is the axis a human recognizes. */
+export interface GpuCoverageRow {
+  gpuFamily: string;
+  runs: number;
+  /** device families (iPhone / Galaxy / ...) contributing runs to this GPU family. */
+  deviceFamilies: string[];
+  quality: {
+    gpu: { r2: number; mae: number; n: number } | null;
+    cpu: { r2: number; mae: number; n: number } | null;
+  } | null;
+  /** "high" = worth prioritizing more runs/devices for; "low" = well fit already. */
+  priority: "high" | "medium" | "low";
+}
+
 export interface FleetSummary {
   generatedAt: string;
   totalRuns: number;
@@ -84,6 +102,18 @@ export interface FleetSummary {
   excludedDesktopRuns: number;
   unknownRuns: number;
   families: FleetFamily[];
+  gpuCoverage: GpuCoverageRow[];
+}
+
+/** cpu R2 thresholds for the coverage priority flag - tuned against what
+ * we've actually observed across families so far (0.03-0.6 range), not an
+ * absolute "good regression" bar. */
+function priorityFor(quality: GpuCoverageRow["quality"]): GpuCoverageRow["priority"] {
+  const cpu = quality?.cpu;
+  if (!cpu) return "high"; // no fit at all yet - most urgent
+  if (cpu.r2 < 0.15) return "high";
+  if (cpu.r2 < 0.35) return "medium";
+  return "low";
 }
 
 type FleetItem = RunDeviceItem;
@@ -93,8 +123,11 @@ function classifiableOf(item: FleetItem): ClassifiableDevice {
   return item.device as unknown as ClassifiableDevice;
 }
 
-/** Group runs by portable family (desktops excluded) with per-family inventory. */
-export function buildFleet(items: readonly FleetItem[]): FleetSummary {
+/** Group runs by portable family (desktops excluded) with per-family inventory.
+ * `model` (the currently published/last-refit coefficient table) is optional -
+ * pass it to also get the gpuCoverage fit-quality breakdown; omit it to get
+ * inventory only (e.g. before any refit has ever run). */
+export function buildFleet(items: readonly FleetItem[], model?: CoefficientTable): FleetSummary {
   let excludedDesktopRuns = 0;
   let unknownRuns = 0;
   for (const it of items) {
@@ -105,6 +138,9 @@ export function buildFleet(items: readonly FleetItem[]): FleetSummary {
 
   const grouped = groupPortableByFamily(items, classifiableOf);
 
+  const gpuRuns = new Map<string, number>();
+  const gpuDeviceFamilies = new Map<string, Set<string>>();
+
   const families: FleetFamily[] = grouped.map(({ family, items: runs }) => {
     const modelCounts = new Map<string, number>();
     const gpuFams = new Set<string>();
@@ -114,9 +150,12 @@ export function buildFleet(items: readonly FleetItem[]): FleetSummary {
 
     for (const r of runs) {
       const d = r.device as unknown as ClassifiableDevice & { uaModel?: string | null; label?: string | null; gl?: { renderer?: string | null } | null };
-      const model = modelOf(d);
-      modelCounts.set(model, (modelCounts.get(model) ?? 0) + 1);
-      gpuFams.add(gpuFamily(d.gpu?.renderer ?? d.gl?.renderer));
+      const modelStr = modelOf(d);
+      modelCounts.set(modelStr, (modelCounts.get(modelStr) ?? 0) + 1);
+      const gf = gpuFamily(d.gpu?.renderer ?? d.gl?.renderer);
+      gpuFams.add(gf);
+      gpuRuns.set(gf, (gpuRuns.get(gf) ?? 0) + 1);
+      (gpuDeviceFamilies.get(gf) ?? gpuDeviceFamilies.set(gf, new Set()).get(gf)!).add(family);
       if (r.avgFps > 0) fpsList.push(r.avgFps);
       if (isFittable(r.clientVersion)) fittableRuns++;
       if (r.createdAt > latestAt) latestAt = r.createdAt;
@@ -137,6 +176,25 @@ export function buildFleet(items: readonly FleetItem[]): FleetSummary {
 
   const portableRuns = families.reduce((s, f) => s + f.runs, 0);
 
+  // Union of GPU families seen in the data and families the model has fit
+  // quality for (a stale model may reference a family with no recent runs).
+  const gpuFamNames = new Set([...gpuRuns.keys(), ...Object.keys(model?.byFamilyQuality ?? {})]);
+  const gpuCoverage: GpuCoverageRow[] = [...gpuFamNames]
+    .map((gf) => {
+      const quality = model?.byFamilyQuality?.[gf] ?? null;
+      return {
+        gpuFamily: gf,
+        runs: gpuRuns.get(gf) ?? 0,
+        deviceFamilies: [...(gpuDeviceFamilies.get(gf) ?? [])].sort(),
+        quality,
+        priority: priorityFor(quality),
+      };
+    })
+    .sort((a, b) => {
+      const rank = { high: 0, medium: 1, low: 2 };
+      return rank[a.priority] - rank[b.priority] || b.runs - a.runs;
+    });
+
   return {
     generatedAt: new Date().toISOString(),
     totalRuns: items.length,
@@ -144,6 +202,7 @@ export function buildFleet(items: readonly FleetItem[]): FleetSummary {
     excludedDesktopRuns,
     unknownRuns,
     families,
+    gpuCoverage,
   };
 }
 
@@ -173,6 +232,20 @@ export function renderFleet(f: FleetSummary): string {
     })
     .join("\n");
 
+  const coverageRows = f.gpuCoverage
+    .map((c) => {
+      const cpu = c.quality?.cpu;
+      const cpuCell = cpu ? `R² ${cpu.r2.toFixed(2)} · MAE ${cpu.mae.toFixed(1)}ms · n=${cpu.n}` : "not fit yet";
+      return `<tr>
+      <td><strong>${esc(c.gpuFamily)}</strong></td>
+      <td><span class="badge badge-${c.priority}">${c.priority}</span></td>
+      <td class="num">${c.runs}</td>
+      <td>${cpuCell}</td>
+      <td class="models">${esc(c.deviceFamilies.join(", "))}</td>
+    </tr>`;
+    })
+    .join("\n");
+
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -182,6 +255,7 @@ export function renderFleet(f: FleetSummary): string {
   body { font: 14px/1.5 system-ui, sans-serif; margin: 0; background: #0b0d10; color: #e6e6e6; }
   main { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
   h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 32px 0 4px; }
   .muted { color: #8a929c; }
   .stats { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
   .stat { background: #14181d; border: 1px solid #232a31; border-radius: 10px; padding: 10px 14px; }
@@ -193,6 +267,10 @@ export function renderFleet(f: FleetSummary): string {
   td.num { text-align: right; font-variant-numeric: tabular-nums; }
   td.models { color: #b7c0cb; font-size: 13px; }
   tbody tr:hover { background: #12161a; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; }
+  .badge-high { background: #3a1d1d; color: #e08a8a; }
+  .badge-medium { background: #3a331d; color: #e0c675; }
+  .badge-low { background: #1d3a26; color: #7fd99a; }
 </style></head>
 <body><main>
   <h1>Spine Bench fleet <span class="muted">- portable devices by family</span></h1>
@@ -209,6 +287,16 @@ export function renderFleet(f: FleetSummary): string {
     </tr></thead>
     <tbody>
 ${rows || `<tr><td colspan="6" class="muted">No portable runs yet.</td></tr>`}
+    </tbody>
+  </table></div>
+
+  <h2>GPU coverage <span class="muted">- what the cost model actually clusters by; where to send the next device</span></h2>
+  <div class="wrap"><table>
+    <thead><tr>
+      <th>GPU family</th><th>Priority</th><th>Runs</th><th>CPU fit quality</th><th>Device families</th>
+    </tr></thead>
+    <tbody>
+${coverageRows || `<tr><td colspan="5" class="muted">No GPU coverage data yet - run a refit first.</td></tr>`}
     </tbody>
   </table></div>
 </main></body></html>`;

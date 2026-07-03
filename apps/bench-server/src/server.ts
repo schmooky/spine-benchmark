@@ -217,7 +217,7 @@ app.get("/api/runs/:id", readLimiter, async (req, res) => {
 app.get("/api/fleet", readLimiter, async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 1000, 5000);
   try {
-    res.json(buildFleet(await runStore.listDevices(limit)));
+    res.json(buildFleet(await runStore.listDevices(limit), getModel()));
   } catch (err) {
     logger.error({ err }, "fleet build failed");
     res.status(503).json({ error: "storage unavailable" });
@@ -227,7 +227,7 @@ app.get("/api/fleet", readLimiter, async (req, res) => {
 app.get("/fleet", readLimiter, async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 1000, 5000);
   try {
-    res.type("text/html").send(renderFleet(buildFleet(await runStore.listDevices(limit))));
+    res.type("text/html").send(renderFleet(buildFleet(await runStore.listDevices(limit), getModel())));
   } catch (err) {
     logger.error({ err }, "fleet render failed");
     res.status(503).type("text/html").send("<h1>storage unavailable</h1>");

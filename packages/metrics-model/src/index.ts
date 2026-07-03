@@ -67,6 +67,15 @@ export interface FleetModel {
   cpu: LinearCostModel | null;
   /** per-GPU-family fits. */
   byFamily: Record<string, { gpu: LinearCostModel | null; cpu: LinearCostModel | null }>;
+  /** per-GPU-family fit quality - which families the model actually explains
+   * vs. which ones need more/better data (thesis #9's "where to look next"). */
+  byFamilyQuality: Record<
+    string,
+    {
+      gpu: { r2: number; mae: number; n: number } | null;
+      cpu: { r2: number; mae: number; n: number } | null;
+    }
+  >;
   quality: {
     gpu: { r2: number; mae: number; n: number } | null;
     cpu: { r2: number; mae: number; n: number } | null;
@@ -82,11 +91,15 @@ export function fitFleet(rows: TrainingRow[], lambda = 1e-3): FleetModel {
 
   const families = [...new Set(rows.map((r) => r.family))];
   const byFamily: FleetModel["byFamily"] = {};
+  const byFamilyQuality: FleetModel["byFamilyQuality"] = {};
   for (const fam of families) {
     const famRows = rows.filter((r) => r.family === fam);
-    byFamily[fam] = {
-      gpu: fitAxis(famRows, "gpuMs", fam, lambda)?.model ?? null,
-      cpu: fitAxis(famRows, "cpuMs", fam, lambda)?.model ?? null,
+    const famGpu = fitAxis(famRows, "gpuMs", fam, lambda);
+    const famCpu = fitAxis(famRows, "cpuMs", fam, lambda);
+    byFamily[fam] = { gpu: famGpu?.model ?? null, cpu: famCpu?.model ?? null };
+    byFamilyQuality[fam] = {
+      gpu: famGpu ? { r2: famGpu.r2, mae: famGpu.mae, n: famGpu.n } : null,
+      cpu: famCpu ? { r2: famCpu.r2, mae: famCpu.mae, n: famCpu.n } : null,
     };
   }
 
@@ -94,6 +107,7 @@ export function fitFleet(rows: TrainingRow[], lambda = 1e-3): FleetModel {
     gpu: gpu?.model ?? null,
     cpu: cpu?.model ?? null,
     byFamily,
+    byFamilyQuality,
     quality: {
       gpu: gpu ? { r2: gpu.r2, mae: gpu.mae, n: gpu.n } : null,
       cpu: cpu ? { r2: cpu.r2, mae: cpu.mae, n: cpu.n } : null,
