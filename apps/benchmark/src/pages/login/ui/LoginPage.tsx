@@ -6,7 +6,6 @@ import { useSessionStore } from "@/entities/session";
 import { Button } from "@/shared/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -46,12 +45,9 @@ export function LoginPage() {
             </div>
             <CardTitle>Spine Workbench</CardTitle>
             <CardDescription>
-              Drop, measure, and inspect Spine skeletons at true scale.
+              Drop a skeleton to measure and inspect it at true scale.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center text-sm text-muted-foreground">
-            Sign in to open your stage.
-          </CardContent>
           <CardFooter>
             <Button
               className="w-full"

@@ -27,7 +27,7 @@ export function BonesTool() {
     <div className="pointer-events-none absolute bottom-6 left-1/2 z-20 -translate-x-1/2">
       <div className="flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-md">
         <Bone className="size-3.5 text-primary" />
-        Bone structure - segments &amp; joints, live
+        Bones - pivot + direction, coloured per bone, live
       </div>
     </div>
   );

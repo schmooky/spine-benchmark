@@ -39,6 +39,18 @@ const STATUS_TEXT: Record<BudgetStatus, string> = {
   over: "text-red-400",
 };
 
+const STATUS_BAR: Record<BudgetStatus, string> = {
+  ok: "bg-emerald-400/70",
+  warn: "bg-amber-400/70",
+  over: "bg-red-400/70",
+};
+
+/** The "+-N%" error band from the model's fit quality, or "" when unknown. */
+function band(cost: { quality?: { gpu: { relMae?: number } | null; cpu: { relMae?: number } | null } | null }): string {
+  const q = cost.quality?.cpu ?? cost.quality?.gpu;
+  return q?.relMae != null ? `+-${Math.round(q.relMae * 100)}%` : "";
+}
+
 // Portable families only - desktops are excluded from the target picker.
 const KINDS = PORTABLE_KINDS;
 
@@ -113,8 +125,15 @@ export function DeviceMeter() {
   if (status !== "ready" || !spine || !cost) return null;
 
   const Icon = DEVICE_KIND_ICON[device.kind];
-  const pct = Math.max(cost.gpuPct, cost.cpuPct);
+  const pct = Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100);
   const provenance = provenanceLabel(cost);
+  // short chip for the compact readout (the full sentence lives in the tooltip)
+  const provShort =
+    cost.source === "default"
+      ? "uncalibrated"
+      : `${cost.source === "family" ? device.gpuFamily : "fleet"} fit${
+          band(cost) ? ` ${band(cost)}` : ""
+        }`;
 
   return (
     <>
@@ -122,27 +141,44 @@ export function DeviceMeter() {
         type="button"
         onClick={() => setPickerOpen(true)}
         title={`${device.name} (${device.gpuFamily}) - predicted for this device: CPU ${cost.cpuMs.toFixed(2)}ms (${Math.round(cost.cpuPct * 100)}% of ${cost.budgetMs.cpu}ms), GPU ${cost.gpuMs.toFixed(2)}ms (${Math.round(cost.gpuPct * 100)}% of ${cost.budgetMs.gpu}ms); binding: ${cost.binding.toUpperCase()}. Assumes the skeleton at ${Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% of the device's screen height. Model: ${provenance}. Budget source: ${cost.budgetSource}. Click to change device`}
-        className="pointer-events-auto absolute left-4 top-4 z-40 flex flex-col items-start gap-0.5 transition-opacity hover:opacity-75"
+        className="pointer-events-auto absolute left-4 top-4 z-40 flex w-52 flex-col gap-1 rounded-xl border border-border bg-card/80 px-3 py-2 text-left shadow-xl backdrop-blur-md transition-colors hover:bg-card"
       >
-        <span className="flex items-center gap-1.5">
-          <Icon className={cn("size-4", STATUS_TEXT[cost.status])} />
-          <span className={cn("text-sm font-semibold tabular-nums", STATUS_TEXT[cost.status])}>
-            {(cost.gpuMs + cost.cpuMs).toFixed(2)}ms
-          </span>
-          <span className="text-[11px] uppercase tabular-nums text-muted-foreground">
-            {cost.binding} {Math.round(pct * 100)}% of frame
-          </span>
+        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Icon className="size-3.5 shrink-0" />
+          <span className="truncate font-medium text-foreground">{device.name}</span>
+          <span className="ml-auto shrink-0 uppercase tracking-wide">{cost.binding}</span>
         </span>
-        <span className="pl-[22px] text-[10px] tabular-nums text-muted-foreground/80">
-          cpu {cost.cpuMs.toFixed(2)} · gpu {cost.gpuMs.toFixed(2)} · {provenance}
+
+        <span className="flex items-baseline gap-1.5">
+          <span className={cn("text-lg font-semibold leading-none tabular-nums", STATUS_TEXT[cost.status])}>
+            {(cost.gpuMs + cost.cpuMs).toFixed(2)}
+            <span className="text-xs font-normal">ms</span>
+          </span>
+          <span className={cn("text-xs tabular-nums", STATUS_TEXT[cost.status])}>{pct}% of frame</span>
+        </span>
+
+        <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-secondary/50">
+          <div
+            className={cn("h-full rounded-full", STATUS_BAR[cost.status])}
+            style={{ width: `${Math.min(100, pct)}%` }}
+          />
+        </div>
+
+        <span className="flex items-center justify-between text-[10px] tabular-nums text-muted-foreground">
+          <span>cpu {cost.cpuMs.toFixed(2)} · gpu {cost.gpuMs.toFixed(2)}</span>
+        </span>
+        <span
+          className={cn(
+            "text-[10px]",
+            cost.source === "default" ? "text-amber-400/80" : "text-muted-foreground/70",
+          )}
+        >
+          {provShort}
         </span>
         {measuredMs && (
-          <span
-            className="pl-[22px] text-[10px] tabular-nums text-muted-foreground/50"
-            title="Ground truth measured by the crawler on THIS machine - shown for reference, never scored against the target device's budget"
-          >
-            this machine: cpu {measuredMs.cpuMs.toFixed(2)}
-            {measuredMs.gpuMs != null ? ` · gpu ${measuredMs.gpuMs.toFixed(2)}` : " · no gpu timer"}
+          <span className="text-[10px] tabular-nums text-muted-foreground/45">
+            measured here: {measuredMs.cpuMs.toFixed(2)}
+            {measuredMs.gpuMs != null ? ` / ${measuredMs.gpuMs.toFixed(2)}` : ""} ms
           </span>
         )}
       </button>

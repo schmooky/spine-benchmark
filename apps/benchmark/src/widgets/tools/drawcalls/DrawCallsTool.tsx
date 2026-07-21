@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, SquareStack } from "lucide-react";
+import { X, SquareStack, Check, TriangleAlert } from "lucide-react";
 
 import {
   useSkeletonStore,
   analyzeDrawCalls,
   type DrawCallAnalysis,
-  type BreakReason,
+  type DrawBatch,
 } from "@/entities/skeleton";
 import { cn } from "@/shared/lib/utils";
 
@@ -19,29 +19,30 @@ function pageColor(pageOrder: string[], page: string): string {
   return `hsl(${hue} 45% 62%)`;
 }
 
-const REASON_LABEL: Record<BreakReason, string> = {
-  first: "first batch",
-  page: "atlas page change",
-  blend: "blend mode change",
-  "page+blend": "page + blend change",
-};
+/** Short display name for a possibly-pathy atlas page. */
+function shortPage(page: string): string {
+  const base = page.split("/").pop() ?? page;
+  return base.replace(/\.(png|webp|json|atlas)$/i, "");
+}
 
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-secondary/30 px-2 py-1.5 text-center">
-      <div className="text-base font-semibold tabular-nums">{value}</div>
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-        {label}
-      </div>
-    </div>
-  );
+/** Plain-language reason THIS batch had to start a new draw call. */
+function breakReason(b: DrawBatch, prev: DrawBatch | undefined): string {
+  if (!prev || b.reason === "first") return "first batch of the frame";
+  const pageChanged = b.page !== prev.page;
+  const blendChanged = b.blend !== prev.blend;
+  if (pageChanged && blendChanged) {
+    return `texture ${shortPage(prev.page)} -> ${shortPage(b.page)}, blend -> ${b.blend}`;
+  }
+  if (pageChanged) return `texture changed: ${shortPage(prev.page)} -> ${shortPage(b.page)}`;
+  return `blend changed: ${prev.blend} -> ${b.blend}`;
 }
 
 /**
  * Draw-call visualizer - a live side panel. Walks the current draw order and
- * shows the classic Spine batch count plus, for every batch, why it had to
- * start a new draw call (atlas page change or blend mode change). Updates a few
- * times a second so it tracks animation.
+ * shows the classic Spine batch count, WHY each batch had to start a new draw
+ * call (which texture/blend changed), and how many calls are wasted on
+ * page/blend thrashing (avoidable by reordering slots or repacking the atlas).
+ * Updates a few times a second so it tracks animation.
  */
 export function DrawCallsTool() {
   const navigate = useNavigate();
@@ -64,10 +65,7 @@ export function DrawCallsTool() {
       return;
     }
     setAnalysis(analyzeDrawCalls(spine));
-    const id = window.setInterval(
-      () => setAnalysis(analyzeDrawCalls(spine)),
-      250,
-    );
+    const id = window.setInterval(() => setAnalysis(analyzeDrawCalls(spine)), 250);
     return () => window.clearInterval(id);
   }, [spine, status, navigate]);
 
@@ -81,6 +79,7 @@ export function DrawCallsTool() {
   if (status !== "ready" || !spine || !analysis) return null;
 
   const close = () => navigate("/");
+  const wasted = Math.max(0, analysis.total - analysis.minPossible);
 
   return (
     <div
@@ -104,72 +103,103 @@ export function DrawCallsTool() {
         </button>
       </div>
 
+      {/* headline + plain explanation */}
       <div className="border-b border-border px-4 py-3">
         <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-semibold tabular-nums">
-            {analysis.total}
-          </span>
+          <span className="text-4xl font-semibold tabular-nums">{analysis.total}</span>
           <span className="text-sm text-muted-foreground">
             draw call{analysis.total === 1 ? "" : "s"}
           </span>
         </div>
-        <p className="mt-0.5 text-[11px] text-muted-foreground">
-          atlas-page + blend-mode batching, live
+        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+          One call renders a run of neighbouring slots that share the same atlas
+          texture and blend mode. A new call starts the moment either changes.
         </p>
-        <div className="mt-3 grid grid-cols-4 gap-1.5">
-          <Stat value={analysis.pages} label="pages" />
-          <Stat value={analysis.pageBreaks} label="page" />
-          <Stat value={analysis.blendBreaks} label="blend" />
-          <Stat value={analysis.renderedSlots} label="slots" />
-        </div>
-      </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
-        <div className="flex flex-col gap-1.5">
-          {analysis.batches.map((b) => (
-            <div
-              key={b.index}
-              className="rounded-lg border border-border bg-secondary/20 p-2.5"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-muted-foreground">
-                  #{b.index + 1}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-[11px]"
-                    title={b.page}
-                  >
-                    <span
-                      className="size-2 rounded-full"
-                      style={{ backgroundColor: pageColor(pageOrder, b.page) }}
-                    />
-                    <span className="max-w-24 truncate">{b.page}</span>
-                  </span>
-                  {b.blend !== "normal" && (
-                    <span className="rounded-md border border-border bg-secondary/60 px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                      {b.blend}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {b.reason !== "first" && (
-                <div className="mt-1 text-[11px] text-primary/80">
-                  new draw call - {REASON_LABEL[b.reason]}
-                </div>
-              )}
-              <div className="mt-1 line-clamp-2 text-[11px] text-muted-foreground/80">
-                {b.slots.length} slot{b.slots.length === 1 ? "" : "s"}:{" "}
-                {b.slots.join(", ")}
-              </div>
+        {/* avoidable-cost insight */}
+        {wasted > 0 ? (
+          <div className="mt-2.5 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2.5 py-2">
+            <TriangleAlert className="mt-px size-3.5 shrink-0 text-amber-400" />
+            <div className="text-[11px] leading-snug text-amber-200/90">
+              <span className="font-medium">{wasted} avoidable</span> - this
+              content only needs {analysis.minPossible} (one per texture+blend).
+              The extra calls come from those being interleaved in draw order;
+              grouping slots by texture removes them.
             </div>
+          </div>
+        ) : (
+          <div className="mt-2.5 flex items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-2">
+            <Check className="size-3.5 shrink-0 text-emerald-400" />
+            <div className="text-[11px] text-emerald-200/90">
+              Optimal - one call per texture+blend, no thrashing.
+            </div>
+          </div>
+        )}
+
+        {/* draw-order strip: one cell per batch, coloured by texture */}
+        <div className="mt-2.5">
+          <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+            draw order
+          </div>
+          <div className="flex h-3 w-full gap-px overflow-hidden rounded">
+            {analysis.batches.map((b) => (
+              <div
+                key={b.index}
+                className="h-full flex-1"
+                title={`#${b.index + 1} ${shortPage(b.page)} / ${b.blend}`}
+                style={{ backgroundColor: pageColor(pageOrder, b.page) }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* page legend */}
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+          {pageOrder.map((p) => (
+            <span key={p} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="size-2 rounded-full" style={{ backgroundColor: pageColor(pageOrder, p) }} />
+              {shortPage(p)}
+            </span>
           ))}
         </div>
       </div>
 
-      <div className="border-t border-border px-4 py-2.5 text-[11px] leading-snug text-muted-foreground">
-        Consecutive slots batch while page &amp; blend stay equal; each change
-        costs a draw call.
+      {/* per-call breakdown */}
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <div className="flex flex-col gap-1.5">
+          {analysis.batches.map((b, i) => (
+            <div key={b.index} className="rounded-lg border border-border bg-secondary/20 p-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                  #{b.index + 1}
+                </span>
+                <span
+                  className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-[11px]"
+                  title={b.page}
+                >
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: pageColor(pageOrder, b.page) }}
+                  />
+                  <span className="max-w-28 truncate">{shortPage(b.page)}</span>
+                </span>
+                {b.blend !== "normal" && (
+                  <span className="rounded-md border border-border bg-secondary/60 px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                    {b.blend}
+                  </span>
+                )}
+                <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
+                  {b.slots.length} slot{b.slots.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <div className="mt-1 text-[11px] leading-snug">
+                <span className={i === 0 ? "text-muted-foreground/60" : "text-amber-300/80"}>
+                  {breakReason(b, analysis.batches[i - 1])}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

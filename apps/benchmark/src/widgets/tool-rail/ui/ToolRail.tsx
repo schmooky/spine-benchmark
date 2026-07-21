@@ -20,8 +20,8 @@ export function ToolRail() {
   const hasSkeleton = useSkeletonStore((s) => s.status === "ready");
 
   return (
-    <nav className="pointer-events-auto absolute left-4 top-1/2 z-30 -translate-y-1/2">
-      <div className="flex flex-col gap-1.5 rounded-2xl border border-border bg-card/70 p-1.5 shadow-xl backdrop-blur-md">
+    <nav className="pointer-events-auto absolute bottom-4 left-4 z-30">
+      <div className="flex flex-col gap-1 rounded-2xl border border-border bg-card/70 p-1.5 shadow-xl backdrop-blur-md">
         {TOOLS.map((tool) => {
           const active = pathname === tool.path;
           const disabled = tool.requiresSkeleton && !hasSkeleton;
@@ -36,7 +36,7 @@ export function ToolRail() {
                   aria-pressed={active}
                   onClick={() => navigate(active ? "/" : tool.path)}
                   className={cn(
-                    "flex size-10 items-center justify-center rounded-xl transition-all",
+                    "flex size-9 items-center justify-center rounded-xl transition-all",
                     "text-muted-foreground hover:text-foreground",
                     "disabled:pointer-events-none disabled:opacity-30",
                     active
@@ -44,7 +44,7 @@ export function ToolRail() {
                       : "hover:bg-accent",
                   )}
                 >
-                  <Icon className="size-5" />
+                  <Icon className="size-[18px]" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>

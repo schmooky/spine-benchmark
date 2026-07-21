@@ -112,7 +112,8 @@ export function MeshTool() {
       </div>
 
       <div className="border-t border-border px-4 py-2.5 text-[11px] leading-snug text-muted-foreground">
-        Vertices colored by dominant bone, sized by weight.
+        Driving bones drawn faded in colour; vertices take their dominant
+        bone's colour and grow with weight.
       </div>
     </div>
   );

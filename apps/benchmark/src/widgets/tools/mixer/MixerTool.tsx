@@ -56,6 +56,7 @@ export function MixerTool() {
   const [shown, setShown] = useState(false);
   const [activeTrack, setActiveTrack] = useState(0);
   const [addKey, setAddKey] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   // react-timeline-editor needs concrete pixel width AND height (its
   // virtualized grid collapses to 0 under "100%"), so we measure the box
   const [area, setArea] = useState({ w: 600, h: 240 });
@@ -73,6 +74,11 @@ export function MixerTool() {
   const animations = useMemo(
     () => spine?.skeleton.data.animations.map((a) => a.name) ?? [],
     [spine],
+  );
+  /** timeline length = the end of the last clip. */
+  const total = useMemo(
+    () => clips.reduce((m, c) => Math.max(m, c.startSec + c.durationSec), 0),
+    [clips],
   );
   const durOf = useCallback(
     (name: string): number => {
@@ -210,6 +216,19 @@ export function MixerTool() {
       } else {
         sp.state.timeScale = 1;
       }
+    };
+  }, []);
+
+  // reflect the playhead position in the readout (playback + scrub)
+  useEffect(() => {
+    const ts = timelineRef.current;
+    if (!ts) return;
+    const onTime = (e: { time: number }) => setCurrentTime(e.time);
+    ts.listener.on("setTimeByTick", onTime);
+    ts.listener.on("afterSetTime", onTime);
+    return () => {
+      ts.listener.off("setTimeByTick", onTime);
+      ts.listener.off("afterSetTime", onTime);
     };
   }, []);
 
@@ -356,6 +375,11 @@ export function MixerTool() {
           {speed.toFixed(1)}x
         </span>
 
+        <span className="ml-1 rounded-md bg-secondary/50 px-2 py-1 text-xs tabular-nums text-muted-foreground">
+          {currentTime.toFixed(2)}
+          <span className="text-muted-foreground/50"> / {total.toFixed(2)}s</span>
+        </span>
+
         <span className="flex-1" />
         <button
           type="button"
@@ -458,10 +482,14 @@ export function MixerTool() {
             const name = metaRef.current.get(action.id)?.animation ?? "";
             return (
               <div
-                title={name}
-                className="flex h-full items-center overflow-hidden rounded-md border border-white/15"
+                title={`${name} - drag to move, right-click to delete`}
+                className="flex h-full items-center overflow-hidden rounded-md border border-white/20 px-1.5"
                 style={{ background: animationColor(name) }}
-              />
+              >
+                <span className="truncate text-[11px] font-medium text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">
+                  {name}
+                </span>
+              </div>
             );
           }}
           onClickRow={(_e, { row }) =>
