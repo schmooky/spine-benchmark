@@ -44,6 +44,11 @@ export interface CostModelTable {
 
 export type CostStatus = "ok" | "warn" | "over";
 
+/** A model is a REAL fit only if it exists and isn't the seed placeholder. */
+function isRealFit(m?: LinearCostModel | null): boolean {
+  return !!m && m.fitFor !== "placeholder";
+}
+
 /** Where a prediction's weights came from - the provenance the meter shows. */
 export type ModelSource = "family" | "fleet" | "default";
 
@@ -99,7 +104,15 @@ export function predictDeviceCost(
   const gpu = fam?.gpu ?? model?.fleet.gpu ?? undefined;
   const cpu = fam?.cpu ?? model?.fleet.cpu ?? undefined;
   const { gpuMs, cpuMs } = predictCostMs(design, gpu, cpu);
-  const source: ModelSource = fam ? "family" : model?.fleet.gpu || model?.fleet.cpu ? "fleet" : "default";
+  // A REAL fit is one that isn't the seed placeholder. Before any fleet data
+  // exists the server serves DEFAULT_*_COST_MODEL (fitFor: "placeholder") - we
+  // still predict with it so the meter shows a number, but it must report as
+  // "uncalibrated", never masquerade as a "fleet fit".
+  const source: ModelSource = fam
+    ? "family"
+    : isRealFit(model?.fleet.gpu) || isRealFit(model?.fleet.cpu)
+      ? "fleet"
+      : "default";
   const quality =
     source === "family"
       ? (model?.byFamilyQuality?.[device.gpuFamily] ?? null)

@@ -22,19 +22,26 @@ export function SweepApp() {
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<UploadOk | null>(null);
   const startedRef = useRef(false);
+  const cancelRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (startedRef.current || !hostRef.current) return;
     startedRef.current = true;
 
     const startedAt = new Date().toISOString();
-    const { result, cancel } = startSweeps(hostRef.current, {
-      onProgress: setProgress,
-    });
 
     void (async () => {
       try {
-        const [sweepResult, device] = await Promise.all([result, collectDevice()]);
+        // Collect device info BEFORE sweeping: collectDevice creates an extra
+        // WebGL2 context, requests a WebGPU adapter, and probes battery/storage
+        // - GPU/driver work that, run concurrently, contaminates the fill
+        // sweep's low-level GPU timings, which are exactly the stage-1 pins.
+        const device = await collectDevice();
+        const { result, cancel } = startSweeps(hostRef.current!, {
+          onProgress: setProgress,
+        });
+        cancelRef.current = cancel;
+        const sweepResult = await result;
         setStage("uploading");
         const upload: RunUpload = {
           clientVersion: CLIENT_VERSION,
@@ -61,7 +68,7 @@ export function SweepApp() {
       }
     })();
 
-    return () => cancel();
+    return () => cancelRef.current?.();
   }, []);
 
   return (

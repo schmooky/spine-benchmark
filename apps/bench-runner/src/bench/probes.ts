@@ -9,14 +9,13 @@
  */
 
 let sink = 0;
+let warmed = false;
 
-/** Deterministic xorshift workload, ~10-40 ms depending on device. */
-export function cpuScore(): number {
-  const N = 4_000_000;
-  const t0 = performance.now();
+/** The timed xorshift kernel. */
+function xorshiftKernel(n: number): number {
   let x = 123456789 >>> 0;
   let acc = 0;
-  for (let i = 0; i < N; i++) {
+  for (let i = 0; i < n; i++) {
     x ^= x << 13;
     x >>>= 0;
     x ^= x >>> 17;
@@ -24,7 +23,22 @@ export function cpuScore(): number {
     x >>>= 0;
     acc = (acc + (x & 1023)) | 0;
   }
-  sink = acc;
+  return acc;
+}
+
+/** Deterministic xorshift workload, ~10-40 ms depending on device, in
+ * kilo-ops per ms. Measured before and after the run; the drift is a
+ * thermal-throttling signal - so the BASELINE must be JIT-warm too, else the
+ * cold first call reads artificially slow and the warm-up masquerades as a
+ * (negative) throttle. The first call runs a discarded warm-up pass. */
+export function cpuScore(): number {
+  const N = 4_000_000;
+  if (!warmed) {
+    sink = xorshiftKernel(N >> 2); // trigger JIT compilation, result discarded
+    warmed = true;
+  }
+  const t0 = performance.now();
+  sink = xorshiftKernel(N);
   const ms = Math.max(0.001, performance.now() - t0);
   return Math.round(N / ms / 1000); // kilo-ops per ms
 }
