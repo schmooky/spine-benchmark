@@ -17,6 +17,15 @@ import type { RunSummary, ScenarioResult } from "@/types";
 const HOLD_MS = 900;
 /** Skip this much of the hold at the start (transient after setLevel), ms. */
 const SETTLE_MS = 150;
+/** A single rendered frame slower than this means the GPU is choking on this
+ * level (weak devices at the heavy fill/vertex levels). Stop ramping that
+ * driver - pushing further risks a context-loss/tab-kill that loses the whole
+ * run. The levels already recorded are kept. */
+const CHOKE_MS = 2500;
+/** Cap the framebuffer so the fullscreen fill sweep doesn't render at a phone's
+ * full 3x DPI (a 1080p phone would otherwise blend 64 layers at ~2700x6000 -
+ * instant death on a budget GPU). Same cap the scene engine uses. */
+const MAX_FRAMEBUFFER_AREA = 2_600_000;
 
 export interface SweepProgress {
   driverIndex: number;
@@ -54,25 +63,43 @@ function holdLevel(
   app: Application,
   crawler: Crawler,
   workload: SweepWorkload,
-  isCancelled: () => boolean,
-): Promise<{ gpu: number[]; cpu: number[] }> {
+  shouldStop: () => boolean,
+): Promise<{ gpu: number[]; cpu: number[]; choked: boolean; dead: boolean }> {
   return new Promise((resolve) => {
     const gpu: number[] = [];
     const cpu: number[] = [];
     let lastResolvedIdx = -1;
     const start = performance.now();
+    let lastNow = start;
 
     const tick = () => {
-      if (isCancelled()) {
-        resolve({ gpu, cpu });
+      if (shouldStop()) {
+        resolve({ gpu, cpu, choked: false, dead: true });
         return;
       }
-      crawler.frameStart();
-      workload.update?.(app);
-      app.render();
-      crawler.frameEnd();
+      // a render throw = lost/broken context on a weak GPU; bail with what we
+      // have rather than rejecting the whole sweep.
+      try {
+        crawler.frameStart();
+        workload.update?.(app);
+        app.render();
+        crawler.frameEnd();
+      } catch {
+        resolve({ gpu, cpu, choked: false, dead: true });
+        return;
+      }
 
-      const elapsed = performance.now() - start;
+      const now = performance.now();
+      const dt = now - lastNow;
+      lastNow = now;
+      // a frame this slow means the GPU is choking on this level - stop before
+      // it dies entirely and takes the run with it.
+      if (dt > CHOKE_MS && now - start > SETTLE_MS) {
+        resolve({ gpu, cpu, choked: true, dead: false });
+        return;
+      }
+
+      const elapsed = now - start;
       if (elapsed >= SETTLE_MS) {
         // newest RESOLVED gpu query (EXT results land a few frames late) -
         // same pattern sceneEngine uses to avoid double-counting a frameIdx.
@@ -105,7 +132,7 @@ function holdLevel(
       }
 
       if (elapsed >= HOLD_MS) {
-        resolve({ gpu, cpu });
+        resolve({ gpu, cpu, choked: false, dead: false });
         return;
       }
       requestAnimationFrame(tick);
@@ -124,6 +151,7 @@ export function startSweeps(
   hooks: SweepHooks,
 ): { result: Promise<SweepRunResult>; cancel: () => void } {
   let cancelled = false;
+  let contextLost = false;
   let app: Application | null = null;
   let crawler: Crawler | null = null;
   const cancel = () => {
@@ -131,17 +159,33 @@ export function startSweeps(
   };
 
   const result = (async (): Promise<SweepRunResult> => {
+    // cap resolution so the fullscreen fill sweep can't render at a phone's
+    // full DPI (see MAX_FRAMEBUFFER_AREA).
+    const logicalArea = Math.max(1, window.innerWidth * window.innerHeight);
+    const resolution = Math.min(
+      window.devicePixelRatio || 1,
+      2,
+      Math.max(1, Math.sqrt(MAX_FRAMEBUFFER_AREA / logicalArea)),
+    );
     app = new Application();
     await app.init({
       background: 0x101317,
       resizeTo: window,
       antialias: false,
+      autoDensity: true,
+      resolution,
     });
     if (cancelled) {
       app.destroy(true);
       throw new SweepCancelled();
     }
     host.appendChild(app.canvas);
+    // a lost WebGL context on a weak GPU must abort gracefully with partial
+    // results, not reject the whole run (which uploads nothing).
+    app.canvas.addEventListener("webglcontextlost", (e) => {
+      e.preventDefault();
+      contextLost = true;
+    });
     // manual loop, ticker stopped - same contract as sceneEngine.
     app.ticker.stop();
 
@@ -157,13 +201,13 @@ export function startSweeps(
     const startedAll = performance.now();
 
     for (let wi = 0; wi < workloads.length; wi++) {
-      if (cancelled) break;
+      if (cancelled || contextLost) break;
       const wl = workloads[wi]!;
       const scenStart = performance.now();
       const pairs: NonNullable<ScenarioResult["sweep"]>["pairs"] = [];
 
       for (let li = 0; li < wl.levels.length; li++) {
-        if (cancelled) break;
+        if (cancelled || contextLost) break;
         const level = wl.levels[li]!;
         hooks.onProgress({
           driverIndex: wi,
@@ -174,16 +218,29 @@ export function startSweeps(
         });
         wl.setLevel(app, level);
         const driverValue = wl.driverValue(level, app);
-        const { gpu, cpu } = await holdLevel(app, crawler, wl, () => cancelled);
+        const { gpu, cpu, choked, dead } = await holdLevel(
+          app,
+          crawler,
+          wl,
+          () => cancelled || contextLost,
+        );
         pairs.push({
           level,
           driverValue,
           gpuMsMedian: median(gpu),
           frameCpuMsMedian: median(cpu),
         });
+        // this level choked the GPU (or the context died) - stop ramping this
+        // driver rather than push into the level that kills the run.
+        if (choked || dead) break;
       }
-      await crawler.flushPendingGpu(150);
-      wl.teardown(app);
+      // teardown can throw once the context is gone; keep the partial pairs.
+      try {
+        await crawler.flushPendingGpu(150);
+        wl.teardown(app);
+      } catch {
+        /* context already lost - pairs are already captured */
+      }
 
       scenarios.push({
         id: `sweep-${wl.id}`,
@@ -216,12 +273,16 @@ export function startSweeps(
         avgFps: 0,
         worstFrameMsP99: 0,
         hiddenMs: 0,
-        degraded: false,
+        degraded: contextLost,
         quick: false,
         displayHz: 0,
         longTaskCount: 0,
         longTaskTotalMs: 0,
-        ...(cancelled ? { aborted: true, abortReason: "cancelled" } : {}),
+        ...(cancelled
+          ? { aborted: true, abortReason: "cancelled" }
+          : contextLost
+            ? { aborted: true, abortReason: "webgl context lost (GPU overwhelmed by sweep)" }
+            : {}),
       },
     };
   })();
