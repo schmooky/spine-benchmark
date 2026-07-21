@@ -27,8 +27,14 @@ import {
  * staleness-weighted percentiles), (c) skeleton re-parse spikes inside the
  * measured window on doubling steps, and (d) feature vectors that dropped all
  * non-mesh (region/sequence) vertices. Fitting on them launders those errors
- * into the model weights. */
-export const MIN_FIT_VERSION = "0.5.0";
+ * into the model weights.
+ *
+ * 0.5.1 raises the bar again: the 0.5.0 shakedown cohort captured heterogeneous
+ * game-scene features as "one representative spine x count", which fit to
+ * per-family R2 ~0.2. 0.5.1 captures the MEAN feature vector over EVERY spine
+ * so the composite matches the measured frameCpuMs - so 0.5.0 scene runs are
+ * quarantined too. */
+export const MIN_FIT_VERSION = "0.5.1";
 
 /** Semver-ish >= compare (major.minor.patch). */
 export function isFittableVersion(clientVersion: string | null | undefined): boolean {

@@ -10,7 +10,7 @@
  */
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { Spine } from "@esotericsoftware/spine-pixi-v8";
-import { estimatePoseCoverage, type WalkableSkeleton } from "@spine-benchmark/metrics-impact-formula";
+import { estimatePoseCoverage, FEATURE_KEYS, type WalkableSkeleton } from "@spine-benchmark/metrics-impact-formula";
 import { mountCrawler, type Crawler, type FrameRecord } from "@spine-benchmark/pixi-crawler";
 
 import type {
@@ -110,31 +110,68 @@ function worldScaleOf(s: Spine, resolution: number): number {
   return Math.sqrt(det) * resolution;
 }
 
-/** Estimate the scene's live RI/CI: sample ONE spine (rotating through the
- * pool) and scale by the pool size. Walking every spine at stress densities
- * (hundreds..8192) is a multi-ms spike that would land inside the measured
- * window and contaminate the very frame times the ramp judges; rotation still
- * averages over the heterogeneous mix across successive samples.
+/** Above this pool size, sample ONE spine and scale (a homogeneous stress pool
+ * of N copies of one symbol, where representative == every spine, and walking
+ * thousands would spike the measured frame). At or below it, walk every spine
+ * (real game scenes are 16-32 DIFFERENT skeletons). */
+const SCENE_SUM_CAP = 256;
+
+/** Feature vector of one posed skeleton (walker + geometric coverage). Coverage
+ * is returned pre-folded into painted kpx (coveredKpx x overdraw, overdraw 1)
+ * so summing across heterogeneous spines is correct - mean-of-products errors
+ * don't creep into the fill term. */
+function spineFeatures(s: Spine, resolution: number): ImpactInputs {
+  const d = measureFrameImpactDetailed(s.skeleton);
+  const cov = estimatePoseCoverage(s.skeleton as unknown as WalkableSkeleton, {
+    scale: worldScaleOf(s, resolution),
+  });
+  return {
+    ...d.inputs,
+    coveredKpx: cov.coveredKpx * Math.max(1, cov.overdrawFactor),
+    overdrawFactor: 1,
+  };
+}
+
+/** The scene's live RI/CI + the per-instance feature vector the fit trains on.
  *
- * Coverage/overdraw come from the geometric estimator (per-pose, no GL
- * readback) so the captured feature vector's fill term actually MOVES with
- * layered fill - the old one-shot readback proxy was a constant 1. */
+ * For a heterogeneous scene the feature vector is the MEAN over EVERY spine, so
+ * the fit's `mean x instances` equals the true scene total (which is what
+ * frameCpuMs measures). The old "one representative x count" is only valid for
+ * a homogeneous pool and silently wrecks the fit on real multi-skeleton scenes
+ * (per-family R2 ~0.2). RI/CI are the true sum across all spines. */
 function sampleSceneImpact(
   spines: Spine[],
   rotate: number,
   resolution: number,
+  homogeneous: boolean,
 ): { ri: number; ci: number; one: ImpactInputs | null } {
-  if (spines.length === 0) return { ri: 0, ci: 0, one: null };
-  const rep = spines[rotate % spines.length];
-  const d = measureFrameImpactDetailed(rep.skeleton);
-  const coverage = estimatePoseCoverage(rep.skeleton as unknown as WalkableSkeleton, {
-    scale: worldScaleOf(rep, resolution),
-  });
-  return {
-    ri: d.ri * spines.length,
-    ci: d.ci * spines.length,
-    one: { ...d.inputs, ...coverage },
-  };
+  const n = spines.length;
+  if (n === 0) return { ri: 0, ci: 0, one: null };
+
+  // Homogeneous stress pool (N copies of one symbol set), or too many to walk:
+  // one representative x count is valid and avoids a multi-ms spike in the
+  // ramp's fps judgment.
+  if (homogeneous || n > SCENE_SUM_CAP) {
+    const rep = spines[rotate % n];
+    const d = measureFrameImpactDetailed(rep.skeleton);
+    return { ri: d.ri * n, ci: d.ci * n, one: spineFeatures(rep, resolution) };
+  }
+
+  let ri = 0;
+  let ci = 0;
+  const sum = {} as Record<(typeof FEATURE_KEYS)[number], number>;
+  for (const k of FEATURE_KEYS) sum[k] = 0;
+  for (const s of spines) {
+    const d = measureFrameImpactDetailed(s.skeleton);
+    ri += d.ri;
+    ci += d.ci;
+    const f = spineFeatures(s, resolution);
+    for (const k of FEATURE_KEYS) sum[k] += f[k] ?? 0;
+  }
+  const one = {} as ImpactInputs;
+  for (const k of FEATURE_KEYS) one[k] = sum[k] / n;
+  one.overdrawFactor = 1; // already folded into coveredKpx per spine
+  return { ri, ci, one };
 }
 
 /** p95 of a small unsorted sample. */
@@ -654,7 +691,7 @@ export function startSceneBenchmark(
 
           impactAge += dt;
           if (impactAge >= IMPACT_SAMPLE_MS && spines.length > 0) {
-            const s = sampleSceneImpact(spines, impactRotate++, app.renderer.resolution);
+            const s = sampleSceneImpact(spines, impactRotate++, app.renderer.resolution, !!stress);
             lastImpact = { ri: s.ri, ci: s.ci };
             lastInputs = s.one;
             impactAge = 0;

@@ -19,7 +19,14 @@
 // (honest gpuFrames coverage), disjoint handling drops pending queries,
 // displayHz=0 can no longer disable the ramp gates. Runs below 0.5.0 are
 // QUARANTINED from the cost-model fit (see deviceFit MIN_FIT_VERSION).
-export const CLIENT_VERSION = "0.5.0";
+// 0.5.1 = correct scene features + robust sweeps. The 0.5.0 shakedown cohort
+// captured heterogeneous game-scene features as "one representative spine x
+// count" (valid only for a homogeneous stress pool), which fits to per-family
+// R2 ~0.2; scene features are now the MEAN over EVERY spine so mean x instances
+// = the true scene total. Also: sweeps skip on no-GPU-timer devices and survive
+// weak GPUs (resolution cap + context-loss + choke guard) instead of aborting.
+// 0.5.0 runs are quarantined from the fit (their scene features are wrong).
+export const CLIENT_VERSION = "0.5.1";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =
