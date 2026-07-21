@@ -405,26 +405,40 @@ class StageController {
     return this.crawler?.getGpuCost();
   }
 
-  /** ACTUAL measured ms, averaged over the last `windowFrames` rendered
-   *  frames - true GPU time (EXT timer query, null without one) and total CPU
-   *  (the whole ticker-tick, prePixi + pixi). This is a real measurement, not
-   *  a prediction from skeleton features - prefer it over predictDeviceCost's
-   *  estimate when a live crawler frame is available.
+  /** ACTUAL measured ms, averaged over the last `windowFrames` rendered frames.
+   *  This is a real measurement, not a prediction from skeleton features.
+   *
+   *  `cpuMs` is the SPINE's OWN CPU cost (its update/transform phases, from the
+   *  spine profile) - the character in isolation, comparable to the
+   *  per-instance prediction. `frameCpuMs` is the whole ticker-tick (grid,
+   *  camera, the materialize filter for the first ~1.2s, the crawler's own
+   *  overhead AND the spine) - the workbench-frame cost, which is dominated by
+   *  chrome, not the character. Showing frameCpuMs as "the spine's cost" is
+   *  exactly what makes a cheap character look like it eats a big slice.
    *
    *  Averaged rather than a single last-frame read: `performance.now()` is
    *  commonly coarsened to ~1ms resolution (Spectre/fingerprinting
    *  mitigation) in non-cross-origin-isolated pages, so a genuinely
-   *  sub-millisecond per-frame cost (small/simple skeletons) quantizes to
-   *  literally 0 or 1ms depending on which side of a tick boundary a single
-   *  frame lands on - a single sample flickers, a window doesn't. */
-  getMeasuredMs(windowFrames = 20): { gpuMs: number | null; cpuMs: number } | undefined {
+   *  sub-millisecond per-frame cost quantizes to 0 or 1ms on a single sample -
+   *  a window doesn't. */
+  getMeasuredMs(
+    windowFrames = 20,
+  ): { gpuMs: number | null; cpuMs: number; frameCpuMs: number } | undefined {
     const frames = this.crawler?.getFrames();
     if (!frames || frames.length === 0) return undefined;
     const recent = frames.slice(-windowFrames);
-    const cpuMs = recent.reduce((sum, f) => sum + f.measuredCpuMs, 0) / recent.length;
+    const frameCpuMs = recent.reduce((sum, f) => sum + f.measuredCpuMs, 0) / recent.length;
+    // spine-isolated CPU; fall back to the whole tick if the profile is off
+    const spineSamples = recent
+      .map((f) => f.spine?.totalMs)
+      .filter((v): v is number => v != null && v > 0);
+    const cpuMs =
+      spineSamples.length > 0
+        ? spineSamples.reduce((s, v) => s + v, 0) / spineSamples.length
+        : frameCpuMs;
     const gpuSamples = recent.map((f) => f.gpuMs).filter((v): v is number => v != null);
     const gpuMs = gpuSamples.length > 0 ? gpuSamples.reduce((s, v) => s + v, 0) / gpuSamples.length : null;
-    return { gpuMs, cpuMs };
+    return { gpuMs, cpuMs, frameCpuMs };
   }
 
   /** Wait until at least `windowMs` of real playback has ELAPSED past

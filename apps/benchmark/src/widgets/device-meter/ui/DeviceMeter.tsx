@@ -85,9 +85,11 @@ export function DeviceMeter() {
   const [model, setModel] = useState<CostModelTable | null>(null);
   // this-machine measured ms (crawler.getLastFrame()) - a local reference
   // readout, NOT comparable to the target device's budget.
-  const [measuredMs, setMeasuredMs] = useState<{ gpuMs: number | null; cpuMs: number } | null>(
-    null,
-  );
+  const [measuredMs, setMeasuredMs] = useState<{
+    gpuMs: number | null;
+    cpuMs: number;
+    frameCpuMs: number;
+  } | null>(null);
 
   const device = deviceById(deviceId);
 
@@ -176,9 +178,12 @@ export function DeviceMeter() {
           {provShort}
         </span>
         {measuredMs && (
-          <span className="text-[10px] tabular-nums text-muted-foreground/45">
-            measured here: {measuredMs.cpuMs.toFixed(2)}
-            {measuredMs.gpuMs != null ? ` / ${measuredMs.gpuMs.toFixed(2)}` : ""} ms
+          <span
+            className="text-[10px] tabular-nums text-muted-foreground/45"
+            title={`Measured on THIS machine. Spine only: ${measuredMs.cpuMs.toFixed(2)}ms CPU (the character in isolation). Whole workbench frame: ${measuredMs.frameCpuMs.toFixed(2)}ms CPU (adds the grid, camera, dissolve filter and the profiler's own overhead - not the character).`}
+          >
+            spine here: {measuredMs.cpuMs.toFixed(2)} ms
+            <span className="text-muted-foreground/30"> (frame {measuredMs.frameCpuMs.toFixed(2)})</span>
           </span>
         )}
       </button>
