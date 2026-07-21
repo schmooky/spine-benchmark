@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   MIN_FAMILY_ROWS,
   fitDevices,
+  gpuFamily,
   predictForFamily,
   sweepPins,
   toCoefficientTable,
@@ -192,5 +193,19 @@ describe("toDesignFeatures", () => {
     const d = toDesignFeatures(f);
     expect(d.coveredKpx).toBe(40);
     expect(d.overdrawFactor).toBe(0);
+  });
+});
+
+describe("gpuFamily classifier (ANGLE-wrapped real renderer strings)", () => {
+  it("recognizes Samsung Xclipse (was bucketed as unknown/other)", () => {
+    expect(gpuFamily("ANGLE (Samsung Xclipse 940) on Vulkan 1.3.231")).toBe("Samsung Xclipse 9xx");
+  });
+  it("still parses ANGLE-wrapped Adreno and Mali", () => {
+    expect(gpuFamily("ANGLE (Qualcomm, Adreno (TM) 750, OpenGL ES 3.2)")).toBe("Adreno 7xx");
+    expect(gpuFamily("ANGLE (ARM, Mali-G715, OpenGL ES 3.2)")).toBe("Mali-G715");
+  });
+  it("recognizes Apple and falls back to unknown for empties", () => {
+    expect(gpuFamily("Apple GPU")).toBe("Apple GPU");
+    expect(gpuFamily("")).toBe("unknown");
   });
 });

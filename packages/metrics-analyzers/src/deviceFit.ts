@@ -42,7 +42,10 @@ export function isFittableVersion(clientVersion: string | null | undefined): boo
   return true;
 }
 
-/** Normalize a WebGL `RENDERER` string to a coarse GPU family for clustering. */
+/** Normalize a WebGL `RENDERER` string to a coarse GPU family for clustering.
+ * Handles ANGLE-wrapped strings too, e.g. "ANGLE (Samsung Xclipse 940) on
+ * Vulkan 1.3.231" or "ANGLE (Qualcomm, Adreno (TM) 750, ...)" - the substring
+ * checks match inside the wrapper. */
 export function gpuFamily(renderer: string | null | undefined): string {
   const r = (renderer ?? "").toLowerCase();
   if (!r) return "unknown";
@@ -54,6 +57,11 @@ export function gpuFamily(renderer: string | null | undefined): string {
   if (r.includes("mali")) {
     const m = r.match(/mali-?g?(\d+)/);
     return m ? `Mali-G${m[1]}` : "Mali";
+  }
+  // Samsung Xclipse (Exynos, AMD RDNA-based) - e.g. "Xclipse 940" -> "Xclipse 9xx"
+  if (r.includes("xclipse")) {
+    const m = r.match(/xclipse\s*(\d)\d\d/);
+    return m ? `Samsung Xclipse ${m[1]}xx` : "Samsung Xclipse";
   }
   if (r.includes("powervr")) return "PowerVR";
   if (r.includes("rtx")) return "NVIDIA RTX";

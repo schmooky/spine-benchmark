@@ -6,7 +6,25 @@ import { collectDevice } from "@/lib/device";
 import { uploadRun, type UploadOk } from "@/lib/upload";
 import type { RunUpload } from "@/types";
 
-type Stage = "running" | "uploading" | "done" | "error";
+type Stage = "running" | "uploading" | "done" | "error" | "skipped";
+
+/** Does this device expose the WebGL2 GPU timer the sweeps depend on?
+ * Isolation sweeps ONLY produce data via EXT_disjoint_timer_query_webgl2 -
+ * without it every level records null gpuMs (Apple/Safari never shipped it;
+ * Android through ANGLE-on-Vulkan, e.g. Samsung Xclipse, doesn't expose it).
+ * Running the sweep there burns device-farm minutes for zero data, so we skip
+ * it and tell the operator to run the scene benchmark instead. */
+function hasGpuTimer(): boolean {
+  try {
+    const gl = document.createElement("canvas").getContext("webgl2");
+    if (!gl) return false;
+    const ext = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return !!ext;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Isolation-sweep calibration mode (?mode=sweep). Ramps each GPU cost driver
@@ -29,6 +47,13 @@ export function SweepApp() {
     startedRef.current = true;
 
     const startedAt = new Date().toISOString();
+
+    // Fast exit BEFORE anything expensive: no GPU timer -> the sweep can only
+    // produce null gpuMs, so don't burn device-farm minutes on it.
+    if (!hasGpuTimer()) {
+      setStage("skipped");
+      return;
+    }
 
     void (async () => {
       try {
@@ -108,6 +133,16 @@ export function SweepApp() {
               <a className="underline" href={ok.reportUrl}>
                 {ok.reportUrl}
               </a>
+            </div>
+          )}
+          {stage === "skipped" && (
+            <div className="text-sm text-neutral-300">
+              <span className="font-medium text-amber-400">No GPU timer on this device.</span>{" "}
+              The isolation sweep needs EXT_disjoint_timer_query_webgl2, which this
+              device does not expose (Apple, or Android via ANGLE-on-Vulkan), so it
+              would record no data. Nothing uploaded - run the{" "}
+              <a className="underline" href="/">scene benchmark</a> instead (its
+              compute cost is measured without a GPU timer).
             </div>
           )}
           {stage === "error" && (
