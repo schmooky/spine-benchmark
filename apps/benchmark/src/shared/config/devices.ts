@@ -45,19 +45,23 @@ export const ASSUMED_SCREEN_HEIGHT_FRACTION = 0.4;
 export const DEFAULT_BUDGET_MS = { gpu: 8, cpu: 8 } as const;
 
 export const DEVICES: DeviceProfile[] = [
+  // gpuFamily MUST equal what deviceFit's gpuFamily() classifier emits for the
+  // device's WebGL RENDERER, or the per-family fit never reaches this profile
+  // (it falls back to the pooled fleet model). Keys below match the classifier
+  // output exactly: "Apple GPU", "Mali-G57", "Adreno 7xx", "Samsung Xclipse 9xx".
   {
-    id: "phone-low",
-    name: "Budget phone",
-    example: "Redmi 9A · Mali-G52",
+    id: "phone-mali",
+    name: "Budget Android",
+    example: "Redmi Note / Galaxy A · Mali-G57",
     kind: "phone",
     capacity: 12,
-    gpuFamily: "Mali",
-    screenPx: { w: 720, h: 1600 },
+    gpuFamily: "Mali-G57",
+    screenPx: { w: 1080, h: 2400 },
   },
   {
     id: "phone-mid",
-    name: "Mid-range phone",
-    example: "iPhone 11 / Pixel 6a",
+    name: "Mid iPhone",
+    example: "iPhone 11 / SE",
     kind: "phone",
     capacity: 22,
     gpuFamily: "Apple GPU",
@@ -65,12 +69,30 @@ export const DEVICES: DeviceProfile[] = [
   },
   {
     id: "phone-high",
-    name: "Flagship phone",
+    name: "Flagship iPhone",
     example: "iPhone 15 Pro class",
     kind: "phone",
     capacity: 40,
     gpuFamily: "Apple GPU",
     screenPx: { w: 1179, h: 2556 },
+  },
+  {
+    id: "phone-adreno",
+    name: "Snapdragon flagship",
+    example: "S24 US / Pixel 8 · Adreno 7xx",
+    kind: "phone",
+    capacity: 42,
+    gpuFamily: "Adreno 7xx",
+    screenPx: { w: 1080, h: 2400 },
+  },
+  {
+    id: "phone-xclipse",
+    name: "Galaxy S24 (Exynos)",
+    example: "SM-S921B · Samsung Xclipse 940",
+    kind: "phone",
+    capacity: 40,
+    gpuFamily: "Samsung Xclipse 9xx",
+    screenPx: { w: 1080, h: 2340 },
   },
   {
     id: "tablet-low",
