@@ -50,8 +50,13 @@ const HEAP_ABORT_RATIO = 0.85;
 const MAX_FRAMEBUFFER_AREA = 2_600_000;
 /** Blank gap between scenes: lets GC + GPU settle so metrics stay clean. */
 const SETTLE_MS = 700;
-/** Stress scenes get more of the time budget (they carry the capacity curve). */
-const STRESS_WEIGHT = 2.5;
+/**
+ * Measured window per scene. A per-frame median stabilizes in seconds, not
+ * minutes: this covers JIT warmup + at least one full animation cycle (so the
+ * heaviest pose is caught) + a stable median window. The old 5-minute run was
+ * sized to feed a regression; a direct measurement needs none of that.
+ */
+const SCENE_MEASURE_MS = 3500;
 /** Cap stress density on mobile GPUs (iOS Safari loses the WebGL context well
  * before fps gates if you pile on hundreds of heavy mesh spines). */
 const MOBILE_STRESS_CAP = 80;
@@ -296,7 +301,6 @@ function toFrameMetrics(r: FrameRecord): FrameMetrics {
 export function startSceneBenchmark(
   host: HTMLElement,
   scenes: SceneDescriptor[],
-  totalSeconds: number,
   skip: Set<string>,
   hooks: SceneHooks,
 ): { result: Promise<SegmentResult>; cancel: () => void } {
@@ -405,14 +409,11 @@ export function startSceneBenchmark(
     };
     document.addEventListener("visibilitychange", onVisibility);
 
-    // weighted time budget computed over the FULL run (stress scenes get more
-    // time) so a scene's duration is identical whether it runs now or after a
-    // resume. We only MEASURE toMeasure, but weight over all `scenes`.
-    const weightOf = (d: SceneDescriptor) => (d.stress ? STRESS_WEIGHT : 1);
-    const sumWeight = scenes.reduce((a, d) => a + weightOf(d), 0);
-    const budgetMs = Math.max(1, totalSeconds * 1000 - SETTLE_MS * (scenes.length - 1));
-    const durOf = (d: SceneDescriptor) =>
-      Math.max(3000, Math.floor((budgetMs * weightOf(d)) / sumWeight));
+    // Fixed short measured window per scene - identical whether it runs now or
+    // after a resume, and independent of how many scenes there are. Direct
+    // measurement doesn't need a big time budget; a few seconds gives a stable
+    // per-frame median.
+    const durOf = (_d: SceneDescriptor) => SCENE_MEASURE_MS;
     const totalMs =
       scenes.reduce((a, d) => a + durOf(d), 0) + SETTLE_MS * (scenes.length - 1);
     // seed elapsed with the time already covered by scenes done/skipped in

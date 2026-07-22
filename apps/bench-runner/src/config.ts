@@ -33,16 +33,16 @@
 // pool up to 256 - all real scenes + all mobile stress - is walked in full;
 // only huge desktop stress > 256 keeps the representative shortcut). Runs below
 // 0.5.2 are quarantined - their stress features are still wrong.
-export const CLIENT_VERSION = "0.5.2";
+// 0.6.0 = MEASURE-ONLY. The regression is retired: no prediction, so no feature-
+// aggregation to get wrong. One flow, no URL params - open the link on a device
+// and it directly measures frameCpuMs (per-frame compute) of the REAL game
+// scenes, then shows the number on-device and uploads it. Density stress ramps
+// (capacity, not per-frame cost - and the weak-GPU crashers) are dropped; each
+// scene runs a fixed short window (warmup + one animation cycle + median). The
+// number IS a stopwatch on the real frame, not a model.
+export const CLIENT_VERSION = "0.6.0";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =
   import.meta.env.VITE_BENCH_API ??
   (import.meta.env.DEV ? "http://localhost:8787" : "https://spine-bench.schmooky.dev");
-
-/** Full run is ~5 minutes across all scenes; ?quick=<s> compresses it. */
-export function totalSeconds(): number {
-  const params = new URLSearchParams(location.search);
-  if (params.has("quick")) return Number(params.get("quick")) || 24;
-  return 300;
-}

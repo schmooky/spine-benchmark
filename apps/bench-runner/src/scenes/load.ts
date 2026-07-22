@@ -24,7 +24,9 @@ export async function loadAllScenes(): Promise<SceneDescriptor[]> {
   } catch {
     /* generated scenes are optional in dev */
   }
-  // ?scenes=N measures only the first N (testing / short runs)
-  const n = Number(new URLSearchParams(location.search).get("scenes"));
-  return Number.isFinite(n) && n > 0 ? scenes.slice(0, n) : scenes;
+  // Measure-only benchmark: keep the REAL game scenes (each a real board), drop
+  // the density stress ramps. Stress ramps answer "how many copies until it
+  // chokes" (capacity), not "how long does this take to render" (per-frame
+  // cost) - and they were what crashed weak GPUs. No URL params: just open it.
+  return scenes.filter((s) => !s.stress);
 }

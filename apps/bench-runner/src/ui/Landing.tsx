@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import { totalSeconds } from "@/config";
 import { pastRuns, type PastRun } from "@/lib/history";
 import { collectDevice } from "@/lib/device";
 import { useRunnerStore } from "@/store";
@@ -15,21 +14,16 @@ export function Landing({ onStart }: { onStart: () => void }) {
     void collectDevice().then((d) => setDeviceLabel(d.label));
   }, []);
 
-  const mins = Math.round(totalSeconds() / 60);
-  const quick = totalSeconds() < 120;
-
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 shadow-2xl">
         <h1 className="text-xl font-semibold">Spine Run</h1>
         <p className="mt-1 text-sm text-neutral-400">
-          Device benchmark for Spine animation budgets. It plays real game
-          scenes for{" "}
-          <span className="text-neutral-200">
-            {quick ? `${totalSeconds()} seconds (quick mode)` : `~${mins} minutes`}
-          </span>{" "}
-          while recording frame timings, then uploads the result and gives
-          you a short run code.
+          Device benchmark for Spine animation budgets. It plays each real game
+          scene for <span className="text-neutral-200">a few seconds</span>,
+          measures how long every frame takes to render{" "}
+          <span className="text-neutral-200">on this device</span>, then shows
+          you the numbers and uploads a short run code.
         </p>
 
         {deviceLabel && (

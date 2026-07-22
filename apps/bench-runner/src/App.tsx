@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { CLIENT_VERSION, totalSeconds } from "@/config";
+import { CLIENT_VERSION } from "@/config";
 import { useRunnerStore } from "@/store";
 import { BenchCancelled } from "@/bench/engine";
 import { startSceneBenchmark } from "@/bench/sceneEngine";
@@ -83,7 +83,6 @@ export default function App() {
     const { result, cancel } = startSceneBenchmark(
       hostRef.current,
       scenes,
-      totalSeconds(),
       skipIds(session),
       {
         onHud: (h) => useRunnerStore.getState().setHud(h),
@@ -121,7 +120,21 @@ export default function App() {
       if (!session.environment) session.environment = seg.environment;
       saveSession(session);
       if (isComplete(session)) {
-        const upload = assembleUpload(session, seg, totalSeconds() < 120);
+        // real per-frame compute measured on THIS device, heaviest scene first -
+        // shown on the Done screen so the tester sees the number without leaving.
+        store.setMeasured(
+          session.results
+            .map((r) => ({
+              label: r.label,
+              kind: r.kind,
+              frameCpuMs: r.stats.frameCpuMsAvg ?? null,
+              frameCpuMsP95: r.stats.frameCpuMsP95 ?? null,
+            }))
+            .sort((a, b) => (b.frameCpuMs ?? 0) - (a.frameCpuMs ?? 0)),
+        );
+        // measure-only runs are always short; they are the canonical (and only)
+        // measurement now, not a truncated "quick" test.
+        const upload = assembleUpload(session, seg, false);
         lastUploadRef.current = upload;
         await doUpload(upload);
       } else if (seg.contextLost) {
