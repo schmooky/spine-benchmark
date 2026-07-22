@@ -19,8 +19,8 @@ import {
 import { cn } from "@/shared/lib/utils";
 import {
   fetchCostModel,
+  isCostTrusted,
   predictDeviceCost,
-  provenanceLabel,
   scoreAgainstBudget,
   type CostModelTable,
 } from "@/shared/lib/cost-budget";
@@ -170,7 +170,11 @@ export function AnimationsDrawer() {
 
   const famBudget = model?.budgetByFamily?.[device.gpuFamily];
   const budget = famBudget ?? model?.budgetMs ?? DEFAULT_BUDGET_MS;
-  const provenance = provenanceLabel(
+  // Is the SELECTED device's GPU family calibrated with a tight-error fit? If
+  // not, the predicted per-device ms/curves are placeholder guesses and must
+  // NOT be shown as the primary number - the real measured-on-this-machine cost
+  // is what's shown instead.
+  const deviceTrusted = isCostTrusted(
     predictDeviceCost(
       { vertices: 0, nonNormalBlends: 0, clippingMasks: 0, meshes: 0, weightedMeshes: 0, deformedMeshes: 0, ik: 0, transform: 0, path: 0, physics: 0, drawCallEst: 0, coveredKpx: 0, overdrawFactor: 1 },
       device,
@@ -182,18 +186,15 @@ export function AnimationsDrawer() {
     .map((a) => {
       const curve = curves.get(a.name);
       const scored = curve ? scoreAgainstBudget(curve.peak.gpuMs, curve.peak.cpuMs, budget) : null;
-      return { anim: a, curve, scored, measurement: results.get(a.name) };
+      const m = results.get(a.name);
+      // rank/scale by the number we actually trust: predicted % on a calibrated
+      // device, else the measured max-CPU on THIS machine.
+      const primary = deviceTrusted && scored ? Math.max(scored.gpuPct, scored.cpuPct) : m ? m.maxCpuMs : 0;
+      return { anim: a, curve, scored, measurement: m, primary };
     })
-    .sort((a, b) => {
-      const av = a.scored ? Math.max(a.scored.gpuPct, a.scored.cpuPct) : -1;
-      const bv = b.scored ? Math.max(b.scored.gpuPct, b.scored.cpuPct) : -1;
-      return bv - av;
-    });
+    .sort((a, b) => b.primary - a.primary);
 
-  const maxPct = Math.max(
-    0.001,
-    ...rows.map((r) => (r.scored ? Math.max(r.scored.gpuPct, r.scored.cpuPct) : 0)),
-  );
+  const maxPrimary = Math.max(0.001, ...rows.map((r) => r.primary));
 
   return (
     <Drawer
@@ -208,9 +209,11 @@ export function AnimationsDrawer() {
           <DrawerHeader>
             <DrawerTitle>Animations</DrawerTitle>
             <DrawerDescription>
-              {animations.length} animation{animations.length === 1 ? "" : "s"} · predicted on{" "}
-              {device.name} at {Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% screen height ·{" "}
-              {provenance} · heaviest first.
+              {animations.length} animation{animations.length === 1 ? "" : "s"} ·{" "}
+              {deviceTrusted
+                ? `predicted on ${device.name} at ${Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% screen height`
+                : `measured on this computer (${device.name} not calibrated)`}{" "}
+              · heaviest first.
               {progress && (
                 <span className="ml-2 inline-flex items-center gap-1 text-foreground">
                   <Loader2 className="size-3 animate-spin" />
@@ -228,43 +231,54 @@ export function AnimationsDrawer() {
                 </p>
               )}
 
-              {rows.map(({ anim: a, curve, scored, measurement: m }) => {
+              {rows.map(({ anim: a, curve, scored, measurement: m, primary }) => {
                 const pct = scored ? Math.max(scored.gpuPct, scored.cpuPct) : 0;
-                const status = scored ? budgetStatus(pct) : "ok";
-                const barWidth = Math.min(100, (pct / maxPct) * 100);
+                const status = deviceTrusted && scored ? budgetStatus(pct) : "ok";
+                const barWidth = Math.min(100, (primary / maxPrimary) * 100);
                 return (
                   <div key={a.name} className="rounded-xl border border-border bg-card/50 p-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{a.name}</span>
                       <Chip>{a.duration.toFixed(2)}s</Chip>
-                      {curve && scored ? (
+
+                      {deviceTrusted ? (
+                        /* calibrated device: the predicted peak is trustworthy */
+                        curve && scored ? (
+                          <span
+                            title={`worst sampled moment on ${device.name}: cpu ${curve.peak.cpuMs.toFixed(2)}ms + gpu ${curve.peak.gpuMs.toFixed(2)}ms at t=${curve.peak.t.toFixed(2)}s`}
+                            className={cn(
+                              "rounded-md border bg-secondary/40 px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+                              BAR_CHIP[status],
+                            )}
+                          >
+                            peak {curve.peak.totalMs.toFixed(2)}ms @ {curve.peak.t.toFixed(2)}s ·{" "}
+                            {scored.binding}-bound · {(pct * 100).toFixed(0)}% of budget
+                          </span>
+                        ) : (
+                          <Chip>predicting…</Chip>
+                        )
+                      ) : /* uncalibrated: only the measured-on-this-machine cost is real */ m ? (
                         <span
-                          title={`worst sampled moment on ${device.name}: cpu ${curve.peak.cpuMs.toFixed(2)}ms (${Math.round(scored.cpuPct * 100)}% of ${budget.cpu}ms) + gpu ${curve.peak.gpuMs.toFixed(2)}ms (${Math.round(scored.gpuPct * 100)}% of ${budget.gpu}ms) at t=${curve.peak.t.toFixed(2)}s · avg cpu ${curve.avgCpuMs.toFixed(2)}ms / gpu ${curve.avgGpuMs.toFixed(2)}ms`}
-                          className={cn(
-                            "rounded-md border bg-secondary/40 px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
-                            BAR_CHIP[status],
-                          )}
+                          title={`REAL frames measured on THIS computer (not ${device.name}): avg ${m.avgCpuMs.toFixed(2)}ms · p95 ${m.p95CpuMs.toFixed(2)}ms · max ${m.maxCpuMs.toFixed(2)}ms CPU over ${m.frames} frames`}
+                          className="rounded-md border border-border bg-secondary/40 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-foreground"
                         >
-                          peak {curve.peak.totalMs.toFixed(2)}ms @ {curve.peak.t.toFixed(2)}s ·{" "}
-                          {scored.binding}-bound · {(pct * 100).toFixed(0)}% of budget
+                          {m.avgCpuMs.toFixed(2)}ms avg · {m.maxCpuMs.toFixed(2)}ms peak
+                          <span className="ml-1 font-normal text-muted-foreground/60">on this computer</span>
                         </span>
                       ) : (
-                        <Chip>predicting…</Chip>
+                        <Chip>measuring…</Chip>
                       )}
-                      {m && (
-                        <Chip
-                          title={`REAL frames measured on THIS machine (not ${device.name}): avg ${m.avgCpuMs.toFixed(2)}ms · p95 ${m.p95CpuMs.toFixed(2)}ms · max ${m.maxCpuMs.toFixed(2)}ms CPU${m.avgGpuMs != null ? ` · avg ${m.avgGpuMs.toFixed(2)}ms GPU` : " · no GPU timer here"} over ${m.frames} frames - reference only, never scored against the target budget`}
-                        >
-                          this machine {m.avgCpuMs.toFixed(2)}ms
-                        </Chip>
-                      )}
+
                       <span className="flex-1" />
-                      {curve && <CostSparkline curve={curve} status={status} />}
+                      {deviceTrusted && curve && <CostSparkline curve={curve} status={status} />}
                     </div>
 
                     <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary/50">
                       <div
-                        className={cn("h-full rounded-full transition-all", BAR_FILL[status])}
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          deviceTrusted ? BAR_FILL[status] : "bg-muted-foreground/40",
+                        )}
                         style={{ width: `${barWidth}%` }}
                       />
                     </div>

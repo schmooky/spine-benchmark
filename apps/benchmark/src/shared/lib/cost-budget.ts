@@ -49,6 +49,22 @@ function isRealFit(m?: LinearCostModel | null): boolean {
   return !!m && m.fitFor !== "placeholder";
 }
 
+/** A fitted prediction is only trustworthy enough to show as an authoritative
+ * number when its held-out error band is at or below this. Above it, the
+ * number is a rough guess and must NOT be presented with a ms value, %, or
+ * traffic-light colour - only the honestly-measured local cost may be. */
+export const TRUST_RELMAE_MAX = 0.35;
+
+/** Can we put an authoritative per-device ms in front of a person? Only when a
+ * REAL fit exists (not the placeholder) AND its error band is tight. This is
+ * the single gate for "truth people can rely on": everything else falls back
+ * to the measured-on-this-machine number, clearly labelled as such. */
+export function isCostTrusted(cost: Pick<DeviceCost, "source" | "quality">): boolean {
+  if (cost.source === "default") return false;
+  const q = cost.quality?.cpu ?? cost.quality?.gpu;
+  return q?.relMae != null && q.relMae <= TRUST_RELMAE_MAX;
+}
+
 /** Where a prediction's weights came from - the provenance the meter shows. */
 export type ModelSource = "family" | "fleet" | "default";
 

@@ -14,9 +14,10 @@ import {
 import {
   predictDeviceCost,
   fetchCostModel,
-  provenanceLabel,
+  isCostTrusted,
   type CostModelTable,
 } from "@/shared/lib/cost-budget";
+import { stage } from "@/widgets/stage";
 import { BENCH_API } from "@/shared/config/api";
 import {
   ASSUMED_SCREEN_HEIGHT_FRACTION,
@@ -74,12 +75,18 @@ export function InfoDrawer() {
 
   const [open, setOpen] = useState(true);
   const [model, setModel] = useState<CostModelTable | null>(null);
+  const [measured, setMeasured] = useState<{ cpuMs: number; frameCpuMs: number } | null>(null);
 
   useEffect(() => {
     let live = true;
     void fetchCostModel(BENCH_API).then((m) => live && setModel(m));
+    const id = window.setInterval(() => {
+      const m = stage.getMeasuredMs();
+      if (m) setMeasured({ cpuMs: m.cpuMs, frameCpuMs: m.frameCpuMs });
+    }, 300);
     return () => {
       live = false;
+      window.clearInterval(id);
     };
   }, []);
 
@@ -119,7 +126,7 @@ export function InfoDrawer() {
     });
   }, [spine, model]);
 
-  const provenance = perDevice[0] ? provenanceLabel(perDevice[0].cost) : "";
+  const anyCalibrated = perDevice.some((x) => isCostTrusted(x.cost));
 
   return (
     <Drawer
@@ -134,9 +141,8 @@ export function InfoDrawer() {
           <DrawerHeader className="pb-2">
             <DrawerTitle>{meta?.name ?? "Metrics"}</DrawerTitle>
             <DrawerDescription>
-              What this skeleton is, and what it costs per device -{" "}
-              {provenance || "predicted"} at{" "}
-              {Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% screen height.
+              What this skeleton is (measured), and what it costs per device
+              (shown only for calibrated GPU families).
             </DrawerDescription>
           </DrawerHeader>
 
@@ -159,53 +165,80 @@ export function InfoDrawer() {
                 <Stat label="Bounds" value={`${structure.w}x${structure.h}`} sub="px" />
               </div>
 
-              {/* cost by device */}
+              {/* measured on THIS machine - the one number that is real today */}
+              <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-card/40 px-3 py-2">
+                <span className="text-[11px] text-muted-foreground">
+                  Measured on this computer
+                  <span className="text-muted-foreground/50"> (not the phone)</span>
+                </span>
+                <span className="text-sm font-semibold tabular-nums">
+                  {measured ? `${measured.cpuMs.toFixed(2)} ms compute` : "measuring..."}
+                  {measured && (
+                    <span className="ml-1 text-[10px] font-normal text-muted-foreground/50">
+                      frame {measured.frameCpuMs.toFixed(2)}
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              {/* cost by device - only trustworthy (calibrated) rows carry a number */}
               <div className="mt-4 mb-1.5 flex items-center justify-between">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Cost by device
+                  Predicted cost by device
                 </span>
-                <span className="text-[10px] text-muted-foreground/70">
-                  predicted ms / frame, binding axis
-                </span>
+                <span className="text-[10px] text-muted-foreground/70">calibrated families only</span>
               </div>
-              <div className="overflow-hidden rounded-xl border border-border">
-                {perDevice.map(({ d, cost, pct }, i) => (
-                  <div
-                    key={d.id}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2",
-                      i > 0 && "border-t border-border",
-                      d.id === selected.id && "bg-primary/5",
-                    )}
-                  >
-                    <div className="w-28 shrink-0">
-                      <div className="truncate text-xs font-medium">{d.name}</div>
-                      <div className="truncate text-[10px] text-muted-foreground">{d.gpuFamily}</div>
-                    </div>
-
-                    {/* budget bar */}
-                    <div className="min-w-0 flex-1">
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/50">
-                        <div
-                          className={cn("h-full rounded-full", STATUS_BAR[cost.status])}
-                          style={{ width: `${Math.min(100, pct)}%` }}
-                        />
+              {anyCalibrated ? (
+                <div className="overflow-hidden rounded-xl border border-border">
+                  {perDevice.map(({ d, cost, pct }, i) => {
+                    const trusted = isCostTrusted(cost);
+                    return (
+                      <div
+                        key={d.id}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2",
+                          i > 0 && "border-t border-border",
+                          d.id === selected.id && "bg-primary/5",
+                        )}
+                      >
+                        <div className="w-28 shrink-0">
+                          <div className="truncate text-xs font-medium">{d.name}</div>
+                          <div className="truncate text-[10px] text-muted-foreground">{d.gpuFamily}</div>
+                        </div>
+                        {trusted ? (
+                          <>
+                            <div className="min-w-0 flex-1">
+                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/50">
+                                <div
+                                  className={cn("h-full rounded-full", STATUS_BAR[cost.status])}
+                                  style={{ width: `${Math.min(100, pct)}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="hidden w-40 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground sm:block">
+                              cpu {cost.cpuMs.toFixed(2)} · gpu {cost.gpuMs.toFixed(2)}
+                            </div>
+                            <div className={cn("w-24 shrink-0 text-right text-xs font-semibold tabular-nums", STATUS_TEXT[cost.status])}>
+                              {pct}% {cost.binding}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex-1 text-right text-[11px] text-muted-foreground/40">
+                            not calibrated
+                          </div>
+                        )}
                       </div>
-                    </div>
-
-                    <div className="hidden w-40 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground sm:block">
-                      cpu {cost.cpuMs.toFixed(2)} · gpu {cost.gpuMs.toFixed(2)}
-                    </div>
-                    <div className={cn("w-24 shrink-0 text-right text-xs font-semibold tabular-nums", STATUS_TEXT[cost.status])}>
-                      {pct}% {cost.binding}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-2 text-[10px] leading-snug text-muted-foreground/60">
-                Budget {DEFAULT_BUDGET_MS.cpu}ms cpu / {DEFAULT_BUDGET_MS.gpu}ms gpu per frame unless a
-                fitted per-family ceiling exists. Local machine measurement is shown in the top-left meter.
-              </p>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 px-3 py-3 text-[11px] leading-snug text-amber-200/80">
+                  No device is calibrated yet, so there is no trustworthy per-device
+                  prediction to show. Collect benchmark runs for a GPU family and its
+                  cost appears here. Until then, only the measured-on-this-computer
+                  number above is real.
+                </div>
+              )}
             </div>
           )}
         </div>

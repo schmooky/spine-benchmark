@@ -6,7 +6,9 @@ import { estimatePoseCoverage, type WalkableSkeleton } from "@spine-benchmark/me
 import {
   predictDeviceCost,
   fetchCostModel,
+  isCostTrusted,
   provenanceLabel,
+  TRUST_RELMAE_MAX,
   type CostModelTable,
   type DeviceCost,
 } from "@/shared/lib/cost-budget";
@@ -19,7 +21,6 @@ import {
   DEVICE_KIND_ICON,
   DEVICE_KIND_LABEL,
   PORTABLE_KINDS,
-  DEFAULT_BUDGET_MS,
   deviceById,
   type BudgetStatus,
   type DeviceProfile,
@@ -128,63 +129,77 @@ export function DeviceMeter() {
 
   const Icon = DEVICE_KIND_ICON[device.kind];
   const pct = Math.round(Math.max(cost.gpuPct, cost.cpuPct) * 100);
-  const provenance = provenanceLabel(cost);
-  // short chip for the compact readout (the full sentence lives in the tooltip)
-  const provShort =
-    cost.source === "default"
-      ? "uncalibrated"
-      : `${cost.source === "family" ? device.gpuFamily : "fleet"} fit${
-          band(cost) ? ` ${band(cost)}` : ""
-        }`;
+  // THE honesty gate: only show an authoritative per-device number when a real,
+  // tight-error fit backs it. Otherwise show ONLY the measured-on-this-machine
+  // cost, clearly labelled - never a placeholder guess dressed as a fact.
+  const trusted = isCostTrusted(cost);
+  const provShort = `${cost.source === "family" ? device.gpuFamily : "fleet"} fit${
+    band(cost) ? ` ${band(cost)}` : ""
+  }`;
 
   return (
     <>
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        title={`${device.name} (${device.gpuFamily}) - predicted for this device: CPU ${cost.cpuMs.toFixed(2)}ms (${Math.round(cost.cpuPct * 100)}% of ${cost.budgetMs.cpu}ms), GPU ${cost.gpuMs.toFixed(2)}ms (${Math.round(cost.gpuPct * 100)}% of ${cost.budgetMs.gpu}ms); binding: ${cost.binding.toUpperCase()}. Assumes the skeleton at ${Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% of the device's screen height. Model: ${provenance}. Budget source: ${cost.budgetSource}. Click to change device`}
+        title={
+          trusted
+            ? `${device.name} (${device.gpuFamily}) - predicted: CPU ${cost.cpuMs.toFixed(2)}ms, GPU ${cost.gpuMs.toFixed(2)}ms; ${cost.binding.toUpperCase()}-bound at ${pct}% of frame. Model: ${provenanceLabel(cost)}. Assumes ${Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% screen height. Click to change device.`
+            : `No trustworthy prediction for ${device.name} yet - the cost model for its GPU family (${device.gpuFamily}) is not calibrated. The number shown is MEASURED on THIS computer (${measuredMs ? `${measuredMs.cpuMs.toFixed(2)}ms compute, ${measuredMs.frameCpuMs.toFixed(2)}ms whole frame` : "measuring..."}), which is not the target phone. Click to change device.`
+        }
         className="pointer-events-auto absolute left-4 top-4 z-40 flex w-52 flex-col gap-1 rounded-xl border border-border bg-card/80 px-3 py-2 text-left shadow-xl backdrop-blur-md transition-colors hover:bg-card"
       >
         <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Icon className="size-3.5 shrink-0" />
           <span className="truncate font-medium text-foreground">{device.name}</span>
-          <span className="ml-auto shrink-0 uppercase tracking-wide">{cost.binding}</span>
+          {trusted && <span className="ml-auto shrink-0 uppercase tracking-wide">{cost.binding}</span>}
         </span>
 
-        <span className="flex items-baseline gap-1.5">
-          <span className={cn("text-lg font-semibold leading-none tabular-nums", STATUS_TEXT[cost.status])}>
-            {(cost.gpuMs + cost.cpuMs).toFixed(2)}
-            <span className="text-xs font-normal">ms</span>
-          </span>
-          <span className={cn("text-xs tabular-nums", STATUS_TEXT[cost.status])}>{pct}% of frame</span>
-        </span>
-
-        <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-secondary/50">
-          <div
-            className={cn("h-full rounded-full", STATUS_BAR[cost.status])}
-            style={{ width: `${Math.min(100, pct)}%` }}
-          />
-        </div>
-
-        <span className="flex items-center justify-between text-[10px] tabular-nums text-muted-foreground">
-          <span>cpu {cost.cpuMs.toFixed(2)} · gpu {cost.gpuMs.toFixed(2)}</span>
-        </span>
-        <span
-          className={cn(
-            "text-[10px]",
-            cost.source === "default" ? "text-amber-400/80" : "text-muted-foreground/70",
-          )}
-        >
-          {provShort}
-        </span>
-        {measuredMs && (
-          <span
-            className="text-[10px] tabular-nums text-muted-foreground/45"
-            title={`Measured on THIS machine. Spine only: ${measuredMs.cpuMs.toFixed(2)}ms CPU (the character in isolation). Whole workbench frame: ${measuredMs.frameCpuMs.toFixed(2)}ms CPU (adds the grid, camera, dissolve filter and the profiler's own overhead - not the character).`}
-          >
-            spine here: {measuredMs.cpuMs.toFixed(2)} ms
-            <span className="text-muted-foreground/30"> (frame {measuredMs.frameCpuMs.toFixed(2)})</span>
-          </span>
+        {trusted ? (
+          <>
+            {/* authoritative: a real fit with a tight error band backs this */}
+            <span className="flex items-baseline gap-1.5">
+              <span className={cn("text-lg font-semibold leading-none tabular-nums", STATUS_TEXT[cost.status])}>
+                {(cost.gpuMs + cost.cpuMs).toFixed(2)}
+                <span className="text-xs font-normal">ms</span>
+              </span>
+              <span className={cn("text-xs tabular-nums", STATUS_TEXT[cost.status])}>{pct}% of frame</span>
+            </span>
+            <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-secondary/50">
+              <div
+                className={cn("h-full rounded-full", STATUS_BAR[cost.status])}
+                style={{ width: `${Math.min(100, pct)}%` }}
+              />
+            </div>
+            <span className="text-[10px] tabular-nums text-muted-foreground">
+              cpu {cost.cpuMs.toFixed(2)} · gpu {cost.gpuMs.toFixed(2)}
+            </span>
+            <span className="text-[10px] text-muted-foreground/70">predicted · {provShort}</span>
+          </>
+        ) : (
+          <>
+            {/* NO fabricated per-device number - the model isn't calibrated. Show
+                only what is really measured, and say whose machine it's on. */}
+            <span className="text-[11px] font-medium text-amber-400">
+              not calibrated for this device
+            </span>
+            {measuredMs ? (
+              <>
+                <span className="text-[10px] text-muted-foreground/70">
+                  measured on THIS computer (not the phone):
+                </span>
+                <span className="text-lg font-semibold leading-none tabular-nums text-foreground">
+                  {measuredMs.cpuMs.toFixed(2)}
+                  <span className="text-xs font-normal"> ms compute</span>
+                </span>
+                <span className="text-[10px] tabular-nums text-muted-foreground/40">
+                  whole frame {measuredMs.frameCpuMs.toFixed(2)} ms · GPU not measurable in-browser
+                </span>
+              </>
+            ) : (
+              <span className="text-[10px] text-muted-foreground/60">measuring on this computer...</span>
+            )}
+          </>
         )}
       </button>
 
@@ -193,10 +208,11 @@ export function DeviceMeter() {
           <DialogHeader>
             <DialogTitle>Target device</DialogTitle>
             <DialogDescription>
-              The meter predicts how many milliseconds the current pose costs
-              on the selected device, assuming the skeleton at{" "}
-              {Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% of its screen
-              height.
+              Once a device's GPU family has enough measured runs, the meter
+              shows the predicted milliseconds on it (at{" "}
+              {Math.round(ASSUMED_SCREEN_HEIGHT_FRACTION * 100)}% screen height).
+              Until then it shows only what is measured on this computer, and
+              says so.
             </DialogDescription>
           </DialogHeader>
 
@@ -212,9 +228,9 @@ export function DeviceMeter() {
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {DEVICES.filter((d) => d.kind === kind).map((d) => {
                       const selected = d.id === deviceId;
-                      const budget =
-                        model?.budgetByFamily?.[d.gpuFamily] ?? model?.budgetMs ?? DEFAULT_BUDGET_MS;
-                      const fitted = !!model?.byFamily?.[d.gpuFamily];
+                      const fq = model?.byFamilyQuality?.[d.gpuFamily];
+                      const relMae = fq?.cpu?.relMae ?? fq?.gpu?.relMae;
+                      const calibrated = relMae != null && relMae <= TRUST_RELMAE_MAX;
                       return (
                         <button
                           key={d.id}
@@ -239,9 +255,15 @@ export function DeviceMeter() {
                           <span className="text-[11px] text-muted-foreground">
                             {d.example}
                           </span>
-                          <span className="mt-1 text-[10px] tabular-nums text-muted-foreground/70">
-                            budget {budget.cpu}ms cpu / {budget.gpu}ms gpu
-                            {fitted ? " · fitted" : " · estimate"}
+                          <span
+                            className={cn(
+                              "mt-1 text-[10px] tabular-nums",
+                              calibrated ? "text-emerald-400/80" : "text-muted-foreground/50",
+                            )}
+                          >
+                            {calibrated
+                              ? `calibrated +-${Math.round((relMae as number) * 100)}%`
+                              : "not calibrated yet"}
                           </span>
                         </button>
                       );
