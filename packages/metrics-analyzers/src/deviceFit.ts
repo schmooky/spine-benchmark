@@ -29,12 +29,11 @@ import {
  * non-mesh (region/sequence) vertices. Fitting on them launders those errors
  * into the model weights.
  *
- * 0.5.1 raises the bar again: the 0.5.0 shakedown cohort captured heterogeneous
- * game-scene features as "one representative spine x count", which fit to
- * per-family R2 ~0.2. 0.5.1 captures the MEAN feature vector over EVERY spine
- * so the composite matches the measured frameCpuMs - so 0.5.0 scene runs are
- * quarantined too. */
-export const MIN_FIT_VERSION = "0.5.1";
+ * 0.5.1 captured the MEAN feature vector over every spine for REAL scenes, but
+ * wrongly left STRESS scenes (a mix of 9 symbols) on "one representative x
+ * count". 0.5.2 fixes stress too (walk every pool up to 256). Only 0.5.2+ runs
+ * have correct features for BOTH scene types, so the cutoff is 0.5.2. */
+export const MIN_FIT_VERSION = "0.5.2";
 
 /** Semver-ish >= compare (major.minor.patch). */
 export function isFittableVersion(clientVersion: string | null | undefined): boolean {

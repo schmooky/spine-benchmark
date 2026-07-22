@@ -25,8 +25,15 @@
 // R2 ~0.2; scene features are now the MEAN over EVERY spine so mean x instances
 // = the true scene total. Also: sweeps skip on no-GPU-timer devices and survive
 // weak GPUs (resolution cap + context-loss + choke guard) instead of aborting.
-// 0.5.0 runs are quarantined from the fit (their scene features are wrong).
-export const CLIENT_VERSION = "0.5.1";
+// 0.5.1 fixed only the NON-stress scenes: it wrongly assumed stress pools were
+// homogeneous and left them on "one representative x count". But stress pools
+// are a MIX of 9 symbols, so stress rows (a large share of the fit) still had
+// wrong features.
+// 0.5.2 = the SAME mean-over-all-spines walk now covers stress pools too (every
+// pool up to 256 - all real scenes + all mobile stress - is walked in full;
+// only huge desktop stress > 256 keeps the representative shortcut). Runs below
+// 0.5.2 are quarantined - their stress features are still wrong.
+export const CLIENT_VERSION = "0.5.2";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =

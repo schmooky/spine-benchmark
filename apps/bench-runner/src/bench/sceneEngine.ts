@@ -110,10 +110,13 @@ function worldScaleOf(s: Spine, resolution: number): number {
   return Math.sqrt(det) * resolution;
 }
 
-/** Above this pool size, sample ONE spine and scale (a homogeneous stress pool
- * of N copies of one symbol, where representative == every spine, and walking
- * thousands would spike the measured frame). At or below it, walk every spine
- * (real game scenes are 16-32 DIFFERENT skeletons). */
+/** Above this pool size, sample ONE spine and scale (only huge DESKTOP stress
+ * ramps reach here - up to 8192 - and walking thousands every sample would be
+ * prohibitive; representative x count is unbiased in expectation). At or below
+ * it - EVERY real scene (16-32 different skeletons) AND every mobile stress
+ * pool (capped at 80, and a MIX of 9 different symbols) - walk every spine.
+ * Mobile stress is NOT homogeneous, so one-representative x count was wrong for
+ * it too; that is the bug this cap now covers. */
 const SCENE_SUM_CAP = 256;
 
 /** Feature vector of one posed skeleton (walker + geometric coverage). Coverage
@@ -143,15 +146,14 @@ function sampleSceneImpact(
   spines: Spine[],
   rotate: number,
   resolution: number,
-  homogeneous: boolean,
 ): { ri: number; ci: number; one: ImpactInputs | null } {
   const n = spines.length;
   if (n === 0) return { ri: 0, ci: 0, one: null };
 
-  // Homogeneous stress pool (N copies of one symbol set), or too many to walk:
-  // one representative x count is valid and avoids a multi-ms spike in the
-  // ramp's fps judgment.
-  if (homogeneous || n > SCENE_SUM_CAP) {
+  // Only a huge desktop stress pool is too big to walk; there, one
+  // representative x count is unbiased in expectation. Everything else - real
+  // scenes AND mobile stress (a mix of symbols) - is walked in full.
+  if (n > SCENE_SUM_CAP) {
     const rep = spines[rotate % n];
     const d = measureFrameImpactDetailed(rep.skeleton);
     return { ri: d.ri * n, ci: d.ci * n, one: spineFeatures(rep, resolution) };
@@ -691,7 +693,7 @@ export function startSceneBenchmark(
 
           impactAge += dt;
           if (impactAge >= IMPACT_SAMPLE_MS && spines.length > 0) {
-            const s = sampleSceneImpact(spines, impactRotate++, app.renderer.resolution, !!stress);
+            const s = sampleSceneImpact(spines, impactRotate++, app.renderer.resolution);
             lastImpact = { ri: s.ri, ci: s.ci };
             lastInputs = s.one;
             impactAge = 0;
