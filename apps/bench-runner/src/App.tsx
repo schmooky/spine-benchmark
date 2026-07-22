@@ -26,6 +26,19 @@ import { Hud } from "@/ui/Hud";
 import { Done } from "@/ui/Done";
 import { ErrorView } from "@/ui/ErrorView";
 
+/** How heavy a scene is for ranking: its real (GPU-inclusive) frame time when
+ * it DROPPED below full rate, else its compute cost - a smooth scene's
+ * wall-clock is just pinned at the vsync ceiling and would tie every other
+ * smooth scene together. */
+function sceneCost(m: {
+  frameMs: number | null;
+  frameCpuMs: number | null;
+  fps: number | null;
+}): number {
+  const dropped = m.fps != null && m.fps < 57 && m.frameMs != null;
+  return dropped ? m.frameMs! : m.frameCpuMs ?? m.frameMs ?? 0;
+}
+
 export default function App() {
   const stage = useRunnerStore((s) => s.stage);
   const hud = useRunnerStore((s) => s.hud);
@@ -129,8 +142,14 @@ export default function App() {
               kind: r.kind,
               frameCpuMs: r.stats.frameCpuMsAvg ?? null,
               frameCpuMsP95: r.stats.frameCpuMsP95 ?? null,
+              frameMs: r.stats.frameMsAvg ?? null,
+              fps: r.stats.avgFps ?? null,
             }))
-            .sort((a, b) => (b.frameCpuMs ?? 0) - (a.frameCpuMs ?? 0)),
+            // heaviest first: a scene that DROPS frames is ranked by its real
+            // (GPU-inclusive) frame time; a scene holding full rate is ranked
+            // by compute, since its wall-clock is just pinned at the vsync
+            // ceiling and would tie every smooth scene together.
+            .sort((a, b) => sceneCost(b) - sceneCost(a)),
         );
         // measure-only runs are always short; they are the canonical (and only)
         // measurement now, not a truncated "quick" test.

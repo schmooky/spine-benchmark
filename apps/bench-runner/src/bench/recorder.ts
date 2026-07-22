@@ -177,7 +177,14 @@ export class Recorder {
       const renderCpu = f
         ? f.buildMs + f.updateRendMs + f.batchUploadMs + f.transformsMs + f.executeMs + f.renderOtherMs + f.gcMs
         : 0;
-      const total = (sample.cpuMs ?? 0) + renderCpu;
+      // CPU work in a frame cannot exceed that frame's wall-clock duration -
+      // it all ran serially inside it. On some drivers (Mali/ANGLE, heavy mesh
+      // scenes) the render-phase timers double-count GPU-sync stalls and the
+      // sum reads HIGHER than the real frame time, which is physically
+      // impossible. Clamp to dtMs: for the common case (compute < frame time)
+      // this is a no-op; it only trims the impossible over-counts down to the
+      // real ceiling. The wall-clock frameMsAvg stays the GPU-inclusive total.
+      const total = Math.min((sample.cpuMs ?? 0) + renderCpu, dtMs);
       this.frameCpuMs.push(total);
       this.secFrameCpu.push(total);
     }

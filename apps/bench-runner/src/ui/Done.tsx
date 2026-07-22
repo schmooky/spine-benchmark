@@ -1,14 +1,41 @@
 import { useState } from "react";
 
-import { useRunnerStore } from "@/store";
-
-/** One 60fps frame is 16.67ms; express measured compute as a share of it. */
-const FRAME_60_MS = 1000 / 60;
+import { useRunnerStore, type MeasuredScene } from "@/store";
 
 function fmtMs(ms: number | null): string {
   if (ms == null) return "-";
   return ms >= 10 ? ms.toFixed(1) : ms.toFixed(2);
 }
+
+type Status = "ok" | "warn" | "over";
+
+/** Traffic-light on the REAL render rate: a scene that holds ~full frame rate
+ * is fine; one that drops below it is the real cost problem. */
+function statusOf(fps: number | null): Status {
+  if (fps == null) return "ok";
+  if (fps >= 57) return "ok";
+  if (fps >= 45) return "warn";
+  return "over";
+}
+
+/** Ranking / bar weight: real (GPU-inclusive) frame time when a scene dropped
+ * below full rate, else its compute cost (a smooth scene's wall-clock is just
+ * pinned at the refresh ceiling). */
+function sceneCost(m: MeasuredScene): number {
+  const dropped = m.fps != null && m.fps < 57 && m.frameMs != null;
+  return dropped ? m.frameMs! : m.frameCpuMs ?? m.frameMs ?? 0;
+}
+
+const NUM: Record<Status, string> = {
+  ok: "text-emerald-300",
+  warn: "text-amber-300",
+  over: "text-red-300",
+};
+const FILL: Record<Status, string> = {
+  ok: "bg-emerald-400/70",
+  warn: "bg-amber-400/70",
+  over: "bg-red-400/70",
+};
 
 export function Done({
   runId,
@@ -30,25 +57,24 @@ export function Done({
     }
   };
 
-  const rows = (measured ?? []).filter((m) => m.frameCpuMs != null);
-  const maxMs = Math.max(FRAME_60_MS, ...rows.map((r) => r.frameCpuMs ?? 0));
+  const rows = (measured ?? []).filter(
+    (m) => m.frameMs != null || m.frameCpuMs != null,
+  );
+  const maxCost = Math.max(0.001, ...rows.map(sceneCost));
 
   return (
     <div className="flex h-full items-center justify-center overflow-y-auto p-6">
       <div className="w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 shadow-2xl">
-        {/* HERO: the real measured time on THIS device */}
         <p className="text-center text-sm text-neutral-400">
           Measured on <span className="text-neutral-200">this device</span> - real
-          per-frame compute time
+          per-frame render cost
         </p>
 
         {rows.length > 0 ? (
           <div className="mt-4 flex flex-col gap-1.5">
             {rows.map((r) => {
-              const ms = r.frameCpuMs ?? 0;
-              const pctOf60 = (ms / FRAME_60_MS) * 100;
-              const bar = Math.min(100, (ms / maxMs) * 100);
-              const over = ms > FRAME_60_MS;
+              const st = statusOf(r.fps);
+              const bar = Math.min(100, (sceneCost(r) / maxCost) * 100);
               return (
                 <div
                   key={r.label}
@@ -57,22 +83,24 @@ export function Done({
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="truncate text-sm text-neutral-200">{r.label}</span>
                     <span
-                      className={`shrink-0 font-mono text-sm tabular-nums ${
-                        over ? "text-amber-300" : "text-emerald-300"
-                      }`}
-                      title={`p95 ${fmtMs(r.frameCpuMsP95)} ms/frame`}
+                      className={`shrink-0 font-mono text-sm tabular-nums ${NUM[st]}`}
+                      title={`compute p95 ${fmtMs(r.frameCpuMsP95)} ms`}
                     >
-                      {fmtMs(ms)} ms/frame
+                      {fmtMs(r.frameMs)} ms{" "}
+                      <span className="text-neutral-500">
+                        · {r.fps == null ? "-" : Math.round(r.fps)} fps
+                      </span>
                     </span>
                   </div>
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
                     <div
-                      className={`h-full rounded-full ${over ? "bg-amber-400/70" : "bg-emerald-400/70"}`}
+                      className={`h-full rounded-full ${FILL[st]}`}
                       style={{ width: `${bar}%` }}
                     />
                   </div>
                   <p className="mt-1 text-[11px] text-neutral-500">
-                    {pctOf60.toFixed(0)}% of a 60fps frame budget (16.7 ms)
+                    frame {fmtMs(r.frameMs)} ms (real, incl. GPU) · compute{" "}
+                    {fmtMs(r.frameCpuMs)} ms (CPU)
                   </p>
                 </div>
               );
@@ -80,14 +108,17 @@ export function Done({
           </div>
         ) : (
           <p className="mt-4 text-center text-sm text-neutral-500">
-            No per-scene compute was captured for this run.
+            No per-scene timings were captured for this run.
           </p>
         )}
 
         <p className="mt-3 text-[11px] leading-relaxed text-neutral-500">
-          This is the <span className="text-neutral-400">CPU compute</span> per frame
-          (spine update + render-side work), measured directly on this device - not
-          predicted. GPU fill time can't be measured in a browser and is not included.
+          <span className="text-neutral-400">frame</span> = real time per frame
+          including GPU (capped at your screen's refresh, so a scene at full fps is
+          fine even near 16.7 ms). <span className="text-neutral-400">compute</span> =
+          CPU work (spine update + render), clamped so it can never exceed the frame.
+          The browser can't split GPU fill out on its own - but the frame time already
+          includes it whenever a scene drops below full rate.
         </p>
 
         {/* SECONDARY: the run code to hand back to whoever collects */}

@@ -40,7 +40,14 @@
 // (capacity, not per-frame cost - and the weak-GPU crashers) are dropped; each
 // scene runs a fixed short window (warmup + one animation cycle + median). The
 // number IS a stopwatch on the real frame, not a model.
-export const CLIENT_VERSION = "0.6.0";
+// 0.6.1 = frameCpuMs clamped to the frame's wall-clock. On Mali/ANGLE heavy
+// mesh scenes the render-phase timers double-counted GPU-sync stalls, so
+// frameCpuMs read HIGHER than the real frame time (physically impossible, caught
+// on a Realme Mali-G57: stars-of-egypt 29.5ms vs 17.3ms/58fps). CPU work can't
+// exceed its frame, so it is now min(phaseSum, dt) per frame - guarantees
+// frameCpuMsAvg <= frameMsAvg. The on-device report reconciles both: real
+// (GPU-inclusive) frame time + fps as the cost, compute as the CPU detail.
+export const CLIENT_VERSION = "0.6.1";
 
 /** bench-server base URL. Dev points at the local memory-mode server. */
 export const API_BASE: string =

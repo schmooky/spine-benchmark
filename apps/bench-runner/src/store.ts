@@ -17,13 +17,19 @@ export interface CrashReportNotice {
   instances: number;
 }
 
-/** One scene's real, measured per-frame compute cost on THIS device. */
+/** One scene's real, measured per-frame cost on THIS device. */
 export interface MeasuredScene {
   label: string;
   kind: string;
-  /** avg spine.update + render-side CPU per frame (ms), vsync-independent. */
+  /** avg spine.update + render-side CPU per frame (ms), vsync-independent,
+   * clamped to the frame's wall-clock (can never exceed it). */
   frameCpuMs: number | null;
   frameCpuMsP95: number | null;
+  /** avg wall-clock frame time (ms) - the REAL, GPU-inclusive cost. Vsync-
+   * capped near the refresh ceiling while the scene holds full frame rate. */
+  frameMs: number | null;
+  /** avg frames per second for the scene (real render rate). */
+  fps: number | null;
 }
 
 interface RunnerState {
