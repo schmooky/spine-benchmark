@@ -1,0 +1,252 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-07-27T12:46:07.981Z",
+  "target": "frameCpuMs",
+  "unit": "ms",
+  "scope": "cpu-compute-only (GPU has no in-browser timer)",
+  "minTrustedClientVersion": "0.6.1",
+  "maxTrustedHeldOutMape": 0.3,
+  "features": [
+    "intercept",
+    "verticesTotal",
+    "deformedMeshesTotal",
+    "weightedMeshesTotal",
+    "coveredKpxTotal",
+    "drawCallEstTotal"
+  ],
+  "featureNote": "scene-total = per-spine pose-feature mean * instances. A dropped spine in the workbench uses instances=1. ms = sum(weights[i] * features[i]).",
+  "method": "per-device OLS refit of measured frameCpuMs vs scene features; the hand-tuned poseImpact weights score R2=0.02 and are NOT used. 5-fold held-out MAPE is the honest error band.",
+  "devices": [
+    {
+      "deviceLabel": "iPhone (Apple GPU)",
+      "gpuFamily": {
+        "vendor": "Apple Inc.",
+        "renderer": "Apple GPU"
+      },
+      "clientVersion": "0.6.0",
+      "runIds": [
+        "zygf241g",
+        "b7os9ob7"
+      ],
+      "scenes": 34,
+      "weights": [
+        2.696577,
+        0.000125,
+        -0.000866,
+        0.000856,
+        -0.000002,
+        -0.000239
+      ],
+      "inSampleR2": 0.28,
+      "heldOutMape": 0.162,
+      "trusted": false
+    },
+    {
+      "deviceLabel": "TECNO AD8 (Mali-G710 MC10)",
+      "gpuFamily": {
+        "vendor": "ARM",
+        "renderer": "Mali-G710 MC10"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "iix8w5d6"
+      ],
+      "scenes": 34,
+      "weights": [
+        5.191257,
+        0.000826,
+        -0.000412,
+        0.000953,
+        -0.000032,
+        -0.011978
+      ],
+      "inSampleR2": 0.72,
+      "heldOutMape": 0.192,
+      "trusted": true
+    },
+    {
+      "deviceLabel": "TECNO LI6 (ARM, Mali-G57 MC2, OpenGL ES 3.2)",
+      "gpuFamily": {
+        "vendor": "Google Inc. (ARM)",
+        "renderer": "ANGLE (ARM, Mali-G57 MC2, OpenGL ES 3.2)"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "nx7kyknp"
+      ],
+      "scenes": 34,
+      "weights": [
+        5.673678,
+        0.000996,
+        -0.005038,
+        0.001098,
+        -0.000062,
+        0.019917
+      ],
+      "inSampleR2": 0.71,
+      "heldOutMape": 0.232,
+      "trusted": true
+    },
+    {
+      "deviceLabel": "SM-A155F (ARM, Mali-G57 MC2, OpenGL ES 3.2)",
+      "gpuFamily": {
+        "vendor": "Google Inc. (ARM)",
+        "renderer": "ANGLE (ARM, Mali-G57 MC2, OpenGL ES 3.2)"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "zldmqag3"
+      ],
+      "scenes": 34,
+      "weights": [
+        3.734204,
+        0.000903,
+        0.004294,
+        0.002026,
+        -0.000028,
+        0.009566
+      ],
+      "inSampleR2": 0.7,
+      "heldOutMape": 0.233,
+      "trusted": true
+    },
+    {
+      "deviceLabel": "Pixel 7 (Mali-G710)",
+      "gpuFamily": {
+        "vendor": "ARM",
+        "renderer": "Mali-G710"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "fbmqxgyi"
+      ],
+      "scenes": 34,
+      "weights": [
+        2.154578,
+        0.000435,
+        -0.002206,
+        0.003463,
+        -0.000022,
+        -0.004665
+      ],
+      "inSampleR2": 0.7,
+      "heldOutMape": 0.235,
+      "trusted": true
+    },
+    {
+      "deviceLabel": "TECNO CL6 (ARM, Mali-G57 MC2, OpenGL ES 3.2)",
+      "gpuFamily": {
+        "vendor": "Google Inc. (ARM)",
+        "renderer": "ANGLE (ARM, Mali-G57 MC2, OpenGL ES 3.2)"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "dyn11g4q"
+      ],
+      "scenes": 34,
+      "weights": [
+        3.297949,
+        0.00088,
+        0.002298,
+        0.00105,
+        -0.000022,
+        0.012837
+      ],
+      "inSampleR2": 0.72,
+      "heldOutMape": 0.243,
+      "trusted": true
+    },
+    {
+      "deviceLabel": "Pixel 9a (Mali-G715)",
+      "gpuFamily": {
+        "vendor": "ARM",
+        "renderer": "Mali-G715"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "qe2husyb"
+      ],
+      "scenes": 34,
+      "weights": [
+        2.281309,
+        0.00057,
+        0.000759,
+        0.002227,
+        -0.000021,
+        -0.00301
+      ],
+      "inSampleR2": 0.72,
+      "heldOutMape": 0.247,
+      "trusted": true
+    },
+    {
+      "deviceLabel": "Pixel 9 (Mali-G715)",
+      "gpuFamily": {
+        "vendor": "ARM",
+        "renderer": "Mali-G715"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "gxwq2zoy"
+      ],
+      "scenes": 34,
+      "weights": [
+        2.392026,
+        0.000549,
+        0.003123,
+        0.00265,
+        -0.000024,
+        -0.005597
+      ],
+      "inSampleR2": 0.68,
+      "heldOutMape": 0.265,
+      "trusted": true
+    },
+    {
+      "deviceLabel": "SM-S921B (Samsung Xclipse 940) on Vulkan 1.3.231)",
+      "gpuFamily": {
+        "vendor": "Samsung Electronics Co., Ltd.",
+        "renderer": "ANGLE (Samsung Xclipse 940) on Vulkan 1.3.231"
+      },
+      "clientVersion": "0.6.1",
+      "runIds": [
+        "tnm3y0p1"
+      ],
+      "scenes": 33,
+      "weights": [
+        3.32319,
+        0.0005,
+        -0.007166,
+        0.003748,
+        -0.000048,
+        -0.015801
+      ],
+      "inSampleR2": 0.62,
+      "heldOutMape": 0.324,
+      "trusted": false
+    },
+    {
+      "deviceLabel": "RMX3760 (Mali-G57)",
+      "gpuFamily": {
+        "vendor": "ARM",
+        "renderer": "Mali-G57"
+      },
+      "clientVersion": "0.6.0",
+      "runIds": [
+        "ru7ejyn6"
+      ],
+      "scenes": 34,
+      "weights": [
+        4.730086,
+        0.001505,
+        -0.000942,
+        -0.001931,
+        -0.0001,
+        -0.007637
+      ],
+      "inSampleR2": 0.49,
+      "heldOutMape": 0.396,
+      "trusted": false
+    }
+  ]
+}

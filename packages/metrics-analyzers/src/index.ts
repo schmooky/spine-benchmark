@@ -7,3 +7,4 @@
 // @spine-benchmark/metrics-impact-formula (see ADR 0001).
 export * from './deviceFit.js';
 export * from './deviceClass.js';
+export * from './deviceCalibration.js';
