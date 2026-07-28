@@ -57,8 +57,6 @@ consumed them (see [ADR 0004](docs/adr/0004-drop-ri-ci-package-stack.md)).
 | Path | Purpose | npm |
 |---|---|---|
 | `apps/benchmark` | Benchmark UI/workbench (the site) | private |
-| `apps/bench-runner` | Calibration client (isolation sweeps + scene ramps) | private |
-| `apps/bench-server` | Fleet ingest, per-family fit, held-out validation | private |
 | `packages/metrics-impact-formula` | Canonical scoring formulas + pose-feature walker + coverage estimator (single source of truth) | **public** |
 | `packages/metrics-model` | Ridge fit of feature-vector to milliseconds | **public** |
 | `packages/metrics-analyzers` | Device cost-model toolkit: `deviceFit` (per-family fit) + `deviceClass` (portable-family classifier) | **public** |

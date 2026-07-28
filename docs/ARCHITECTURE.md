@@ -178,25 +178,27 @@ the formulas AND the pose walk stay in the leaf.
    (vertices incl. region/sequence quads, meshes, constraints,
    draw-call estimate), and `estimatePoseCoverage` adds screen-normalized
    fill/overdraw.
-3. **Measure (calibration).** The bench-runner records real GPU/CPU ms
-   per frame against those features and uploads them; `bench-server`
-   fits `metrics-model` per GPU family via `metrics-analyzers/deviceFit`
-   (sweeps pin the collinear driver ratios, scenes fit the family scale).
-4. **Predict (workbench).** The site reads the fitted table and multiplies
-   the current pose's features by the selected device's weights to show
-   predicted CPU + GPU ms vs that device's frame budget, with provenance
-   and a `+-N%` band.
-5. **Validate.** `bench-server` holds out runs the model never saw,
-   predicts them, and publishes per-family MAPE + a predicted-vs-measured
-   scatter on `/fleet` - the trust loop.
+3. **Measure (calibration).** A device client records real per-frame CPU ms
+   against those features on real phones and uploads them to a fleet server.
+   > **Not in this repo.** The measurement client (`bench-runner` /
+   > spine-run) and the fleet server (`bench-server`) are maintained
+   > separately: their scene corpus is built from licensed studio game
+   > assets, which must not live in this tree. What ships here is the
+   > *result* - `packages/metrics-analyzers/data/device-calibration.json`,
+   > which contains only device labels, fitted weights and error bands, and
+   > no game data.
+4. **Predict (workbench).** The site reads that calibration and multiplies
+   the current pose's features by the selected device's weights to show a
+   predicted CPU ms alongside its held-out `+-N%` band. GPU ms is not
+   modelled: browsers withhold the WebGL GPU timer on nearly every platform.
+5. **Validate.** Each device's model is scored by 5-fold held-out MAPE at
+   build time; only devices inside the trust ceiling are marked `trusted`.
 
 ## Apps vs published packages
 
 | Workspace | Published to npm | Deployed | What it is |
 |---|---|---|---|
 | `@spine-benchmark/site` | no (private) | https://spine.schmooky.dev | Benchmark site / workbench |
-| `@spine-benchmark/bench-runner` | no (private) | spine-run.schmooky.dev | Calibration client |
-| `@spine-benchmark/bench-server` | no (private) | spine-bench.schmooky.dev | Fit + fleet + validation |
 | `@spine-benchmark/crawler-demo` | no (private) | separate dev demo | Live crawler showcase |
 | `@spine-benchmark/reports-api` | no (private) | backend service | Encrypted report + share link server |
 | `@spine-benchmark/metrics-impact-formula` | yes | - | Formulas + pose walker + coverage |

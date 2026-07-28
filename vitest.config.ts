@@ -27,8 +27,6 @@ for (const dir of packageDirs) {
 const testInclude: string[] = [
   'apps/benchmark/test/**/*.test.ts',
   'apps/reports-api/test/**/*.test.ts',
-  'apps/bench-runner/src/**/*.test.ts',
-  'apps/bench-server/src/**/*.test.ts',
   ...packageDirs.map(dir => `packages/${dir}/src/**/*.test.ts`),
 ];
 

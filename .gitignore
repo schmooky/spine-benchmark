@@ -148,5 +148,4 @@ packages/*/dist/
 apps/crawler/public/assets/
 
 # spine-bench scene pipeline: local-only asset symlink + heavy intermediate
-apps/bench-runner/public/games
 tools/scene-pipeline/catalog.json
