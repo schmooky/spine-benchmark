@@ -158,31 +158,46 @@ export function DeviceMeter() {
           <span className="text-[10px] text-muted-foreground/50">measuring...</span>
         )}
 
-        {/* 2. context: what is NOT the spine */}
+        {/* 2. context: what is NOT the spine. Fixed one-per-line rows - the row
+            COUNT must never change as digits change width, or the panel jumps
+            while you are watching a number. */}
         {measured && (
-          <div className="mt-1 flex flex-wrap gap-x-2 text-[10px] tabular-nums text-muted-foreground/70">
-            {measured.spineMs != null && (
-              <span title="the workbench's own per-frame cost - pixel grid, camera, materialize filter and the profiler itself. NOT your spine; it would not exist in a game.">
-                workbench {fmt(Math.max(0, measured.frameMs - measured.spineMs))} ms
+          <div className="mt-1 flex flex-col gap-0.5 text-[10px] tabular-nums text-muted-foreground/70">
+            <div
+              className="flex items-baseline justify-between gap-2"
+              title="the workbench's own per-frame cost - pixel grid, camera, materialize filter and the profiler itself. NOT your spine; it would not exist in a game."
+            >
+              <span>workbench</span>
+              <span>
+                {measured.spineMs != null
+                  ? `${fmt(Math.max(0, measured.frameMs - measured.spineMs))} ms`
+                  : "-"}
               </span>
-            )}
-            <span title="everything this canvas does per frame: your spine PLUS the workbench's own grid, camera and filters">
-              whole frame {fmt(measured.frameMs)} ms
-            </span>
-            <span
+            </div>
+            <div
+              className="flex items-baseline justify-between gap-2"
+              title="everything this canvas does per frame: your spine PLUS the workbench's own grid, camera and filters"
+            >
+              <span>whole frame</span>
+              <span>{fmt(measured.frameMs)} ms</span>
+            </div>
+            <div
+              className="flex items-baseline justify-between gap-2"
               title={
                 measured.gpuMs != null
                   ? "real GPU time from EXT_disjoint_timer_query"
                   : "Browsers withhold the WebGL GPU timer (EXT_disjoint_timer_query) on almost every platform - Chrome blocks it on Android and on macOS/ANGLE. This is expected, not a fault: GPU time simply cannot be read from a page here. CPU numbers above are unaffected."
               }
             >
-              gpu{" "}
-              {measured.gpuMs != null ? (
-                `${fmt(measured.gpuMs)} ms`
-              ) : (
-                <span className="text-muted-foreground/40">not readable in browser</span>
-              )}
-            </span>
+              <span>gpu</span>
+              <span>
+                {measured.gpuMs != null ? (
+                  `${fmt(measured.gpuMs)} ms`
+                ) : (
+                  <span className="text-muted-foreground/40">not readable</span>
+                )}
+              </span>
+            </div>
           </div>
         )}
 
@@ -277,7 +292,9 @@ export function DeviceMeter() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
+          {/* pr-2 keeps the scrollbar off the cards (it would otherwise sit on
+              top of them and clip the right edge) */}
+          <div className="grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto pr-2 sm:grid-cols-2">
             {CALIBRATED_DEVICES.map((d) => {
               const selected = d.label === device?.label;
               const e = all.get(d.label);
