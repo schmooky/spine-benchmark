@@ -75,14 +75,19 @@ export function InfoDrawer() {
 
   const [open, setOpen] = useState(true);
   const [model, setModel] = useState<CostModelTable | null>(null);
-  const [measured, setMeasured] = useState<{ cpuMs: number; frameCpuMs: number } | null>(null);
+  const [measured, setMeasured] = useState<{
+    spineMs: number | null;
+    frameCpuMs: number;
+  } | null>(null);
 
   useEffect(() => {
     let live = true;
     void fetchCostModel(BENCH_API).then((m) => live && setModel(m));
     const id = window.setInterval(() => {
       const m = stage.getMeasuredMs();
-      if (m) setMeasured({ cpuMs: m.cpuMs, frameCpuMs: m.frameCpuMs });
+      // spineMs is STRICTLY the skeleton's own cost - never the whole tick,
+      // which is mostly the workbench's grid/camera/filters.
+      if (m) setMeasured({ spineMs: m.spineMs, frameCpuMs: m.frameCpuMs });
     }, 300);
     return () => {
       live = false;
@@ -172,9 +177,16 @@ export function InfoDrawer() {
                   <span className="text-muted-foreground/50"> (not the phone)</span>
                 </span>
                 <span className="text-sm font-semibold tabular-nums">
-                  {measured ? `${measured.cpuMs.toFixed(2)} ms compute` : "measuring..."}
+                  {!measured
+                    ? "measuring..."
+                    : measured.spineMs != null
+                      ? `${measured.spineMs.toFixed(3)} ms spine`
+                      : "spine profiler off"}
                   {measured && (
-                    <span className="ml-1 text-[10px] font-normal text-muted-foreground/50">
+                    <span
+                      className="ml-1 text-[10px] font-normal text-muted-foreground/50"
+                      title="the whole canvas frame - your spine PLUS the workbench's own grid, camera and filters"
+                    >
                       frame {measured.frameCpuMs.toFixed(2)}
                     </span>
                   )}

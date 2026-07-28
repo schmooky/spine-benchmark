@@ -79,7 +79,7 @@ export function DeviceMeter() {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [measured, setMeasured] = useState<{
-    spineMs: number;
+    spineMs: number | null;
     frameMs: number;
     gpuMs: number | null;
   } | null>(null);
@@ -100,9 +100,10 @@ export function DeviceMeter() {
     }
     const sample = () => {
       const m = stage.getMeasuredMs();
-      // cpuMs is SPINE-isolated (spineProfile on); frameCpuMs is the whole tick
-      // including the workbench's own grid/camera/filter chrome.
-      setMeasured(m ? { spineMs: m.cpuMs, frameMs: m.frameCpuMs, gpuMs: m.gpuMs } : null);
+      // spineMs is STRICTLY the skeleton's own cost (null if unprofiled - never
+      // the whole tick); frameCpuMs is everything the canvas does, most of which
+      // is the workbench's own grid/camera/filters, not the spine.
+      setMeasured(m ? { spineMs: m.spineMs, frameMs: m.frameCpuMs, gpuMs: m.gpuMs } : null);
       setWork(stage.getFrameWork() ?? null);
 
       const walkable = spine.skeleton as unknown as WalkableSkeleton;
@@ -141,28 +142,45 @@ export function DeviceMeter() {
           <span className="text-[10px] text-muted-foreground/60">measured here</span>
         </div>
         {measured ? (
-          <div className="mt-0.5 flex items-baseline gap-1">
-            <span className="text-xl font-semibold leading-none tabular-nums text-foreground">
-              {fmt(measured.spineMs)}
-            </span>
-            <span className="text-xs text-muted-foreground">ms / frame</span>
-          </div>
+          measured.spineMs != null ? (
+            <div className="mt-0.5 flex items-baseline gap-1">
+              <span className="text-xl font-semibold leading-none tabular-nums text-foreground">
+                {fmt(measured.spineMs)}
+              </span>
+              <span className="text-xs text-muted-foreground">ms / frame</span>
+            </div>
+          ) : (
+            <div className="mt-0.5 text-[11px] text-amber-400">
+              spine profiler off - cannot isolate
+            </div>
+          )
         ) : (
           <span className="text-[10px] text-muted-foreground/50">measuring...</span>
         )}
 
-        {/* 2. context */}
+        {/* 2. context: what is NOT the spine */}
         {measured && (
           <div className="mt-1 flex flex-wrap gap-x-2 text-[10px] tabular-nums text-muted-foreground/70">
-            <span title="everything this canvas does per frame, including the workbench's own grid, camera and filters">
+            {measured.spineMs != null && (
+              <span title="the workbench's own per-frame cost - pixel grid, camera, materialize filter and the profiler itself. NOT your spine; it would not exist in a game.">
+                workbench {fmt(Math.max(0, measured.frameMs - measured.spineMs))} ms
+              </span>
+            )}
+            <span title="everything this canvas does per frame: your spine PLUS the workbench's own grid, camera and filters">
               whole frame {fmt(measured.frameMs)} ms
             </span>
-            <span title="real GPU time from EXT_disjoint_timer_query - desktop browsers expose it, mobile ones do not">
+            <span
+              title={
+                measured.gpuMs != null
+                  ? "real GPU time from EXT_disjoint_timer_query"
+                  : "Browsers withhold the WebGL GPU timer (EXT_disjoint_timer_query) on almost every platform - Chrome blocks it on Android and on macOS/ANGLE. This is expected, not a fault: GPU time simply cannot be read from a page here. CPU numbers above are unaffected."
+              }
+            >
               gpu{" "}
               {measured.gpuMs != null ? (
                 `${fmt(measured.gpuMs)} ms`
               ) : (
-                <span className="text-muted-foreground/40">no timer</span>
+                <span className="text-muted-foreground/40">not readable in browser</span>
               )}
             </span>
           </div>

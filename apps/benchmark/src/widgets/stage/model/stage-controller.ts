@@ -456,22 +456,30 @@ class StageController {
 
   getMeasuredMs(
     windowFrames = 20,
-  ): { gpuMs: number | null; cpuMs: number; frameCpuMs: number } | undefined {
+  ):
+    | { gpuMs: number | null; cpuMs: number; frameCpuMs: number; spineMs: number | null }
+    | undefined {
     const frames = this.crawler?.getFrames();
     if (!frames || frames.length === 0) return undefined;
     const recent = frames.slice(-windowFrames);
     const frameCpuMs = recent.reduce((sum, f) => sum + f.measuredCpuMs, 0) / recent.length;
-    // spine-isolated CPU; fall back to the whole tick if the profile is off
+    // SPINE-ISOLATED cost. Keep zeros: a spine sitting at rest genuinely costs
+    // ~0ms, and that is an answer, not a missing measurement. Only a total
+    // absence of samples (profile off) is unknown - reported as null rather
+    // than silently substituting the whole tick, which would present the
+    // workbench's own grid/camera/filter cost as if it were the skeleton's.
     const spineSamples = recent
       .map((f) => f.spine?.totalMs)
-      .filter((v): v is number => v != null && v > 0);
-    const cpuMs =
+      .filter((v): v is number => v != null);
+    const spineMs =
       spineSamples.length > 0
         ? spineSamples.reduce((s, v) => s + v, 0) / spineSamples.length
-        : frameCpuMs;
+        : null;
+    // legacy field: whole-tick fallback preserved for existing callers
+    const cpuMs = spineMs ?? frameCpuMs;
     const gpuSamples = recent.map((f) => f.gpuMs).filter((v): v is number => v != null);
     const gpuMs = gpuSamples.length > 0 ? gpuSamples.reduce((s, v) => s + v, 0) / gpuSamples.length : null;
-    return { gpuMs, cpuMs, frameCpuMs };
+    return { gpuMs, cpuMs, frameCpuMs, spineMs };
   }
 
   /** Wait until at least `windowMs` of real playback has ELAPSED past
