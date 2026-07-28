@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Spine Benchmark mark. Left-aligned descending bars: reads as measurement
+       at 16px and, unlike centred bars, is never mistaken for a menu icon.
+       Strictly monochrome so it holds up in light and dark tabs. -->
+  <rect width="64" height="64" rx="14" fill="#0a0a0a" />
+  <g fill="#ffffff">
+    <rect x="13" y="15" width="38" height="8" rx="4" />
+    <rect x="13" y="28" width="27" height="8" rx="4" />
+    <rect x="13" y="41" width="16" height="8" rx="4" />
+  </g>
+</svg>
