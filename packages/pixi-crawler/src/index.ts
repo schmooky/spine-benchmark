@@ -1,69 +1,73 @@
 /**
  * @module @spine-benchmark/pixi-crawler
  *
- * Real-time Spine animation profiler and performance analyzer for PixiJS.
+ * A drop-in PixiJS 8 performance crawler: per-frame timing, a phase-split cost
+ * breakdown (CPU pre / pixi build-transform-execute / spine / GPU), device-
+ * invariant workload counters, an optional HUD + worst-frame inspector, and a
+ * telemetry sink. Add it to any app in one call:
  *
- * @example
- * ```ts
- * import { Crawler } from '@spine-benchmark/pixi-crawler';
+ *     import { mountCrawler } from "@spine-benchmark/pixi-crawler";
+ *     const crawler = mountCrawler(app);            // HUD visible, auto-dispose
  *
- * const crawler = new Crawler(app, {
- *   overlayEnabled: true,
- *   impactBrackets: [3, 8, 15, 25],  // mobile defaults
- * });
+ * Or construct it directly for full control:
  *
- * // On-demand scan
- * const snapshot = crawler.scan();
- * console.log(snapshot.drawCalls, snapshot.issueCount);
+ *     import { Crawler } from "@spine-benchmark/pixi-crawler";
+ *     const crawler = new Crawler({
+ *         targetFrameMs: 1000 / 60,
+ *         spineProfile: { enabled: true },
+ *         hud: !import.meta.env.PROD,
+ *         telemetry: { sink, sampling: { windowMs: 5000 }, rawFrames: "on-overrun" },
+ *     });
+ *     crawler.attach(app.renderer, app.ticker);
+ *     window.addEventListener("pagehide", () => void crawler.dispose());
  *
- * // Open the remote diagnostic panel
- * // (also available via the W key when overlay is active)
- * ```
+ * `new Crawler(config)` is the single root; every other subsystem is a
+ * config-gated submodule it owns. Contracts:
+ *   - `app.ticker !== Ticker.shared` (the Application must own its ticker, else
+ *     Spine collides - not supported).
+ *   - The package's pixi peer-dep must match the app's pixi exactly, or the
+ *     hooks patch the wrong prototype graph.
+ *   - `dispose()` / `detach()` restores `TextureSource.prototype.unload`.
  */
 
-// ── Core classes ─────────────────────────────────────────────
-export { Crawler } from './core/index.js';
-export { Scanner } from './core/index.js';
-export { Recorder } from './core/index.js';
-export { WaterfallSpy } from './core/index.js';
-export { CrawlerBridge } from './core/index.js';
-export { SpineBudgetTracker } from './core/index.js';
-export { isSpine, analyzeSpine } from './core/index.js';
-export { openRemotePanel } from './core/index.js';
-
-// ── Types ────────────────────────────────────────────────────
+export { Crawler } from "./crawler";
+export { mountCrawler } from "./mount";
+export type { CrawlerTarget, MountOptions } from "./mount";
 export type {
   CrawlerConfig,
-  FrameSnapshot,
-  Recording,
-  NodeMeta,
-  Issue,
-  IssueCode,
-  NodeKind,
-  SpineAnalysis,
-  SpineSlotInfo,
-  SpineBatchBreak,
-  MaskAnalysis,
-  ObjectCensus,
-  RenderingImpact,
-  ComputationalImpact,
-  SpineBudget,
-  SpineBudgetHistory,
-  AggregateBudget,
-  ImpactLevel,
-  WaterfallEntry,
-  RemoteFrameData,
-  FrameTiming,
-} from './core/index.js';
-
-// ── Constants ────────────────────────────────────────────────
-export { DEFAULT_CONFIG, ISSUE_IMPACT, ISSUE_EXPLAIN, DEFAULT_IMPACT_BRACKETS, classifyImpactLevel } from './core/index.js';
-
-/**
- * Dynamically import the overlay UI module.
- * Use this for tree-shaking: the UI is only loaded when explicitly requested
- * or when the Crawler is constructed with `overlayEnabled: true`.
- */
-export async function loadUI() {
-  return import('./ui/index.js');
-}
+  FrameRecord,
+  FrameCapture,
+  FrameRecording,
+  InstructionDump,
+  RenderGroupDump,
+  PipeExecuteCall,
+} from "./types";
+export type {
+  TelemetrySink,
+  TelemetryBatch,
+  TelemetryConfig,
+  RawFramesPolicy,
+} from "./features/telemetry/types";
+export type {
+  WorkloadCost,
+  WorkloadDriver,
+  WorkloadDriverName,
+  WorkloadCostConfig,
+} from "./core/workload-cost";
+export type {
+  DeviceCeiling,
+  DeviceTier,
+  DeviceTierConfig,
+} from "./core/device-tier";
+export {
+  DEVICE_CEILINGS,
+  DEFAULT_TIER_BANDS,
+  DEFAULT_TIER_LABELS,
+} from "./core/device-tier";
+export type {
+  GpuCost,
+  GpuDriver,
+  GpuDriverName,
+  GpuCostConfig,
+  GpuCostCoverage,
+} from "./core/gpu-cost";

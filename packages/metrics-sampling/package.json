@@ -32,5 +32,9 @@
   "homepage": "https://github.com/schmooky/spine-benchmark/tree/main/packages/metrics-sampling#readme",
   "bugs": {
     "url": "https://github.com/schmooky/spine-benchmark/issues"
-  }
+  },
+  "dependencies": {
+    "@spine-benchmark/metrics-impact-formula": "^0.1.1"
+  },
+  "private": true
 }

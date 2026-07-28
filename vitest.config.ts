@@ -33,9 +33,25 @@ const testInclude: string[] = [
 // Build test.coverage.include: source files for all workspace packages.
 const coverageInclude: string[] = packageDirs.map(dir => `packages/${dir}/src/**/*.ts`);
 
+// Subpath exports need their own alias entries, listed BEFORE the package-name
+// aliases so the more specific match wins (vite matches alias in order).
+const subpathAlias: { find: string; replacement: string }[] = [
+  {
+    find: '@spine-benchmark/metrics-analyzers/deviceClass',
+    replacement: r('packages', 'metrics-analyzers', 'src', 'deviceClass.ts'),
+  },
+  {
+    find: '@spine-benchmark/metrics-analyzers/deviceFit',
+    replacement: r('packages', 'metrics-analyzers', 'src', 'deviceFit.ts'),
+  },
+];
+
 export default defineConfig({
   resolve: {
-    alias: workspaceAlias,
+    alias: [
+      ...subpathAlias,
+      ...Object.entries(workspaceAlias).map(([find, replacement]) => ({ find, replacement })),
+    ],
   },
   test: {
     environment: 'node',

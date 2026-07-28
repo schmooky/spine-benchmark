@@ -18,15 +18,14 @@ import {
   AnimationState,
   AnimationStateData,
   Physics,
-  BlendMode,
-  ClippingAttachment,
-  MeshAttachment,
 } from '@esotericsoftware/spine-core';
 import {
   classifyImpactLevel,
   computationalImpactCost,
+  extractPoseFeatures,
   renderingImpactCost,
   type ImpactLevel,
+  type WalkableSkeleton,
 } from '@spine-benchmark/metrics-impact-formula';
 
 export interface AnimationReport {
@@ -97,43 +96,21 @@ export function analyzeSkeletonData(skeletonData: SkeletonData): AnalysisReport 
       state.apply(skeleton);
       skeleton.updateWorldTransform(Physics.update);
 
-      // Count per-frame metrics from the live skeleton state
-      let nonNormal = 0;
-      let clips = 0;
-      let verts = 0;
-      let meshCount = 0;
-      let weightedCount = 0;
-      let deformedCount = 0;
+      // canonical per-pose counting - the SAME walker the workbench, the
+      // bench-runner trainer and the offline sampler use (ADR 0002). The old
+      // local walk here dropped every region/sequence vertex.
+      const f = extractPoseFeatures(skeleton as unknown as WalkableSkeleton);
 
-      for (const slot of skeleton.drawOrder) {
-        if (slot.color.a <= 0) continue;
-        if (slot.bone && slot.bone.active === false) continue;
-        const att = slot.getAttachment();
-        if (!att) continue;
-
-        if (slot.data.blendMode !== BlendMode.Normal) nonNormal++;
-        if (att instanceof ClippingAttachment) clips++;
-        if (att instanceof MeshAttachment) {
-          meshCount++;
-          verts += (att.worldVerticesLength ?? 0) / 2;
-          if (att.bones && att.bones.length > 0) weightedCount++;
-          if (slot.deform && slot.deform.length > 0) deformedCount++;
-        }
-      }
-
-      const activeIk = (skeleton.ikConstraints ?? []).filter(isConstraintActive).length;
-      const activeTransform = (skeleton.transformConstraints ?? []).filter(isConstraintActive).length;
-      const activePath = (skeleton.pathConstraints ?? []).filter(isConstraintActive).length;
-      const activePhysics = ((skeleton as any).physicsConstraints ?? []).filter(isConstraintActive).length;
-      const totalActive = activeIk + activeTransform + activePath + activePhysics;
-
-      peakNonNormalBlends = Math.max(peakNonNormalBlends, nonNormal);
-      peakClippingMasks = Math.max(peakClippingMasks, clips);
-      peakVertices = Math.max(peakVertices, verts);
-      peakActiveConstraints = Math.max(peakActiveConstraints, totalActive);
-      peakMeshes = Math.max(peakMeshes, meshCount);
-      peakWeightedMeshes = Math.max(peakWeightedMeshes, weightedCount);
-      peakDeformedMeshes = Math.max(peakDeformedMeshes, deformedCount);
+      peakNonNormalBlends = Math.max(peakNonNormalBlends, f.nonNormalBlends);
+      peakClippingMasks = Math.max(peakClippingMasks, f.clippingMasks);
+      peakVertices = Math.max(peakVertices, f.vertices);
+      peakActiveConstraints = Math.max(
+        peakActiveConstraints,
+        f.ik + f.transform + f.path + f.physics,
+      );
+      peakMeshes = Math.max(peakMeshes, f.meshes);
+      peakWeightedMeshes = Math.max(peakWeightedMeshes, f.weightedMeshes);
+      peakDeformedMeshes = Math.max(peakDeformedMeshes, f.deformedMeshes);
     }
 
     const ri = renderingImpactCost({

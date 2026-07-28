@@ -59,29 +59,21 @@ cannot drift.
 
 Entry point: [`apps/benchmark/src/main.tsx`](../apps/benchmark/src/main.tsx).
 
-1. User drops a Spine bundle on the page.
-2. [`@spine-benchmark/asset-store`](../packages/asset-store/) and
-   [`@spine-benchmark/spine-loader`](../packages/spine-loader/) parse
-   the skeleton and cache it.
-3. [`@spine-benchmark/metrics-sampling`](../packages/metrics-sampling/)
-   walks each animation timeline and collects per-frame inputs.
-4. [`@spine-benchmark/metrics-analyzers`](../packages/metrics-analyzers/)
-   produces feature-specific numbers (mesh vertices, constraint counts,
-   blend modes, clipping regions, physics).
-5. [`@spine-benchmark/metrics-impact-formula`](../packages/metrics-impact-formula/src/index.ts)
-   converts those numbers into RI/CI costs.
-6. [`@spine-benchmark/metrics-scoring`](../packages/metrics-scoring/)
-   classifies costs into impact levels (`minimal` | `low` | `moderate`
-   | `high` | `very-high`) using `DEFAULT_IMPACT_BRACKETS`.
-7. [`@spine-benchmark/metrics-reporting`](../packages/metrics-reporting/)
-   aggregates everything into an `ImpactReportModel`, which the UI
-   renders (and which [`apps/reports-api`](../apps/reports-api/) can
-   server-render for encrypted share links).
+1. User drops a Spine bundle on the page (parsed + cached by the site's
+   own vendored loader in `apps/benchmark/src/entities/skeleton`).
+2. [`@spine-benchmark/metrics-impact-formula`](../packages/metrics-impact-formula/src/index.ts)'s
+   `extractPoseFeatures` walks each posed animation frame into the
+   canonical `ImpactFeatures` vector, and `estimatePoseCoverage` adds
+   screen-normalized fill/overdraw.
+3. The same package's `poseImpact` converts those features into RI/CI
+   costs (for the heatmap), while the fitted per-family model
+   ([`metrics-model`](../packages/metrics-model/) via
+   [`metrics-analyzers`](../packages/metrics-analyzers/)) converts them
+   into predicted milliseconds for the selected device.
 
-The heatmap visualisation in
-[`apps/benchmark/src/hooks/useAnimationHeatmap.ts`](../apps/benchmark/src/hooks/useAnimationHeatmap.ts)
-calls `renderingImpactCost()` + `computationalImpactCost()` directly
-from the leaf package.
+The per-animation cost curves the workbench shows
+(`measureAnimationCostCurves`) call the same walker + fitted model, so
+the offline prediction and the live crawler reading cannot drift.
 
 ### Live (pixi-crawler)
 
@@ -119,134 +111,104 @@ paths in the same PR and extend the parity test.
 
 ## Package topology
 
+The project measures Spine cost as fitted **milliseconds per GPU
+family**, not unitless RI/CI scores. The old RI/CI analyzer stack
+(`metrics-pipeline`, `metrics-reporting`, `metrics-scoring`,
+`metrics-factors`, the `metrics` umbrella) and the `workbench-core`
+tool engine (`*-tools`, `asset-store`, `spine-loader`) were removed
+once nothing consumed them - see
+[ADR 0004](adr/0004-drop-ri-ci-package-stack.md).
+
 ```
-                  metrics-impact-formula  (leaf, zero deps)
-                         ^            ^
-                         |            |
-                         |            +------------------+
-                         |                               |
-                  metrics-factors                   pixi-crawler
-                         ^                              (live)
-                         |
-                  metrics-analyzers
-                         ^
-              +----------+----------+
-              |                     |
-     metrics-sampling        metrics-scoring
-              \                     /
-               +--------+----------+
-                        v
-                 metrics-pipeline
-                        ^
-                        |
-                 metrics-reporting
-                        ^
-                        |
-                     metrics          (umbrella re-export)
-                        ^
-                        |
-                  apps/benchmark      apps/reports-api
+        metrics-impact-formula   (leaf, zero deps: formulas +
+             ^   ^   ^            pose-feature walker + coverage)
+             |   |   |
+    +--------+   |   +--------------------+-------------------+
+    |            |                        |                   |
+ cli    pixi-crawler              metrics-model         metrics-sampling
+                (live)                  ^   ^              (private)
+                                        |   |                  |
+                                        |   +----------------- + (site)
+                                        |
+                                  metrics-analyzers
+                                  (deviceFit + deviceClass)
+                                        ^
+                                        |
+                                   apps/benchmark
 ```
 
 ### Groups
 
 - **Canonical leaf.**
   [`metrics-impact-formula`](../packages/metrics-impact-formula/) has
-  zero runtime dependencies, ships RI/CI math, and is the "single
-  source of truth" every consumer imports.
-- **Measurement primitives.**
-  [`metrics-factors`](../packages/metrics-factors/) defines the raw
-  fields analyzers collect (vertex counts, blend modes, etc.).
-- **Analyzers.**
-  [`metrics-analyzers`](../packages/metrics-analyzers/) plus the
-  specialised `mesh-tools`, `constraint-tools`, `drawcall-tools`,
-  `render-tools`, and `file-tools` packages compute per-feature
-  numbers from a parsed skeleton.
-- **Sampling + scoring.**
+  zero runtime dependencies and is the single source of truth for BOTH
+  the scoring formulas (`renderingImpactCost` / `computationalImpactCost`)
+  AND the pose-feature walker + coverage estimator (`extractPoseFeatures`,
+  `poseImpact`, `estimatePoseCoverage`) that every path feeds them with.
+  Extended to feature INPUTS by ADR 0001's addendum.
+- **Cost model (public).**
+  [`metrics-model`](../packages/metrics-model/) ridge-fits a feature
+  vector to milliseconds; [`metrics-analyzers`](../packages/metrics-analyzers/)
+  exposes `deviceFit` (per-GPU-family two-stage fit) and `deviceClass`
+  (portable-family classifier). Both are pixi-free data packages.
+- **Internal measurement (private).**
+  [`gpu-timing`](../packages/gpu-timing/) wraps the WebGL2 timer query;
   [`metrics-sampling`](../packages/metrics-sampling/) walks animation
-  timelines; [`metrics-scoring`](../packages/metrics-scoring/)
-  classifies cost numbers into impact levels.
-- **Orchestration.**
-  [`metrics-pipeline`](../packages/metrics-pipeline/) wires sampling,
-  analyzers, and scoring into one callable pipeline.
-  [`metrics-reporting`](../packages/metrics-reporting/) builds the
-  `ImpactReportModel` offline consumers use.
-- **Umbrella.** [`metrics`](../packages/metrics/) re-exports the
-  above so the benchmark app can `import { SpineAnalyzer } from
-  '@spine-benchmark/metrics'` without reaching into sub-packages.
-- **Asset + loading.**
-  [`asset-store`](../packages/asset-store/),
-  [`spine-loader`](../packages/spine-loader/), and
-  [`workbench-core`](../packages/workbench-core/) manage parsed
-  Spine data and shared UI plumbing.
+  timelines. Consumed only by this repo - never published.
 - **Published runtime libraries.**
-  [`pixi-crawler`](../packages/pixi-crawler/) is the live profiler.
-  [`spinefolio`](../packages/spinefolio/) is a standalone Spine
-  widget for PixiJS v8 portfolios, independent of the analysis
-  stack, used by `apps/reports-api` to render per-animation previews
-  in share links.
-- **Tooling.** [`cli`](../packages/cli/) is a thin command-line
-  wrapper around the pipeline.
+  [`pixi-crawler`](../packages/pixi-crawler/) is the embeddable live
+  profiler (ships to game clients). [`spinefolio`](../packages/spinefolio/)
+  is a standalone PixiJS v8 Spine widget used by `apps/reports-api`.
+- **Tooling.** [`cli`](../packages/cli/) is a headless skeleton analyzer.
 
-**Direction of dependency** is strictly upward in the diagram above.
-Nothing below `metrics-impact-formula` may import from anything
-above it. The duplication guard enforces that the formulas
-themselves do not leak out of the leaf.
+**Direction of dependency** is strictly upward. Nothing below
+`metrics-impact-formula` imports from above it, and no PUBLIC package
+depends on a private one. The duplication guard
+(`scripts/check-no-duplicate-impact-formulas.mjs`) enforces that both
+the formulas AND the pose walk stay in the leaf.
 
-## Data flow: skeleton to score
+## Data flow: skeleton to predicted milliseconds
 
-A single function call from the benchmark app walks the whole
-pipeline: `SpineAnalyzer.analyze(spine)` in
-[`packages/metrics/src/SpineAnalyzer.ts`](../packages/metrics/src/SpineAnalyzer.ts).
-
-1. **Parse.** `spine-loader` turns `.skel` + `.atlas` + textures into
-   a Spine instance. `asset-store` caches it.
-2. **Sample.** `metrics-sampling` walks each animation at a fixed
-   rate (`sampleRate: 30` by default). At each sample the skeleton
-   is posed, then handed off to the analyzers.
-3. **Analyze.** Per-feature analyzers in `metrics-analyzers` read
-   the posed skeleton and produce raw counts: visible mesh vertices,
-   active constraints, blend mode transitions, clipping regions,
-   physics behaviours.
-4. **Score.** `metrics-impact-formula` turns those counts into RI
-   and CI cost numbers. `metrics-scoring` classifies each number
-   into an impact level using `DEFAULT_IMPACT_BRACKETS`.
-5. **Report.** `metrics-reporting.buildImpactReportModel()` rolls
-   the per-animation results into a `SpineAnalysisResult` shaped
-   like:
-
-   ```ts
-   {
-     skeletonName: string;
-     totalAnimations: number;
-     totalSkins: number;
-     skeleton: SkeletonAnalysis;
-     animations: AnimationAnalysis[]; // per-animation mesh/clip/blend/constraint
-     globalMesh: GlobalMeshAnalysis;
-     globalClipping: GlobalClippingAnalysis;
-     globalBlendMode: GlobalBlendModeAnalysis;
-     globalPhysics: GlobalPhysicsAnalysis;
-     stats: AnalysisStatistics;
-   }
-   ```
-
-   The same type is consumed by the UI, by the share-link renderer,
-   and by the CLI.
+1. **Pose.** The skeleton is posed - live on the workbench stage, per
+   animation frame offline, or per instance live via the crawler.
+2. **Walk.** `metrics-impact-formula`'s `extractPoseFeatures` walks the
+   current `drawOrder` once into the canonical `ImpactFeatures` vector
+   (vertices incl. region/sequence quads, meshes, constraints,
+   draw-call estimate), and `estimatePoseCoverage` adds screen-normalized
+   fill/overdraw.
+3. **Measure (calibration).** A device client records real per-frame CPU ms
+   against those features on real phones and uploads them to a fleet server.
+   > **Not in this repo.** The measurement client (`bench-runner` /
+   > spine-run) and the fleet server (`bench-server`) are maintained
+   > separately: their scene corpus is built from licensed studio game
+   > assets, which must not live in this tree. What ships here is the
+   > *result* - `packages/metrics-analyzers/data/device-calibration.json`,
+   > which contains only device labels, fitted weights and error bands, and
+   > no game data.
+4. **Predict (workbench).** The site reads that calibration and multiplies
+   the current pose's features by the selected device's weights to show a
+   predicted CPU ms alongside its held-out `+-N%` band. GPU ms is not
+   modelled: browsers withhold the WebGL GPU timer on nearly every platform.
+5. **Validate.** Each device's model is scored by 5-fold held-out MAPE at
+   build time; only devices inside the trust ceiling are marked `trusted`.
 
 ## Apps vs published packages
 
 | Workspace | Published to npm | Deployed | What it is |
 |---|---|---|---|
-| `@spine-benchmark/site` | no (private) | https://spine.schmooky.dev | Public benchmark site |
+| `@spine-benchmark/site` | no (private) | https://spine.schmooky.dev | Benchmark site / workbench |
 | `@spine-benchmark/crawler-demo` | no (private) | separate dev demo | Live crawler showcase |
 | `@spine-benchmark/reports-api` | no (private) | backend service | Encrypted report + share link server |
-| `@spine-benchmark/metrics-impact-formula` | yes | - | Canonical RI/CI math |
-| `@spine-benchmark/pixi-crawler` | yes | - | Live PixiJS profiler |
-| `@spine-benchmark/spinefolio` | yes | - | Spine widget for portfolios |
+| `@spine-benchmark/metrics-impact-formula` | yes | - | Formulas + pose walker + coverage |
+| `@spine-benchmark/metrics-model` | yes | - | Feature-vector to ms ridge fit |
+| `@spine-benchmark/metrics-analyzers` | yes | - | `deviceFit` + `deviceClass` toolkit |
 | `@spine-benchmark/cli` | yes | - | Command-line analyzer |
-| ...and the 14 other `metrics-*` / `*-tools` packages | yes | - | Reusable building blocks |
+| `@spine-benchmark/pixi-crawler` | yes | - | Embeddable PixiJS profiler |
+| `@spine-benchmark/spinefolio` | yes | - | Spine widget for portfolios |
+| `@spine-benchmark/gpu-timing` | no (private) | - | WebGL2 timer + coverage (internal) |
+| `@spine-benchmark/metrics-sampling` | no (private) | - | Timeline sampling (internal) |
 
-The public API of the project is the set of npm packages. The apps
+The public API of the project is the set of published npm packages. The apps
 are the reference consumers - they exist so the packages get real
 mileage before shipping. Anything in `apps/` can assume it is the
 last link in the chain and is free to import any workspace package,

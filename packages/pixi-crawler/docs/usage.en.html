@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>pixi-crawler - how to embed the profiler in a Pixi app</title>
+<style>
+  :root {
+    --bg: #0f1013;
+    --panel: #16181c;
+    --fg: #e7e8ec;
+    --dim: #a6a9b2;
+    --muted: #7f8390;
+    --line: rgba(255, 255, 255, 0.07);
+    --accent: #7d9cb2;
+    --sand: #c2a878;
+    --sage: #8fb89a;
+    --rose: #c07f77;
+    --radius: 12px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 96px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 32px; }
+  h1 { font-size: 26px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h1 .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--accent); font-size: 22px; }
+  .lede { color: var(--dim); margin: 0; max-width: 60ch; }
+  h2 { font-size: 19px; margin: 44px 0 12px; padding-top: 8px; letter-spacing: -0.01em; }
+  h3 { font-size: 15px; margin: 26px 0 8px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  p { color: var(--dim); }
+  p strong, li strong { color: var(--fg); font-weight: 600; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em; background: rgba(255, 255, 255, 0.06);
+    padding: 1px 6px; border-radius: 5px; color: #d7dbe2;
+  }
+  pre {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; overflow-x: auto; margin: 14px 0;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  }
+  pre code { background: none; padding: 0; font-size: 13px; line-height: 1.6; color: #d7dbe2; }
+  .tok-key { color: var(--accent); }
+  .tok-str { color: var(--sage); }
+  .tok-com { color: var(--muted); font-style: italic; }
+  .tok-fn { color: var(--sand); }
+  ul { color: var(--dim); padding-left: 22px; }
+  li { margin: 5px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+  td code { font-size: 12.5px; white-space: nowrap; }
+  td.desc { color: var(--dim); }
+  .callout {
+    border: 1px solid var(--line); border-left: 3px solid var(--sand);
+    background: rgba(194, 168, 120, 0.06); border-radius: 8px;
+    padding: 12px 16px; margin: 16px 0; color: var(--dim);
+  }
+  .callout.warn { border-left-color: var(--rose); background: rgba(192, 127, 119, 0.06); }
+  .callout strong { color: var(--fg); }
+  a { color: var(--accent); }
+  .toc { columns: 2; column-gap: 28px; margin: 8px 0 0; }
+  .toc a { display: block; color: var(--dim); text-decoration: none; padding: 3px 0; font-size: 14px; }
+  .toc a:hover { color: var(--fg); }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1><span class="mono">pixi-crawler</span> - a performance profiler for Pixi&nbsp;8</h1>
+  <p class="lede">
+    An embeddable measurement instrument: a per-frame breakdown of where the
+    milliseconds go (CPU pre-work, pixi build / transform / execute, Spine,
+    true GPU time), workload counters, a HUD, and telemetry. Drop it into any
+    app in one call.
+  </p>
+</header>
+
+<nav class="toc">
+  <a href="#install">Install</a>
+  <a href="#quickstart">Quick start</a>
+  <a href="#control">Full control</a>
+  <a href="#contracts">Contracts &amp; constraints</a>
+  <a href="#manual">Manual render loop</a>
+  <a href="#config">Configuration</a>
+  <a href="#read">Reading measurements</a>
+  <a href="#telemetry">Telemetry</a>
+  <a href="#hud">HUD, themes &amp; motion</a>
+  <a href="#record">Recording a session</a>
+</nav>
+
+<h2 id="install">Install</h2>
+<p>
+  <code>pixi.js</code> is a <strong>peer dependency</strong>. It is critical
+  that your app's pixi version and the package's match exactly: the crawler
+  patches pixi prototypes, and a version mismatch means it patches the wrong
+  graph.
+</p>
+<pre><code>npm install @spine-benchmark/pixi-crawler</code></pre>
+
+<h2 id="quickstart">Quick start</h2>
+<p>
+  One call: <code>mountCrawler(app)</code>. Shows the HUD by default and
+  auto-disposes itself on <code>pagehide</code>.
+</p>
+<pre><code><span class="tok-key">import</span> { Application } <span class="tok-key">from</span> <span class="tok-str">"pixi.js"</span>;
+<span class="tok-key">import</span> { mountCrawler } <span class="tok-key">from</span> <span class="tok-str">"@spine-benchmark/pixi-crawler"</span>;
+
+<span class="tok-key">const</span> app = <span class="tok-key">new</span> <span class="tok-fn">Application</span>();
+<span class="tok-key">await</span> app.<span class="tok-fn">init</span>({ background: <span class="tok-str">"#101317"</span>, resizeTo: window });
+
+<span class="tok-com">// HUD visible, auto-dispose on pagehide</span>
+<span class="tok-key">const</span> crawler = <span class="tok-fn">mountCrawler</span>(app);
+
+<span class="tok-com">// headless (no HUD) + telemetry</span>
+<span class="tok-key">const</span> headless = <span class="tok-fn">mountCrawler</span>(app, { hud: <span class="tok-key">false</span>, telemetry: { sink } });</code></pre>
+<p>
+  <code>mountCrawler</code> accepts a Pixi <code>Application</code>, or any
+  object with <code>{ renderer, ticker }</code> fields; the second argument is
+  a config object (see below) plus an <code>autoDispose</code> flag (default
+  <code>true</code>).
+</p>
+
+<h2 id="control">Full control</h2>
+<p>
+  For full lifecycle control, construct it directly and manage
+  <code>attach</code> / <code>detach</code> / <code>dispose</code> yourself.
+</p>
+<pre><code><span class="tok-key">import</span> { Crawler } <span class="tok-key">from</span> <span class="tok-str">"@spine-benchmark/pixi-crawler"</span>;
+
+<span class="tok-key">const</span> crawler = <span class="tok-key">new</span> <span class="tok-fn">Crawler</span>({
+  targetFrameMs: <span class="tok-str">1000</span> / <span class="tok-str">60</span>,   <span class="tok-com">// frame budget the HUD normalizes bars against</span>
+  hud: !<span class="tok-key">import</span>.meta.env.PROD,
+  spineProfile: { enabled: <span class="tok-key">true</span> },
+  telemetry: { sink, sampling: { windowMs: <span class="tok-str">5000</span> }, rawFrames: <span class="tok-str">"on-overrun"</span> },
+});
+
+crawler.<span class="tok-fn">attach</span>(app.renderer, app.ticker);
+
+window.<span class="tok-fn">addEventListener</span>(<span class="tok-str">"pagehide"</span>, () =&gt; <span class="tok-key">void</span> crawler.<span class="tok-fn">dispose</span>());</code></pre>
+
+<h2 id="contracts">Contracts &amp; constraints</h2>
+<div class="callout warn">
+  <strong>The app's ticker must NOT be <code>Ticker.shared</code>.</strong>
+  The app must own its own ticker: under the shared ticker Spine collides with
+  the crawler. This is the one hard incompatibility.
+</div>
+<ul>
+  <li><strong>Pixi versions must match exactly</strong> - the crawler patches pixi prototypes; a version mismatch means it patches the wrong graph.</li>
+  <li><strong><code>gpuMs</code> is <code>null</code> on Safari / iOS</strong> - no <code>EXT_disjoint_timer_query_webgl2</code> extension there. CPU measurements still work; the crawler discards "disjoint" (unreliable) GPU-timer readings itself.</li>
+  <li><strong><code>dispose()</code> / <code>detach()</code> restore</strong> every patched method (including <code>TextureSource.prototype.unload</code>). Call one of them on unmount.</li>
+  <li>Every measurement axis has overhead. Only enable what you actually read (see Configuration).</li>
+</ul>
+
+<h2 id="manual">Manual render loop</h2>
+<p>
+  If your app drives its own render (ticker stopped, your own
+  <code>requestAnimationFrame</code>), bracket each frame manually. Under a
+  running ticker these calls are <strong>not</strong> needed -
+  <code>attach()</code> already wires the frame boundaries to the ticker.
+  Mixing the two modes double-counts.
+</p>
+<pre><code>app.ticker.<span class="tok-fn">stop</span>();
+
+<span class="tok-key">function</span> <span class="tok-fn">frame</span>() {
+  crawler.<span class="tok-fn">frameStart</span>();
+  <span class="tok-com">// ...advance the scene, then render...</span>
+  app.<span class="tok-fn">render</span>();
+  crawler.<span class="tok-fn">frameEnd</span>();       <span class="tok-com">// flushes one FrameRecord</span>
+  <span class="tok-fn">requestAnimationFrame</span>(frame);
+}
+<span class="tok-fn">requestAnimationFrame</span>(frame);</code></pre>
+
+<h2 id="config">Configuration</h2>
+<p>Every <code>CrawlerConfig</code> field is optional; each gates one subsystem.</p>
+<table>
+  <thead><tr><th>Field</th><th>Default</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>hud</code></td><td>off</td><td class="desc">Show the DOM HUD overlay. On via <code>mountCrawler</code>.</td></tr>
+    <tr><td><code>targetFrameMs</code></td><td>1000/60</td><td class="desc">Frame budget in ms: the HUD normalizes bars and colors status against it.</td></tr>
+    <tr><td><code>bufferSize</code></td><td>600</td><td class="desc">Frame ring-buffer size (how many recent <code>FrameRecord</code>s to keep).</td></tr>
+    <tr><td><code>enableGpuTiming</code></td><td>on</td><td class="desc">True per-frame GPU time via <code>EXT_disjoint_timer_query</code> (<code>gpuMs</code>).</td></tr>
+    <tr><td><code>deepRenderSplit</code></td><td>on</td><td class="desc">CPU render-time split by phase (build / transform / execute / ...).</td></tr>
+    <tr><td><code>filterProfile</code></td><td>on</td><td class="desc">Filter timing (push / apply / pop) and pass count.</td></tr>
+    <tr><td><code>textureTracking</code></td><td>on</td><td class="desc">Texture uploads / unloads, bytes, active GPU count.</td></tr>
+    <tr><td><code>spineProfile</code></td><td>off</td><td class="desc">Per-phase Spine breakdown. <strong>Patches Spine's methods</strong> - do not enable if you separately time inside <code>spine.update()</code>.</td></tr>
+    <tr><td><code>pipeProfile</code></td><td>off</td><td class="desc">Per-render-pipe-call timing. The heaviest overhead of any flag.</td></tr>
+    <tr><td><code>workloadCost</code></td><td>on</td><td class="desc">Open device-independent workload measure (derived, read on demand).</td></tr>
+    <tr><td><code>gpuCost</code></td><td>on</td><td class="desc">Open GPU-heaviness measure (fill footprint + filters).</td></tr>
+    <tr><td><code>hudTheme</code></td><td>"slate"</td><td class="desc">HUD color preset: <code>"slate"</code> (default), <code>"warm"</code>, or <code>"contrast"</code>. Sets <code>--sbc-*</code> CSS variables only - no measurement effect.</td></tr>
+    <tr><td><code>hudMotion</code></td><td>on</td><td class="desc">Smooth expand/collapse micro-interaction on the HUD. Purely cosmetic; set false for an instant, transition-free HUD.</td></tr>
+    <tr><td><code>selfProfile</code></td><td>off</td><td class="desc">Per-function self-time via the W3C JS Self-Profiling API (needs a <code>Document-Policy: js-profiling</code> header, Chromium only).</td></tr>
+    <tr><td><code>memoryProfile</code></td><td>off</td><td class="desc">Process memory via <code>measureUserAgentSpecificMemory()</code> (needs cross-origin isolation).</td></tr>
+    <tr><td><code>telemetry</code></td><td>off</td><td class="desc">Periodic aggregate flush to your sink (see below).</td></tr>
+  </tbody>
+</table>
+
+<h2 id="read">Reading measurements</h2>
+<p>The crawler does not require the HUD - read frames directly and build your own panel.</p>
+<pre><code><span class="tok-key">const</span> f = crawler.<span class="tok-fn">getLastFrame</span>();     <span class="tok-com">// the latest FrameRecord (or undefined)</span>
+f.gpuMs;                              <span class="tok-com">// true GPU time, ms (null without a timer)</span>
+f.counters.drawCalls;                <span class="tok-com">// draw calls</span>
+f.counters.verticesDrawn;            <span class="tok-com">// vertices/indices</span>
+f.counters.stencilMaskPasses;        <span class="tok-com">// stencil masks</span>
+f.counters.renderTargetSwitches;     <span class="tok-com">// render-target switches</span>
+f.renderSplit?.updateRenderablesMs;  <span class="tok-com">// CPU render phase, ms</span>
+
+crawler.<span class="tok-fn">getFrames</span>();               <span class="tok-com">// the whole ring buffer</span>
+crawler.<span class="tok-fn">getWorkloadCost</span>();        <span class="tok-com">// open workload measure + bottleneck</span>
+crawler.<span class="tok-fn">getGpuCost</span>();             <span class="tok-com">// open GPU-heaviness measure</span>
+crawler.<span class="tok-fn">getWorstFrame</span>();          <span class="tok-com">// worst frame + a scene dump</span>
+
+<span class="tok-com">// GPU queries land 1-3 frames late; drain them at the end of a measurement window:</span>
+<span class="tok-key">await</span> crawler.<span class="tok-fn">flushPendingGpu</span>();</code></pre>
+
+<h2 id="telemetry">Telemetry</h2>
+<p>
+  Set <code>telemetry.sink</code> and the crawler sends aggregated batches
+  (windowed percentiles). Fire-and-forget: the crawler does not wait for a
+  response and catches + logs errors. The transport is yours.
+</p>
+<pre><code><span class="tok-key">const</span> sink = {
+  <span class="tok-fn">send</span>(batch) {
+    navigator.<span class="tok-fn">sendBeacon</span>(<span class="tok-str">"/telemetry"</span>, <span class="tok-fn">JSON</span>.stringify(batch));
+  },
+};
+
+<span class="tok-key">const</span> crawler = <span class="tok-key">new</span> <span class="tok-fn">Crawler</span>({
+  telemetry: {
+    sink,
+    sampling: { windowMs: <span class="tok-str">5000</span> },   <span class="tok-com">// flush cadence, ms</span>
+    rawFrames: <span class="tok-str">"on-overrun"</span>,        <span class="tok-com">// raw frames only on overruns</span>
+  },
+});
+crawler.<span class="tok-fn">attach</span>(app.renderer, app.ticker);
+
+<span class="tok-com">// tag the current scene for calibration-corpus attribution</span>
+crawler.<span class="tok-fn">setTelemetryLabel</span>(<span class="tok-str">"bonus-game"</span>);</code></pre>
+
+<h2 id="hud">HUD, themes &amp; motion</h2>
+<p>
+  The HUD is a muted, neutral panel over the scene (no neon). Click "-" to
+  collapse it to an fps badge; the header carries a small frame-time
+  sparkline so a steady vs. jittery line reads at a glance. The whole palette
+  is driven by <code>--sbc-*</code> CSS variables on the root
+  <code>#sbc-crawler</code> - override a handful of them for your own theme,
+  or pick one of the three built-in presets via <code>config.hudTheme</code>.
+</p>
+<pre><code><span class="tok-key">import</span> { mountCrawler } <span class="tok-key">from</span> <span class="tok-str">"@spine-benchmark/pixi-crawler"</span>;
+
+<span class="tok-fn">mountCrawler</span>(app, { hudTheme: <span class="tok-str">"warm"</span> });
+
+<span class="tok-com">/* or override tokens yourself, in your own CSS: */</span>
+<span class="tok-com">/* #sbc-crawler.sbc-hud { --sbc-bg: rgba(22,19,17,.95); --sbc-accent: #c2a878; } */</span></code></pre>
+<p>
+  Expand/collapse plays a brief settle animation by default
+  (<code>hudMotion: true</code>); set it <code>false</code> for an instant,
+  transition-free HUD.
+</p>
+
+<h2 id="record">Recording a session</h2>
+<p>
+  Frames can be recorded and saved to JSON, to replay later in the inspector
+  (record/save/load buttons are also in the HUD).
+</p>
+<pre><code>crawler.<span class="tok-fn">startRecording</span>();
+<span class="tok-com">// ...reproduce the problem scenario...</span>
+crawler.<span class="tok-fn">stopRecording</span>();
+<span class="tok-key">const</span> recording = crawler.<span class="tok-fn">getRecording</span>();   <span class="tok-com">// { version, frames, ... } -&gt; serialize to JSON</span></code></pre>
+
+<footer>
+  pixi-crawler - a performance profiler for PixiJS 8. Public API:
+  <code>mountCrawler</code>, <code>Crawler</code>. Requires Pixi 8 (a peer
+  dependency, exact version match) and an app ticker other than
+  <code>Ticker.shared</code>. A Russian translation lives alongside this file
+  at <code>usage.ru.html</code>.
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "name": "@spine-benchmark/metrics-analyzers",
   "version": "0.1.1",
-  "description": "Low-level Spine metrics analyzers for meshes, clipping, blend modes, skeleton, and constraints",
+  "description": "Device cost-model toolkit: per-GPU-family fitted ms model (deviceFit) and portable-family device classification (deviceClass)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,6 +9,22 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./deviceClass": {
+      "development": {
+        "types": "./src/deviceClass.ts",
+        "import": "./src/deviceClass.ts"
+      },
+      "types": "./dist/deviceClass.d.ts",
+      "import": "./dist/deviceClass.js"
+    },
+    "./deviceFit": {
+      "development": {
+        "types": "./src/deviceFit.ts",
+        "import": "./src/deviceFit.ts"
+      },
+      "types": "./dist/deviceFit.d.ts",
+      "import": "./dist/deviceFit.js"
     }
   },
   "files": [
@@ -16,15 +32,12 @@
   ],
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prebuild": "npm run build --prefix ../.. --workspace @spine-benchmark/metrics-impact-formula --workspace @spine-benchmark/metrics-model"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-factors": "^0.1.1",
-    "@spine-benchmark/metrics-scoring": "^0.1.1",
-    "@spine-benchmark/metrics-sampling": "^0.1.1"
-  },
-  "peerDependencies": {
-    "@esotericsoftware/spine-pixi-v8": "^4.2.101"
+    "@spine-benchmark/metrics-impact-formula": "^0.1.1",
+    "@spine-benchmark/metrics-model": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

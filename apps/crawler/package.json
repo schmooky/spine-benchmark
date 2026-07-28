@@ -9,14 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@esotericsoftware/spine-pixi-v8": "^4.2.102",
-    "@spine-benchmark/pixi-crawler": "^0.2.0",
-    "gsap": "^3.14.2",
+    "@spine-benchmark/pixi-crawler": "^0.3.0",
     "pixi.js": "^8.8.1"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "vite": "^8.0.8",
-    "vite-plugin-static-copy": "^4.0.1"
+    "vite": "^8.0.8"
   }
 }

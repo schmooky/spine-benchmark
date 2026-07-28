@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>pixi-crawler - как подключить профайлер к Pixi-приложению</title>
+<style>
+  :root {
+    --bg: #0f1013;
+    --panel: #16181c;
+    --fg: #e7e8ec;
+    --dim: #a6a9b2;
+    --muted: #7f8390;
+    --line: rgba(255, 255, 255, 0.07);
+    --accent: #7d9cb2;
+    --sand: #c2a878;
+    --sage: #8fb89a;
+    --rose: #c07f77;
+    --radius: 12px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 96px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 32px; }
+  h1 { font-size: 26px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h1 .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--accent); font-size: 22px; }
+  .lede { color: var(--dim); margin: 0; max-width: 60ch; }
+  h2 { font-size: 19px; margin: 44px 0 12px; padding-top: 8px; letter-spacing: -0.01em; }
+  h3 { font-size: 15px; margin: 26px 0 8px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  p { color: var(--dim); }
+  p strong, li strong { color: var(--fg); font-weight: 600; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em; background: rgba(255, 255, 255, 0.06);
+    padding: 1px 6px; border-radius: 5px; color: #d7dbe2;
+  }
+  pre {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; overflow-x: auto; margin: 14px 0;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  }
+  pre code { background: none; padding: 0; font-size: 13px; line-height: 1.6; color: #d7dbe2; }
+  .tok-key { color: var(--accent); }
+  .tok-str { color: var(--sage); }
+  .tok-com { color: var(--muted); font-style: italic; }
+  .tok-fn { color: var(--sand); }
+  ul { color: var(--dim); padding-left: 22px; }
+  li { margin: 5px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+  td code { font-size: 12.5px; white-space: nowrap; }
+  td.desc { color: var(--dim); }
+  .callout {
+    border: 1px solid var(--line); border-left: 3px solid var(--sand);
+    background: rgba(194, 168, 120, 0.06); border-radius: 8px;
+    padding: 12px 16px; margin: 16px 0; color: var(--dim);
+  }
+  .callout.warn { border-left-color: var(--rose); background: rgba(192, 127, 119, 0.06); }
+  .callout strong { color: var(--fg); }
+  a { color: var(--accent); }
+  .toc { columns: 2; column-gap: 28px; margin: 8px 0 0; }
+  .toc a { display: block; color: var(--dim); text-decoration: none; padding: 3px 0; font-size: 14px; }
+  .toc a:hover { color: var(--fg); }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1><span class="mono">pixi-crawler</span> - профайлер производительности для Pixi&nbsp;8</h1>
+  <p class="lede">
+    Встраиваемый инструмент измерений: покадровый разбор того, куда уходят
+    миллисекунды (CPU-подготовка, pixi build / transform / execute, Spine,
+    реальное GPU-время), счётчики нагрузки, HUD и телеметрия. Подключается к
+    любому приложению одним вызовом.
+  </p>
+</header>
+
+<nav class="toc">
+  <a href="#install">Установка</a>
+  <a href="#quickstart">Быстрый старт</a>
+  <a href="#control">Полный контроль</a>
+  <a href="#contracts">Контракты и ограничения</a>
+  <a href="#manual">Ручной цикл рендера</a>
+  <a href="#config">Конфигурация</a>
+  <a href="#read">Чтение измерений</a>
+  <a href="#telemetry">Телеметрия</a>
+  <a href="#hud">HUD и темы</a>
+  <a href="#record">Запись сессии</a>
+</nav>
+
+<h2 id="install">Установка</h2>
+<p>
+  <code>pixi.js</code> - это <strong>peer-зависимость</strong>. Крайне важно,
+  чтобы версия pixi в приложении и в пакете совпадали точь-в-точь: крокер
+  патчит прототипы pixi, и при разных версиях он пропатчит не тот граф.
+</p>
+<pre><code>npm install @spine-benchmark/pixi-crawler</code></pre>
+
+<h2 id="quickstart">Быстрый старт</h2>
+<p>
+  Один вызов <code>mountCrawler(app)</code>. По умолчанию показывает HUD и сам
+  снимается с приложения по событию <code>pagehide</code>.
+</p>
+<pre><code><span class="tok-key">import</span> { Application } <span class="tok-key">from</span> <span class="tok-str">"pixi.js"</span>;
+<span class="tok-key">import</span> { mountCrawler } <span class="tok-key">from</span> <span class="tok-str">"@spine-benchmark/pixi-crawler"</span>;
+
+<span class="tok-key">const</span> app = <span class="tok-key">new</span> <span class="tok-fn">Application</span>();
+<span class="tok-key">await</span> app.<span class="tok-fn">init</span>({ background: <span class="tok-str">"#101317"</span>, resizeTo: window });
+
+<span class="tok-com">// HUD виден, авто-dispose на pagehide</span>
+<span class="tok-key">const</span> crawler = <span class="tok-fn">mountCrawler</span>(app);
+
+<span class="tok-com">// headless (без HUD) + телеметрия</span>
+<span class="tok-key">const</span> headless = <span class="tok-fn">mountCrawler</span>(app, { hud: <span class="tok-key">false</span>, telemetry: { sink } });</code></pre>
+<p>
+  <code>mountCrawler</code> принимает Pixi-<code>Application</code> либо любой
+  объект с полями <code>{ renderer, ticker }</code>, а вторым аргументом -
+  конфигурацию (см. ниже) плюс флаг <code>autoDispose</code> (по умолчанию
+  <code>true</code>).
+</p>
+
+<h2 id="control">Полный контроль</h2>
+<p>
+  Если нужен полный жизненный цикл - создавайте экземпляр напрямую и управляйте
+  <code>attach</code> / <code>detach</code> / <code>dispose</code> сами.
+</p>
+<pre><code><span class="tok-key">import</span> { Crawler } <span class="tok-key">from</span> <span class="tok-str">"@spine-benchmark/pixi-crawler"</span>;
+
+<span class="tok-key">const</span> crawler = <span class="tok-key">new</span> <span class="tok-fn">Crawler</span>({
+  targetFrameMs: <span class="tok-str">1000</span> / <span class="tok-str">60</span>,   <span class="tok-com">// бюджет кадра для нормировки полос HUD</span>
+  hud: !<span class="tok-key">import</span>.meta.env.PROD,
+  spineProfile: { enabled: <span class="tok-key">true</span> },
+  telemetry: { sink, sampling: { windowMs: <span class="tok-str">5000</span> }, rawFrames: <span class="tok-str">"on-overrun"</span> },
+});
+
+crawler.<span class="tok-fn">attach</span>(app.renderer, app.ticker);
+
+window.<span class="tok-fn">addEventListener</span>(<span class="tok-str">"pagehide"</span>, () =&gt; <span class="tok-key">void</span> crawler.<span class="tok-fn">dispose</span>());</code></pre>
+
+<h2 id="contracts">Контракты и ограничения</h2>
+<div class="callout warn">
+  <strong>Тикер приложения не должен быть <code>Ticker.shared</code>.</strong>
+  Приложение обязано владеть собственным тикером: на общем тикере Spine
+  конфликтует с крокером. Это единственная жёсткая несовместимость.
+</div>
+<ul>
+  <li><strong>Версия pixi должна совпадать точь-в-точь</strong> - крокер патчит прототипы pixi; несовпадение версий приведёт к патчу не того графа.</li>
+  <li><strong><code>gpuMs</code> = <code>null</code> на Safari / iOS</strong> - там нет расширения <code>EXT_disjoint_timer_query_webgl2</code>. CPU-измерения при этом работают; крокер сам отбрасывает «дизъюнктные» (недостоверные) показания GPU-таймера.</li>
+  <li><strong><code>dispose()</code> / <code>detach()</code> восстанавливают</strong> пропатченные методы (в т.ч. <code>TextureSource.prototype.unload</code>). Вызывайте один из них при размонтировании.</li>
+  <li>Измерения - это накладные расходы. Держите включённым только то, что реально читаете (см. конфигурацию).</li>
+</ul>
+
+<h2 id="manual">Ручной цикл рендера</h2>
+<p>
+  Если приложение рисует само (тикер остановлен, свой <code>requestAnimationFrame</code>),
+  оборачивайте каждый кадр вручную. На работающем тикере эти вызовы <strong>не</strong>
+  нужны - <code>attach()</code> уже привязал границы кадра к тикеру. Смешивать
+  два режима нельзя (двойной учёт).
+</p>
+<pre><code>app.ticker.<span class="tok-fn">stop</span>();
+
+<span class="tok-key">function</span> <span class="tok-fn">frame</span>() {
+  crawler.<span class="tok-fn">frameStart</span>();
+  <span class="tok-com">// ... продвинуть сцену, затем отрисовать</span>
+  app.<span class="tok-fn">render</span>();
+  crawler.<span class="tok-fn">frameEnd</span>();       <span class="tok-com">// сбрасывает один FrameRecord</span>
+  <span class="tok-fn">requestAnimationFrame</span>(frame);
+}
+<span class="tok-fn">requestAnimationFrame</span>(frame);</code></pre>
+
+<h2 id="config">Конфигурация</h2>
+<p>Все поля <code>CrawlerConfig</code> опциональны; каждое включает свою подсистему.</p>
+<table>
+  <thead><tr><th>Поле</th><th>По умолч.</th><th>Назначение</th></tr></thead>
+  <tbody>
+    <tr><td><code>hud</code></td><td>off</td><td class="desc">Показать DOM-оверлей HUD. Через <code>mountCrawler</code> - on.</td></tr>
+    <tr><td><code>targetFrameMs</code></td><td>1000/60</td><td class="desc">Бюджет кадра в мс: по нему HUD нормирует полосы и красит статус.</td></tr>
+    <tr><td><code>bufferSize</code></td><td>600</td><td class="desc">Размер кольцевого буфера кадров (сколько последних <code>FrameRecord</code> хранить).</td></tr>
+    <tr><td><code>enableGpuTiming</code></td><td>on</td><td class="desc">Реальное GPU-время кадра через <code>EXT_disjoint_timer_query</code> (<code>gpuMs</code>).</td></tr>
+    <tr><td><code>deepRenderSplit</code></td><td>on</td><td class="desc">Разбивка CPU-времени рендера по фазам (build / transform / execute / ...).</td></tr>
+    <tr><td><code>filterProfile</code></td><td>on</td><td class="desc">Тайминг фильтров (push / apply / pop) и число проходов.</td></tr>
+    <tr><td><code>textureTracking</code></td><td>on</td><td class="desc">Загрузки / выгрузки текстур, байты, число активных на GPU.</td></tr>
+    <tr><td><code>spineProfile</code></td><td>off</td><td class="desc">Пофазный разбор Spine. <strong>Патчит методы Spine</strong> - не включайте, если сами измеряете время внутри <code>spine.update()</code>.</td></tr>
+    <tr><td><code>pipeProfile</code></td><td>off</td><td class="desc">Тайминг каждого вызова render-pipe. Самые тяжёлые накладные расходы.</td></tr>
+    <tr><td><code>workloadCost</code></td><td>on</td><td class="desc">Открытая device-независимая мера нагрузки (произв., читается по запросу).</td></tr>
+    <tr><td><code>gpuCost</code></td><td>on</td><td class="desc">Открытая мера GPU-тяжести (fill-footprint + фильтры).</td></tr>
+    <tr><td><code>hudTheme</code></td><td>"slate"</td><td class="desc">Цветовая тема HUD: <code>"slate"</code> (по умолч.), <code>"warm"</code> или <code>"contrast"</code>. Только CSS-переменные <code>--sbc-*</code> - на измерения не влияет.</td></tr>
+    <tr><td><code>hudMotion</code></td><td>on</td><td class="desc">Плавная микро-анимация сворачивания/разворачивания HUD. Чисто косметика; <code>false</code> - мгновенно, без переходов.</td></tr>
+    <tr><td><code>selfProfile</code></td><td>off</td><td class="desc">Пофункциональный self-time через W3C JS Self-Profiling (нужен заголовок <code>Document-Policy: js-profiling</code>, только Chromium).</td></tr>
+    <tr><td><code>memoryProfile</code></td><td>off</td><td class="desc">Память процесса через <code>measureUserAgentSpecificMemory()</code> (нужна cross-origin isolation).</td></tr>
+    <tr><td><code>telemetry</code></td><td>off</td><td class="desc">Периодическая отправка агрегатов в ваш sink (см. ниже).</td></tr>
+  </tbody>
+</table>
+
+<h2 id="read">Чтение измерений</h2>
+<p>Крокер не требует HUD - можно читать кадры напрямую и строить свою панель.</p>
+<pre><code><span class="tok-key">const</span> f = crawler.<span class="tok-fn">getLastFrame</span>();     <span class="tok-com">// последний FrameRecord (или undefined)</span>
+f.gpuMs;                              <span class="tok-com">// реальное GPU-время, мс (null без таймера)</span>
+f.counters.drawCalls;                <span class="tok-com">// драв-коллы</span>
+f.counters.verticesDrawn;            <span class="tok-com">// вершины/индексы</span>
+f.counters.stencilMaskPasses;        <span class="tok-com">// stencil-маски</span>
+f.counters.renderTargetSwitches;     <span class="tok-com">// смены render-target</span>
+f.renderSplit?.updateRenderablesMs;  <span class="tok-com">// CPU-фаза рендера, мс</span>
+
+crawler.<span class="tok-fn">getFrames</span>();               <span class="tok-com">// весь кольцевой буфер</span>
+crawler.<span class="tok-fn">getWorkloadCost</span>();        <span class="tok-com">// открытая мера нагрузки + узкое место</span>
+crawler.<span class="tok-fn">getGpuCost</span>();             <span class="tok-com">// открытая мера GPU-тяжести</span>
+crawler.<span class="tok-fn">getWorstFrame</span>();          <span class="tok-com">// худший кадр + дамп сцены</span>
+
+<span class="tok-com">// GPU-запросы приходят на 1-3 кадра позже; в конце окна измерений слейте их:</span>
+<span class="tok-key">await</span> crawler.<span class="tok-fn">flushPendingGpu</span>();</code></pre>
+
+<h2 id="telemetry">Телеметрия</h2>
+<p>
+  Задайте <code>telemetry.sink</code> - крокер будет слать агрегированные батчи
+  (перцентили по окну). Отправка «fire-and-forget»: крокер не ждёт ответа,
+  ошибки ловит и логирует. Транспорт - ваш.
+</p>
+<pre><code><span class="tok-key">const</span> sink = {
+  <span class="tok-fn">send</span>(batch) {
+    navigator.<span class="tok-fn">sendBeacon</span>(<span class="tok-str">"/telemetry"</span>, <span class="tok-fn">JSON</span>.stringify(batch));
+  },
+};
+
+<span class="tok-key">const</span> crawler = <span class="tok-key">new</span> <span class="tok-fn">Crawler</span>({
+  telemetry: {
+    sink,
+    sampling: { windowMs: <span class="tok-str">5000</span> },   <span class="tok-com">// частота флаша, мс</span>
+    rawFrames: <span class="tok-str">"on-overrun"</span>,        <span class="tok-com">// сырые кадры только на просадках</span>
+  },
+});
+crawler.<span class="tok-fn">attach</span>(app.renderer, app.ticker);
+
+<span class="tok-com">// помечайте текущую сцену для атрибуции корпуса измерений</span>
+crawler.<span class="tok-fn">setTelemetryLabel</span>(<span class="tok-str">"bonus-game"</span>);</code></pre>
+
+<h2 id="hud">HUD, темы и анимация</h2>
+<p>
+  HUD - приглушённая, нейтральная панель поверх сцены (без «неона»). Клик по
+  «-» сворачивает её в бейдж FPS. В заголовке - мини-график (спарклайн)
+  времени кадра за последние ~60 кадров: ровная или дёрганая линия читается
+  мгновенно. Вся палитра задаётся CSS-переменными <code>--sbc-*</code> на
+  корне <code>#sbc-crawler</code> - переопределите пару переменных сами, либо
+  выберите одну из трёх готовых тем через <code>config.hudTheme</code>.
+</p>
+<pre><code><span class="tok-key">import</span> { mountCrawler } <span class="tok-key">from</span> <span class="tok-str">"@spine-benchmark/pixi-crawler"</span>;
+
+<span class="tok-fn">mountCrawler</span>(app, { hudTheme: <span class="tok-str">"warm"</span> });
+
+<span class="tok-com">/* либо переопределите переменные сами, в своём CSS: */</span>
+<span class="tok-com">/* #sbc-crawler.sbc-hud { --sbc-bg: rgba(22,19,17,.95); --sbc-accent: #c2a878; } */</span></code></pre>
+<p>
+  Сворачивание/разворачивание по умолчанию проигрывает короткую анимацию
+  (<code>hudMotion: true</code>); задайте <code>false</code> для мгновенного
+  HUD без переходов.
+</p>
+
+<h2 id="record">Запись сессии</h2>
+<p>
+  Кадры можно записать и сохранить в JSON, чтобы позже воспроизвести в
+  инспекторе (кнопки записи/сохранения/загрузки есть и в HUD).
+</p>
+<pre><code>crawler.<span class="tok-fn">startRecording</span>();
+<span class="tok-com">// ... воспроизведите проблемный сценарий ...</span>
+crawler.<span class="tok-fn">stopRecording</span>();
+<span class="tok-key">const</span> recording = crawler.<span class="tok-fn">getRecording</span>();   <span class="tok-com">// { version, frames, ... } -&gt; сериализуйте в JSON</span></code></pre>
+
+<footer>
+  pixi-crawler - профайлер производительности для PixiJS 8. Публичный API:
+  <code>mountCrawler</code>, <code>Crawler</code>. Требует Pixi 8 (peer-зависимость,
+  версия точь-в-точь) и тикер приложения, отличный от <code>Ticker.shared</code>.
+  Английская версия - рядом, в файле <code>usage.en.html</code>.
+</footer>
+
+</div>
+</body>
+</html>
