@@ -8,6 +8,20 @@ import { cn } from "@/shared/lib/utils";
 
 const FRAME_MS = 1000 / 60;
 
+/** Spine costs are usually well under 1ms, so keep the small end readable:
+ * 3 decimals below 1ms, 2 below 10ms, 1 above. */
+function fmt(ms: number): string {
+  if (ms >= 10) return ms.toFixed(1);
+  if (ms >= 1) return ms.toFixed(2);
+  return ms.toFixed(3);
+}
+/** A tier's spread, collapsed when the devices agree. */
+function span(lo: number, hi: number): string {
+  return hi - lo < (hi < 1 ? 0.005 : 0.05) ? fmt(hi) : `${fmt(lo)}-${fmt(hi)}`;
+}
+const compact = (n: number) =>
+  n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : Math.round(n).toString();
+
 type Status = "ok" | "warn" | "over";
 function statusOf(ms: number): Status {
   if (ms >= FRAME_MS) return "over";
@@ -20,10 +34,6 @@ const TEXT: Record<Status, string> = {
   over: "text-red-400",
 };
 
-const fmt = (ms: number) => (ms >= 10 ? ms.toFixed(1) : ms.toFixed(2));
-const compact = (n: number) =>
-  n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : Math.round(n).toString();
-
 interface Work {
   drawCalls: number;
   vertices: number;
@@ -34,34 +44,31 @@ interface Work {
   filterPasses: number;
 }
 
-function range(g: GroupPrediction): string {
-  if (g.maxMs - g.minMs < 0.5) return `${g.maxMs.toFixed(1)} ms`;
-  return `${g.minMs.toFixed(1)}-${g.maxMs.toFixed(1)} ms`;
-}
-
 /**
- * Cost analysis panel. Three honest layers, in descending order of certainty:
+ * Cost analysis panel, ordered by how certain each number is.
  *
- *   1. THIS DEVICE - CPU and GPU milliseconds MEASURED directly (the crawler's
- *      per-frame CPU + the EXT_disjoint_timer_query GPU timer, which desktop
- *      Chrome does expose). Zero calibration, zero model: a stopwatch.
- *   2. THE WORK - draw calls, vertices, state changes, batch breaks, stencil
- *      passes, render-target switches. These are device-INVARIANT facts: the
- *      same spine issues the same work everywhere, so they explain WHY the
- *      cost is what it is and transfer to any device without a model.
- *   3. OTHER DEVICES - estimated ms from the measured per-device calibration,
- *      with its held-out error band. A model, and labelled as one.
- *
- * Deliberately NOT here: a first-principles "ops / device spec" prediction.
- * Tested against the measured fleet it fails (a universal op-cost model with
- * one speed number per device scores a NEGATIVE R2) - devices differ in their
- * work MIX, not by a single scalar. Only per-device measurement is true.
+ *   1. THIS SPINE, HERE - the skeleton's OWN per-frame CPU, measured in
+ *      isolation (crawler spineProfile: spine.update + its vertex work), not
+ *      the whole frame. One idle symbol is typically well under a millisecond,
+ *      so it is printed to microsecond resolution. Zero model.
+ *   2. WHOLE FRAME, HERE - everything the canvas does this frame (this spine +
+ *      the workbench's own grid, camera and filters), plus the real GPU
+ *      milliseconds where the browser exposes a timer (desktop does, mobile
+ *      does not). Context for the number above, never confused with it.
+ *   3. THE WORK - draw calls, vertices, state changes, batch breaks, stencil
+ *      and render-target switches. Device-INVARIANT facts; no model needed.
+ *   4. ON PHONES - the marginal cost of one of these (sub-ms, additive) and of
+ *      a whole board, from the measured per-device calibration + its band.
  */
 export function DeviceMeter() {
   const spine = useSkeletonStore((s) => s.spine);
   const status = useSkeletonStore((s) => s.status);
 
-  const [measured, setMeasured] = useState<{ cpuMs: number; gpuMs: number | null } | null>(null);
+  const [measured, setMeasured] = useState<{
+    spineMs: number;
+    frameMs: number;
+    gpuMs: number | null;
+  } | null>(null);
   const [work, setWork] = useState<Work | null>(null);
   const [groups, setGroups] = useState<GroupPrediction[]>([]);
 
@@ -74,11 +81,13 @@ export function DeviceMeter() {
     }
     const sample = () => {
       const m = stage.getMeasuredMs();
-      setMeasured(m ? { cpuMs: m.frameCpuMs, gpuMs: m.gpuMs } : null);
+      // cpuMs is the SPINE-isolated cost (spineProfile is on); frameCpuMs is
+      // the whole tick including the workbench's grid/camera/filter chrome.
+      setMeasured(m ? { spineMs: m.cpuMs, frameMs: m.frameCpuMs, gpuMs: m.gpuMs } : null);
       setWork(stage.getFrameWork() ?? null);
       const walkable = spine.skeleton as unknown as WalkableSkeleton;
       const coverage = estimatePoseCoverage(walkable, { scale: 1 });
-      setGroups(predictGroups(measureFrameFeatures(spine.skeleton, coverage), BOARD_SIZE));
+      setGroups(predictGroups(measureFrameFeatures(spine.skeleton, coverage)));
     };
     sample();
     const id = window.setInterval(sample, 250);
@@ -87,43 +96,42 @@ export function DeviceMeter() {
 
   if (status !== "ready" || !spine) return null;
 
-  const cpuSt = measured ? statusOf(measured.cpuMs) : "ok";
-  const gpuSt = measured?.gpuMs != null ? statusOf(measured.gpuMs) : "ok";
-
   return (
     <div className="pointer-events-auto absolute left-4 top-4 z-40 w-60 rounded-xl border border-border bg-card/80 px-3 py-2.5 shadow-xl backdrop-blur-md">
-      {/* 1. MEASURED on this machine - the only fully certain number */}
-      <div className="mb-1 flex items-baseline justify-between">
-        <span className="text-[11px] font-medium text-foreground">This computer</span>
-        <span className="text-[10px] text-muted-foreground/60">measured</span>
+      {/* 1. THE number: this spine's own cost, measured */}
+      <div className="flex items-baseline justify-between">
+        <span className="text-[11px] font-medium text-foreground">This spine</span>
+        <span className="text-[10px] text-muted-foreground/60">measured here</span>
       </div>
-
       {measured ? (
-        <div className="flex items-baseline gap-3">
-          <span className="flex items-baseline gap-1">
-            <span className="text-[10px] text-muted-foreground">CPU</span>
-            <span className={cn("text-base font-semibold tabular-nums leading-none", TEXT[cpuSt])}>
-              {fmt(measured.cpuMs)}
-              <span className="text-[10px] font-normal"> ms</span>
-            </span>
+        <div className="mt-0.5 flex items-baseline gap-1">
+          <span className="text-xl font-semibold leading-none tabular-nums text-foreground">
+            {fmt(measured.spineMs)}
           </span>
-          <span className="flex items-baseline gap-1">
-            <span className="text-[10px] text-muted-foreground">GPU</span>
-            {measured.gpuMs != null ? (
-              <span className={cn("text-base font-semibold tabular-nums leading-none", TEXT[gpuSt])}>
-                {fmt(measured.gpuMs)}
-                <span className="text-[10px] font-normal"> ms</span>
-              </span>
-            ) : (
-              <span className="text-[10px] text-muted-foreground/50">no timer</span>
-            )}
-          </span>
+          <span className="text-xs text-muted-foreground">ms / frame</span>
         </div>
       ) : (
         <span className="text-[10px] text-muted-foreground/50">measuring...</span>
       )}
 
-      {/* 2. THE WORK - device-invariant facts, no model involved */}
+      {/* 2. context: the whole canvas frame + real GPU where available */}
+      {measured && (
+        <div className="mt-1 flex flex-wrap gap-x-2 text-[10px] tabular-nums text-muted-foreground/70">
+          <span title="everything this canvas does per frame, including the workbench's own grid, camera and filters">
+            whole frame {fmt(measured.frameMs)} ms
+          </span>
+          <span title="real GPU time from EXT_disjoint_timer_query - desktop browsers expose it, mobile ones do not">
+            gpu{" "}
+            {measured.gpuMs != null ? (
+              `${fmt(measured.gpuMs)} ms`
+            ) : (
+              <span className="text-muted-foreground/40">no timer</span>
+            )}
+          </span>
+        </div>
+      )}
+
+      {/* 3. the work - device-invariant facts */}
       {work && (
         <div className="mt-2 border-t border-border/50 pt-1.5">
           <div className="mb-1 text-[10px] text-muted-foreground/60">
@@ -161,27 +169,26 @@ export function DeviceMeter() {
         </div>
       )}
 
-      {/* 3. OTHER DEVICES - a model, labelled as one */}
+      {/* 4. estimated on real phones: one spine, and a whole board */}
       {groups.length > 0 && (
         <div className="mt-2 border-t border-border/50 pt-1.5">
-          <div className="mb-1 text-[10px] text-muted-foreground/60">
-            estimated CPU, ~{BOARD_SIZE}-symbol board
+          <div className="mb-1 flex items-baseline justify-between text-[10px] text-muted-foreground/60">
+            <span>estimated on phones</span>
+            <span>1 spine · board of {BOARD_SIZE}</span>
           </div>
           <div className="flex flex-col gap-0.5">
             {groups.map((g) => (
               <div key={g.name} className="flex items-baseline justify-between gap-2">
                 <span className="truncate text-[10px] text-muted-foreground">{g.name}</span>
                 {g.trustedCount > 0 ? (
-                  <span
-                    className={cn("shrink-0 text-[11px] font-medium tabular-nums", TEXT[statusOf(g.maxMs)])}
-                  >
-                    {range(g)}
-                    {g.band != null && (
-                      <span className="font-normal text-muted-foreground/50">
-                        {" "}
-                        +-{Math.round(g.band * 100)}%
-                      </span>
-                    )}
+                  <span className="shrink-0 text-[10px] tabular-nums">
+                    <span className="font-medium text-foreground">
+                      {span(g.perSpineMinMs, g.perSpineMaxMs)}
+                    </span>
+                    <span className="text-muted-foreground/40"> · </span>
+                    <span className={cn("font-medium", TEXT[statusOf(g.boardMaxMs)])}>
+                      {span(g.boardMinMs, g.boardMaxMs)} ms
+                    </span>
                   </span>
                 ) : (
                   <span className="shrink-0 text-[10px] text-muted-foreground/40">no runs</span>
@@ -189,6 +196,17 @@ export function DeviceMeter() {
               </div>
             ))}
           </div>
+          {groups.some((g) => g.band != null) && (
+            <div className="mt-1 text-[10px] text-muted-foreground/50">
+              +-
+              {Math.round(
+                (groups.filter((g) => g.band != null).reduce((a, g) => a + (g.band ?? 0), 0) /
+                  Math.max(1, groups.filter((g) => g.band != null).length)) *
+                  100,
+              )}
+              % from measured runs
+            </div>
+          )}
         </div>
       )}
     </div>

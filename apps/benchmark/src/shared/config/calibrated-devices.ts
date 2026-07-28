@@ -11,6 +11,7 @@
  */
 import {
   predictDeviceMs,
+  sceneTotalFeatures,
   type CalFeatureInputs,
   type DeviceCalibration,
   type DeviceCalModel,
@@ -96,6 +97,25 @@ export function predictMs(
   return predictDeviceMs(device.model, toCalInputs(features), instances);
 }
 
+/**
+ * MARGINAL cost of adding one more of this spine - the model's content terms
+ * with the intercept dropped. This is the number that composes: N copies cost
+ * N x marginal, on top of the scene's fixed overhead. It is also the honest
+ * per-spine figure, since the intercept is a whole BOARD's frame overhead and
+ * charging it to a single symbol is what made single-spine estimates mis-order
+ * devices. Typically well under 1ms for one idle symbol.
+ */
+export function predictMarginalMs(
+  device: CalibratedDevice,
+  features: ImpactFeatures,
+  instances = 1,
+): number {
+  const x = sceneTotalFeatures(toCalInputs(features), instances);
+  let ms = 0;
+  for (let i = 1; i < device.model.weights.length; i++) ms += device.model.weights[i] * (x[i] ?? 0);
+  return Math.max(0, ms);
+}
+
 // ── Device GROUPS (tiers) ──────────────────────────────────────────────
 // Individual devices are noisy; a tier RANGE is the honest, shippable unit.
 // NOT grouped by GPU family - the same GPU spans 2x compute across SoCs - but by
@@ -136,9 +156,14 @@ export const DEVICE_GROUPS: DeviceGroup[] = (() => {
 
 export interface GroupPrediction {
   name: string;
-  /** predicted frameCpuMs range across the group's TRUSTED devices. */
-  minMs: number;
-  maxMs: number;
+  /** ONE of this spine: marginal ms across the tier's trusted devices. Sub-ms
+   * for a typical idle symbol - this is the number that composes. */
+  perSpineMinMs: number;
+  perSpineMaxMs: number;
+  /** A whole board of BOARD_SIZE of them, including the scene's fixed frame
+   * overhead - the "a few ms" figure. */
+  boardMinMs: number;
+  boardMaxMs: number;
   /** typical held-out model error across the group (0..1), or null. */
   band: number | null;
   /** how many trusted devices back this. 0 = no clean calibration yet. */
@@ -147,21 +172,23 @@ export interface GroupPrediction {
 }
 
 /**
- * Predict this spine's per-frame CPU cost as a RANGE across each device tier.
- * Uses only trusted devices; the range is the real device spread, and `band`
- * is the models' held-out error to widen it by. This is the "goes live with
- * +/- some ms" number.
+ * Per-tier cost for this spine: the MARGINAL cost of one (sub-ms, additive)
+ * and the total for a full board (a few ms, includes fixed frame overhead).
+ * Only trusted devices count; `band` is the models' held-out error.
  */
-export function predictGroups(features: ImpactFeatures, instances = 1): GroupPrediction[] {
+export function predictGroups(features: ImpactFeatures): GroupPrediction[] {
   const inputs = toCalInputs(features);
   return DEVICE_GROUPS.map((g) => {
     const trusted = g.devices.filter((d) => d.trusted);
-    const preds = trusted.map((d) => predictDeviceMs(d.model, inputs, instances));
+    const per = trusted.map((d) => predictMarginalMs(d, features, 1));
+    const board = trusted.map((d) => predictDeviceMs(d.model, inputs, BOARD_SIZE));
     const bands = trusted.map((d) => d.errorBand).filter((b): b is number => b != null);
     return {
       name: g.name,
-      minMs: preds.length ? Math.min(...preds) : 0,
-      maxMs: preds.length ? Math.max(...preds) : 0,
+      perSpineMinMs: per.length ? Math.min(...per) : 0,
+      perSpineMaxMs: per.length ? Math.max(...per) : 0,
+      boardMinMs: board.length ? Math.min(...board) : 0,
+      boardMaxMs: board.length ? Math.max(...board) : 0,
       band: bands.length ? bands.reduce((a, b) => a + b, 0) / bands.length : null,
       trustedCount: trusted.length,
       deviceCount: g.devices.length,
