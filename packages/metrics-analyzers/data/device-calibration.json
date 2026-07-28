@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-07-28T12:43:02.467Z",
+  "generatedAt": "2026-07-28T13:40:55.953Z",
   "target": "frameCpuMs",
   "unit": "ms",
   "scope": "cpu-compute-only (GPU has no in-browser timer)",
@@ -28,6 +28,7 @@
         "zygf241g",
         "b7os9ob7"
       ],
+      "clampAffectedScenes": 1,
       "scenes": 34,
       "weights": [
         2.696577,
@@ -51,6 +52,7 @@
       "runIds": [
         "iix8w5d6"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 34,
       "weights": [
         5.191257,
@@ -74,6 +76,7 @@
       "runIds": [
         "nx7kyknp"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 34,
       "weights": [
         5.673678,
@@ -97,6 +100,7 @@
       "runIds": [
         "zldmqag3"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 34,
       "weights": [
         3.734204,
@@ -120,6 +124,7 @@
       "runIds": [
         "fbmqxgyi"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 34,
       "weights": [
         2.154578,
@@ -143,6 +148,7 @@
       "runIds": [
         "dyn11g4q"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 34,
       "weights": [
         3.297949,
@@ -166,6 +172,7 @@
       "runIds": [
         "qe2husyb"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 34,
       "weights": [
         2.281309,
@@ -189,6 +196,7 @@
       "runIds": [
         "gxwq2zoy"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 34,
       "weights": [
         2.392026,
@@ -212,6 +220,7 @@
       "runIds": [
         "tnm3y0p1"
       ],
+      "clampAffectedScenes": 0,
       "scenes": 33,
       "weights": [
         3.32319,
@@ -235,6 +244,7 @@
       "runIds": [
         "ru7ejyn6"
       ],
+      "clampAffectedScenes": 2,
       "scenes": 34,
       "weights": [
         4.730086,

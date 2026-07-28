@@ -157,7 +157,14 @@ async function main() {
     const gpuFamily = detail.device?.gpuFamily ?? detail.device?.gpu ?? "unknown";
     const entry =
       perDevice.get(label) ??
-      { deviceLabel: label, gpuFamily, clientVersion: r.clientVersion, runIds: [], scenes: {} };
+      {
+        deviceLabel: label,
+        gpuFamily,
+        clientVersion: r.clientVersion,
+        runIds: [],
+        scenes: {},
+        clampAffected: 0,
+      };
     entry.runIds.push(r.id);
     // keep the freshest client version seen for this device
     if (cmpVersion(r.clientVersion ?? "0", entry.clientVersion ?? "0") > 0)
@@ -167,6 +174,13 @@ async function main() {
     for (const s of detail.scenarios) {
       const ms = s.stats?.frameCpuMsAvg;
       if (ms != null) entry.scenes[s.id] = { ms, inst: inst[s.id] };
+      // Pre-clamp (< 0.6.1) runs over-counted frameCpuMs on drivers where the
+      // render-phase timers double-count GPU-sync stalls - visible as a CPU time
+      // LARGER than the frame's own wall clock. Count those: a run with none is
+      // already identical to what the clamp would produce, so its version alone
+      // shouldn't disqualify it.
+      const frame = s.stats?.frameMsAvg;
+      if (ms != null && frame != null && ms > frame * 1.05) entry.clampAffected++;
     }
     perDevice.set(label, entry);
 
@@ -204,13 +218,17 @@ async function main() {
     const weights = ols(X, y);
     const r2 = inSampleR2(weights, X, y);
     const mape = heldOutMape(X, y);
-    const trusted =
-      cmpVersion(entry.clientVersion ?? "0", MIN_VERSION) >= 0 && mape != null && mape <= MAX_TRUSTED_MAPE;
+    // Clean = post-clamp, OR pre-clamp but provably unaffected by it (no scene
+    // where CPU time exceeded the frame's own wall clock).
+    const clean =
+      cmpVersion(entry.clientVersion ?? "0", MIN_VERSION) >= 0 || entry.clampAffected === 0;
+    const trusted = clean && mape != null && mape <= MAX_TRUSTED_MAPE;
     devices.push({
       deviceLabel: entry.deviceLabel,
       gpuFamily: entry.gpuFamily,
       clientVersion: entry.clientVersion,
       runIds: entry.runIds,
+      clampAffectedScenes: entry.clampAffected,
       scenes: sceneIds.length,
       weights: weights.map((w) => Math.round(w * 1e6) / 1e6),
       inSampleR2: Math.round(r2 * 100) / 100,
