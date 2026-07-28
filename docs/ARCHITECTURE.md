@@ -134,7 +134,7 @@ once nothing consumed them - see
                                   (deviceFit + deviceClass)
                                         ^
                                         |
-                                  apps/bench-server
+                                   apps/benchmark
 ```
 
 ### Groups
@@ -151,12 +151,10 @@ once nothing consumed them - see
   vector to milliseconds; [`metrics-analyzers`](../packages/metrics-analyzers/)
   exposes `deviceFit` (per-GPU-family two-stage fit) and `deviceClass`
   (portable-family classifier). Both are pixi-free data packages.
-- **Internal measurement + tooling (private).**
+- **Internal measurement (private).**
   [`gpu-timing`](../packages/gpu-timing/) wraps the WebGL2 timer query;
   [`metrics-sampling`](../packages/metrics-sampling/) walks animation
-  timelines; [`calibration-primitives`](../packages/calibration-primitives/)
-  is the source of the procedural calibration spines emitted by
-  `tools/scene-pipeline`. Consumed only by this repo - never published.
+  timelines. Consumed only by this repo - never published.
 - **Published runtime libraries.**
   [`pixi-crawler`](../packages/pixi-crawler/) is the embeddable live
   profiler (ships to game clients). [`spinefolio`](../packages/spinefolio/)
@@ -172,7 +170,7 @@ the formulas AND the pose walk stay in the leaf.
 ## Data flow: skeleton to predicted milliseconds
 
 1. **Pose.** The skeleton is posed - live on the workbench stage, per
-   animation frame offline, or per instance in the bench-runner.
+   animation frame offline, or per instance live via the crawler.
 2. **Walk.** `metrics-impact-formula`'s `extractPoseFeatures` walks the
    current `drawOrder` once into the canonical `ImpactFeatures` vector
    (vertices incl. region/sequence quads, meshes, constraints,
@@ -209,7 +207,6 @@ the formulas AND the pose walk stay in the leaf.
 | `@spine-benchmark/spinefolio` | yes | - | Spine widget for portfolios |
 | `@spine-benchmark/gpu-timing` | no (private) | - | WebGL2 timer + coverage (internal) |
 | `@spine-benchmark/metrics-sampling` | no (private) | - | Timeline sampling (internal) |
-| `@spine-benchmark/calibration-primitives` | no (private) | - | Procedural calibration spines (tooling) |
 
 The public API of the project is the set of published npm packages. The apps
 are the reference consumers - they exist so the packages get real

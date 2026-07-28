@@ -65,7 +65,6 @@ consumed them (see [ADR 0004](docs/adr/0004-drop-ri-ci-package-stack.md)).
 | `packages/spinefolio` | PixiJS v8 Spine widget library | **public** |
 | `packages/gpu-timing` | WebGL2 timer-query + coverage sampling (internal) | private |
 | `packages/metrics-sampling` | Animation timeline sampling (internal) | private |
-| `packages/calibration-primitives` | Procedural single-axis calibration spines (tooling) | private |
 
 ## Build Specific Workspaces
 

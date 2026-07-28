@@ -51,7 +51,7 @@ live consumer:
 
 All thirteen were already published on npm at 0.1.1.
 
-(`calibration-primitives` was initially in this list but kept: it is
+(`calibration-primitives` was kept at the time of this ADR because it is
 the source of the procedural single-axis calibration spines that the
 `tools/scene-pipeline` authoring scripts emit. It was never published,
 so it is marked private rather than dropped.)
@@ -91,3 +91,11 @@ low-touch choice; they can be `npm deprecate`d later if needed.
 - The duplication guard now also flags a local pose-feature walk
   (`worldVerticesLength / 2` outside the leaf), closing the
   input-drift gap that ADR 0002 left open.
+
+## Addendum
+
+`calibration-primitives` has since been removed too. Its only consumer was
+`tools/scene-pipeline`, which was deleted along with `bench-runner` and
+`bench-server` because those carried licensed studio game data that must not
+live in this repository. With the pipeline gone the package had no consumer
+left.

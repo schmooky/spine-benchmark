@@ -149,3 +149,10 @@ apps/crawler/public/assets/
 
 # spine-bench scene pipeline: local-only asset symlink + heavy intermediate
 tools/scene-pipeline/catalog.json
+
+# Licensed studio spine assets and the apps that consumed them must never be
+# tracked here. These apps are maintained outside this repo.
+apps/bench-runner/
+apps/bench-server/
+*.atlas
+*.skel
