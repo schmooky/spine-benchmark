@@ -5,15 +5,29 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prebuild": "npm run build --prefix ../.. --workspace @spine-benchmark/metrics-impact-formula"
   },
   "license": "MIT",
-  "publishConfig": { "access": "public" },
-  "dependencies": { "@spine-benchmark/metrics-impact-formula": "^0.1.1" },
-  "devDependencies": { "typescript": "^5.9.3" }
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@spine-benchmark/metrics-impact-formula": "^0.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }

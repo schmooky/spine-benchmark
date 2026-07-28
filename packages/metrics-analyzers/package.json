@@ -32,11 +32,12 @@
   ],
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prebuild": "npm run build --prefix ../.. --workspace @spine-benchmark/metrics-impact-formula --workspace @spine-benchmark/metrics-model"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-model": "^0.1.0",
-    "@spine-benchmark/metrics-impact-formula": "^0.1.1"
+    "@spine-benchmark/metrics-impact-formula": "^0.1.1",
+    "@spine-benchmark/metrics-model": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
