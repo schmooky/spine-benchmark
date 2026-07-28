@@ -1,11 +1,28 @@
 const DEVICE_ID_KEY = "pixi-crawler:device-id";
 
+/** Monotonic tail for the no-Web-Crypto fallback below. */
+let fallbackSeq = 0;
+
 function randomId(): string {
   const c = (
-    globalThis as unknown as { crypto?: { randomUUID?: () => string } }
+    globalThis as unknown as {
+      crypto?: {
+        randomUUID?: () => string;
+        getRandomValues?: <T extends Uint8Array>(a: T) => T;
+      };
+    }
   ).crypto;
   if (c?.randomUUID) return c.randomUUID();
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  if (c?.getRandomValues) {
+    const b = c.getRandomValues(new Uint8Array(16));
+    return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  }
+  // No Web Crypto at all (ancient or exotic host). These ids only correlate
+  // telemetry rows - they are never credentials - so a timestamp plus a
+  // monotonic counter is sufficient, and avoids deriving an identifier from a
+  // predictable PRNG (which static analysis rightly flags).
+  fallbackSeq += 1;
+  return `${Date.now().toString(36)}-${fallbackSeq.toString(36)}`;
 }
 
 export function makeSessionId(): string {

@@ -56,7 +56,10 @@ export function gpuFamily(renderer: string | null | undefined): string {
   if (!r) return "unknown";
   if (r.includes("apple")) return "Apple GPU";
   if (r.includes("adreno")) {
-    const m = r.match(/adreno.*?(\d)\d\d/);
+    // `[^0-9]{0,64}` rather than `.*?`: bounded and digit-free, so the match is
+    // linear. The lazy wildcard could backtrack polynomially on a driver string
+    // repeating "adreno" many times.
+    const m = r.match(/adreno[^0-9]{0,64}(\d)\d\d/);
     return m ? `Adreno ${m[1]}xx` : "Adreno";
   }
   if (r.includes("mali")) {
