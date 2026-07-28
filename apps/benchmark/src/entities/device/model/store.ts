@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { DEFAULT_DEVICE_ID, DEVICES } from "@/shared/config/devices";
+import { CALIBRATED_DEVICES, DEFAULT_DEVICE_LABEL } from "@/shared/config/calibrated-devices";
 
 /**
  * The animator's target device. Deliberately NOT wired into resetAll and
@@ -13,11 +13,11 @@ const LS_KEY = "spine-workbench.device";
 function initialDeviceId(): string {
   try {
     const stored = localStorage.getItem(LS_KEY);
-    if (stored && DEVICES.some((d) => d.id === stored)) return stored;
+    if (stored && CALIBRATED_DEVICES.some((d) => d.label === stored)) return stored;
   } catch {
     // private mode etc. - fall through to default
   }
-  return DEFAULT_DEVICE_ID;
+  return DEFAULT_DEVICE_LABEL;
 }
 
 interface DeviceState {

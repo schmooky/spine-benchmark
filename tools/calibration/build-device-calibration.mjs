@@ -39,10 +39,12 @@ const API = process.env.BENCH_API ?? "https://spine-bench.schmooky.dev";
 const S3 = "https://s3.twcstorage.ru/spine-bench/";
 const MIN_VERSION = "0.6.1"; // post-clamp; below this frameCpuMs over-counts on Mali
 const MAX_TRUSTED_MAPE = 0.3; // 30% held-out error is the trust ceiling
-const OUT = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../packages/metrics-analyzers/data/device-calibration.json",
-);
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
+// canonical artifact + a bundled copy the workbench app imports directly.
+const OUTS = [
+  join(ROOT, "packages/metrics-analyzers/data/device-calibration.json"),
+  join(ROOT, "apps/benchmark/src/shared/config/device-calibration.json"),
+];
 
 /** feature vector for one scene: intercept + scene-total drivers. */
 function sceneFeatures(oneMean, instances) {
@@ -233,10 +235,13 @@ async function main() {
       "per-device OLS refit of measured frameCpuMs vs scene features; the hand-tuned poseImpact weights score R2=0.02 and are NOT used. 5-fold held-out MAPE is the honest error band.",
     devices,
   };
-  mkdirSync(dirname(OUT), { recursive: true });
-  writeFileSync(OUT, JSON.stringify(out, null, 2) + "\n");
-
-  console.log(`\nwrote ${OUT}`);
+  const json = JSON.stringify(out, null, 2) + "\n";
+  for (const p of OUTS) {
+    mkdirSync(dirname(p), { recursive: true });
+    writeFileSync(p, json);
+    console.log(`wrote ${p}`);
+  }
+  console.log("");
   console.log("DEVICE".padEnd(30), "ver".padStart(6), "R2".padStart(6), "held".padStart(6), "trusted");
   for (const d of devices)
     console.log(
