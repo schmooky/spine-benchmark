@@ -421,6 +421,39 @@ class StageController {
    *  mitigation) in non-cross-origin-isolated pages, so a genuinely
    *  sub-millisecond per-frame cost quantizes to 0 or 1ms on a single sample -
    *  a window doesn't. */
+  /**
+   * The frame's REAL work counters, averaged over a short window. These are
+   * device-INVARIANT facts about the scene (the same spine issues the same
+   * draw calls and vertices everywhere) - the honest input to any cost
+   * reasoning, and the thing that needs no calibration at all.
+   */
+  getFrameWork(windowFrames = 20):
+    | {
+        drawCalls: number;
+        vertices: number;
+        stateChanges: number;
+        batchBreaks: number;
+        stencilPasses: number;
+        renderTargetSwitches: number;
+        filterPasses: number;
+      }
+    | undefined {
+    const frames = this.crawler?.getFrames();
+    if (!frames || frames.length === 0) return undefined;
+    const recent = frames.slice(-windowFrames);
+    const avg = (pick: (f: (typeof recent)[number]) => number) =>
+      recent.reduce((s, f) => s + (pick(f) || 0), 0) / recent.length;
+    return {
+      drawCalls: avg((f) => f.counters.drawCalls),
+      vertices: avg((f) => f.counters.verticesDrawn),
+      stateChanges: avg((f) => f.counters.stateChanges),
+      batchBreaks: avg((f) => f.counters.batchBreaks),
+      stencilPasses: avg((f) => f.counters.stencilMaskPasses),
+      renderTargetSwitches: avg((f) => f.counters.renderTargetSwitches),
+      filterPasses: avg((f) => f.filter?.passes ?? 0),
+    };
+  }
+
   getMeasuredMs(
     windowFrames = 20,
   ): { gpuMs: number | null; cpuMs: number; frameCpuMs: number } | undefined {
