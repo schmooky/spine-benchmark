@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@spine-benchmark/pixi-crawler": "^0.3.0",
-    "pixi.js": "^8.8.1"
+    "pixi.js": "^8.19.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
