@@ -34,11 +34,11 @@
   "author": "Spine Benchmark Contributors",
   "license": "MIT",
   "peerDependencies": {
-    "pixi.js": "^8.0.0"
+    "pixi.js": "^8.20.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "pixi.js": "^8.0.0",
+    "pixi.js": "^8.20.1",
     "typescript": "^5.3.0"
   },
   "repository": {
