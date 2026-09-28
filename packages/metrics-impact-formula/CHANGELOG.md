@@ -1,5 +1,11 @@
 # @spine-benchmark/metrics-impact-formula
 
+## 0.2.0
+
+### Minor Changes
+
+- Publishes the canonical pose-feature walker and fitted cost-model API that `main` has carried since the v4 measurement work: `extractPoseFeatures`, `poseImpact`, `estimatePoseCoverage`, `ImpactFeatures` / `FEATURE_KEYS`, `LinearCostModel`, `predictMs`, `predictCostMs`, `DEFAULT_GPU_COST_MODEL` / `DEFAULT_CPU_COST_MODEL`, `toDesignFeatures`, and optional weight parameters on `renderingImpactCost` / `computationalImpactCost` (defaults unchanged). Consumers outside the monorepo (e.g. `pixi-crawler`) can now use the same walker the benchmark trains on.
+
 ## 0.1.1
 
 ### Patch Changes

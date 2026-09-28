@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@esotericsoftware/spine-core": "^4.2.101",
-    "@spine-benchmark/metrics-impact-formula": "^0.1.0"
+    "@spine-benchmark/metrics-impact-formula": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
