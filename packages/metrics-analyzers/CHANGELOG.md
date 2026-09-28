@@ -1,5 +1,18 @@
 # @spine-benchmark/metrics-analyzers
 
+## 0.2.0
+
+### Minor Changes
+
+- **Breaking:** the package is now the device cost-model toolkit - `deviceFit` (`gpuFamily`, `fitDevices`, `toCoefficientTable`, `predictForFamily`), `deviceClass` (`deviceClass`, `deviceFamily`, `groupPortableByFamily`) and `deviceCalibration` (`predictDeviceMs` and helpers). The per-attachment RI/CI analyzers of 0.1.x (`blendModeAnalyzer`, `clippingAnalyzer`, `meshAnalyzer`, `physicsAnalyzer`, `skeletonAnalyzer`) are gone; scoring lives in `@spine-benchmark/metrics-impact-formula`.
+- Fix: removed the `development` export conditions of `./deviceClass` and `./deviceFit`. They pointed at `src/`, which is not published, so dev-mode resolution (Vite) failed for consumers.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @spine-benchmark/metrics-impact-formula@0.2.0
+  - @spine-benchmark/metrics-model@0.1.0
+
 ## 0.1.1
 
 ### Patch Changes

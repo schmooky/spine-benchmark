@@ -25,7 +25,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-impact-formula": "^0.1.1"
+    "@spine-benchmark/metrics-impact-formula": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

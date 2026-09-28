@@ -34,7 +34,7 @@
     "url": "https://github.com/schmooky/spine-benchmark/issues"
   },
   "dependencies": {
-    "@spine-benchmark/metrics-impact-formula": "^0.1.1"
+    "@spine-benchmark/metrics-impact-formula": "^0.2.0"
   },
   "private": true
 }
